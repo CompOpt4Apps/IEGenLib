@@ -1,0 +1,261 @@
+=================================
+README for IEGenLib
+=================================
+IEGenLib is a library that represents and manipulates integer sets and
+relations that have affine and uninterpreted function constraints.
+
+====  I. Unpacking the Distribution ===================
+
+The distribution is shipped as a tar file. When you unpack the tar
+file it creates a directory that is the root of the distribution.
+
+    tar xzvf iegenlib-1.0.0.tgz
+
+==== II. Quick Start ===============
+
+  A. Building IEGenLib and the IEGenLib Calculator
+  B. Running the IEGenLib Calculator
+  C. Using the IEGenLib Python Interface
+
+---- A. Building IEGenLib and the IEGenLib calculator ----------
+
+After unpacking the distribution build and install using the standard
+sequence of commands.
+    ./configure --build-python
+    make
+    make test
+    make install
+
+This will install into a directory IEGenLib/iegenlib
+Set IEGEN_HOME to /full/path/to/IEGenLib/iegen
+
+Choosing an alternative installation directory is covered below.
+
+---- B. Running the IEGenLib calculator ----------
+WARNING: declaring function inverses in the calculator doesn't work now
+
+The iegenlib_calc binary can be executed to enter sets and relations
+and operations on them.  When run, the iegenlib_calc suggests examples. 
+
+        $IEGEN_HOME/bin/iegenlib_calc
+
+The program will present a prompt for an input string. You may input
+any valid string and it will return the interpreted string and a
+formatted dot file to a file called set_relation.dot. The calculator
+continues until a blank line is input or [CTRL][D] is entered.
+       
+
+---- C. Using the IEGenLib Python bindings ----------
+
+Required to use Python bindings to IEGenLib:
+    * Python 2.7.2 known to work on linux and Mac
+
+The Python bindings shipped in the distribution ($IEGEN_HOME/bindings/..) 
+can also be used to interface to the library.
+
+    (1) Set the PYTHONPATH environment variable
+    
+     export PYTHONPATH=$PYTHONPATH:$IEGEN_HOME/bindings
+            - OR -
+     setenv PYTHONPATH $IEGEN_HOME/bindings
+
+
+    (2) Run python
+     
+        python
+        >>> import iegenlib
+
+    (3) Examples
+    The following Python statements are examples on how to create sets and 
+    relations:
+
+        >>> S1 = iegenlib.Set("{[s,i]: 0<=s && s<T && 0<=i && i<N}")
+        >>> print S1
+        
+        >>> R1 = iegenlib.Relation("{[s,i]->[0,s,1,i,0]}")
+
+    NOTE: Both the omega and ISL syntax are allowed for specifying sets and 
+    relations.  Some of the short cuts such as 0<=i<N are missing however.
+    
+    The following Python statements are examples on how to apply operations 
+    (such as Apply, Union, Inverse, and Compose) between sets/relations:
+    
+        >>> S2 = R1.Apply(S1)           # Apply operation  #
+        
+        >>> S3 = iegenlib.Set("{[i,j]: 0<=i and i<n and 5<=j and j<m}")
+        
+        >>> S4 = iegenlib.Set("{[i,j]: 0<=i and i<n and m+5<=j and j<m+10}")
+        
+        >>> S4 = S3.Union(S4)           # Union operation #
+        
+        >>> R2 = iegenlib.Relation("{[i,j]->[ip,jp]: ip=f(i) and jp=2j}")
+        
+        >>> R3 = iegenlib.Relation("{[q,r]->[i,j]: i=q and j=r}")
+        
+        >>> R3 = R3.Compose(R2)         # Compose operation#
+        
+        >>> R2 = R2.Inverse()           # Inverse operation#
+        
+        >>> print R2                    # to print the resulting set/relation#
+            { [ip, jp] -> [i, j] : ip - f(i) = 0 && 2 j - jp = 0 } 
+                                        # The output of the print command #
+
+    Some examples that use function inverse declarations.
+    
+        # This indicates that the uninterpreted function f has the
+        # given domain and range and is bijective.  Since is bijective
+        # f_inv will be defined.
+        >>> domain = iegenlib.Set("{[i]:0<=i &&i<G}")
+        >>> range = iegenlib.Set("{[i]:0<=i &&i<G}")
+        >>> fname = "f"
+        >>> iegenlib.appendCurrEnv(fname,domain,range,True)
+
+        >>> S5 = iegenlib.Set("{[i,j]:i=f(f_inv(j))}")
+        >>> print "S5 = ", S5
+
+        >>> R4 = iegenlib.Relation("{[i,j]->[ip,j]: ip=f(i)}")
+        >>> print "R4 = ", R4
+
+        >>> S6 = R4.Apply(S5)
+        >>> print "S6 = ", S6
+
+
+     The user can obtain dot files for SparseConstraints objects of
+     sets/relations from the IEGenlib Python Interface by using
+     toDotString() methods. Python methods open(filename, mode)  and
+     write(item) can be used to open and write to the output file, as
+     in the following examples:
+
+        >>> S3 = iegenlib.Set("[n,m]->{[i,j]: 0<=i and i<n and 5<=j and j<m}")
+         
+        >>> file = open("S3.dot", 'w')
+         
+        >>> file.write(S3.toDotString())
+         
+        >>> file.close()
+
+
+==== III. Distribution Organization ===============
+
+The distribution is shipped as a tar file. When you unpack the tar
+file it creates a directory that is the root of the distribution.
+
+    tar xzvf iegenlib-#.#.#.tgz
+
+Sources for the project are found in the distribution root src/
+sub-directory.
+
+The library and demonstration driver create both string and dot
+output; graphviz is needed to visualize the dot output.
+      
+
+==== IV. Building IEGenLib from Source =======================
+
+    Build Command Sequence
+        ./configure
+        make
+        make install
+
+    Build and Test without creating an install directory
+        ./configure
+        make
+        make test
+       
+
+    Required to use Python bindings to IEGenLib:
+        * Python 2.7.2 known to work on linux and Mac
+
+    Requirements
+        * cmake 2.6 or newer
+        
+        * C++ compiler, the below versions are known to work
+            Mac i686-apple-darwin10-g++-4.2.1, 
+            GCC 4.6.3 20120306 (Red Hat 4.6.3-2)
+            
+        * If re-generating parser files BISON 2.4 and FLEX 2.5 or newer
+        
+        * If re-generating docs
+            * doxygen (http://www.stack.nl/~dimitri/doxygen/index.html,
+                       known to work with 1.5.6 and 1.7.5)
+            * dot (http://www.graphviz.org)
+
+        * If rebuilding python bindings from source: 
+            * swig version 2.0.4 for linux, version 1.3.40 for Mac known to work
+            ** please note: if installing swig from macports 2 packages 
+               are required: swig and swig-python
+ 
+        * If you plan to change the grammar for the sets or relations:
+            * Flex: version 2.5.35 known to work
+            * Bison: version 2.4.1 known to work
+
+Please notify us if you find that other versions of these tools that
+work or do not work for you.
+
+Build files for the project are generated using cmake (except for the
+distribution root-level Makefile that is included in the tar file).
+Cmake version 2.6 or newer is required. Make files can be generated to
+only build the binaries, to additionally generate the parser files,
+and/or to additionally include Python bindings to the library. These
+options are enabled through a configure script in the root of the
+project. If the parser option is included, then additionally FLEX
+version 2.5 or newer and BISON version 2.4 or newer are required. If
+documentation is to be re-generated, then doxygen and dot are also
+required to create it.
+
+Run ./configure --help for more build configuration options.
+
+The default install directory is ${IEGEN_DIR}/iegen/. This directory
+may be changed using options to the configure script.  Note that the
+cmake system places binaries in an iegen/ directory, rather than an
+iegen-LINUX64/ or iegen-MacOSX/ directory as are shipped in the
+distribution.
+
+
+===== V. Running Tests =====
+
+The iegen/bin/run_iegenlib_tests binary can be executed to run the tests of 
+the various components of IEGenLib. Additionally, from the root of the 
+distribution you can run 'make test' to run these same tests.
+
+The gtest framework is used for writing and running unit tests.  Information 
+on gtest can be found at:
+
+    http://code.google.com/p/googletest/
+
+and introductory documentation is at:
+
+    http://code.google.com/p/googletest/wiki/V1_6_Primer
+
+===== VI. Documentation =====
+
+To create the doxygen documentation, run the following command:
+
+    make docs
+
+An index.html file will be created in the distribution root directory, in 
+doc/html/. A latex pdf file, called refman.pdf will also be created, in the 
+doc/latex/ directory. 
+
+===== VII. Debug and Release Builds =====
+
+The default build is the debug build.  It is set by cmake in the configure 
+script with -DCMAKE_BUILD_TYPE:STRING=Debug.  The compiler options for the 
+debug build are '-O0 -g'.  
+
+To create a release version, use in the -build--release option to the 
+configure script. The compiler options for the release are '-O3 -DNDEBUG'.
+
+To show actual build commands, you can run the verbose version of the build:
+  
+  make install VERBOSE=1
+
+===== Contact =====
+
+For more information about the PIES project, please visit this URL:
+
+http://www.cs.colostate.edu/hpc/PIES/
+
+Or, please contact the PIES project director:
+
+Dr. Michelle Strout, mstrout@cs.colostate.edu
+
