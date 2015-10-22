@@ -7,13 +7,11 @@
  * related Conjunction class.
  *
  * \date Started: 3/28/12
- * # $Revision:: 785                $: last committed revision
- * # $Date:: 2013-08-20 03:02:55 -0#$: date of last committed revision
- * # $Author:: mstrout              $: author of last committed revision
  *
  * \authors Michelle Strout and Joseph Strout
  *
- * Copyright (c) 2012, Colorado State University <br>
+ * Copyright (c) 2012, 2013 Colorado State University <br>
+ * Copyright (c) 2015, University of Arizona <br>
  * All rights reserved. <br>
  * See ../../COPYING for details. <br>
  */
@@ -3334,3 +3332,21 @@ TEST_F(SetRelationTest, SparseConstraintsSetTupleDecl){
     delete r;
     delete r_org;
 }
+
+#pragma mark IsFunction
+TEST_F(SetRelationTest, RelationIsFunction){
+    // Example from MoldynManyTests.  This should be a function.
+    Relation* r1 = new Relation("{[s,t,i]->[s,t]}");
+    EXPECT_EQ(r1->isFunction(), true);
+
+    // Example from MoldynManyTests.  And so should this.
+    /* FIXME, ok that is why the MoldynManyTests isn't working
+    Relation* r2 = new Relation("{[s,1,t,2]->[s,t,i]}");
+    EXPECT_EQ(r2->isFunction(), true);
+    */
+    
+    
+    delete r1;
+    //delete r2;
+}
+

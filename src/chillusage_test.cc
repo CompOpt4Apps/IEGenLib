@@ -37,6 +37,35 @@ class ChillUsageTest : public::testing::Test {
 };
 
 
+/*! Seeing if we can do dependence simplification for GS.
+*/
+TEST_F(ChillUsageTest, GSDepSimplification)
+{
+    // From CHILL, Anand creates the full dependence relation
+    // for the loop.
+    Relation* full_dep = new Relation("{ [i,j] -> [i',j'] : "
+                            "i<i' && i=col(j') and 0<=i and i<N and "
+                            "0<=i' and i'<N "
+                            "and idx(i) <= j and j<idx(i+1) "
+                            "and idx(i’) <= j' and j' < idx(i’+1) }");
+
+    EXPECT_EQ("{ [i, j] -> [i', j'] : i - col(j') = 0 && i >= 0 && i' >= 0 "
+              "&& j - idx(i) >= 0 && j' - idx(i) >= 0 && -i + i' - 1 >= 0 && "
+              "-i + N - 1 >= 0 && -j + idx(i + 1) - 1 >= 0 && -i' + N - 1 >= "
+              "0 && -j' + idx(i + 1) - 1 >= 0 }", 
+              full_dep->prettyPrintString() );
+   
+   /* MMS, 10/21/15, this doesn't work yet
+    // project out j
+    Relation* rel_2to1 = new Relation("{[x,y]->[x]}");
+    //Relation* rel_1to2 = new Relation("{[x]->[x,y]}");
+    EXPECT_EQ( "",
+               rel_2to1->Compose(full_dep)->prettyPrintString());
+*/
+
+    delete full_dep;
+}
+
 /*! Tests modifying the access relations for loop coalescing.
 */
 TEST_F(ChillUsageTest, LoopCoalescing)
