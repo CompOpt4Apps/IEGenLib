@@ -5,10 +5,9 @@
  *
  * To compile, execute the following command from the root of the project:
  *     cd ..
- *     make install     // or change the iegen/ subdir below to iegen-MACOSX/
- *                      //                                  or iegen-LINUX64/
+ *     make install VERBOSE=1   // NOTE the compiler being used, <C++COMP>
  *     cd src
- *     g++ -o cpp_api_example -I../iegen/include/iegenlib -L../iegen/lib -liegenlib cpp_api_example.cc
+ *     <C++COMP> -o cpp_api_example -I../iegen/include/iegenlib -L../iegen/lib -liegenlib -L../lib/installed/lib  -lisl -lgmp cpp_api_example.cc
  *
  * \date Date Started: 3/11/11
  *
