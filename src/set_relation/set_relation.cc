@@ -661,7 +661,7 @@ Conjunction::Compose(const Conjunction *rhs, int innerArity) const {
                             "inverse: lhsIsFunction:" << lhsIsFunction <<
                             " lhsIsFunctionInverse:" << lhsIsFunctionInverse <<
                             " rhsIsFunction:" << rhsIsFunction <<
-                            " rhsIsFunctionInvers:" <<rhsIsFunctionInverse;
+                            " rhsIsFunctionInverse:" <<rhsIsFunctionInverse;
         throw assert_exception(ss.str());
     }           
 
@@ -2534,6 +2534,37 @@ Relation* Relation::Inverse() const{
 
     return result;
 }
+
+/*! Determine whether all of the outputs can be determined as
+**  functions of the inputs.  Need to check for each conjunction.
+*/
+bool Relation::isFunction() const {
+    bool result = true;
+    
+    // Each conjunction must be a function
+    for (std::list<Conjunction*>::const_iterator i=mConjunctions.begin();
+        i != mConjunctions.end(); i++) {
+        result = result && (*i)->isFunction(inArity());
+    }
+    
+    return result;
+}
+
+/*! Determine whether all of the inputs can be determined as
+**  functions of the outputs.  Need to check for each conjunction.
+*/
+bool Relation::isFunctionInverse() const {
+    bool result = true;
+    
+    // Each conjunction must be a function
+    for (std::list<Conjunction*>::const_iterator i=mConjunctions.begin();
+        i != mConjunctions.end(); i++) {
+        result = result && (*i)->isFunctionInverse(inArity());
+    }
+    
+    return result;
+}
+
 
 /*! Return the expression that describes the value of the tupleLoc
 *   specified as a function of the tuple locations in the start

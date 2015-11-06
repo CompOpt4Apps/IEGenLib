@@ -274,9 +274,11 @@ public:
     Set* normalize() const;
     Set* normalizeR() const;  // BK:  was trying this out ... may not stay
 
-private:
+    // Want to use these in Relation::isFunction and other so must be public.
     bool isFunction(int inArity) const;
     bool isFunctionInverse(int inArity) const;
+
+private:
 
     /// Set of equality constraints.
     std::list<Exp*> mEqualities;
@@ -524,6 +526,7 @@ public:
     //! If replacing a constant with a variable ignores the substitution
     //! in that conjunction.
     //! Also modifies arity to match.
+    //! FIXME: MMS 10/21/15, why do we need this?
     void setTupleDecl( TupleDecl tuple_decl );
 
     //! Get our total arity (in plus out).
@@ -564,6 +567,12 @@ public:
     */
     Relation *Inverse() const;
 
+    /*! Determine whether all of the outputs can be determined as
+    **  functions of the inputs and/or vice versa.
+    */
+    bool isFunction() const;
+    bool isFunctionInverse() const;
+
     /*! Return the expression that describes the value of the tupleLoc
     *   specified as a function of the tuple locations in the start
     *   through the stop locations.
@@ -582,7 +591,6 @@ public:
     void normalize();
 
 private:
-
 
     int mInArity;
     int mOutArity;
