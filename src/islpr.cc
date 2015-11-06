@@ -134,22 +134,22 @@ int main(int argc, char **argv)
 {
 
 
-  string GS_F("[n,idx_I,idx_I1,idx_IP,idx_IP1,col_JP] -> \
-               { [i,j] -> [ip,jp] : i = col_JP and i < ip\
-                 and 0 <= i < n and idx_I <= j < idx_I1   \
-                 and 0 <= ip <= n and idx_IP <= jp < idx_IP1 }");
+  string GS_F("[n,idx_I,idx_I1,idx_IP,idx_IP1,col_JP] -> "
+               "{ [i,j] -> [ip,jp] : i = col_JP and i < ip "
+               "and 0 <= i < n and idx_I <= j < idx_I1 "
+               "and 0 <= ip <= n and idx_IP <= jp < idx_IP1 }");
 
 
 //  string simp = project_out (GS_F, 1);
 
   cout<<endl;
-  cout<<GS_F;
+//  cout<<GS_F;
   cout<<endl;
 
   string isl_str_F = getRelationStringFromISL(GS_F);  
 
   cout<<endl;
-  cout<<isl_str_F;
+//  cout<<isl_str_F;
   cout<<endl;
 
   std::map<string,string> ufsTOvar;
@@ -160,15 +160,43 @@ int main(int argc, char **argv)
 
 //  varTOufs.insert(std::pair<string,string>(var,ufs));
   varTOufs[var] = ufs;
-  cout<<endl<<varTOufs[var]<<endl;
+//  cout<<endl<<varTOufs[var]<<endl;
 
 
-  iegenlib::Relation* rel = new iegenlib::Relation(isl_str_F);
 
-//  std::cout << rel->prettyPrintString() << std::endl;
+
+
+  string GSF_F("[n] -> { [i,j] -> [ip,jp] : i = col(jp) and i < ip "
+               "and 0 <= i and i < n and idx(i) <= j and j < idx(i+1) "
+               "and 0 <= ip and ip <= n and idx(ip+1) <= jp and jp < idx(ip+1) }");
+
+  cout<<endl;
+//  cout<<GSF_F;
+  cout<<endl;
+
+  iegenlib::Relation* rel = new iegenlib::Relation(GSF_F);
+
+  std::cout << rel->prettyPrintString() << std::endl<< std::endl;
+
+//  iegenlib::Set* oset = new iegenlib::Set("col(jp)");
+//  std::cout << oset->prettyPrintString() << std::endl;
 
   return 0;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
