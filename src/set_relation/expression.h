@@ -131,6 +131,9 @@ public:
     //! f ( f_inv ( i ) ) changed to i.
     virtual Exp* collapseNestedInvertibleFunctions() const;
 
+//    virtual bool isUFSArg(int tvar){}
+//    virtual int tvloc(){}
+
 protected:
     typedef enum {TupleVar, SymConst, UFCall, ConstVal, TupleExp} termtype;
     inline termtype getTermType() const { return mTermType; }
@@ -281,6 +284,9 @@ public:
     //! Returns true if this term can be combined with the given term.
     bool factorMatches(const Term& other) const;
 
+    // Is tuple variable tvar an argument to this UFS?
+    bool isUFSArg(int tvar);
+
 private:
     void argsToStream(std::stringstream& ss) const;
     void argsToStreamPrettyPrint(const TupleDecl & aTupleDecl,
@@ -335,6 +341,9 @@ public:
     //! Returns true if the Term is a const
     bool isConst() const { return false; }
 
+    //! Returns true if the Term is a TupleVarTerm
+//    virtual bool isTupleVar() const { return true; }
+
     //--------------------- methods for the use in expression
 
     //! Returns true if this term has the same factor (i.e. everything
@@ -344,6 +353,8 @@ public:
     //! Remap our location according to the given map vector.
     //! See Exp::remapTupleVars for more detail.
     void remapLocation(const std::vector<int>& oldToNewLocs);
+
+    int tvloc(){return mLocation;}
 
 private:
     int mLocation;
@@ -680,6 +691,10 @@ public:
     //! Assumes all VarTerm's are symbolic constants.
     StringIterator* getSymbolIterator() const;
 
+
+    // Is tuple variable tvar arggument of an UFS in this EX?
+    // isArg: whither EX is argument to an UFS
+    bool isUFSArg(int tvar, bool isArg);
 
 protected:
 

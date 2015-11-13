@@ -1642,6 +1642,225 @@ Set* Conjunction::normalize() const {
     return retval2;  
 }
 
+//*****************************************************************************
+
+bool Conjunction::isUFSArg(int tvar)
+{
+    bool is = false;
+    // Iterate over the equality expressions.
+    for (std::list<Exp*>::iterator i=mEqualities.begin();
+                i != mEqualities.end(); i++) {
+        is = (*i)->isUFSArg(tvar,false);
+        if (is)  return is;
+    }
+ 
+     // Iterate over the inequality expressions.
+    for (std::list<Exp*>::iterator i=mInequalities.begin();
+                i != mInequalities.end(); i++) {
+        is = (*i)->isUFSArg(tvar, false);
+        if (is)  return is;
+    }
+
+  return is;
+}
+
+// Uses isl library to project out a tuple variable from an affine set
+std::string ISL_project_out (std::string relstr, unsigned pos)
+{
+  // Get an isl context
+  isl_ctx *ctx;
+  ctx = isl_ctx_alloc();
+  
+  // Get an isl printer and associate to an isl context
+  isl_printer * ip = NULL;
+  ip = isl_printer_to_str(ctx);
+  
+  // load Relation r into ISL map
+  isl_set* iset = NULL;
+  iset = isl_set_read_from_str(ctx, relstr.c_str());
+
+  // Project out tuple variable No. pos
+  iset = isl_set_project_out(iset, isl_dim_out, pos, 1);
+
+  // get string back from ISL map
+  char * cstr;
+  isl_printer_set_output_format(ip , ISL_FORMAT_ISL);
+  isl_printer_print_set(ip ,iset);
+  cstr=isl_printer_get_str(ip);
+  std::string stringFromISL = cstr;
+  
+  // clean-up
+  isl_printer_flush(ip);
+  isl_printer_free(ip);
+  free(cstr);
+  isl_set_free(iset);
+  iset= NULL;
+  isl_ctx_free(ctx); 
+
+  return stringFromISL;
+}
+
+/* Mahdi Soltan Mohammadi
+     Projects out tuple varrable No. tvar
+     tvar is calculated based on total ariety (in+out) starting from 0.
+     Consequently, to project out jp from R: tvar = 2
+     R = {[i,j,k] -> [ip,jp,kp] : ...}
+*/
+void Conjunction::project_out(int tvar)
+{
+    /////////////////////
+    // (step 0) Group together all equality expressions that 
+    // are parts of the same UFCallTerm, IOW i=f(k)[0] and 
+    // j=f(k)[1] should become (i,j) = f(k).
+    // FIXME: what about inequalities?
+
+    Conjunction* selfcopy = new Conjunction(*this);
+    TupleDecl origTupleDecl = selfcopy->getTupleDecl(); // for (step 3)
+    selfcopy->groupIndexedUFCalls();
+
+ 
+    /////////////////////
+    // (step 1)
+    // Replace all uninterpreted function calls with variables
+    // and create a new affine conjunction that is a superset of the
+    // current conjunction.  UFCallMapAndBounds object will
+    // maintain the mapping of temporary variables to UF calls.
+    UFCallMapAndBounds ufcallmap(getTupleDecl());
+    selfcopy->ufCallsToTempVars( ufcallmap );
+
+    Set* constraints = ufcallmap.cloneConstraints();
+
+//std::cout << "constraints = " << constraints->toString() << std::endl;    
+//std::cout << "ufcallmap = " << ufcallmap.toString() << std::endl;
+
+    // update the tuple declaration in selfcopy to match what is
+    // in the constraints
+    selfcopy->setTupleDecl( constraints->getTupleDecl() );
+    
+    // Also need to include all the constraints in selfcopy were UF calls
+    // were replaced by temporaries.
+    Set* selfcopyset = new Set(selfcopy->getTupleDecl());
+    selfcopyset->addConjunction(selfcopy);
+//std::cout << "selfcopyset = " << selfcopyset->toString() << std::endl;
+
+    Set* retval1 = constraints->Intersect(selfcopyset);
+//std::cout << "after intersect = , retval = " << retval1->toString() << std::endl;
+    
+    //////////////////////
+    // (step 2) 
+    // Send the result of step 1 to ISL and back.
+    
+    // (a) get string from result of step 1
+    std::string fromStep1 = retval1->toISLString();
+//std::cout << "fromStep1 = " << fromStep1 << std::endl;
+ 
+    // (b) send through ISL to project out desired tuple variable
+    string fromISL = ISL_project_out(fromStep1, tvar);
+//std::cout<<std::endl<<std::endl<<"from isl:  "<<fromISL<<std::endl<<std::endl;
+
+    // (c) convert back to a Set
+    Set* retval2 = new Set(fromISL);
+//std::cout << "retval2 = " << retval2->toString() << std::endl;
+
+    delete retval1;
+    
+    // Then in (step 3) we will need to use substitute to replace extra
+    // tuple vars with UF calls by making queries to ufcallmap.  Will need
+    // to call setTupleDecl on retval to remove those extra tuple vars that
+    // acted as temporaries to replace uf calls.  Then return retval Set.
+    /////////////////////
+    // (step 3)
+    
+    // FIXME: just assuming one conjunction right now.
+    if (retval2->mConjunctions.size()!=1) {
+        throw assert_exception("Conjunction::normalize: "
+            "currently only handle one Conjunction fromISL");
+    }
+    Conjunction* conj = retval2->mConjunctions.front();
+    
+    // Determine starting index of extra tuple vars
+    int numTempVars = ufcallmap.numTempVars();
+    int expandedArity = conj->arity();
+    int indexStart = expandedArity - numTempVars;
+//std::cout<<std::endl<<"St Idx = "<<indexStart<<"   Ex Ar = "<<expandedArity<<"   No Tm = "<<numTempVars<<std::endl<<std::endl;
+
+
+    SubMap affineSubstMap;
+    // Taking into account projection effect on tuple variable order:
+    // tv_n -> tv_n-1;  tv_n-1 -> tv_n-2; ... tv_tvar+1 -> tv_tvar
+    for (int i = tvar; i < expandedArity; i++) {
+
+    	TupleVarTerm* tvTerm = new TupleVarTerm(i+1);
+    	TupleVarTerm* tvTermJ = new TupleVarTerm(i);
+        Exp * tvExp = new Exp();
+        tvExp->addTerm(tvTermJ);
+
+        // Add this equivalence to affineSubstMap
+        affineSubstMap.insertPair(tvTerm,tvExp); // takes ownership of tvTerm and tvExp
+    }
+//std::cout << "AffineSubstMap = " << affineSubstMap.toString() << std::endl;      
+    	    
+    // Build up a map of non-affine information
+    //       -- from the affine SubMap, and 
+    //       -- from the ufcallmap (holding ufcalls/tempvars that
+    //           we substituted back in (step 1)
+    //
+    SubMap nonAffineSubstMap;
+
+    for (int i = indexStart; i < expandedArity; i++) {
+
+      // considering projected out variable
+      int j;
+      if (i >= tvar) j = i+1;
+      else           j = i;
+
+      TupleVarTerm* tvTerm = new TupleVarTerm(i);
+      UFCallTerm* origUFCall = ufcallmap.cloneUFCall(j);
+      Exp* tvExp = new Exp();
+      tvExp->addTerm(origUFCall);
+		 
+      // substitute affine results into original UFCall
+      tvExp->substitute(affineSubstMap);
+		
+      // substitute non-affine results into original UFCall
+      tvExp->substitute(nonAffineSubstMap);
+
+      nonAffineSubstMap.insertPair(tvTerm, tvExp);
+    }
+	
+//std::cout<<std::endl<<"NONAf sub = "<<nonAffineSubstMap.toString()<<std::endl<<std::endl;
+//std::cout << "Before subtitution = " << retval2->toString() << std::endl;	
+
+    // SubstituteInConstraints using non-affine SubMap
+    retval2->substituteInConstraints(nonAffineSubstMap);
+
+//std::cout << "After  subtitution = " << retval2->prettyPrintString() << std::endl;
+    
+   // Remove extra tuple vars (since they have been "substituted", and 
+   // we have removed one tuple variable
+   TupleDecl redTupleDecl(origTupleDecl.size()-1);
+   for (int i = 0; i < int(redTupleDecl.size()) ; i++) {
+      // considering projected out variable
+      int j;
+      if (i >= tvar) j = i+1;
+      else           j = i;
+     redTupleDecl.setTupleElem(i , origTupleDecl.elemVarString(j));
+   }
+//std::cout<< std::endl << "tuple shrink = " << redTupleDecl.toString() << std::endl;
+
+    retval2->setTupleDecl(redTupleDecl);
+    
+//std::cout << "After tuple shrink = " << retval2->prettyPrintString() << std::endl;
+
+    *this = *(retval2->mConjunctions.front());
+
+    delete constraints;
+    delete selfcopy;
+    delete retval2;
+}
+
+//***************************************************************************************
+
 Set* Conjunction::normalizeR() const
 {
     /////////////////////
@@ -2119,6 +2338,25 @@ void SparseConstraints::remapTupleVars(const std::vector<int>& oldToNewLocs) {
     }
 }
 
+
+
+bool SparseConstraints::project_out(int tvar)
+{
+
+    if (isUFSArg(tvar)){
+      return false;
+    }
+
+    for (std::list<Conjunction*>::const_iterator i=mConjunctions.begin();
+                i != mConjunctions.end(); i++) {
+        Conjunction* conjunction = dynamic_cast<Conjunction*>((*i));
+
+        conjunction->project_out(tvar);
+    }
+
+    return true;
+}
+
 /******************************************************************************/
 #pragma mark -
 
@@ -2277,6 +2515,31 @@ Set* Set::boundTupleExp(const TupleExpTerm& tuple_exp) const {
     }
 
     return result;
+}
+
+
+
+/* Mahdi Soltan Mohammadi
+     Projects out tuple varrable No. tvar
+     tvar is calculated based on total ariety (in+out) starting from 0.
+     Consequently, to project out jp from S: tvar = 5
+     S= {[i,j,k,ip,jp,kp] : ...}
+*/
+bool Set::project_out(int tvar)
+{
+
+    if (isUFSArg(tvar)){
+      return false;
+    }
+
+    for (std::list<Conjunction*>::const_iterator i=mConjunctions.begin();
+                i != mConjunctions.end(); i++) {
+        Conjunction* conjunction = dynamic_cast<Conjunction*>((*i));
+
+        conjunction->project_out(tvar);
+    }
+
+    return true;
 }
 
 
@@ -2610,6 +2873,58 @@ void Relation::normalize() {
     
     // FIXME: will need more ... See SparseConstraints::normalize()
 }
+
+/* Mahdi Soltan Mohammadi
+   Is tuple variable tvar argument to an UFS? 
+*/
+bool SparseConstraints::isUFSArg(int tvar)
+{
+  bool is = false;
+
+    for (std::list<Conjunction*>::const_iterator i=mConjunctions.begin();
+                i != mConjunctions.end(); i++) {
+
+    Conjunction* conjunction = dynamic_cast<Conjunction*>((*i));
+    is = (conjunction->isUFSArg(tvar));
+    if ( is )  return is;
+}
+
+  return is;
+}
+
+
+/* Mahdi Soltan Mohammadi
+     Projects out tuple varrable No. tvar
+     tvar is calculated based on total ariety (in+out) starting from 0.
+     Consequently, to project out jp from R: tvar = 5
+     R = {[i,j,k] -> [ip,jp,kp] : ...}
+*/
+bool Relation::project_out(int tvar)
+{
+
+    if (isUFSArg(tvar)){
+      return false;
+    }
+
+    int ia = mInArity;
+    int oa = mOutArity;
+    if (tvar < ia) ia--;
+    else           oa--;
+
+    mInArity = ia;
+    mOutArity = oa;    
+
+    for (std::list<Conjunction*>::const_iterator i=mConjunctions.begin();
+                i != mConjunctions.end(); i++) {
+        Conjunction* conjunction = dynamic_cast<Conjunction*>((*i));
+
+        conjunction->project_out(tvar);
+        conjunction->setinarity(ia);
+    }
+
+    return true;
+}
+
 
 /******************************************************************************/
 

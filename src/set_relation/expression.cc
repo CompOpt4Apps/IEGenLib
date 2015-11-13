@@ -603,6 +603,23 @@ Term* UFCallTerm::ufCallsToTempVars(UFCallMapAndBounds & ufcallmap) const {
     return retval;
 }
 
+// Is tuple variable tvar an argument to this UFS?
+bool UFCallTerm::isUFSArg(int tvar)
+{
+  bool is = false;
+
+  for (std::vector<Exp*>::const_iterator i=mArgs.begin(); 
+          i != mArgs.end(); ++i) {
+
+    // These expressions are argument to a UFS  = true
+    is = (*i)->isUFSArg(tvar, true);
+    
+    if( is )  return is;
+  }
+
+  return is;
+}
+
 
 #pragma mark -
 /****************************************************************************/
@@ -658,6 +675,7 @@ std::string TupleVarTerm::prettyPrintString(
     ss << aTupleDecl.elemToString(mLocation);
     if(aTupleDecl.elemIsConst(mLocation))
     {
+std::cout<<std::endl<<" c loc =  "<<mLocation<<"  el =  "<<aTupleDecl.elemToString(mLocation)<<std::endl;
         throw assert_exception("TupleVarTerm::prettyPrintString: "
             "tuple var location declaration for tuple var term should "
             "not be constant");
@@ -1790,5 +1808,25 @@ StringIterator* Exp::getSymbolIterator() const {
     return new StringIterator( symbolSet ); 
 }
 
+bool Exp::isUFSArg(int tvar, bool isArg)
+{
+    bool is = false;
+    // Loop through each term 
+    for (std::list<Term*>::const_iterator i=mTerms.begin();
+                i != mTerms.end(); i++) {
+        if ((*i)->isUFCall()) {
+            UFCallTerm *callTerm = dynamic_cast<UFCallTerm*>((*i));
+            is = callTerm->isUFSArg(tvar);
+            if ( is )  return is;
+        }
+        else if (isArg && (*i)->type() == string("TupleVarTerm"))
+        {
+            TupleVarTerm *callTerm = dynamic_cast<TupleVarTerm*>((*i));
+            if (callTerm->tvloc() == tvar) return true;
+        }
+    }
+
+  return is;
+}
 
 }//end namespace iegenlib
