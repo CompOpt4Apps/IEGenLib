@@ -484,8 +484,8 @@ TEST_F(NormalizationTest, PROJECT_OUT) {
      }
    }
 
-   std::cout << std::endl << "r2.pr = " << r2->prettyPrintString() << std::endl;
-   std::cout << std::endl << "s2.pr = " << s2->prettyPrintString() << std::endl;
+//   std::cout << std::endl << "r2.pr = " << r2->prettyPrintString() << std::endl;
+//   std::cout << std::endl << "s2.pr = " << s2->prettyPrintString() << std::endl;
 
 	delete r1;
 	delete r2;
