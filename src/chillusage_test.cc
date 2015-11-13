@@ -35,6 +35,59 @@ class ChillUsageTest : public::testing::Test {
     virtual void SetUp() {}
     virtual void TearDown() {}
 };
+/*
+{ [i] -> [i'] | exists j';
+  i<i' /\ i=col(j')
+  /\ 0 <= i,i' < N
+  /\ idx(i) < idx(i+1)
+  /\ idx(i’) <= j' < idx(i’+1) }
+UNION
+{ [i'] -> [i] | exists j';
+  i'<i /\ i=col(j')
+  /\ 0 <= i,i' < N
+  /\ idx(i) < idx(i+1)
+  /\ idx(i’) <= j' < idx(i’+1) }
+*/
+
+TEST_F(ChillUsageTest, GS)
+{
+// idx(i) = idx_I   idx(i+1) = idx_I1    idx(ip) = idx_IP    idx(i'+1) = idx_IP1      col(jp) = col_JP
+
+    string F("[n,idx_I,idx_I1,idx_IP,idx_IP1,col_JP] -> { [i] -> [ip] : exists j,jp : i = col_JP and i < ip and 0 <= i < n and idx_I <= j < idx_I1 and 0 <= ip <= n and idx_IP <= jp < idx_IP1 }");
+    string A("[n,idx_I,idx_I1,idx_IP,idx_IP1,col_JP] -> { [ip] -> [i] : exists j,jp : i = col_JP and ip < i and 0 <= i < n and idx_I <= j < idx_I1 and 0 <= ip <= n and idx_IP <= jp < idx_IP1 }");
+
+//    string res = getRelationStringFromISL(F);
+//    std::cout<<res;
+
+    // Get an isl context
+    isl_ctx *ctx;
+    ctx = isl_ctx_alloc();
+    
+    // Get an isl printer and associate to an isl context
+    isl_printer * ip = NULL;
+    ip = isl_printer_to_str(ctx);
+    
+    // load Relation r into ISL map
+    isl_map* imap = NULL;
+    imap = isl_map_read_from_str(ctx, F.c_str());
+
+    // get string back from ISL map
+    char * cstr;
+    isl_printer_set_output_format(ip , ISL_FORMAT_ISL);
+    isl_printer_print_map(ip ,imap);
+    cstr=isl_printer_get_str(ip);
+    string stringFromISL = cstr;
+
+    std::cout<<stringFromISL;
+    
+    // clean-up
+    isl_printer_flush(ip);
+    isl_printer_free(ip);
+    free(cstr);
+    isl_map_free(imap);
+    imap= NULL;
+    isl_ctx_free(ctx); 
+}
 
 
 /*! Seeing if we can do dependence simplification for GS.

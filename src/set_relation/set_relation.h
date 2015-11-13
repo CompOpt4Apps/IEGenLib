@@ -163,6 +163,9 @@ public:
     int arity() const { return mTupleDecl.size(); }
     //! Get inarity, for use with relations
     int inarity() const { return mInArity; }
+
+    //! Set inarity, for use with relations
+    void setinarity(int inarity) { mInArity = inarity; }
     
     //! Returns true if the conjunction has at least one equality or inequality
     //! constraints.  If it contains none then this Conjunction is just
@@ -273,6 +276,16 @@ public:
     */
     Set* normalize() const;
     Set* normalizeR() const;  // BK:  was trying this out ... may not stay
+
+    /* Mahdi Soltan Mohammadi
+       Is tuple variable tvar argument to a UFS? 
+    */
+    bool isUFSArg(int tvar);
+
+    /* Mahdi Soltan Mohammadi
+       Projects out tuple varrable No. tvar
+    */
+    void project_out(int tvar);
 
     // Want to use these in Relation::isFunction and other so must be public.
     bool isFunction(int inArity) const;
@@ -403,6 +416,16 @@ public:
     */
     void remapTupleVars(const std::vector<int>& oldToNewLocs);
 
+    /* Mahdi Soltan Mohammadi
+       Is tuple variable tvar argument to an UFS? 
+    */
+    bool isUFSArg(int tvar);
+
+    /* Mahdi Soltan Mohammadi
+       Projects out tuple varrable No. tvar
+    */
+    virtual bool project_out(int tvar);
+
 
 // FIXME: what methods should we have to iterate over conjunctions so
 // this can go back to protected?
@@ -482,6 +505,12 @@ public:
     
     //void normalize();
 
+    /* Mahdi Soltan Mohammadi
+       Projects out tuple varrable No. tvar
+    */
+    bool project_out(int tvar);
+
+
 private:
     int mArity;
 };
@@ -518,8 +547,9 @@ public:
     //! Convert to a human-readable string (substitute in tuple vars).
     std::string prettyPrintString() const;
 
-    //! Get our in arity.
+    //! Get our in/out arity.
     int inArity() const { return mInArity; }
+    int outArity() const { return mOutArity; }
 
     //! For all conjunctions, sets them to the given tuple declaration.
     //! If there are some constants that don't agree then throws exception.
@@ -589,6 +619,17 @@ public:
     // BK: testing this out as a possible solution
     //     Not ready for primetime yet
     void normalize();
+
+
+    /* Mahdi Soltan Mohammadi
+       Is tuple variable tvar argument to an UFS? 
+    */
+//    bool isUFSArg(int tvar);
+
+    /* Mahdi Soltan Mohammadi
+       Projects out tuple varrable No. tvar
+    */
+    bool project_out(int tvar);
 
 private:
 
