@@ -4,18 +4,17 @@
  * \brief Implementations of the Set and Relation classes.
  *
  * \date Started: 3/28/12
- * # $Revision:: 805                $: last committed revision
- * # $Date:: 2013-09-09 03:27:10 -0#$: date of last committed revision
- * # $Author:: mstrout              $: author of last committed revision
  *
  * \authors Michelle Strout and Joe Strout
  *
  * Copyright (c) 2012, Colorado State University <br>
+ * Copyright (c) 2015, University of Arizona <br>
  * All rights reserved. <br>
  * See ../../COPYING for details. <br>
  */
 
 #include "set_relation.h"
+#include "Visitor.h"
 
 namespace iegenlib{
 
@@ -1762,6 +1761,8 @@ Set* Conjunction::normalizeR() const
 }
 
 
+
+
 /******************************************************************************/
 #pragma mark -
 
@@ -2612,5 +2613,47 @@ void Relation::normalize() {
 }
 
 /******************************************************************************/
+
+/******************************************************************************/
+#pragma mark -
+/****************** Visitor Design Pattern Code *******************************/
+
+
+//! Visitor design pattern, see Visitor.h for usage
+void Conjunction::acceptVisitor(Visitor *v) {
+    std::list<Exp*>::iterator expIter = mEqualities.begin();
+    while (expIter != mEqualities.end()) {
+        (*expIter)->acceptVisitor(v);
+        expIter++;
+    }
+    expIter=mInequalities.begin();
+    while (expIter != mInequalities.end()) {
+        (*expIter)->acceptVisitor(v);
+        expIter++;
+    }
+    v->visitConjunction(this);
+}
+
+//! Visitor design pattern, see Visitor.h for usage
+void SparseConstraints::acceptVisitor(Visitor *v) {
+    for (std::list<Conjunction*>::iterator i=mConjunctions.begin();
+                i != mConjunctions.end(); i++) {
+        (*i)->acceptVisitor(v);
+    }
+    v->visitSparseConstraints(this);
+}
+
+//! Visitor design pattern, see Visitor.h for usage
+void Set::acceptVisitor(Visitor *v) {
+    this->SparseConstraints::acceptVisitor(v);
+    v->visitSet(this);
+}
+
+//! Visitor design pattern, see Visitor.h for usage
+void Relation::acceptVisitor(Visitor *v) {
+    SparseConstraints::acceptVisitor(v);
+    v->visitRelation(this);
+}
+
 
 }//end namespace iegenlib

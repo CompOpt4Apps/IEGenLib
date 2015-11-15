@@ -7,13 +7,11 @@
  * uninterpreted function calls as terms allowed.
  *
  * \date Started: 3/18/2012
- * # $Revision:: 805                $: last committed revision
- * # $Date:: 2013-09-09 03:27:10 -0#$: date of last committed revision
- * # $Author:: mstrout              $: author of last committed revision
  *
  * \authors Michelle Strout and Joe Strout
  *
  * Copyright (c) 2012, Colorado State University <br>
+ * Copyright (c) 2015, University of Arizona <br>
  * All rights reserved. <br>
  * See ../../COPYING for details. <br>
  */
@@ -31,6 +29,7 @@
 #include "environment.h"
 #include "TupleDecl.h"
 #include "SubMap.h"
+class Visitor;
 
 #include <util/util.h>
 
@@ -130,6 +129,9 @@ public:
     //! Return a new Exp with all nested functions such as
     //! f ( f_inv ( i ) ) changed to i.
     virtual Exp* collapseNestedInvertibleFunctions() const;
+    
+    //! Visitor design pattern, see Visitor.h for usage
+    virtual void acceptVisitor(Visitor *v);
 
 protected:
     typedef enum {TupleVar, SymConst, UFCall, ConstVal, TupleExp} termtype;
@@ -280,6 +282,10 @@ public:
 
     //! Returns true if this term can be combined with the given term.
     bool factorMatches(const Term& other) const;
+    
+    //! Visitor design pattern, see Visitor.h for usage
+    void acceptVisitor(Visitor *v);
+
 
 private:
     void argsToStream(std::stringstream& ss) const;
@@ -345,6 +351,9 @@ public:
     //! See Exp::remapTupleVars for more detail.
     void remapLocation(const std::vector<int>& oldToNewLocs);
 
+    //! Visitor design pattern, see Visitor.h for usage
+    void acceptVisitor(Visitor *v);
+
 private:
     int mLocation;
 };
@@ -401,6 +410,8 @@ public:
     //! Returns true if this term can be combined with the given term.
     bool factorMatches(const Term& other) const;
 
+    //! Visitor design pattern, see Visitor.h for usage
+    void acceptVisitor(Visitor *v);
 
 private:
     std::string mSymbol;
@@ -503,6 +514,8 @@ public:
     //! Returns true if this term can be combined with the given term.
     bool factorMatches(const Term& other) const;
 
+    //! Visitor design pattern, see Visitor.h for usage
+    void acceptVisitor(Visitor *v);
 
 private:
     unsigned int mSize;
@@ -680,6 +693,8 @@ public:
     //! Assumes all VarTerm's are symbolic constants.
     StringIterator* getSymbolIterator() const;
 
+    //! Visitor design pattern, see Visitor.h for usage
+    void acceptVisitor(Visitor *v);
 
 protected:
 

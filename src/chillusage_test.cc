@@ -4,13 +4,11 @@
  * \brief Tests the part of IEGenLib interface that will be needed in CHILL.
  *
  * \date Started: 8/16/13
- * # $Revision:: 391                $: last committed revision
- * # $Date:: 5/30/12                $: date of last committed revision
- * # $Author:: heim                 $: author of last committed revision
  *
  * \authors Michelle Strout
  *
  * Copyright (c) 2013, Colorado State University <br>
+ * Copyright (c) 2015, University of Arizona <br>
  * All rights reserved. <br>
  * See ../../COPYING for details. <br>
  */
