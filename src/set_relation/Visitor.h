@@ -4,6 +4,8 @@
  * \brief Visitor base class for expressions.h and set_relation.h.
  *
  * Usage: See VisitorDebugTest in set_relation_test for an example.
+ *        You do not have to overload every visit method below.
+ *        Just overload those that your feature needs to do something at.
  *
  * \authors Michelle Strout
  *
