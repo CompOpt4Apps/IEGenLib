@@ -265,6 +265,11 @@ public:
     */
     //Set* createAffineSuperSet(UFCallMapAndBounds & ufcallmap);
     void ufCallsToTempVars(UFCallMapAndBounds & ufcallmap);
+    
+    /*! Helper for addUFConstraints.
+    */
+    void addUFConstraintsHelper(std::string uf1str, 
+                                std::string opstr, std::string uf2str);
 
     /*! Returns a normalized Set that represents this Conjunct.
     **  It has to be a set because bounds on parameters and UF calls

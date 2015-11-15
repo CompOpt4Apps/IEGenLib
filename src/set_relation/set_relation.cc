@@ -1761,6 +1761,30 @@ Set* Conjunction::normalizeR() const
 
 }
 
+// FIXME?: Right now doing this all within an individual conjunct.
+// We need to put in the same constraints across conjuncts to be more
+// general.
+void Conjunction::addUFConstraintsHelper(std::string uf1str, 
+                                         std::string opstr, std::string uf2str){
+
+
+
+/*
+    for (std::list<Exp*>::iterator i=mEqualities.begin();
+                i != mEqualities.end(); i++) {
+        delete (*i);
+    }
+    mEqualities.clear();
+
+    for (std::list<Exp*>::iterator i=mInequalities.begin();
+                i != mInequalities.end(); i++) {
+        delete (*i);
+    }
+    mInequalities.clear();
+*/
+}
+
+
 
 /******************************************************************************/
 #pragma mark -
@@ -2119,6 +2143,15 @@ void SparseConstraints::remapTupleVars(const std::vector<int>& oldToNewLocs) {
     }
 }
 
+void SparseConstraints::addUFConstraintsHelper(std::string uf1str, 
+                            std::string opstr, std::string uf2str) {
+    for (std::list<Conjunction*>::iterator iter=mConjunctions.begin();
+            iter != mConjunctions.end(); iter++) {
+        (*iter)->addUFConstraintsHelper(uf1str,opstr,uf2str);
+    }
+}
+
+
 /******************************************************************************/
 #pragma mark -
 
@@ -2281,8 +2314,10 @@ Set* Set::boundTupleExp(const TupleExpTerm& tuple_exp) const {
 
 Set* Set::addUFConstraints(std::string uf1str, 
                            std::string opstr, std::string uf2str) {
-    // FIXME: Not implemented yet.
-    return new Set(*this);
+    
+    Set* retval = new Set(*this);
+    retval->addUFConstraintsHelper(uf1str,opstr,uf2str);
+    return retval;
 }
 
 /******************************************************************************/
@@ -2618,8 +2653,9 @@ void Relation::normalize() {
 
 Relation* Relation::addUFConstraints(std::string uf1str, 
                                      std::string opstr, std::string uf2str) {
-    // FIXME: Not implemented yet.
-    return new Relation(*this);
+    Relation* retval = new Relation(*this);
+    retval->addUFConstraintsHelper(uf1str,opstr,uf2str);
+    return retval;
 }
             
 
