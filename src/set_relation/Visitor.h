@@ -3,7 +3,7 @@
  *
  * \brief Visitor base class for expressions.h and set_relation.h.
  *
- * Usage:
+ * Usage: See VisitorDebugTest in set_relation_test for an example.
  *
  * \authors Michelle Strout
  *
@@ -22,18 +22,18 @@ class Visitor {
 
   public:
     // Classes in expression.h
-    virtual void visitTerm(iegenlib::Term * t)=0;
-    virtual void visitUFCallTerm(iegenlib::UFCallTerm * t)=0;
-    virtual void visitTupleVarTerm(iegenlib::TupleVarTerm * t)=0;
-    virtual void visitVarTerm(iegenlib::VarTerm * t)=0;
-    virtual void visitTupleExpTerm(iegenlib::TupleExpTerm * t)=0;
-    virtual void visitExp(iegenlib::Exp * e)=0;
+    virtual void visitTerm(iegenlib::Term * t) {}
+    virtual void visitUFCallTerm(iegenlib::UFCallTerm * t) {}
+    virtual void visitTupleVarTerm(iegenlib::TupleVarTerm * t) {}
+    virtual void visitVarTerm(iegenlib::VarTerm * t) {}
+    virtual void visitTupleExpTerm(iegenlib::TupleExpTerm * t) {}
+    virtual void visitExp(iegenlib::Exp * e) {}
    
     // Classes in set_relation.h
-    virtual void visitConjunction(iegenlib::Conjunction * c)=0;
-    virtual void visitSparseConstraints(iegenlib::SparseConstraints * sc)=0;
-    virtual void visitSet(iegenlib::Set * s)=0;
-    virtual void visitRelation(iegenlib::Relation * r)=0;
+    virtual void visitConjunction(iegenlib::Conjunction * c) {}
+    virtual void visitSparseConstraints(iegenlib::SparseConstraints * sc) {}
+    virtual void visitSet(iegenlib::Set * s) {}
+    virtual void visitRelation(iegenlib::Relation * r) {}
    
 };
 
