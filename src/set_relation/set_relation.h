@@ -412,6 +412,24 @@ public:
 // this can go back to protected?
 //protected:
     std::list<Conjunction*> mConjunctions;
+
+
+  protected:
+    /*! For adding constraints involving uninterpreted functions.
+    **  For example, if forall e, index(e)<=diagptr(e), then
+    **  this method will find all instances of index() and diagptr()
+    **  in the current constraints and using the current parameters
+    **  add in the provided constraint.  Let's say that diagptr is
+    **  called with diagptr(foo) and diagptr(x+1) and index is called
+    **  with index(y).  Then the following constraints will be added
+    **      index(foo)<=diagptr(foo)
+    **      index(x+1)<=diagptr(x+1)
+    **      index(y)<=diagptr(y)
+    **  Makes changes to the current SparseConstraints object.
+    */
+    void addUFConstraintsHelper(std::string uf1str, 
+                                std::string opstr, std::string uf2str);
+
 };
 
 /*!
@@ -483,6 +501,20 @@ public:
     ** \return Set will contain all bounds on expressions in tuple expression.
     */
     Set* boundTupleExp(const TupleExpTerm& tuple_exp) const; 
+    
+    /*! Will create constraints uf1str(e) opstr uf2str(e) for all
+    **  actual parameters that occur for those UFs. 
+    ** See SparseConstraints::addUFConstraintsHelper for more docs.
+    **
+    ** \param uf1str name of first uninterpreted function
+    ** \param opstr  operator that describes relationship between UFs
+    ** \param uf2str name of second uninterpreted function.
+    **
+    ** \return Set will contain new constraints and will be owned by caller
+    */
+    Set* addUFConstraints(std::string uf1str, 
+                          std::string opstr, std::string uf2str);
+    
     
     //void normalize();
     
@@ -590,6 +622,21 @@ public:
     //! addConjunction that checks the Conjunction and Relation arities match
     //! \param adoptedconjuction (adopted)
     void addConjunction(Conjunction *adoptedConjunction);
+    
+    /*! Will create constraints uf1str(e) opstr uf2str(e) for all
+    **  actual parameters that occur for those UFs. 
+    ** See SparseConstraints::addUFConstraintsHelper for more docs.
+    **
+    ** \param uf1str name of first uninterpreted function
+    ** \param opstr  operator that describes relationship between UFs
+    ** \param uf2str name of second uninterpreted function.
+    **
+    ** \return Set will contain new constraints and will be owned by caller
+    */
+    Relation* addUFConstraints(std::string uf1str, 
+                               std::string opstr, std::string uf2str);
+    
+    
 
     // Iterate over all conjunctions and normalize each conjunction.
     // Then call cleanup to resort things?
