@@ -4,9 +4,6 @@
  * \brief Tests the part of IEGenLib interface that will be needed in CHILL.
  *
  * \date Started: 8/16/13
- * # $Revision:: 391                $: last committed revision
- * # $Date:: 5/30/12                $: date of last committed revision
- * # $Author:: heim                 $: author of last committed revision
  *
  * \authors Michelle Strout
  *
@@ -207,4 +204,24 @@ TEST_F(ChillUsageTest, LoopCoalescingKequalJ)
     delete r2_v1_exp;
     delete T_coalesce;
     delete T_coalesce_inv;
+}
+
+/*! Tests adding constraints between UFCalls such as
+    forall e, index(e) <= diagptr(e).
+*/
+TEST_F(ChillUsageTest, AddUFConstraints)
+{
+    Relation* r1 = new Relation("{[i,j]->[k] : k=col(j) && 0<=i && i<N"
+                                "&& index(i)<=j && j<index(i+1)}");
+    Relation* r1add = r1->addUFConstraints("index", "<=", "diagptr");
+    Relation* expect1 = new Relation("{[i,j]->[k] : k=col(j) && 0<=i && i<N"
+                                     "&& index(i)<=j && j<index(i+1)"
+                                     "&& index(i)<=diagptr(i)"
+                                     "&& index(i+1)<=diagptr(i+1)}");
+
+    //EXPECT_EQ(expect1->prettyPrintString(), r1add->prettyPrintString());
+    
+    delete r1;
+    delete r1add;
+    delete expect1;
 }

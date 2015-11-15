@@ -2279,6 +2279,11 @@ Set* Set::boundTupleExp(const TupleExpTerm& tuple_exp) const {
     return result;
 }
 
+Set* Set::addUFConstraints(std::string uf1str, 
+                           std::string opstr, std::string uf2str) {
+    // FIXME: Not implemented yet.
+    return new Set(*this);
+}
 
 /******************************************************************************/
 #pragma mark -
@@ -2610,6 +2615,13 @@ void Relation::normalize() {
     
     // FIXME: will need more ... See SparseConstraints::normalize()
 }
+
+Relation* Relation::addUFConstraints(std::string uf1str, 
+                                     std::string opstr, std::string uf2str) {
+    // FIXME: Not implemented yet.
+    return new Relation(*this);
+}
+            
 
 /******************************************************************************/
 
