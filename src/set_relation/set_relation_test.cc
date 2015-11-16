@@ -18,6 +18,8 @@
 
 #include "set_relation.h"
 #include "expression.h"
+#include "Visitor.h"
+
 #include <util/util.h>
 #include <gtest/gtest.h>
 
@@ -1735,7 +1737,7 @@ TEST_F(SetRelationTest, UsingEnvironment) {
     delete result;
     delete r2;
     delete r1;
-}
+};
 
 #pragma mark LCPC12SubmissionComposeNotFunc
 // Getting an exception that not both of these relations are functions.
@@ -3348,5 +3350,74 @@ TEST_F(SetRelationTest, RelationIsFunction){
     
     delete r1;
     //delete r2;
+}
+
+#pragma mark VisitorDebugTest
+class VisitorDebugTest : public Visitor {
+  private:
+    std::stringstream ss;
+    
+  public:
+    std::string returnResult() { return ss.str(); }
+    
+    void visitTerm(iegenlib::Term * t) {
+        ss << "visitTerm (" << t->toString() << ")" << std::endl;
+    }
+    void visitUFCallTerm(iegenlib::UFCallTerm * t) {
+        ss << "visitUFCallTerm (" << t->toString() << ")" << std::endl;
+    }
+    void visitTupleVarTerm(iegenlib::TupleVarTerm * t) {
+        ss << "visitVarTerm (" << t->toString() << ")" << std::endl;
+    }
+    void visitVarTerm(iegenlib::VarTerm * t) {
+        ss << "visitTerm (" << t->toString() << ")" << std::endl;
+    }
+    void visitTupleExpTerm(iegenlib::TupleExpTerm * t) {
+        ss << "visitTupleExpTerm (" << t->toString() << ")" << std::endl;
+    }
+    void visitExp(iegenlib::Exp * e) {
+        ss << "visitExp (" << e->toString() << ")" << std::endl;
+    }
+   
+    // Classes in set_relation.h
+    void visitConjunction(iegenlib::Conjunction * c) {
+        ss << "visitConjunction (" << c->toString() << ")" << std::endl;
+    }
+    void visitSparseConstraints(iegenlib::SparseConstraints * sc) {
+        ss << "visitSparseConstraints (" << sc->toString() 
+                 << ")" << std::endl;
+    }
+    void visitSet(iegenlib::Set * s) {
+        ss << "visitSet (" << s->toString() << ")" << std::endl;
+    }
+    void visitRelation(iegenlib::Relation * r) {
+        ss << "visitRelation (" << r->toString() << ")" << std::endl;
+    }
+};
+
+TEST_F(SetRelationTest, VisitorDebugTest){
+    // FIXME: parser is not handling "union"
+    //Set *s = new Set("{[i,j,k,0] : i>=N } union {[x,y,z]}");
+    Set *s1 = new Set("{[i,0,k] : i>=N }");
+    Set *s2 = new Set("{[x,y,z] : y <N}");
+    Set *s = s1->Union(s2);
+    Relation *r = new Relation("{[k,p] -> [k1,i'] : k1=k-1 && "
+        "i' = sigma(col(p)) && v=foo(a,b,bar(p+x))}");
+        
+    VisitorDebugTest* v = new VisitorDebugTest();
+    s->acceptVisitor(v);
+    EXPECT_EQ("visitVarTerm (-__tv1)\nvisitTerm (N)\nvisitTerm (-1)\nvisitExp"
+              " (-__tv1 + N - 1)\nvisitConjunction ({ [x, y, z] : "
+              "-__tv1 + N - 1 >= 0 })\nvisitVarTerm (__tv0)\nvisitTerm "
+              "(-N)\nvisitExp (__tv0 - N)\nvisitConjunction ({ [i, 0, k] : "
+              "__tv0 - N >= 0 })\nvisitSparseConstraints ({ [x, y, z] : "
+              "-__tv1 + N - 1 >= 0 } union { [i, 0, k] : __tv0 - N >= 0 "
+              "})\nvisitSet ({ [x, y, z] : -__tv1 + N - 1 >= 0 } union "
+              "{ [i, 0, k] : __tv0 - N >= 0 })\n", 
+              v->returnResult());
+    //std::cout << v->returnResult();
+
+    delete r;
+    delete s;
 }
 

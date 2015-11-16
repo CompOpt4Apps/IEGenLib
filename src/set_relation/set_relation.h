@@ -10,13 +10,11 @@
  * can include uninterpreted function symbol terms.
  *
  * \date Started: 3/28/12
- * # $Revision:: 805                $: last committed revision
- * # $Date:: 2013-09-09 03:27:10 -0#$: date of last committed revision
- * # $Author:: mstrout              $: author of last committed revision
  *
  * \authors Michelle Strout
  *
  * Copyright (c) 2012, Colorado State University <br>
+ * Copyright (c) 2015, University of Arizona <br>
  * All rights reserved. <br>
  * See ../../COPYING for details. <br>
  */
@@ -28,6 +26,7 @@
 #include "expression.h"
 #include "UFCallMapAndBounds.h"
 #include "SubMap.h"
+class Visitor;
 
 #include <set>
 #include <vector>
@@ -283,6 +282,9 @@ public:
     bool isFunction(int inArity) const;
     bool isFunctionInverse(int inArity) const;
 
+    //! Visitor design pattern, see Visitor.h for usage
+    void acceptVisitor(Visitor *v);
+
 private:
 
     /// Set of equality constraints.
@@ -407,7 +409,9 @@ public:
     **  remapped.  For example some might be constants in the TupleDecl.
     */
     void remapTupleVars(const std::vector<int>& oldToNewLocs);
-    
+
+    //! Visitor design pattern, see Visitor.h for usage
+    void acceptVisitor(Visitor *v);
 
 // FIXME: what methods should we have to iterate over conjunctions so
 // this can go back to protected?
@@ -518,6 +522,9 @@ public:
     
     
     //void normalize();
+    
+    //! Visitor design pattern, see Visitor.h for usage
+    void acceptVisitor(Visitor *v);    
 
 private:
     int mArity;
@@ -641,6 +648,9 @@ public:
     // BK: testing this out as a possible solution
     //     Not ready for primetime yet
     void normalize();
+
+    //! Visitor design pattern, see Visitor.h for usage
+    void acceptVisitor(Visitor *v);
 
 private:
 

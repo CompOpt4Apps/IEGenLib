@@ -6,14 +6,10 @@
  * This file is to test all of the Expression and Term classes, along with the
  * related classes: EqExp, IneqExp, UFCallTerm, VarTerm, and TupleVarTerm.
  *
- * \date Started: 3/18/2012
- * # $Revision:: 805                $: last committed revision
- * # $Date:: 2013-09-09 03:27:10 -0#$: date of last committed revision
- * # $Author:: mstrout              $: author of last committed revision
- *
  * \authors Michelle Strout and Joe Strout
  *
  * Copyright (c) 2012, Colorado State University <br>
+ * Copyright (c) 2015, University of Arizona <br>
  * All rights reserved. <br>
  * See ../../COPYING for details. <br>
  */

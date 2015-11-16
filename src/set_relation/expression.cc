@@ -3,14 +3,10 @@
  *
  * \brief Implementations of the expression classes.
  *
- * \date Started: 3/18/2012
- * # $Revision:: 805                $: last committed revision
- * # $Date:: 2013-09-09 03:27:10 -0#$: date of last committed revision
- * # $Author:: mstrout              $: author of last committed revision
- *
  * \authors Michelle Strout and Joe Strout
  *
  * Copyright (c) 2012, Colorado State University <br>
+ * Copyright (c) 2015, University of Arizona <br>
  * All rights reserved. <br>
  * See ../../COPYING for details. <br>
  */
@@ -19,6 +15,8 @@
 #include "TupleDecl.h"
 #include "UFCallMapAndBounds.h"
 #include "set_relation.h"
+#include "Visitor.h"
+
 
 namespace iegenlib{
 
@@ -1788,6 +1786,48 @@ StringIterator* Exp::getSymbolIterator() const {
     }
 
     return new StringIterator( symbolSet ); 
+}
+
+#pragma mark -
+/****************************************************************************/
+/*************** Visitor Design Pattern Code ********************************/
+
+/*!
+**  The acceptVisitor code does the traversal of the data structure and
+**  calls a particular Visitor subclass visit methods for a node after
+**  children nodes in the data structure have been visited.
+*/
+
+void Term::acceptVisitor(Visitor *v) {
+    v->visitTerm(this);
+}
+
+void UFCallTerm::acceptVisitor(Visitor *v) {
+    // Iterate over parameters passed to UF.
+    for (std::vector<Exp*>::iterator i=mArgs.begin(); i != mArgs.end(); ++i) {
+        (*i)->acceptVisitor(v);
+    }
+
+    v->visitUFCallTerm(this);
+}
+
+void TupleVarTerm::acceptVisitor(Visitor *v) {
+    v->visitTupleVarTerm(this);
+}
+
+void VarTerm::acceptVisitor(Visitor *v) {
+    v->visitVarTerm(this);
+}
+
+void TupleExpTerm::acceptVisitor(Visitor *v) {
+    v->visitTupleExpTerm(this);
+}
+
+void Exp::acceptVisitor(Visitor *v) {
+    for (std::list<Term*>::iterator i=mTerms.begin(); i != mTerms.end(); ++i) {
+        (*i)->acceptVisitor(v);
+    }
+    v->visitExp(this);
 }
 
 

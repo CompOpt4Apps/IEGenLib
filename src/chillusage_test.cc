@@ -8,6 +8,7 @@
  * \authors Michelle Strout
  *
  * Copyright (c) 2013, Colorado State University <br>
+ * Copyright (c) 2015, University of Arizona <br>
  * All rights reserved. <br>
  * See ../../COPYING for details. <br>
  */
