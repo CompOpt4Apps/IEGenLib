@@ -15,6 +15,7 @@
 
 #include "set_relation.h"
 #include "Visitor.h"
+#include <assert.h>
 
 namespace iegenlib{
 
@@ -1760,33 +1761,6 @@ Set* Conjunction::normalizeR() const
 
 }
 
-// FIXME?: Right now doing this all within an individual conjunct.
-// We need to put in the same constraints across conjuncts to be more
-// general.
-void Conjunction::addUFConstraintsHelper(std::string uf1str, 
-                                         std::string opstr, std::string uf2str){
-
-
-
-/*
-    for (std::list<Exp*>::iterator i=mEqualities.begin();
-                i != mEqualities.end(); i++) {
-        delete (*i);
-    }
-    mEqualities.clear();
-
-    for (std::list<Exp*>::iterator i=mInequalities.begin();
-                i != mInequalities.end(); i++) {
-        delete (*i);
-    }
-    mInequalities.clear();
-*/
-}
-
-
-
-
-
 /******************************************************************************/
 #pragma mark -
 
@@ -2144,15 +2118,6 @@ void SparseConstraints::remapTupleVars(const std::vector<int>& oldToNewLocs) {
     }
 }
 
-void SparseConstraints::addUFConstraintsHelper(std::string uf1str, 
-                            std::string opstr, std::string uf2str) {
-    for (std::list<Conjunction*>::iterator iter=mConjunctions.begin();
-            iter != mConjunctions.end(); iter++) {
-        (*iter)->addUFConstraintsHelper(uf1str,opstr,uf2str);
-    }
-}
-
-
 /******************************************************************************/
 #pragma mark -
 
@@ -2313,13 +2278,6 @@ Set* Set::boundTupleExp(const TupleExpTerm& tuple_exp) const {
     return result;
 }
 
-Set* Set::addUFConstraints(std::string uf1str, 
-                           std::string opstr, std::string uf2str) {
-    
-    Set* retval = new Set(*this);
-    retval->addUFConstraintsHelper(uf1str,opstr,uf2str);
-    return retval;
-}
 
 /******************************************************************************/
 #pragma mark -
@@ -2652,12 +2610,6 @@ void Relation::normalize() {
     // FIXME: will need more ... See SparseConstraints::normalize()
 }
 
-Relation* Relation::addUFConstraints(std::string uf1str, 
-                                     std::string opstr, std::string uf2str) {
-    Relation* retval = new Relation(*this);
-    retval->addUFConstraintsHelper(uf1str,opstr,uf2str);
-    return retval;
-}
             
 
 /******************************************************************************/
@@ -2701,6 +2653,117 @@ void Set::acceptVisitor(Visitor *v) {
 void Relation::acceptVisitor(Visitor *v) {
     SparseConstraints::acceptVisitor(v);
     v->visitRelation(this);
+}
+
+
+/******************************************************************************/
+#pragma mark -
+/****************** addUFConstraints ******************************************/
+
+class VisitorFindUFCallTerms : public Visitor {
+  private:
+    std::set<UFCallTerm> mTerms;
+    std::string mTargetUF;
+    
+  public:
+    VisitorFindUFCallTerms(std::string targetUF) : mTargetUF(targetUF) {}
+  
+    std::set<UFCallTerm> returnResult() { return mTerms; }
+    
+    void visitUFCallTerm(iegenlib::UFCallTerm * t) {
+        if (t->name() == mTargetUF) { mTerms.insert(*t); }
+    }
+};
+
+/*! For adding constraints involving uninterpreted functions.
+**  For example, if forall e, index(e)<=diagptr(e), then
+**  this method will find all instances of index() and diagptr()
+**  in the current constraints and using the current parameters
+**  add in the provided constraint.  Let's say that diagptr is
+**  called with diagptr(foo) and diagptr(x+1) and index is called
+**  with index(y).  Then the following constraints will be added
+**      index(foo)<=diagptr(foo)
+**      index(x+1)<=diagptr(x+1)
+**      index(y)<=diagptr(y)
+**  Makes changes to the current SparseConstraints object.
+*/
+void SparseConstraints::addUFConstraintsHelper(std::string uf1str, 
+        std::string opstr, std::string uf2str) {
+
+    // Have visitors that collects UFTerms.
+    VisitorFindUFCallTerms * v1 = new VisitorFindUFCallTerms(uf1str);
+    this->acceptVisitor(v1);
+    std::set<UFCallTerm> uf1Terms = v1->returnResult();
+    VisitorFindUFCallTerms * v2 = new VisitorFindUFCallTerms(uf2str);
+    this->acceptVisitor(v2);
+    std::set<UFCallTerm> uf2Terms = v2->returnResult();
+     
+    // Create a set of new constraints.
+    std::set<Exp*> eqConstraints;
+    std::set<Exp*> ineqConstraints;
+    for (std::set<UFCallTerm>::const_iterator tIter=uf1Terms.begin();
+            tIter != uf1Terms.end(); tIter++) {
+        
+        UFCallTerm uf1term = (*tIter);
+        
+        // Copy uf1 term and then name the function to uf2 in copy.
+        // Need to copies because constraints will own both terms.
+        UFCallTerm *uf1copy1 = new UFCallTerm(uf1term);
+        UFCallTerm *uf1copy2 = new UFCallTerm(uf1term);
+        uf1copy2->setName(uf2str);
+        Exp* constraint = new Exp();
+        
+        // uf1 = uf2, uf1 - uf2 = 0
+        if (opstr=="=") {
+            uf1copy2->multiplyBy(-1);
+            constraint->addTerm(uf1copy1);
+            constraint->addTerm(uf1copy2);
+            eqConstraints.insert(constraint);
+            
+        // uf1 <= uf2, uf2 - uf1 >= 0
+        } else if (opstr=="<=") {
+            uf1copy1->multiplyBy(-1);
+            constraint->addTerm(uf1copy1);
+            constraint->addTerm(uf1copy2);
+            ineqConstraints.insert(constraint);
+            
+        
+        // uf1 >= uf2, uf1 - uf2 >= 0
+        // uf1 > uf2, uf1 - uf2 + 1 >= 0
+        // uf1 < uf2, uf2 - uf1 + 1 >= 0
+        // Otherwise have comparison operator we don't handle.
+        } else {
+            std::cerr << "SparseConstraints::addUFConstraintsHelper: "
+                      << "operator not handled " << opstr << std::endl;
+            assert(0);
+        }
+    }
+
+    // When visiting conjunctions add the new constraints 
+    // to each of the conjunctions.
+    for (std::list<Conjunction*>::iterator iter=mConjunctions.begin();
+            iter != mConjunctions.end(); iter++) {
+        for (std::set<Exp*>::iterator eIter=ineqConstraints.begin();
+                eIter != ineqConstraints.end(); eIter++) {
+            (*iter)->addInequality(*eIter);
+        }   
+    }
+
+}
+
+Set* Set::addUFConstraints(std::string uf1str, 
+                           std::string opstr, std::string uf2str) {
+    
+    Set* retval = new Set(*this);
+    retval->addUFConstraintsHelper(uf1str,opstr,uf2str);
+    return retval;
+}
+
+Relation* Relation::addUFConstraints(std::string uf1str, 
+                                     std::string opstr, std::string uf2str) {
+    Relation* retval = new Relation(*this);
+    retval->addUFConstraintsHelper(uf1str,opstr,uf2str);
+    return retval;
 }
 
 

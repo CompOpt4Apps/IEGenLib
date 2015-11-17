@@ -265,11 +265,6 @@ public:
     //Set* createAffineSuperSet(UFCallMapAndBounds & ufcallmap);
     void ufCallsToTempVars(UFCallMapAndBounds & ufcallmap);
     
-    /*! Helper for addUFConstraints.
-    */
-    void addUFConstraintsHelper(std::string uf1str, 
-                                std::string opstr, std::string uf2str);
-
     /*! Returns a normalized Set that represents this Conjunct.
     **  It has to be a set because bounds on parameters and UF calls
     **  can introduce disjunctions.
@@ -420,18 +415,6 @@ public:
 
 
   protected:
-    /*! For adding constraints involving uninterpreted functions.
-    **  For example, if forall e, index(e)<=diagptr(e), then
-    **  this method will find all instances of index() and diagptr()
-    **  in the current constraints and using the current parameters
-    **  add in the provided constraint.  Let's say that diagptr is
-    **  called with diagptr(foo) and diagptr(x+1) and index is called
-    **  with index(y).  Then the following constraints will be added
-    **      index(foo)<=diagptr(foo)
-    **      index(x+1)<=diagptr(x+1)
-    **      index(y)<=diagptr(y)
-    **  Makes changes to the current SparseConstraints object.
-    */
     void addUFConstraintsHelper(std::string uf1str, 
                                 std::string opstr, std::string uf2str);
 

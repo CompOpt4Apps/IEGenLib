@@ -258,6 +258,9 @@ public:
 
     //! Returns the function name as a string.
     std::string name() const { return mFuncName; }
+    
+    //! Enables the function name to be set.
+    void setName(std::string n) { mFuncName = n; }
 
     //! Return a new Exp with all nested functions such as
     //! f ( f_inv ( i ) ) changed to i.

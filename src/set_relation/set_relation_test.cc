@@ -3421,3 +3421,17 @@ TEST_F(SetRelationTest, VisitorDebugTest){
     delete s;
 }
 
+#pragma mark addUFConstraintsTest
+TEST_F(SetRelationTest, addUFConstraintsTest){
+    Set* s = new Set("{[i,j] : index(i) <= j && j < index(i+1)}");
+    
+    Set* result = s->addUFConstraints("index","<=", "diagptr");
+    
+    EXPECT_EQ("{ [i, j] : j - index(i) >= 0 && -diagptr(i) + index(i) >= 0 "
+              "&& diagptr(i + 1) - index(i + 1) >= 0 && -j + index(i + 1) - "
+              "1 >= 0 }",
+              result->prettyPrintString());
+              
+    delete s;
+    delete result;    
+}
