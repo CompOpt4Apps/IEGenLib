@@ -87,6 +87,9 @@ public:
     //! Get the coefficient of this term.
     int coefficient() const { return mCoeff; }
     
+    //! Set the coefficient of this term.
+    void setCoefficient(int coeff) { mCoeff = coeff; }
+    
     //! Returns true if the Term is really a UFCallTerm.
     virtual bool isUFCall() const { return false; }
 

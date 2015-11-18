@@ -2671,7 +2671,11 @@ class VisitorFindUFCallTerms : public Visitor {
     std::set<UFCallTerm> returnResult() { return mTerms; }
     
     void visitUFCallTerm(iegenlib::UFCallTerm * t) {
-        if (t->name() == mTargetUF) { mTerms.insert(*t); }
+        if (t->name() == mTargetUF) {
+            UFCallTerm termCopy = *t;
+            termCopy.setCoefficient(1);
+            mTerms.insert(termCopy);
+        }
     }
 };
 
@@ -2697,10 +2701,19 @@ void SparseConstraints::addUFConstraintsHelper(std::string uf1str,
     VisitorFindUFCallTerms * v2 = new VisitorFindUFCallTerms(uf2str);
     this->acceptVisitor(v2);
     std::set<UFCallTerm> uf2Terms = v2->returnResult();
+    
+    // Rename all of the uf2Terms functions to uf1 and
+    // insert into uf1Terms set so don't get repetition of same
+    // parameters.
+    for (std::set<UFCallTerm>::const_iterator tIter=uf2Terms.begin();
+            tIter != uf2Terms.end(); tIter++) {
+        UFCallTerm uf2term = (*tIter);
+        uf2term.setName( uf1str );
+        uf1Terms.insert( uf2term );
+    }
      
-    // Create a set of new constraints.
-    std::set<Exp*> eqConstraints;
-    std::set<Exp*> ineqConstraints;
+    // Create a set of new constraints for all of the instances
+    // in uf1Terms.
     for (std::set<UFCallTerm>::const_iterator tIter=uf1Terms.begin();
             tIter != uf1Terms.end(); tIter++) {
         
@@ -2716,37 +2729,51 @@ void SparseConstraints::addUFConstraintsHelper(std::string uf1str,
         // uf1 = uf2, uf1 - uf2 = 0
         if (opstr=="=") {
             uf1copy2->multiplyBy(-1);
-            constraint->addTerm(uf1copy1);
-            constraint->addTerm(uf1copy2);
-            eqConstraints.insert(constraint);
+            constraint->setEquality();
             
         // uf1 <= uf2, uf2 - uf1 >= 0
         } else if (opstr=="<=") {
             uf1copy1->multiplyBy(-1);
-            constraint->addTerm(uf1copy1);
-            constraint->addTerm(uf1copy2);
-            ineqConstraints.insert(constraint);
-            
-        
+            constraint->setInequality();
+                   
         // uf1 >= uf2, uf1 - uf2 >= 0
+        } else if (opstr==">=") {
+            uf1copy2->multiplyBy(-1);
+            constraint->setInequality();
+
         // uf1 > uf2, uf1 - uf2 + 1 >= 0
+        } else if (opstr==">") {
+            uf1copy2->multiplyBy(-1);
+            constraint->addTerm( new Term(1) );
+            constraint->setInequality();
+
         // uf1 < uf2, uf2 - uf1 + 1 >= 0
+        } else if (opstr=="<") {
+            uf1copy1->multiplyBy(-1);
+            constraint->addTerm( new Term(1) );
+            constraint->setInequality();
+
         // Otherwise have comparison operator we don't handle.
         } else {
             std::cerr << "SparseConstraints::addUFConstraintsHelper: "
                       << "operator not handled " << opstr << std::endl;
             assert(0);
         }
-    }
+        
+        // Actually add in the constraint.
+        constraint->addTerm(uf1copy1);
+        constraint->addTerm(uf1copy2);
+        
+        // Put constraint into each of our conjunctions.
+        for (std::list<Conjunction*>::iterator iter=mConjunctions.begin();
+                iter != mConjunctions.end(); iter++) {
+            if (constraint->isEquality()) {
+                (*iter)->addEquality(constraint);
+            } else {
+                (*iter)->addInequality(constraint);
+            }
+        }
 
-    // When visiting conjunctions add the new constraints 
-    // to each of the conjunctions.
-    for (std::list<Conjunction*>::iterator iter=mConjunctions.begin();
-            iter != mConjunctions.end(); iter++) {
-        for (std::set<Exp*>::iterator eIter=ineqConstraints.begin();
-                eIter != ineqConstraints.end(); eIter++) {
-            (*iter)->addInequality(*eIter);
-        }   
     }
 
 }
