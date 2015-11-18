@@ -87,6 +87,9 @@ public:
     //! Get the coefficient of this term.
     int coefficient() const { return mCoeff; }
     
+    //! Set the coefficient of this term.
+    void setCoefficient(int coeff) { mCoeff = coeff; }
+    
     //! Returns true if the Term is really a UFCallTerm.
     virtual bool isUFCall() const { return false; }
 
@@ -258,6 +261,9 @@ public:
 
     //! Returns the function name as a string.
     std::string name() const { return mFuncName; }
+    
+    //! Enables the function name to be set.
+    void setName(std::string n) { mFuncName = n; }
 
     //! Return a new Exp with all nested functions such as
     //! f ( f_inv ( i ) ) changed to i.

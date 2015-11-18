@@ -3421,3 +3421,47 @@ TEST_F(SetRelationTest, VisitorDebugTest){
     delete s;
 }
 
+#pragma mark addUFConstraintsTest
+TEST_F(SetRelationTest, addUFConstraintsTest){
+  {
+    Set* s = new Set("{[i,j] : index(i) <= j && j < index(i+1)}");
+    Set* result = s->addUFConstraints("index","<=", "diagptr");
+    
+    EXPECT_EQ("{ [i, j] : j - index(i) >= 0 && diagptr(i) - index(i) >= 0 "
+              "&& diagptr(i + 1) - index(i + 1) >= 0 && -j + index(i + 1) - "
+              "1 >= 0 }",
+              result->prettyPrintString());
+
+    delete s;
+    delete result;
+  }
+
+  {
+    Relation* r = new Relation("{[i,j]->[k] : index(i) <= j && "
+        "j < index(i+1) && diagptr(v+1)<k && k<indexptr(i)}");
+    
+    Relation* result1 = r->addUFConstraints("index",">", "diagptr");
+    
+    EXPECT_EQ("{ [i, j] -> [k] : j - index(i) >= 0 && -j + index(i + 1) "
+              "- 1 >= 0 && -k + indexptr(i) - 1 >= 0 && k - diagptr(v + "
+              "1) - 1 >= 0 && -diagptr(i) + index(i) + 1 >= 0 && -diagpt"
+              "r(i + 1) + index(i + 1) + 1 >= 0 && -diagptr(v + 1) + ind"
+              "ex(v + 1) + 1 >= 0 }",
+              result1->prettyPrintString());
+
+    Relation* result2 = r->addUFConstraints("index","=", "diagptr");
+
+    EXPECT_EQ("{ [i, j] -> [k] : diagptr(i) - index(i) = 0 && diagptr(i + "
+              "1) - index(i + 1) = 0 && diagptr(v + 1) - index(v + 1) = 0 "
+              "&& j - index(i) >= 0 && -j + index(i + 1) - 1 >= 0 && -k + "
+              "indexptr(i) - 1 >= 0 && k - diagptr(v + 1) - 1 >= 0 }",
+              result2->prettyPrintString());
+
+    
+    delete r;
+    delete result1;
+    delete result2;
+  }
+ 
+              
+}
