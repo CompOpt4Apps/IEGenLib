@@ -282,11 +282,6 @@ public:
     */
     bool isUFSArg(int tvar);
 
-    /* Mahdi Soltan Mohammadi
-       Projects out tuple varrable No. tvar
-    */
-    void project_out(int tvar);
-
     // Want to use these in Relation::isFunction and other so must be public.
     bool isFunction(int inArity) const;
     bool isFunctionInverse(int inArity) const;
@@ -421,12 +416,6 @@ public:
     */
     bool isUFSArg(int tvar);
 
-    /* Mahdi Soltan Mohammadi
-       Projects out tuple varrable No. tvar
-    */
-    virtual bool project_out(int tvar);
-
-
 // FIXME: what methods should we have to iterate over conjunctions so
 // this can go back to protected?
 //protected:
@@ -504,12 +493,6 @@ public:
     Set* boundTupleExp(const TupleExpTerm& tuple_exp) const; 
     
     //void normalize();
-
-    /* Mahdi Soltan Mohammadi
-       Projects out tuple varrable No. tvar
-    */
-    bool project_out(int tvar);
-
 
 private:
     int mArity;
@@ -619,11 +602,6 @@ public:
     // BK: testing this out as a possible solution
     //     Not ready for primetime yet
     void normalize();
-
-    /* Mahdi Soltan Mohammadi
-       Projects out tuple varrable No. tvar
-    */
-    bool project_out(int tvar);
 
 private:
 
