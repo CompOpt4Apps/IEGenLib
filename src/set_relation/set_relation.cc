@@ -1708,20 +1708,13 @@ std::string ISL_project_out (std::string relstr, unsigned pos)
 */
 void Conjunction::project_out(int tvar)
 {
-    /////////////////////
-    // (step 0) Group together all equality expressions that 
-    // are parts of the same UFCallTerm, IOW i=f(k)[0] and 
-    // j=f(k)[1] should become (i,j) = f(k).
-    // FIXME: what about inequalities?
 
     Conjunction* selfcopy = new Conjunction(*this);
     TupleDecl origTupleDecl = selfcopy->getTupleDecl(); // for (step 3)
-    selfcopy->groupIndexedUFCalls();
-
  
     /////////////////////
     // (step 1)
-    // Replace all uninterpreted function calls with variables
+    // Replace all uninterpreted function calls with temp variables
     // and create a new affine conjunction that is a superset of the
     // current conjunction.  UFCallMapAndBounds object will
     // maintain the mapping of temporary variables to UF calls.
@@ -1773,8 +1766,8 @@ void Conjunction::project_out(int tvar)
     
     // FIXME: just assuming one conjunction right now.
     if (retval2->mConjunctions.size()!=1) {
-        throw assert_exception("Conjunction::normalize: "
-            "currently only handle one Conjunction fromISL");
+        throw assert_exception("Project out "
+              "currently only handle one Conjunction fromISL");
     }
     Conjunction* conj = retval2->mConjunctions.front();
     

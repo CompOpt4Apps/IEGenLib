@@ -620,12 +620,6 @@ public:
     //     Not ready for primetime yet
     void normalize();
 
-
-    /* Mahdi Soltan Mohammadi
-       Is tuple variable tvar argument to an UFS? 
-    */
-//    bool isUFSArg(int tvar);
-
     /* Mahdi Soltan Mohammadi
        Projects out tuple varrable No. tvar
     */

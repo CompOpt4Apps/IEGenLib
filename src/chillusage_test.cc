@@ -35,60 +35,6 @@ class ChillUsageTest : public::testing::Test {
     virtual void SetUp() {}
     virtual void TearDown() {}
 };
-/*
-{ [i] -> [i'] | exists j';
-  i<i' /\ i=col(j')
-  /\ 0 <= i,i' < N
-  /\ idx(i) < idx(i+1)
-  /\ idx(i’) <= j' < idx(i’+1) }
-UNION
-{ [i'] -> [i] | exists j';
-  i'<i /\ i=col(j')
-  /\ 0 <= i,i' < N
-  /\ idx(i) < idx(i+1)
-  /\ idx(i’) <= j' < idx(i’+1) }
-*/
-
-TEST_F(ChillUsageTest, GS)
-{
-// idx(i) = idx_I   idx(i+1) = idx_I1    idx(ip) = idx_IP    idx(i'+1) = idx_IP1      col(jp) = col_JP
-
-    string F("[n,idx_I,idx_I1,idx_IP,idx_IP1,col_JP] -> { [i] -> [ip] : exists j,jp : i = col_JP and i < ip and 0 <= i < n and idx_I <= j < idx_I1 and 0 <= ip <= n and idx_IP <= jp < idx_IP1 }");
-    string A("[n,idx_I,idx_I1,idx_IP,idx_IP1,col_JP] -> { [ip] -> [i] : exists j,jp : i = col_JP and ip < i and 0 <= i < n and idx_I <= j < idx_I1 and 0 <= ip <= n and idx_IP <= jp < idx_IP1 }");
-
-//    string res = getRelationStringFromISL(F);
-//    std::cout<<res;
-
-    // Get an isl context
-    isl_ctx *ctx;
-    ctx = isl_ctx_alloc();
-    
-    // Get an isl printer and associate to an isl context
-    isl_printer * ip = NULL;
-    ip = isl_printer_to_str(ctx);
-    
-    // load Relation r into ISL map
-    isl_map* imap = NULL;
-    imap = isl_map_read_from_str(ctx, F.c_str());
-
-    // get string back from ISL map
-    char * cstr;
-    isl_printer_set_output_format(ip , ISL_FORMAT_ISL);
-    isl_printer_print_map(ip ,imap);
-    cstr=isl_printer_get_str(ip);
-    string stringFromISL = cstr;
-
-    std::cout<<stringFromISL;
-    
-    // clean-up
-    isl_printer_flush(ip);
-    isl_printer_free(ip);
-    free(cstr);
-    isl_map_free(imap);
-    imap= NULL;
-    isl_ctx_free(ctx); 
-}
-
 
 /*! Seeing if we can do dependence simplification for GS.
 */
@@ -261,3 +207,131 @@ TEST_F(ChillUsageTest, LoopCoalescingKequalJ)
     delete T_coalesce;
     delete T_coalesce_inv;
 }
+
+
+//*****************************************************************************
+
+// Testing isUFSArg: is a tuple variable argument to a UFS? (with its index)
+
+TEST_F(ChillUsageTest, ISUFSARG) {
+
+    iegenlib::setCurrEnv();
+    iegenlib::appendCurrEnv("col",
+        new Set("{[i]:0<=i &&i<n}"), 
+        new Set("{[j]:0<=j &&j<n}"), true);
+    iegenlib::appendCurrEnv("idx",
+        new Set("{[i]:0<=i &&i<n}"), 
+        new Set("{[j]:0<=j &&j<n}"), true);
+    iegenlib::appendCurrEnv("row",
+        new Set("{[i]:0<=i &&i<n}"), 
+        new Set("{[j]:0<=j &&j<n}"), true);
+    iegenlib::appendCurrEnv("diag",
+        new Set("{[i]:0<=i &&i<n}"), 
+        new Set("{[j]:0<=j &&j<n}"), true);
+
+    Relation *r1 = new Relation("[n] -> { [i,j] -> [ip,jp] : i = col(jp) and i < ip "
+                             "and 0 <= i and i < n and idx(i) <= j and j < idx(i+1) "
+                 "and 0 <= ip and ip < n and idx(ip) <= jp and jp < idx(ip+1) }");
+
+    Relation *r2 = new Relation("[n] -> { [i,k,j1,j2] -> [ip,kp,jp1,jp2] : i < ip"
+               " and j1 = jp2 and 0 <= i and i < n and 0 <= ip and ip <= n and "
+               "k+1 <= j1 and j1 < row(i+1) and kp+1 <= jp1 and jp1 < row(ip+1) and "
+               "diag(col(k))+1 <= j2 and j2 < row(col(k)+1) and diag(col(kp))+1 <="
+               " jp2 and jp2 < row(col(kp)+1) and row(i) <= k and k < diag(i) "
+               "and row(ip) <= kp and kp < diag(ip) }");
+
+   //  Test case for r2
+   string org_tup("11001100");
+   string ins_tup("00000000");
+ 
+   int ar = r2->arity();
+   for(int i = 0 ; i < ar ; i++)
+   {
+     if ( r2->isUFSArg(i) )
+     {
+       ins_tup[i] = '1';
+//       std::cout << std::endl <<i << "   is UFS arg" << std::endl;
+     }
+     else
+     {
+       ins_tup[i] = '0';
+//       std::cout << std::endl <<i << "   is not UFS arg" << std::endl;
+     }
+   }
+   
+    EXPECT_EQ( org_tup , ins_tup );
+
+   delete r1;
+   delete r2;
+}
+
+//*****************************************************************************
+
+//*****************************************************************************
+// Testing project_out: project out tuple variable # tvar
+
+TEST_F(ChillUsageTest, PROJECT_OUT) {
+
+    iegenlib::setCurrEnv();
+    iegenlib::appendCurrEnv("col",
+        new Set("{[i]:0<=i &&i<n}"), 
+        new Set("{[j]:0<=j &&j<n}"), true);
+    iegenlib::appendCurrEnv("idx",
+        new Set("{[i]:0<=i &&i<n}"), 
+        new Set("{[j]:0<=j &&j<n}"), true);
+    iegenlib::appendCurrEnv("row",
+        new Set("{[i]:0<=i &&i<n}"), 
+        new Set("{[j]:0<=j &&j<n}"), true);
+    iegenlib::appendCurrEnv("diag",
+        new Set("{[i]:0<=i &&i<n}"), 
+        new Set("{[j]:0<=j &&j<n}"), true);
+
+    Relation *r1 = new Relation("[n] -> { [i,j] -> [ip,jp] : i = col(jp) and i < ip "
+                             "and 0 <= i and i < n and idx(i) <= j and j < idx(i+1) "
+                 "and 0 <= ip and ip < n and idx(ip) <= jp and jp < idx(ip+1) }");
+
+    Relation *r2 = new Relation("[n] -> { [i,k,j1,j2] -> [ip,kp,jp1,jp2] : i < ip"
+               " and j1 = jp2 and 0 <= i and i < n and 0 <= ip and ip <= n and "
+               "k+1 <= j1 and j1 < row(i+1) and kp+1 <= jp1 and jp1 < row(ip+1) and "
+               "diag(col(k))+1 <= j2 and j2 < row(col(k)+1) and diag(col(kp))+1 <="
+               " jp2 and jp2 < row(col(kp)+1) and row(i) <= k and k < diag(i) "
+               "and row(ip) <= kp and kp < diag(ip) }");
+
+    Set *s2 = new Set("[n] -> { [i,k,j1,j2,ip,kp,jp1,jp2] : i < ip"
+               " and j1 = jp2 and 0 <= i and i < n and 0 <= ip and ip <= n and "
+               "k+1 <= j1 and j1 < row(i+1) and kp+1 <= jp1 and jp1 < row(ip+1) and "
+               "diag(col(k))+1 <= j2 and j2 < row(col(k)+1) and diag(col(kp))+1 <="
+               " jp2 and jp2 < row(col(kp)+1) and row(i) <= k and k < diag(i) "
+               "and row(ip) <= kp and kp < diag(ip) }");
+ 
+   int iar = r2->inArity(), ar = r2->arity();
+   for(int i = ar-1 ; i >= 0 ; i--)
+   {
+     if (i == 0 || i == iar)
+       continue;
+
+     if ( !r2->isUFSArg(i) )
+     {     
+       r2->project_out(i);
+     }
+   }
+
+   int arS = s2->arity();
+   for(int i = arS-1 ; i >= 0 ; i--)
+   {
+     if ( !s2->isUFSArg(i) )
+     {     
+       s2->project_out(i);
+     }
+   }
+
+//   std::cout << std::endl << "r2.pr = " << r2->prettyPrintString() << std::endl;
+//   std::cout << std::endl << "s2.pr = " << s2->prettyPrintString() << std::endl;
+
+	delete r1;
+	delete r2;
+	delete s2;
+}
+
+//************************************************************************************
+
