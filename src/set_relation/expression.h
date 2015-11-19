@@ -293,6 +293,10 @@ public:
     void acceptVisitor(Visitor *v);
 
 
+    // Is tuple variable tvar an argument to this UFS?
+    bool isUFSArg(int tvar);
+
+
 private:
     void argsToStream(std::stringstream& ss) const;
     void argsToStreamPrettyPrint(const TupleDecl & aTupleDecl,
@@ -346,6 +350,9 @@ public:
 
     //! Returns true if the Term is a const
     bool isConst() const { return false; }
+
+    // Returns location of TV 
+    int tvloc(){return mLocation;}
 
     //--------------------- methods for the use in expression
 
@@ -701,6 +708,11 @@ public:
 
     //! Visitor design pattern, see Visitor.h for usage
     void acceptVisitor(Visitor *v);
+
+
+    // Is tuple variable tvar an argument to this UFS?
+    bool isUFSArg(int tvar, bool isArg);
+
 
 protected:
 

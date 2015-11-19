@@ -1761,6 +1761,28 @@ Set* Conjunction::normalizeR() const
 
 }
 
+//*****************************************************************************
+
+bool Conjunction::isUFSArg(int tvar)
+{
+    bool is = false;
+    // Iterate over the equality expressions.
+    for (std::list<Exp*>::iterator i=mEqualities.begin();
+                i != mEqualities.end(); i++) {
+        is = (*i)->isUFSArg(tvar,false);
+        if (is)  return is;
+    }
+ 
+     // Iterate over the inequality expressions.
+    for (std::list<Exp*>::iterator i=mInequalities.begin();
+                i != mInequalities.end(); i++) {
+        is = (*i)->isUFSArg(tvar, false);
+        if (is)  return is;
+    }
+
+  return is;
+}
+
 /******************************************************************************/
 #pragma mark -
 
@@ -2116,6 +2138,25 @@ void SparseConstraints::remapTupleVars(const std::vector<int>& oldToNewLocs) {
             iter != mConjunctions.end(); iter++) {
         (*iter)->remapTupleVars(oldToNewLocs);
     }
+}
+
+
+/* Mahdi Soltan Mohammadi
+   Is tuple variable tvar argument to an UFS? 
+*/
+bool SparseConstraints::isUFSArg(int tvar)
+{
+  bool is = false;
+
+    for (std::list<Conjunction*>::const_iterator i=mConjunctions.begin();
+                i != mConjunctions.end(); i++) {
+
+    Conjunction* conjunction = dynamic_cast<Conjunction*>((*i));
+    is = (conjunction->isUFSArg(tvar));
+    if ( is )  return is;
+}
+
+  return is;
 }
 
 /******************************************************************************/
