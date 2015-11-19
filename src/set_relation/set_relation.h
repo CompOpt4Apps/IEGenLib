@@ -280,6 +280,11 @@ public:
     //! Visitor design pattern, see Visitor.h for usage
     void acceptVisitor(Visitor *v);
 
+    /* 
+       Is tuple variable tvar argument to a UFS? 
+    */
+    bool isUFSArg(int tvar);
+
 private:
 
     /// Set of equality constraints.
@@ -407,6 +412,11 @@ public:
 
     //! Visitor design pattern, see Visitor.h for usage
     void acceptVisitor(Visitor *v);
+
+    /* 
+       Is tuple variable tvar argument to a UFS? 
+    */
+    bool isUFSArg(int tvar);
 
 // FIXME: what methods should we have to iterate over conjunctions so
 // this can go back to protected?
