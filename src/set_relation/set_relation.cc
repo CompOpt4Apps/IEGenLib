@@ -2621,6 +2621,8 @@ void Relation::normalize() {
 
 //! Visitor design pattern, see Visitor.h for usage
 void Conjunction::acceptVisitor(Visitor *v) {
+    v->preVisitConjunction(this);
+    
     std::list<Exp*>::iterator expIter = mEqualities.begin();
     while (expIter != mEqualities.end()) {
         (*expIter)->acceptVisitor(v);
@@ -2631,28 +2633,31 @@ void Conjunction::acceptVisitor(Visitor *v) {
         (*expIter)->acceptVisitor(v);
         expIter++;
     }
-    v->visitConjunction(this);
+    v->postVisitConjunction(this);
 }
 
 //! Visitor design pattern, see Visitor.h for usage
 void SparseConstraints::acceptVisitor(Visitor *v) {
+    v->preVisitSparseConstraints(this);
     for (std::list<Conjunction*>::iterator i=mConjunctions.begin();
                 i != mConjunctions.end(); i++) {
         (*i)->acceptVisitor(v);
     }
-    v->visitSparseConstraints(this);
+    v->postVisitSparseConstraints(this);
 }
 
 //! Visitor design pattern, see Visitor.h for usage
 void Set::acceptVisitor(Visitor *v) {
+    v->preVisitSet(this);
     this->SparseConstraints::acceptVisitor(v);
-    v->visitSet(this);
+    v->postVisitSet(this);
 }
 
 //! Visitor design pattern, see Visitor.h for usage
 void Relation::acceptVisitor(Visitor *v) {
+    v->preVisitRelation(this);
     SparseConstraints::acceptVisitor(v);
-    v->visitRelation(this);
+    v->postVisitRelation(this);
 }
 
 
@@ -2670,7 +2675,7 @@ class VisitorFindUFCallTerms : public Visitor {
   
     std::set<UFCallTerm> returnResult() { return mTerms; }
     
-    void visitUFCallTerm(iegenlib::UFCallTerm * t) {
+    void postVisitUFCallTerm(iegenlib::UFCallTerm * t) {
         if (t->name() == mTargetUF) {
             UFCallTerm termCopy = *t;
             termCopy.setCoefficient(1);
@@ -2797,11 +2802,18 @@ Relation* Relation::addUFConstraints(std::string uf1str,
 /******************************************************************************/
 #pragma mark -
 /*************** addConstraintsDueToMonotonicity ******************************/
-
-/*class VisitorFindUFCallTerms : public Visitor {
+/*
+class VisitorUniqueFactorToIntMap : public Visitor {
   private:
-    std::set<UFCallTerm> mTerms;
-    std::string mTargetUF;
+    // Gonna use the built-in comparison for std::set to make
+    // sure we only record unique terms.
+    std::set<Term> mTerms;
+    std::set<TupleVarTerm>  mTupleVarTerms;
+    std::set<TupleExpTerm>  mTupleExpTerms;
+    std::set<VarTerm>       mVarTerms;
+    std::set<UFCallTerm>    mUFCallTerms;
+    
+    std::set<Term*> mUniqueFactors;
     
   public:
     VisitorFindUFCallTerms(std::string targetUF) : mTargetUF(targetUF) {}
@@ -2817,6 +2829,7 @@ Relation* Relation::addUFConstraints(std::string uf1str,
     }
 };
 */
+
 
 /*! For adding constraints involving uninterpreted functions.
 **  For example, if forall e, index(e)<=diagptr(e), then

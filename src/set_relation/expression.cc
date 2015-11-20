@@ -1799,35 +1799,42 @@ StringIterator* Exp::getSymbolIterator() const {
 */
 
 void Term::acceptVisitor(Visitor *v) {
-    v->visitTerm(this);
+    v->preVisitTerm(this);
+    v->postVisitTerm(this);
 }
 
 void UFCallTerm::acceptVisitor(Visitor *v) {
+    v->preVisitUFCallTerm(this);
+
     // Iterate over parameters passed to UF.
     for (std::vector<Exp*>::iterator i=mArgs.begin(); i != mArgs.end(); ++i) {
         (*i)->acceptVisitor(v);
     }
 
-    v->visitUFCallTerm(this);
+    v->postVisitUFCallTerm(this);
 }
 
 void TupleVarTerm::acceptVisitor(Visitor *v) {
-    v->visitTupleVarTerm(this);
+    v->preVisitTupleVarTerm(this);
+    v->postVisitTupleVarTerm(this);
 }
 
 void VarTerm::acceptVisitor(Visitor *v) {
-    v->visitVarTerm(this);
+    v->preVisitVarTerm(this);
+    v->postVisitVarTerm(this);
 }
 
 void TupleExpTerm::acceptVisitor(Visitor *v) {
-    v->visitTupleExpTerm(this);
+    v->preVisitTupleExpTerm(this);
+    v->postVisitTupleExpTerm(this);
 }
 
 void Exp::acceptVisitor(Visitor *v) {
+    v->preVisitExp(this);
     for (std::list<Term*>::iterator i=mTerms.begin(); i != mTerms.end(); ++i) {
         (*i)->acceptVisitor(v);
     }
-    v->visitExp(this);
+    v->postVisitExp(this);
 }
 
 
