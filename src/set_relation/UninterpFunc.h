@@ -31,11 +31,18 @@ class Set;
  * \class UninterpFunc
  *
  * \brief Contains info about uninterpreted function such as name, domain,
- *        range, and whether bijective.
+ *        range, whether bijective, and if has any monotonicity characteristic.
  */
+typedef enum {
+    Monotonic_NONE,
+    Monotonic_Nondecreasing
+    // Here is where others would go when we get them
+} MonotonicType;
+
 class UninterpFunc {
 public:
-    UninterpFunc(std::string name, Set* domain, Set* range, bool bijective);
+    UninterpFunc(std::string name, Set* domain, Set* range,
+                 bool bijective, MonotonicType monoType);
     ~UninterpFunc();
     
     //! Copy constructor.
@@ -45,16 +52,19 @@ public:
     UninterpFunc& operator=( const UninterpFunc& other);
     
     //! Return the function name.
-    std::string getName() { return mName; }
+    std::string getName() const { return mName; }
 
     //! Return the function domain.
-    Set* getDomain() { return mDomain; }
+    Set* getDomain() const { return mDomain; }
 
     //! Return the function range.
-    Set* getRange() { return mRange; }
+    Set* getRange() const { return mRange; }
 
     //! Returns true if function is bijective, false otherwise.
-    bool isBijective() { return mIsBijective; }
+    bool isBijective() const { return mIsBijective; }
+    
+    //! Getter for the monotonicity type.
+    MonotonicType getMonoType() const { return mMonoType; }
         
     //! Creates a string with information about function.
     std::string toString() const;
@@ -64,6 +74,7 @@ private:
     Set*                mDomain;
     Set*                mRange;
     bool                mIsBijective;
+    MonotonicType       mMonoType;
 };
 
 }

@@ -45,7 +45,8 @@ TEST(UFCallMapAndBoundsTest, UFCallMapAndBoundsDomainNoTupleVars) {
 
     // declare f and g as non-bijective functions
     iegenlib::setCurrEnv();
-    iegenlib::appendCurrEnv("f", domain, range, false);
+    iegenlib::appendCurrEnv("f", domain, range, false, 
+                            iegenlib::Monotonic_NONE);
 
     // Assume original set is
     // {[x,y] : x = f(N)}
@@ -87,7 +88,8 @@ TEST(UFCallMapAndBoundsTest, UFCallMapAndBoundsDomainWithTupleVars) {
 
     // declare f and g as non-bijective functions
     iegenlib::setCurrEnv();
-    iegenlib::appendCurrEnv("f", domain, range, false);
+    iegenlib::appendCurrEnv("f", domain, range, false,
+                            iegenlib::Monotonic_NONE);
 
     // Assume original set is
     // {[x,y] : x = f(N)}
@@ -154,7 +156,8 @@ TEST(UFCallMapAndBoundsTest, UFCallMapAndBoundsDomain2D) {
 
     // declare f and g as non-bijective functions
     iegenlib::setCurrEnv();
-    iegenlib::appendCurrEnv("f", domain, range, false);
+    iegenlib::appendCurrEnv("f", domain, range, false,
+                            iegenlib::Monotonic_NONE);
 
     // Assume original set is
     // {[x,y] : x = f(N,y)}
@@ -204,7 +207,8 @@ TEST(UFCallMapAndBoundsTest, UFCallMapAndBoundsRange1D) {
 
     // declare f as a non-bijective function.    
     iegenlib::setCurrEnv();
-    iegenlib::appendCurrEnv("f", domain, range, false);
+    iegenlib::appendCurrEnv("f", domain, range, false,
+                            iegenlib::Monotonic_NONE);
 
     // Assume original set is
     // {[x,y] : 7 + x = f(N,y)}
@@ -257,7 +261,8 @@ TEST(UFCallMapAndBoundsTest, UFCallMapAndBoundsRange2D) {
 
     // declare f as a non-bijective function.    
     iegenlib::setCurrEnv();
-    iegenlib::appendCurrEnv("f", domain, range, false);
+    iegenlib::appendCurrEnv("f", domain, range, false,
+                            iegenlib::Monotonic_NONE);
 
     // Assume original set is
     // {[x,y] : (7 + x,y) = f(N,y)}

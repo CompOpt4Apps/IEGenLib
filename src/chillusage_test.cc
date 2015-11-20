@@ -85,7 +85,9 @@ TEST_F(ChillUsageTest, LoopCoalescing)
         // UF range
         new Set("{[k]:0<=k && k<nnz}"),
         // c function is bijective
-        true );               
+        true,
+        // no monotonicity
+        Monotonic_NONE );               
     Relation* T_coalesce = new Relation("{[i,j]->[k]:k = c(i,j)}");  
     // c for coalesce?  we talked about R but that was for inverse of above
 
@@ -157,7 +159,10 @@ TEST_F(ChillUsageTest, LoopCoalescingKequalJ)
         // UF range
         new Set("{[k]:0<=k && k<nnz}"),
         // c function is bijective
-        true );               
+        true,
+        // no monotonicity
+        Monotonic_NONE );               
+               
     Relation* T_coalesce = new Relation("{[i,j]->[k]:k = c(i,j) && k=j}");  
 
     // then applies the transformation to each of the access relation
