@@ -3536,7 +3536,7 @@ TEST_F(SetRelationTest, addConstraintsDueToMonotonicity){
 
 //Testing isUFCallParam: is a tuple variable argument to a UFS? (with its index)
 
-TEST_F(SetRelationTest, ISUFSARG) {
+TEST_F(SetRelationTest, isUFCallParam) {
 
     Relation *r1 = new Relation("[n] -> { [i,j] -> [ip,jp] : i = col(jp) "
        "and i < ip and 0 <= i and i < n and idx(i) <= j and j < idx(i+1) "
