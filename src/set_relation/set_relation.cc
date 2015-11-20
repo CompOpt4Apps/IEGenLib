@@ -2989,7 +2989,6 @@ class VisitorIsUFCallParam : public Visitor {
 
     void preVisitTupleVarTerm(iegenlib::TupleVarTerm *t) {
         if (t->tvloc()==mTupleID) {
-//if (t->tvloc()==7) std::cout<<std::endl <<"hello 7!"<< std::endl;
             mSeenTupleVar = true;
         }
     }
@@ -3002,17 +3001,7 @@ class VisitorIsUFCallParam : public Visitor {
     void postVisitExp(iegenlib::Exp * e) {
         // An expression that is not an inequality or 
         // an equality is a parameter to a UFCall.
-/*
-if(e->isExpression())
-std::cout << std::endl <<"hello  E!   " ;
-else if(e->isInequality())
-std::cout << std::endl <<"hello  I!   " ;
-else if(e->isEquality())
-std::cout << std::endl <<"hello  Eq!   " ;
-else
-std::cout << std::endl <<"hello  Blah!   " ;
-std::cout<<e->toString() << std::endl;
-*/
+
         if (e->isExpression() and mSeenTupleVar) {
             mResult = true;
         }
