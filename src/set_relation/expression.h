@@ -347,6 +347,9 @@ public:
     //! Returns true if the Term is a const
     bool isConst() const { return false; }
 
+    // Returns location of TV 
+    int tvloc(){return mLocation;}
+
     //--------------------- methods for the use in expression
 
     //! Returns true if this term has the same factor (i.e. everything
@@ -541,7 +544,7 @@ private:
 class Exp {
 public:
     //! Default constructor
-    inline Exp() {}
+    inline Exp() {setExpression();}
 
     //! Copy constructor.  Performs a deep copy.
     Exp(const Exp& other);

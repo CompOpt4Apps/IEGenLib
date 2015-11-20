@@ -2944,5 +2944,90 @@ Relation* Relation::addConstraintsDueToMonotonicity() const {
     return retval;
 }
 
+/*****************************************************************************/
+#pragma mark -
+/*************** setExpType **************************************************/
+
+void Conjunction::setExpType()
+{
+    std::list<Exp*>::iterator expIter = mEqualities.begin();
+    while (expIter != mEqualities.end()) {
+        (*expIter)->setEquality();
+        expIter++;
+    }
+    expIter=mInequalities.begin();
+    while (expIter != mInequalities.end()) {
+        (*expIter)->setInequality();
+        expIter++;
+    }
+}
+
+void SparseConstraints::setExpType()
+{
+    for (std::list<Conjunction*>::iterator i=mConjunctions.begin();
+                i != mConjunctions.end(); i++) {
+        (*i)->setExpType();
+    }
+}
+
+/*****************************************************************************/
+#pragma mark -
+/*************** isUFCallParam *****************************/
+
+class VisitorIsUFCallParam : public Visitor {
+  private:
+    bool mResult;
+    int mTupleID;
+    bool mSeenTupleVar;
+    bool prevSeen;
+
+  public:
+    VisitorIsUFCallParam(int tupleID) : mResult(false),
+                 mTupleID(tupleID), mSeenTupleVar(false), prevSeen(false) {}
+
+    bool returnResult() { return mResult; }
+
+    void preVisitTupleVarTerm(iegenlib::TupleVarTerm *t) {
+        if (t->tvloc()==mTupleID) {
+//if (t->tvloc()==7) std::cout<<std::endl <<"hello 7!"<< std::endl;
+            mSeenTupleVar = true;
+        }
+    }
+    void preVisitExp(iegenlib::Exp * e) {
+        // Recording value of mSeenTupleVar, so we can change it back in our
+        // post visit.
+        prevSeen = mSeenTupleVar;
+        mSeenTupleVar = false;
+    }
+    void postVisitExp(iegenlib::Exp * e) {
+        // An expression that is not an inequality or 
+        // an equality is a parameter to a UFCall.
+/*
+if(e->isExpression())
+std::cout << std::endl <<"hello  E!   " ;
+else if(e->isInequality())
+std::cout << std::endl <<"hello  I!   " ;
+else if(e->isEquality())
+std::cout << std::endl <<"hello  Eq!   " ;
+else
+std::cout << std::endl <<"hello  Blah!   " ;
+std::cout<<e->toString() << std::endl;
+*/
+        if (e->isExpression() and mSeenTupleVar) {
+            mResult = true;
+        }
+        // Revive flag for any higher level expression in traversal
+        mSeenTupleVar = prevSeen;
+    }
+
+};
+
+bool SparseConstraints::isUFCallParam(int tupleID) {
+
+    VisitorIsUFCallParam * v = new VisitorIsUFCallParam(tupleID);
+    this->acceptVisitor(v);
+    bool result = v->returnResult();
+    return result;
+}
 
 }//end namespace iegenlib
