@@ -1087,7 +1087,8 @@ TEST_F(ExpTest, InvertFuncToExposeFactorFuncInverse) {
     // f is bijective.
     iegenlib::setCurrEnv();
     iegenlib::appendCurrEnv("f",
-        new Set("{[i]:0<=i &&i<G}"), new Set("{[i]:0<=i &&i<G}"), true);
+        new Set("{[i]:0<=i &&i<G}"), new Set("{[i]:0<=i &&i<G}"), true,
+        iegenlib::Monotonic_NONE);
 
     // Now expose y from above expression
     Exp * y_exposed = e1->invertFuncToExposeFactor(new VarTerm("y"));
@@ -1118,7 +1119,8 @@ TEST_F(ExpTest, InvertFuncToExposeFactorFuncInverse) {
     
     // where g has an inverse g_inv 
     iegenlib::appendCurrEnv("g",
-        new Set("{[i]:0<=i &&i<G}"), new Set("{[i]:0<=i &&i<G}"), true);
+        new Set("{[i]:0<=i &&i<G}"), new Set("{[i]:0<=i &&i<G}"), true,
+        iegenlib::Monotonic_NONE);
     
     // want to expose __tv2
     Exp * tv2_exposed = e2->invertFuncToExposeFactor(new TupleVarTerm(2));
@@ -1146,7 +1148,8 @@ TEST_F(ExpTest, InvertFuncToExposeFactorFuncInverse) {
     
     // where tau has an inverse tau_inv
     iegenlib::appendCurrEnv("tau",
-        new Set("{[i]:0<=i &&i<G}"), new Set("{[i]:0<=i &&i<G}"), true);
+        new Set("{[i]:0<=i &&i<G}"), new Set("{[i]:0<=i &&i<G}"), true,
+        iegenlib::Monotonic_NONE);
     
     // want to expose i
     Exp * i_exposed = e3->invertFuncToExposeFactor(new VarTerm("i"));

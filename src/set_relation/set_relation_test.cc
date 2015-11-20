@@ -459,7 +459,8 @@ TEST_F(SetRelationTest, SolveForFactor) {
     // Upon creation all expressions, conjunctions, sets, etc.
     // should use this environment until another one is constructed.
     iegenlib::appendCurrEnv("f",
-        new Set("{[i]:0<=i &&i<G}"), new Set("{[i]:0<=i &&i<G}"), true);
+        new Set("{[i]:0<=i &&i<G}"), new Set("{[i]:0<=i &&i<G}"), true,
+        iegenlib::Monotonic_NONE);
 
     // Create the expression
     Exp* exp = new Exp();			// t - f(y) = 0
@@ -534,7 +535,8 @@ TEST_F(SetRelationTest, FindFunction) {
     // Upon creation all expressions, conjunctions, sets, etc.
     // should use this environment until another one is constructed.
     iegenlib::appendCurrEnv("f",
-        new Set("{[i]:0<=i &&i<G}"), new Set("{[i]:0<=i &&i<G}"), true);
+        new Set("{[i]:0<=i &&i<G}"), new Set("{[i]:0<=i &&i<G}"), true,
+        iegenlib::Monotonic_NONE);
 
     exp = conj->findFunction(1, 2,3);
     EXPECT_TRUE(exp);
@@ -994,7 +996,8 @@ TEST_F(SetRelationTest, ComposeWithUFCNeedsInverse) {
     // Upon creation all expressions, conjunctions, sets, etc.
     // should use this environment until another one is constructed.
     iegenlib::appendCurrEnv("f",
-        new Set("{[i]:0<=i &&i<G}"), new Set("{[i]:0<=i &&i<G}"), true);
+        new Set("{[i]:0<=i &&i<G}"), new Set("{[i]:0<=i &&i<G}"), true,
+        iegenlib::Monotonic_NONE);
 
     Relation* r1 = new Relation("{ [v,s] -> [w, t] : w=g(v+42) && s = f(t) }");
     Relation* r2
@@ -1713,7 +1716,8 @@ TEST_F(SetRelationTest, UsingEnvironment) {
 
     // Now set up an environment that defines an inverse for f.
     iegenlib::appendCurrEnv("f",
-        new Set("{[i]:0<=i &&i<G}"), new Set("{[i]:0<=i &&i<G}"), true);
+        new Set("{[i]:0<=i &&i<G}"), new Set("{[i]:0<=i &&i<G}"), true,
+        iegenlib::Monotonic_NONE);
 
     // Create the relations
     Relation* r1 = new Relation("{ [v,s] -> [w, t] : w=v+2 && s = f(t) }");
@@ -1868,15 +1872,20 @@ TEST_F(SetRelationTest, IEGRONE41Zeros) {
 TEST_F(SetRelationTest, IEGRONE72CollapsingInverseFuncs) {
     iegenlib::setCurrEnv();
     iegenlib::appendCurrEnv("f",
-        new Set("{[i]:0<=i &&i<G}"), new Set("{[i]:0<=i &&i<G}"), true);
+        new Set("{[i]:0<=i &&i<G}"), new Set("{[i]:0<=i &&i<G}"), true,
+        iegenlib::Monotonic_NONE);
     iegenlib::appendCurrEnv("g",
-        new Set("{[i]:0<=i &&i<G}"), new Set("{[i]:0<=i &&i<G}"), true);
+        new Set("{[i]:0<=i &&i<G}"), new Set("{[i]:0<=i &&i<G}"), true,
+        iegenlib::Monotonic_NONE);
     iegenlib::appendCurrEnv("h",
-        new Set("{[i]:0<=i &&i<G}"), new Set("{[i]:0<=i &&i<G}"), true);
+        new Set("{[i]:0<=i &&i<G}"), new Set("{[i]:0<=i &&i<G}"), true,
+        iegenlib::Monotonic_NONE);
     iegenlib::appendCurrEnv("k",
-        new Set("{[i]:0<=i &&i<G}"), new Set("{[i]:0<=i &&i<G}"), true);
+        new Set("{[i]:0<=i &&i<G}"), new Set("{[i]:0<=i &&i<G}"), true,
+        iegenlib::Monotonic_NONE);
     iegenlib::appendCurrEnv("t",
-        new Set("{[i]:0<=i &&i<G}"), new Set("{[i]:0<=i &&i<G}"), true);
+        new Set("{[i]:0<=i &&i<G}"), new Set("{[i]:0<=i &&i<G}"), true,
+        iegenlib::Monotonic_NONE);
 
     EXPECT_EQ(iegenlib::queryInverseCurrEnv("f"),"f_inv");
 
@@ -2221,7 +2230,8 @@ TEST_F(SetRelationTest, MoldynLoopAlign) {
 
     //iegenlib::appendCurrEnv("sigma() = inverse sigma_inv()");
     iegenlib::appendCurrEnv("sigma",
-        new Set("{[i]:0<=i &&i<G}"), new Set("{[i]:0<=i &&i<G}"), true);
+        new Set("{[i]:0<=i &&i<G}"), new Set("{[i]:0<=i &&i<G}"), true,
+        iegenlib::Monotonic_NONE);
 
     Relation* a1_1;
     Relation* T_I0_to_I1;
@@ -2976,7 +2986,8 @@ TEST_F(SetRelationTest, ComposeForDataReorderingMoldyn) {
 TEST_F(SetRelationTest, ComposeForIterationReorderingMoldyn) {
 
     iegenlib::appendCurrEnv("delta",
-        new Set("{[i]:0<=i &&i<G}"), new Set("{[i]:0<=i &&i<G}"), true);
+        new Set("{[i]:0<=i &&i<G}"), new Set("{[i]:0<=i &&i<G}"), true,
+        iegenlib::Monotonic_NONE);
     
     // scattering function
     Relation* S1 = new Relation("{ [ i ] -> [ 0, s, 0, i, 0 ] }");
@@ -3020,7 +3031,8 @@ TEST_F(SetRelationTest, ComposeForDataReorderingPlusIterationReorderingMoldyn){
     //refresh the env and add delta's inverse delta_inv
     iegenlib::setCurrEnv();
     iegenlib::appendCurrEnv("delta",
-        new Set("{[i]:0<=i &&i<G}"), new Set("{[i]:0<=i &&i<G}"), true);
+        new Set("{[i]:0<=i &&i<G}"), new Set("{[i]:0<=i &&i<G}"), true,
+        iegenlib::Monotonic_NONE);
     
     // This is the original Data Access Function
     // it maps from the local iteration space to the data space
@@ -3185,7 +3197,8 @@ TEST_F(SetRelationTest, LoopFlatteningMoldyn){
     //refresh the env and add alpha's inverse
     iegenlib::setCurrEnv();
     iegenlib::appendCurrEnv("alpha",
-        new Set("{[i]:0<=i &&i<G}"), new Set("{[i]:0<=i &&i<G}"), true);
+        new Set("{[i]:0<=i &&i<G}"), new Set("{[i]:0<=i &&i<G}"), true,
+        iegenlib::Monotonic_NONE);
     // FIXME: we need to detect that the domain I give above
     // and the way alpha is being used is inconsistent
     
@@ -3224,7 +3237,8 @@ TEST_F(SetRelationTest, LoopFlatteningCSRtoCOO){
     //refresh the env and add alpha's inverse
     iegenlib::setCurrEnv();
     iegenlib::appendCurrEnv("tau",
-        new Set("{[i]:0<=i &&i<G}"), new Set("{[i]:0<=i &&i<G}"), true);
+        new Set("{[i]:0<=i &&i<G}"), new Set("{[i]:0<=i &&i<G}"), true,
+        iegenlib::Monotonic_NONE);
     // FIXME: we need to detect that the domain I give above
     // and the way tau is being used is inconsistent
     
@@ -3360,37 +3374,37 @@ class VisitorDebugTest : public Visitor {
   public:
     std::string returnResult() { return ss.str(); }
     
-    void visitTerm(iegenlib::Term * t) {
+    void postVisitTerm(iegenlib::Term * t) {
         ss << "visitTerm (" << t->toString() << ")" << std::endl;
     }
-    void visitUFCallTerm(iegenlib::UFCallTerm * t) {
+    void postVisitUFCallTerm(iegenlib::UFCallTerm * t) {
         ss << "visitUFCallTerm (" << t->toString() << ")" << std::endl;
     }
-    void visitTupleVarTerm(iegenlib::TupleVarTerm * t) {
+    void postVisitTupleVarTerm(iegenlib::TupleVarTerm * t) {
         ss << "visitVarTerm (" << t->toString() << ")" << std::endl;
     }
-    void visitVarTerm(iegenlib::VarTerm * t) {
+    void postVisitVarTerm(iegenlib::VarTerm * t) {
         ss << "visitTerm (" << t->toString() << ")" << std::endl;
     }
-    void visitTupleExpTerm(iegenlib::TupleExpTerm * t) {
+    void postVisitTupleExpTerm(iegenlib::TupleExpTerm * t) {
         ss << "visitTupleExpTerm (" << t->toString() << ")" << std::endl;
     }
-    void visitExp(iegenlib::Exp * e) {
+    void postVisitExp(iegenlib::Exp * e) {
         ss << "visitExp (" << e->toString() << ")" << std::endl;
     }
    
     // Classes in set_relation.h
-    void visitConjunction(iegenlib::Conjunction * c) {
+    void postVisitConjunction(iegenlib::Conjunction * c) {
         ss << "visitConjunction (" << c->toString() << ")" << std::endl;
     }
-    void visitSparseConstraints(iegenlib::SparseConstraints * sc) {
+    void postVisitSparseConstraints(iegenlib::SparseConstraints * sc) {
         ss << "visitSparseConstraints (" << sc->toString() 
                  << ")" << std::endl;
     }
-    void visitSet(iegenlib::Set * s) {
+    void postVisitSet(iegenlib::Set * s) {
         ss << "visitSet (" << s->toString() << ")" << std::endl;
     }
-    void visitRelation(iegenlib::Relation * r) {
+    void postVisitRelation(iegenlib::Relation * r) {
         ss << "visitRelation (" << r->toString() << ")" << std::endl;
     }
 };
@@ -3464,4 +3478,55 @@ TEST_F(SetRelationTest, addUFConstraintsTest){
   }
  
               
+}
+
+#pragma mark addConstraintsDueToMonotonicity
+TEST_F(SetRelationTest, addConstraintsDueToMonotonicity){
+  {
+    iegenlib::setCurrEnv();
+    // Now set up an environment that defines an inverse for f.
+    // Upon creation all expressions, conjunctions, sets, etc.
+    // should use this environment until another one is constructed.
+    iegenlib::appendCurrEnv("f",
+        new Set("{[i]:0<=i &&i<G}"), new Set("{[i]:0<=i &&i<G}"), false,
+        iegenlib::Monotonic_Nondecreasing);
+
+    Set* s = new Set("{[i,j] : f(i)<g(j)}");
+    Set* result = s->addConstraintsDueToMonotonicity();
+    Set* expected = new Set("{[i,j] : f(i)<g(j) && i<j}");
+    
+    //EXPECT_EQ(expected->prettyPrintString(), result->prettyPrintString());
+
+    delete s;
+    delete result;
+    delete expected;
+  }
+/*
+  {
+    Relation* r = new Relation("{[i,j]->[k] : index(i) <= j && "
+        "j < index(i+1) && diagptr(v+1)<k && k<indexptr(i)}");
+    
+    Relation* result1 = r->addUFConstraints("index",">", "diagptr");
+    
+    EXPECT_EQ("{ [i, j] -> [k] : j - index(i) >= 0 && -j + index(i + 1) "
+              "- 1 >= 0 && -k + indexptr(i) - 1 >= 0 && k - diagptr(v + "
+              "1) - 1 >= 0 && -diagptr(i) + index(i) + 1 >= 0 && -diagpt"
+              "r(i + 1) + index(i + 1) + 1 >= 0 && -diagptr(v + 1) + ind"
+              "ex(v + 1) + 1 >= 0 }",
+              result1->prettyPrintString());
+
+    Relation* result2 = r->addUFConstraints("index","=", "diagptr");
+
+    EXPECT_EQ("{ [i, j] -> [k] : diagptr(i) - index(i) = 0 && diagptr(i + "
+              "1) - index(i + 1) = 0 && diagptr(v + 1) - index(v + 1) = 0 "
+              "&& j - index(i) >= 0 && -j + index(i + 1) - 1 >= 0 && -k + "
+              "indexptr(i) - 1 >= 0 && k - diagptr(v + 1) - 1 >= 0 }",
+              result2->prettyPrintString());
+
+    
+    delete r;
+    delete result1;
+    delete result2;
+  }
+*/        
 }

@@ -85,7 +85,8 @@ TEST_F(EnvironmentTest, ToString) {
 TEST_F(EnvironmentTest, EnvUninterpFunc) {
     // Declare a function f.
     UninterpFunc *sf = new UninterpFunc("f",
-        new Set("{[i]:0<=i &&i<G}"), new Set("{[i]:0<=i &&i<G}"), true);
+        new Set("{[i]:0<=i &&i<G}"), new Set("{[i]:0<=i &&i<G}"),
+                true, iegenlib::Monotonic_NONE);
 
     // Now set up an environment with f.
     Environment *env = new Environment(sf);

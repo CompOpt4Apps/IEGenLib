@@ -341,7 +341,7 @@ TEST_F(NormalizationTest, EqUFParamRelation) {
     iegenlib::setCurrEnv();
     iegenlib::appendCurrEnv("theta",
         new Set("{[i]:0<=i &&i<N}"), 
-        new Set("{[j]:0<=j &&j<P}"), true);
+        new Set("{[j]:0<=j &&j<P}"), true, iegenlib::Monotonic_NONE);
 
     Relation *r1 = new Relation("{[tstep,i] -> [s0,t,i1,x] : "
                    "tstep = s0 && i = i1 && t = theta(i) && x = 0 }");
@@ -380,7 +380,7 @@ TEST_F(NormalizationTest, EqUFParamRelation2) {
     iegenlib::setCurrEnv();
     iegenlib::appendCurrEnv("theta",
         new Set("{[i,j]:0<=i &&i<M && 0<=j &&j<P}"),
-        new Set("{[i]:0<=i &&i<N}"), true);
+        new Set("{[i]:0<=i &&i<N}"), true, iegenlib::Monotonic_NONE);
 
     Relation *r1 = new Relation("{[tstep,i] -> [s0,t,i1,x] : "
                    "tstep = s0 && i = i1 && t = theta(0,i) && x = 0 }");
@@ -410,10 +410,10 @@ TEST_F(NormalizationTest, EqUFSignatureRelation) {
     iegenlib::setCurrEnv();
     iegenlib::appendCurrEnv("theta",
         new Set("{[i,j]:0<=i &&i<M && 0<=j &&j<P}"),
-        new Set("{[i]:0<=i &&i<N}"), true);
+        new Set("{[i]:0<=i &&i<N}"), true, iegenlib::Monotonic_NONE);
     iegenlib::appendCurrEnv("sigma",
         new Set("{[i,j]:0<=i &&i<M && 0<=j &&j<P}"),
-        new Set("{[i]:0<=i &&i<N}"), true);
+        new Set("{[i]:0<=i &&i<N}"), true, iegenlib::Monotonic_NONE);
 
     Relation *r1 = new Relation("{[tstep,i] -> [0,s0,1,t,0,i1,x] : "
                    "tstep = s0 && i = i1 && t = theta(0,i) && x = 0 }");
@@ -442,10 +442,10 @@ TEST_F(NormalizationTest, NestedUFCalls1D1D1D) {
     
     iegenlib::appendCurrEnv("left",
         new Set("{[i]:0<=i &&i<K}"),
-        new Set("{[i]:0<=i &&i<M}"), true);
+        new Set("{[i]:0<=i &&i<M}"), true, iegenlib::Monotonic_NONE);
     iegenlib::appendCurrEnv("sigma",
         new Set("{[i]:0<=i &&i<M}"),
-        new Set("{[i]:0<=i &&i<N}"), true);
+        new Set("{[i]:0<=i &&i<N}"), true, iegenlib::Monotonic_NONE);
 	
     Set *r1 = new Set("{[s,i1,s2,e] : "
                    "s = s2 && i1 = sigma(left(e)) }");
@@ -512,10 +512,11 @@ TEST_F(NormalizationTest, NestedUFCalls1D2D1D) {
     
     iegenlib::appendCurrEnv("left",
         new Set("{[i]:0<=i &&i<K}"),
-        new Set("{[i,j]:0<=i &&i<M && 0<=j &&j<P}"), true);
+        new Set("{[i,j]:0<=i &&i<M && 0<=j &&j<P}"), true,
+        iegenlib::Monotonic_NONE);
     iegenlib::appendCurrEnv("sigma",
         new Set("{[i,j]:0<=i &&i<M && 0<=j &&j<P}"),
-        new Set("{[i]:0<=i &&i<N}"), true);
+        new Set("{[i]:0<=i &&i<N}"), true, iegenlib::Monotonic_NONE);
 
     Set *r1 = new Set("{[s,i1,s2,e] : "
                    "s = s2 && i1 = sigma(left(e)) }");
@@ -570,13 +571,13 @@ TEST_F(NormalizationTest, NestedUFCallsEqUFCalls) {
     
     iegenlib::appendCurrEnv("left",
         new Set("{[i]:0<=i &&i<K}"),
-        new Set("{[i]:0<=i &&i<M}"), true);
+        new Set("{[i]:0<=i &&i<M}"), true, iegenlib::Monotonic_NONE);
     iegenlib::appendCurrEnv("sigma",
         new Set("{[j]:0<=j &&j<P}"),
-        new Set("{[i]:0<=i &&i<N}"), true);
+        new Set("{[i]:0<=i &&i<N}"), true, iegenlib::Monotonic_NONE);
     iegenlib::appendCurrEnv("sl",
         new Set("{[j]:0<=j &&j<Q}"),
-        new Set("{[i]:0<=i &&i<R}"), true);
+        new Set("{[i]:0<=i &&i<R}"), true, iegenlib::Monotonic_NONE);
 
     Set *r1 = new Set("{[i,j,e,f] : "
                    "i = j && e = f && sl(i) = sigma(left(e)) }");
@@ -618,7 +619,7 @@ TEST_F(NormalizationTest, EqUFSignatureEqParams) {
     
     iegenlib::appendCurrEnv("theta",
         new Set("{[i,j]:0<=i &&i<P && 0<=j &&j<=N}"),
-        new Set("{[i]:0<=i &&i<M}"), true);
+        new Set("{[i]:0<=i &&i<M}"), true, iegenlib::Monotonic_NONE);
 
     Set *r1 = new Set("{[tstep,i,s0,t,i1,x] : "
                    "tstep = s0 && i = i1 && t = theta(0,i1) && x = 0 "
@@ -664,7 +665,7 @@ TEST_F(NormalizationTest, AffineExpWithUFCall) {
     
     iegenlib::appendCurrEnv("f",
         new Set("{[i]:0<=i &&i<P}"),
-        new Set("{[i]:0<=i &&i<M}"), true);
+        new Set("{[i]:0<=i &&i<M}"), true, iegenlib::Monotonic_NONE);
 
     Set *r1 = new Set("{[x,d] : d = f(x) && f(x) + x = f(x) + x}");
 
@@ -692,7 +693,7 @@ TEST_F(NormalizationTest, AffineExpWithUFCall) {
     
     iegenlib::appendCurrEnv("f",
         new Set("{[i]:0<=i &&i<P}"),
-        new Set("{[i]:0<=i &&i<M}"), true);
+        new Set("{[i]:0<=i &&i<M}"), true, iegenlib::Monotonic_NONE);
 
     Set *r2 = new Set("{[x] : f(x) - f(3) = 0 && x = 3}");
 
@@ -723,7 +724,7 @@ TEST_F(NormalizationTest, EqAffineExpParamForUFCalls) {
     
     iegenlib::appendCurrEnv("f",
         new Set("{[i]:0<=i &&i<P}"),
-        new Set("{[i]:0<=i &&i<M}"), true);
+        new Set("{[i]:0<=i &&i<M}"), true, iegenlib::Monotonic_NONE);
 
     Set *r1 = new Set("{[i,j,x] : j = i + 2 && f(j-1) = x }");
 
@@ -921,7 +922,8 @@ TEST_F(NormalizationTest, buildingNormalize) {
     iegenlib::setCurrEnv();
     iegenlib::appendCurrEnv("tau",
         new Set("{[i]:0<=i &&i<N}"), 
-        new Set("{[i,j]:0<=i &&i<M && 0<=j &&j<P}"), true);
+        new Set("{[i,j]:0<=i &&i<M && 0<=j &&j<P}"), true,
+        iegenlib::Monotonic_NONE);
 
 /* MMS, keep for historical reasons
     // When normalize only does step 0 it just groups together
@@ -1001,7 +1003,8 @@ TEST_F(NormalizationTest, ufCallsToTempVars) {
 
     // Initialize an environment for the function f.    
     iegenlib::appendCurrEnv("f",
-        new Set("{[i]:0<=i &&i<G}"), new Set("{[i]:0<=i &&i<G}"), true);
+        new Set("{[i]:0<=i &&i<G}"), new Set("{[i]:0<=i &&i<G}"), true,
+        iegenlib::Monotonic_NONE);
     
     // Iterate over all the conjunctions in our relation to determine
     // what the ufCallsToTempVars is doing.

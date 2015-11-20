@@ -56,7 +56,7 @@ void setCurrEnv(std::string funcName, Set* domain, Set* range, bool bijective);
 //! Will create and add to global environment a funcName_inv if funcName 
 //! is bijective.
 void appendCurrEnv(std::string funcName, Set* domain, Set* range, 
-                   bool bijective);
+                   bool bijective, MonotonicType monoType);
 
 //! search this environment for a function inverse
 std::string queryInverseCurrEnv(const std::string funcName);
@@ -114,6 +114,9 @@ public:
 
 	//! Returns a clone of the function's range Set or NULL.
 	Set* funcRange(const std::string funcName) const;
+	
+	//! Returns whether a function is monotonistic or not and how.
+	MonotonicType funcMonoType(const std::string funcName) const;
 
     std::string toString() const;
 	  

@@ -2621,6 +2621,8 @@ void Relation::normalize() {
 
 //! Visitor design pattern, see Visitor.h for usage
 void Conjunction::acceptVisitor(Visitor *v) {
+    v->preVisitConjunction(this);
+    
     std::list<Exp*>::iterator expIter = mEqualities.begin();
     while (expIter != mEqualities.end()) {
         (*expIter)->acceptVisitor(v);
@@ -2631,28 +2633,31 @@ void Conjunction::acceptVisitor(Visitor *v) {
         (*expIter)->acceptVisitor(v);
         expIter++;
     }
-    v->visitConjunction(this);
+    v->postVisitConjunction(this);
 }
 
 //! Visitor design pattern, see Visitor.h for usage
 void SparseConstraints::acceptVisitor(Visitor *v) {
+    v->preVisitSparseConstraints(this);
     for (std::list<Conjunction*>::iterator i=mConjunctions.begin();
                 i != mConjunctions.end(); i++) {
         (*i)->acceptVisitor(v);
     }
-    v->visitSparseConstraints(this);
+    v->postVisitSparseConstraints(this);
 }
 
 //! Visitor design pattern, see Visitor.h for usage
 void Set::acceptVisitor(Visitor *v) {
+    v->preVisitSet(this);
     this->SparseConstraints::acceptVisitor(v);
-    v->visitSet(this);
+    v->postVisitSet(this);
 }
 
 //! Visitor design pattern, see Visitor.h for usage
 void Relation::acceptVisitor(Visitor *v) {
+    v->preVisitRelation(this);
     SparseConstraints::acceptVisitor(v);
-    v->visitRelation(this);
+    v->postVisitRelation(this);
 }
 
 
@@ -2670,7 +2675,7 @@ class VisitorFindUFCallTerms : public Visitor {
   
     std::set<UFCallTerm> returnResult() { return mTerms; }
     
-    void visitUFCallTerm(iegenlib::UFCallTerm * t) {
+    void postVisitUFCallTerm(iegenlib::UFCallTerm * t) {
         if (t->name() == mTargetUF) {
             UFCallTerm termCopy = *t;
             termCopy.setCoefficient(1);
@@ -2779,7 +2784,7 @@ void SparseConstraints::addUFConstraintsHelper(std::string uf1str,
 }
 
 Set* Set::addUFConstraints(std::string uf1str, 
-                           std::string opstr, std::string uf2str) {
+                           std::string opstr, std::string uf2str) const {
     
     Set* retval = new Set(*this);
     retval->addUFConstraintsHelper(uf1str,opstr,uf2str);
@@ -2787,9 +2792,155 @@ Set* Set::addUFConstraints(std::string uf1str,
 }
 
 Relation* Relation::addUFConstraints(std::string uf1str, 
-                                     std::string opstr, std::string uf2str) {
+                                     std::string opstr, 
+                                     std::string uf2str) const {
     Relation* retval = new Relation(*this);
     retval->addUFConstraintsHelper(uf1str,opstr,uf2str);
+    return retval;
+}
+
+/******************************************************************************/
+#pragma mark -
+/*************** addConstraintsDueToMonotonicity ******************************/
+/*
+class VisitorUniqueFactorToIntMap : public Visitor {
+  private:
+    // Gonna use the built-in comparison for std::set to make
+    // sure we only record unique terms.
+    std::set<Term> mTerms;
+    std::set<TupleVarTerm>  mTupleVarTerms;
+    std::set<TupleExpTerm>  mTupleExpTerms;
+    std::set<VarTerm>       mVarTerms;
+    std::set<UFCallTerm>    mUFCallTerms;
+    
+    std::set<Term*> mUniqueFactors;
+    
+  public:
+    VisitorFindUFCallTerms(std::string targetUF) : mTargetUF(targetUF) {}
+  
+    std::set<UFCallTerm> returnResult() { return mTerms; }
+    
+    void visitUFCallTerm(iegenlib::UFCallTerm * t) {
+        if (t->name() == mTargetUF) {
+            UFCallTerm termCopy = *t;
+            termCopy.setCoefficient(1);
+            mTerms.insert(termCopy);
+        }
+    }
+};
+*/
+
+
+/*! For adding constraints involving uninterpreted functions.
+**  For example, if forall e, index(e)<=diagptr(e), then
+**  this method will find all instances of index() and diagptr()
+**  in the current constraints and using the current parameters
+**  add in the provided constraint.  Let's say that diagptr is
+**  called with diagptr(foo) and diagptr(x+1) and index is called
+**  with index(y).  Then the following constraints will be added
+**      index(foo)<=diagptr(foo)
+**      index(x+1)<=diagptr(x+1)
+**      index(y)<=diagptr(y)
+**  Makes changes to the current SparseConstraints object.
+*/
+/*
+void SparseConstraints::addUFConstraintsHelper(std::string uf1str, 
+        std::string opstr, std::string uf2str) {
+
+    // Have visitors that collects UFTerms.
+    VisitorFindUFCallTerms * v1 = new VisitorFindUFCallTerms(uf1str);
+    this->acceptVisitor(v1);
+    std::set<UFCallTerm> uf1Terms = v1->returnResult();
+    VisitorFindUFCallTerms * v2 = new VisitorFindUFCallTerms(uf2str);
+    this->acceptVisitor(v2);
+    std::set<UFCallTerm> uf2Terms = v2->returnResult();
+    
+    // Rename all of the uf2Terms functions to uf1 and
+    // insert into uf1Terms set so don't get repetition of same
+    // parameters.
+    for (std::set<UFCallTerm>::const_iterator tIter=uf2Terms.begin();
+            tIter != uf2Terms.end(); tIter++) {
+        UFCallTerm uf2term = (*tIter);
+        uf2term.setName( uf1str );
+        uf1Terms.insert( uf2term );
+    }
+     
+    // Create a set of new constraints for all of the instances
+    // in uf1Terms.
+    for (std::set<UFCallTerm>::const_iterator tIter=uf1Terms.begin();
+            tIter != uf1Terms.end(); tIter++) {
+        
+        UFCallTerm uf1term = (*tIter);
+        
+        // Copy uf1 term and then name the function to uf2 in copy.
+        // Need to copies because constraints will own both terms.
+        UFCallTerm *uf1copy1 = new UFCallTerm(uf1term);
+        UFCallTerm *uf1copy2 = new UFCallTerm(uf1term);
+        uf1copy2->setName(uf2str);
+        Exp* constraint = new Exp();
+        
+        // uf1 = uf2, uf1 - uf2 = 0
+        if (opstr=="=") {
+            uf1copy2->multiplyBy(-1);
+            constraint->setEquality();
+            
+        // uf1 <= uf2, uf2 - uf1 >= 0
+        } else if (opstr=="<=") {
+            uf1copy1->multiplyBy(-1);
+            constraint->setInequality();
+                   
+        // uf1 >= uf2, uf1 - uf2 >= 0
+        } else if (opstr==">=") {
+            uf1copy2->multiplyBy(-1);
+            constraint->setInequality();
+
+        // uf1 > uf2, uf1 - uf2 + 1 >= 0
+        } else if (opstr==">") {
+            uf1copy2->multiplyBy(-1);
+            constraint->addTerm( new Term(1) );
+            constraint->setInequality();
+
+        // uf1 < uf2, uf2 - uf1 + 1 >= 0
+        } else if (opstr=="<") {
+            uf1copy1->multiplyBy(-1);
+            constraint->addTerm( new Term(1) );
+            constraint->setInequality();
+
+        // Otherwise have comparison operator we don't handle.
+        } else {
+            std::cerr << "SparseConstraints::addUFConstraintsHelper: "
+                      << "operator not handled " << opstr << std::endl;
+            assert(0);
+        }
+        
+        // Actually add in the constraint.
+        constraint->addTerm(uf1copy1);
+        constraint->addTerm(uf1copy2);
+        
+        // Put constraint into each of our conjunctions.
+        for (std::list<Conjunction*>::iterator iter=mConjunctions.begin();
+                iter != mConjunctions.end(); iter++) {
+            if (constraint->isEquality()) {
+                (*iter)->addEquality(constraint);
+            } else {
+                (*iter)->addInequality(constraint);
+            }
+        }
+
+    }
+
+}
+*/
+
+Set* Set::addConstraintsDueToMonotonicity() const {
+    Set* retval = new Set(*this);
+    //retval->addConstraintsDueToMonotonicity(uf1str,opstr,uf2str);
+    return retval;
+}
+
+Relation* Relation::addConstraintsDueToMonotonicity() const {
+    Relation* retval = new Relation(*this);
+    //retval->addUFConstraintsHelper(uf1str,opstr,uf2str);
     return retval;
 }
 

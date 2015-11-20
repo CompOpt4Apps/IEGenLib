@@ -29,10 +29,12 @@ void setCurrEnv() {
 
 //! Resets the current environment to empty and then accepts new UninterpFunc
 //! declaration into new environment.
-void setCurrEnv(std::string funcName, Set* domain, Set* range, bool bijective) {
+void setCurrEnv(std::string funcName, Set* domain, Set* range,
+                bool bijective, MonotonicType monoType) {
     currentEnv.reset();
     // create a new uninterpreted function description
-    UninterpFunc* ufunc = new UninterpFunc(funcName, domain, range, bijective);
+    UninterpFunc* ufunc 
+        = new UninterpFunc(funcName, domain, range, bijective, monoType);
     // create new environment
     Environment* env = new Environment(ufunc);
     // copy the contents of the map over to our map
@@ -58,9 +60,10 @@ void setCurrEnv(std::string str) {
 
 
 void appendCurrEnv(std::string funcName, Set* domain, Set* range, 
-                   bool bijective) {
+                   bool bijective, MonotonicType monoType) {
     // create a new uninterpreted function description
-    UninterpFunc* ufunc = new UninterpFunc(funcName, domain, range, bijective);
+    UninterpFunc* ufunc = new UninterpFunc(funcName, domain, range, 
+                                           bijective, monoType);
     // create new environment
     Environment* env = new Environment(ufunc);
     currentEnv.append(env);
@@ -145,7 +148,9 @@ Environment::Environment(UninterpFunc* symfunc){
         if (mUninterpFuncMap.find(inv_name)==mUninterpFuncMap.end()) {
             mUninterpFuncMap[inv_name] = new UninterpFunc(inv_name,
                 new Set(*(symfunc->getRange())), 
-                new Set(*(symfunc->getDomain())), true);
+                new Set(*(symfunc->getDomain())), true,Monotonic_NONE);
+                // FIXME: now just setting to Monotonic_NONE but should
+                // determine inverse of other function.
             mInverseMap[symfunc->getName()] = inv_name;
             mInverseMap[inv_name] = symfunc->getName();
         } else {

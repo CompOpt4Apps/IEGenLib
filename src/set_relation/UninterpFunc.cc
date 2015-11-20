@@ -23,8 +23,9 @@
 namespace iegenlib{
 
 UninterpFunc::UninterpFunc( std::string name, Set* domain, Set* range, 
-                            bool bijective) :
-        mName(name), mDomain(domain), mRange(range), mIsBijective(bijective)
+                            bool bijective, MonotonicType monoType) :
+        mName(name), mDomain(domain), mRange(range), 
+        mIsBijective(bijective), mMonoType(monoType)
 {}
 
 UninterpFunc::~UninterpFunc() {
@@ -43,6 +44,7 @@ UninterpFunc& UninterpFunc::operator=( const UninterpFunc& other) {
     mDomain = new Set(*(other.mDomain));
     mRange = new Set(*(other.mRange));
     mIsBijective = other.mIsBijective;
+    mMonoType = other.mMonoType;
     return *this;
 }
         
@@ -52,7 +54,8 @@ std::string UninterpFunc::toString() const {
     ss << "UninterpFunc(mName=" << mName;
     ss << ", mDomain=" << mDomain->toString();
     ss << ", mRange=" << mRange->toString();
-    ss << ", mIsBijective=" << mIsBijective << ")";
+    ss << ", mIsBijective=" << mIsBijective;
+    ss << ", mIsBijective=" << mMonoType << ")";
     
     return ss.str();
 }

@@ -4,9 +4,6 @@
  * \brief Interface of SubMap class
  *
  * \date Started: 2013-08-20
- * # $Revision:: 785                $: last committed revision
- * # $Date:: 2013-08-20 03:02:55 -0#$: date of last committed revision
- * # $Author:: mstrout              $: author of last committed revision
  *
  * \authors Michelle Strout
  *
