@@ -501,8 +501,18 @@ public:
     ** \return Set will contain new constraints and will be owned by caller
     */
     Set* addUFConstraints(std::string uf1str, 
-                          std::string opstr, std::string uf2str);
+                          std::string opstr, std::string uf2str) const;
     
+    /*! For UFs declared as having a Monotonicity value (see 
+    **  MonotonicType in UninterFunc.h) constraints will be
+    **  added to parameter expressions as needed.
+    **  For example, if we find that f(e1)<f(e2) and f is monotonically
+    **  non-decreasing, then we will add the constraint that e1<e2.
+    **
+    ** \return Set will contain new constraints and will be owned by caller
+    */
+    Set* addConstraintsDueToMonotonicity() const;
+
     
     //void normalize();
     
@@ -619,12 +629,20 @@ public:
     ** \param opstr  operator that describes relationship between UFs
     ** \param uf2str name of second uninterpreted function.
     **
-    ** \return Set will contain new constraints and will be owned by caller
+    ** \return Relation will contain new constraints and is owned by caller
     */
     Relation* addUFConstraints(std::string uf1str, 
-                               std::string opstr, std::string uf2str);
+                               std::string opstr, std::string uf2str) const;
     
-    
+    /*! For UFs declared as having a Monotonicity value (see 
+    **  MonotonicType in UninterFunc.h) constraints will be
+    **  added to parameter expressions as needed.
+    **  For example, if we find that f(e1)<f(e2) and f is monotonically
+    **  non-decreasing, then we will add the constraint that e1<e2.
+    **
+    ** \return Relation will contain new constraints and is owned by caller
+    */
+    Relation* addConstraintsDueToMonotonicity() const;    
 
     // Iterate over all conjunctions and normalize each conjunction.
     // Then call cleanup to resort things?
