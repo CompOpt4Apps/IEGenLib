@@ -280,9 +280,6 @@ public:
     //! Visitor design pattern, see Visitor.h for usage
     void acceptVisitor(Visitor *v);
 
-    // Set Exp Type: {Expression, Inequality, Equality} 
-    void setExpType();
-
 private:
 
     /// Set of equality constraints.
@@ -410,9 +407,6 @@ public:
 
     //! Visitor design pattern, see Visitor.h for usage
     void acceptVisitor(Visitor *v);
-
-    // Set Exp Type: {Expression, Inequality, Equality}
-    void setExpType();
 
     // Is tuple variable tupleID argument to an UFS?
     bool isUFCallParam(int tupleID);

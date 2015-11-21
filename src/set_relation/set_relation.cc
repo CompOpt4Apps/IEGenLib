@@ -282,6 +282,9 @@ void Conjunction::addEquality(Exp* equality) {
         return;
     }
 
+    // Setting the type of expression
+    equality->setEquality();
+
     for (std::list<Exp*>::iterator i=mEqualities.begin();
                 i != mEqualities.end(); i++) {
         Exp* e = *i;
@@ -312,6 +315,10 @@ void Conjunction::addInequality(Exp* inequality) {
         delete inequality;
         return;
     }
+
+    // Setting the type of expression
+    inequality->setInequality();
+
     for (std::list<Exp*>::iterator i=mInequalities.begin();
                 i != mInequalities.end(); i++) {
         Exp* e = *i;
@@ -2942,32 +2949,6 @@ Relation* Relation::addConstraintsDueToMonotonicity() const {
     Relation* retval = new Relation(*this);
     //retval->addUFConstraintsHelper(uf1str,opstr,uf2str);
     return retval;
-}
-
-/*****************************************************************************/
-#pragma mark -
-/*************** setExpType **************************************************/
-
-void Conjunction::setExpType()
-{
-    std::list<Exp*>::iterator expIter = mEqualities.begin();
-    while (expIter != mEqualities.end()) {
-        (*expIter)->setEquality();
-        expIter++;
-    }
-    expIter=mInequalities.begin();
-    while (expIter != mInequalities.end()) {
-        (*expIter)->setInequality();
-        expIter++;
-    }
-}
-
-void SparseConstraints::setExpType()
-{
-    for (std::list<Conjunction*>::iterator i=mConjunctions.begin();
-                i != mConjunctions.end(); i++) {
-        (*i)->setExpType();
-    }
 }
 
 /*****************************************************************************/

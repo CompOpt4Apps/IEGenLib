@@ -3553,7 +3553,6 @@ TEST_F(SetRelationTest, isUFCallParam) {
    string org_tup("11001100");
    string ins_tup("00000000");
  
-   r2->setExpType();
    int ar = r2->arity();
    for(int i = 0 ; i < ar ; i++)
    {
@@ -3576,7 +3575,6 @@ TEST_F(SetRelationTest, isUFCallParam) {
    string org_tup_r1("1011");
    string ins_tup_r1("0000");
  
-   r1->setExpType();
    int ar_r1 = r1->arity();
    for(int i = 0 ; i < ar_r1 ; i++)
    {
