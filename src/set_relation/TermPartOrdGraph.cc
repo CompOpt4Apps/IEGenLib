@@ -15,79 +15,159 @@
 #include "TermPartOrdGraph.h"
 #include <util/util.h>
 #include <iostream>
+#include <assert.h>
 
 namespace iegenlib{
 
-TermPartOrdGraph::TermPartOrdGraph() {
-}
+TermPartOrdGraph::TermPartOrdGraph() : mDoneInsertingTerms(false),
+        mNumTerms(0), mGraphPtr(NULL) {}
 
 //! Delete all of the terms and expressions we are storing.
 TermPartOrdGraph::~TermPartOrdGraph() {
-/*    std::map<Term*,Exp*>::iterator iter;
-    for (iter=mTerm2ExpMap.begin(); iter!=mTerm2ExpMap.end(); iter++) {
-        delete iter->first;
-        delete iter->second;
+    std::set<Term*>::const_iterator iter;
+    for (iter=mNonNegativeTerms.begin(); iter!=mNonNegativeTerms.end(); iter++){
+        delete (*iter);
     }
-*/
 }
 
-/* 
-//! Use this to insert a term, expression pairing into the SubMap.
-//! SubMap takes ownership of expression.
-void SubMap::insertPair( Term* factor, Exp* e ) {
-    mTerm2ExpMap[factor] = e;
-    // FIXME: do we want to check for duplicate factors here?
+//! Use this to insert a term.
+//! TermPartOrdGraph takes ownership of expression.
+//! Changes coeff to 1 and then makes sure the term is unique.
+//! Does NOT take ownership of term.
+void TermPartOrdGraph::insertTerm( const Term* t ) {
+    Term* temp = t->clone();
+    temp->setCoefficient(1);
+
+    // Insert the term into the correct map.
+    if (temp->type()=="UFCallTerm") {
+        UFCallTerm* ufterm = dynamic_cast<UFCallTerm*>(temp);
+        if (mUFCallTerm2IntMap.find(*ufterm)==mUFCallTerm2IntMap.end()) {   
+            mUFCallTerm2IntMap[*ufterm] = mNumTerms++;
+        }
+    } else if (temp->type()=="TupleVarTerm") {
+        TupleVarTerm* tvterm = dynamic_cast<TupleVarTerm*>(temp);
+        if (mTupleVarTerm2IntMap.find(*tvterm)==mTupleVarTerm2IntMap.end()) {
+            mTupleVarTerm2IntMap[*tvterm] = mNumTerms++;
+        }
+    } else if (temp->type()=="VarTerm") {
+        VarTerm* vterm = dynamic_cast<VarTerm*>(temp);
+        if (mVarTerm2IntMap.find(*vterm)==mVarTerm2IntMap.end()) {
+            mVarTerm2IntMap[*vterm] = mNumTerms++;
+        }
+    } else {
+        std::cerr << "TermPartOrdGraph::insertTerm: ERROR unhandled term type" 
+                  << std::endl;
+        assert(0); // FIXME: should be using assert_exceptions instead!!
+    }
+    
+    delete temp;
 }
 
-//! Starts iteration over the substitution map.
-void SubMap::startIter() {
-    mIter = mTerm2ExpMap.begin();
+//! Indicate the given term is non-negative.  Will pretend coeff 1.
+//! Assumes that given term has already been inserted.
+void TermPartOrdGraph::termNonNegative( const Term* t ) {
+    Term* temp = t->clone();
+    temp->setCoefficient(1);
+    
+    // Make sure the term has already been inserted into graph.
+    
+    // If so then insert into non-negative set if it is not
+    // already in there.
+    if (!isNonNegative(t)) {
+        mNonNegativeTerms.insert(temp); // Will own temp so don't delete.
+    } 
 }
 
-//! Indicates whether the map has another pairing.
-bool SubMap::hasNext() const {
-    return (mIter!=mTerm2ExpMap.end());
-}
+bool TermPartOrdGraph::isNonNegative( const Term* term ) const {
+    Term* temp = term->clone();
+    temp->setCoefficient(1);
+    bool retval = false;
 
-//! Returns the next term.
-Term* SubMap::next() {
-    Term* retval = mIter->first;
-    mIter++;
-    return retval;
-}
-
-//! Returns the expression associated with the given Term.
-//! Ignores the Terms coefficient and just checks if factor
-//! matches something in the SubMap.
-//! SubMap still owns expression.  If substitution map doesn't
-//! know about the factor sent in then NULL is returned.
-Exp* SubMap::subExp(Term* factor) const {
-    Exp* retval = NULL;
-
-    // This is where we loop to see if our factor matches any of
-    // the keys in searchTermToSubExp.
-    std::map<Term*,Exp*>::const_iterator miter;
-    for (miter = mTerm2ExpMap.begin(); miter != mTerm2ExpMap.end(); miter++) {
-        Term* searchptr = miter->first;
-        if (factor->factorMatches(*searchptr)) {
-            retval = miter->second;
-            break;  // going to return first expression for a matching term
+    // Search through the Set of non-negative terms and see
+    // if it is in there.
+    std::set<Term*>::const_iterator iter;
+    for (iter=mNonNegativeTerms.begin(); iter!=mNonNegativeTerms.end(); iter++){
+        Term* nonNegTerm = *iter;
+        if (*nonNegTerm == *temp) {
+            retval = true;
         }
     }
+    
+    delete temp;
     return retval;
-
 }
-        
-//! Returns a string representation of the class instance for debugging.
-std::string SubMap::toString() const {
-    std::stringstream ss;
-    ss << "SubMap:" << std::endl;
-    std::map<Term*,Exp*>::const_iterator iter;
-    for (iter=mTerm2ExpMap.begin(); iter!=mTerm2ExpMap.end(); iter++) {
-        ss << "\tterm = " << iter->first->toString() 
-           << ", exp = " << iter->second->toString() << std::endl;
+
+
+//! Returns a set of all unique UFCallTerms that have been inserted.
+//! Caller owns all of the return Terms.
+std::set<UFCallTerm*> TermPartOrdGraph::getUniqueUFCallTerms() const {
+    std::set<UFCallTerm*> retval;
+    
+    // Gather up all the UFCallTerms.
+    std::map<UFCallTerm,int>::const_iterator iter;
+    for (iter=mUFCallTerm2IntMap.begin(); 
+            iter!=mUFCallTerm2IntMap.end(); iter++) {
+        retval.insert(new UFCallTerm(iter->first));
     }
+    return retval;
+}
+
+//! Returns a set of all unique terms that have been inserted.
+std::set<Term*> TermPartOrdGraph::getAllUniqueTerms() const {
+    std::set<Term*> retval;
+        
+    // Gather up all the UFCallTerms.
+    {
+        std::map<UFCallTerm,int>::const_iterator iter;
+        for (iter=mUFCallTerm2IntMap.begin(); 
+                iter!=mUFCallTerm2IntMap.end(); iter++) {
+            retval.insert(new UFCallTerm(iter->first));
+        }
+    }
+    
+    // Gather up all the TupleVarTerms.
+    {
+        std::map<TupleVarTerm,int>::const_iterator iter;
+        for (iter=mTupleVarTerm2IntMap.begin(); 
+                iter!=mTupleVarTerm2IntMap.end(); iter++) {
+            retval.insert(new TupleVarTerm(iter->first));
+        }
+    }
+    
+    // Gather up all the VarTerms.
+    {
+        std::map<VarTerm,int>::const_iterator iter;
+        for (iter=mVarTerm2IntMap.begin(); 
+                iter!=mVarTerm2IntMap.end(); iter++) {
+            retval.insert(new VarTerm(iter->first));
+        }
+    }
+    
+    return retval;
+}
+
+// Want this to be templated.  How do I do that?
+//std::string termMapToString( 
+//        std::map<UFCallTerm,Int>::const_iterator iter;
+//        for (iter=mUFCallTerm2IntMap.begin(); iter!=mTerm2ExpMap.end(); iter++) {
+//            ss << "\tterm = " << iter->first->toString() 
+//               << ", exp = " << iter->second->toString() << std::endl;
+//    }
+
+//! Returns a string representation of the class instance for debugging.
+std::string TermPartOrdGraph::toString() const {
+    std::stringstream ss;
+    ss << "TermPartOrdGraph:" << std::endl;
+    ss << "\tmDoneInsertingTerms = " << mDoneInsertingTerms << std::endl;
+    ss << "\tmNumTerms = " << mNumTerms << std::endl;
+    ss << "\tmNonNegativeTerms = " << std::endl;
+    std::set<Term*>::const_iterator iter;
+    for (iter=mNonNegativeTerms.begin(); iter!=mNonNegativeTerms.end(); iter++){
+        ss << "\t\t" << (*iter)->toString() << std::endl;
+    }
+    if (mGraphPtr!=NULL) { ss << mGraphPtr->toString(); }
     return ss.str();
 }
-*/
+    
+
 }

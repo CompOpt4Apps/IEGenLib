@@ -73,37 +73,51 @@ public:
     TermPartOrdGraph();
     ~TermPartOrdGraph();
     
-    //! Insert a term into graph vertex set.  Will make coeff 1.
-    void insertTerm( Term* term );
+    //! Insert a term into graph vertex set.  Will pretend coeff 1.
+    //! Does not take ownership of term.
+    void insertTerm( const Term* term);
     
-    //! Indicate the given term is non-negative.  Will make coeff 1.
-    void termNonNegative( Term* term );
-    
+    //! Indicate the given term is non-negative.  Will pretend coeff 1.
+    //! Assumes that given term has already been inserted.
+    //! Does not take ownership of term.
+    void termNonNegative( const Term* term );
+ 
+    //! Queries whether a term is non-negative.  Will pretend coeff 1.
+    //! Does not take ownership of term.
+    bool isNonNegative( const Term* term ) const;
+   
     //! Call when all term insertions are done and ready for partial orders.
     void doneInsertingTerms();
 
-    //! Term1 <= Term2, will make coeff's 1
+    //! NONE of the below take ownership of term.
+
+    //! Term1 <= Term2, will pretend coeff's 1
     void insertLTE( Term* term1, Term* term2 );
+    //! Term1 <= Term2, will pretend coeff's 1
     void insertLT( Term* term1, Term* term2 );
+    //! Term1 <= Term2, will pretend coeff's 1
     void insertEqual( Term* term1, Term* term2 );
     
     //! Returns a set of all unique UFCallTerms that have been inserted.
-    std::set<UFCallTerm*> getUniqueUFCallTerms();
-        
+    std::set<UFCallTerm*> getUniqueUFCallTerms() const;
+
+    //! Returns a set of all unique terms that have been inserted.
+    std::set<Term*> getAllUniqueTerms() const;
+   
      //! Returns a string representation of the class instance for debugging.
     std::string toString() const;        
         
 private:
+    bool                        mDoneInsertingTerms;
+    int                         mNumTerms;
+
     std::map<UFCallTerm,int>    mUFCallTerm2IntMap;
     std::map<TupleVarTerm,int>  mTupleVarTerm2IntMap;
     std::map<VarTerm,int>       mVarTerm2IntMap;
-    std::map<Term,int>          mTerm2IntMap;
     
     std::set<Term*>             mNonNegativeTerms;
     
     PartOrdGraph*               mGraphPtr;
-    
-    bool                        mDoneInsertingTerms;
 };
 
 }

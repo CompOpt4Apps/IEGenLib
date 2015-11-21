@@ -20,53 +20,90 @@
 #include <iostream>
 #include <fstream>
 
+using iegenlib::TermPartOrdGraph;
 using iegenlib::TupleVarTerm;
 using iegenlib::Term;
 using iegenlib::VarTerm;
 using iegenlib::UFCallTerm;
 using iegenlib::TupleExpTerm;
+using iegenlib::Exp;
+
+/*      TermPartOrdGraph g;
+ *      UFCallTerm uf = new UFCallTerm( ... );
+ *      TupleVarTerm tv = new TupleVarTerm( ... );
+ *      g.insertTerm( uf );
+ *      g.insertTerm( tv );
+ *      g.insertTerm( uf );     // Will do object comparison and only keep one.
+ *      
+ *      g.doneInsertingTerms();
+ *
+ *      // Insertions of orderings can only come after doneInsertingTerms.
+ *      g.insertLTE( uf, tv);   // (*uf) <= (*tv)
+ *      g.insertLT( uf, tv);    // (*uf) < (*tv)
+ *      g.insertEqual( uf,tv ); // Will cause an error in this case.
+ *
+ *      // Indicating a term is non-negative can happen at anytime
+ *      // after the term has been inserted.
+ *      g.termNonNegative( tv );
+ *
+ *      //====== Queries ======
+ *
+ *      if (g.isNonNegative(uf)) { ... }
+ *
+ *      std::set<UFCallTerm*> ufTerms = g.getUniqueUFCallTerms();
+ *      for (std::set<Term*>::const_iterator iter1 = ufTerms.begin();
+ *              iter1!=ufTerms.end(); iter1++) {
+ *          for (std::set<Term*>::const_iterator iter2 = ufTerms.begin();
+ *                  iter2!=ufTerms.end(); iter2++) {
+ *              if (g.isLT(*iter1, *iter2)) {
+ *                  ...
+ *              }
+ *          }
+ *      }
+ */
 
 
-#pragma mark UFCallMapAndBoundsDomainNoTupleVars
-// Test the UFCallMapAndBounds methods related to bounding by domain.
-// There should be no temporary variables introduced.
-// In this example the parameter expressions do not use tuple vars.
-TEST(UFCallMapAndBoundsTest, UFCallMapAndBoundsDomainNoTupleVars) {
+#pragma mark TermPartOrdGraphToString
+// Test the toString method.
+TEST(TermPartOrdGraphTest, TermPartOrdGraphToString) {
 
-    Set* domain = new Set("{[j] : lb_j <= j && j <= ub_j } ");
-    Set* range = new Set("{[i] : lb_i <= i && i <= ub_i } ");
+    TermPartOrdGraph g;
+    VarTerm * v = new VarTerm( "N" );
+    g.insertTerm( v );
 
-    // declare f and g as non-bijective functions
-    iegenlib::setCurrEnv();
-    iegenlib::appendCurrEnv("f", domain, range, false, 
-                            iegenlib::Monotonic_NONE);
-
-    // Assume original set is
-    // {[x,y] : x = f(N)}
-    Set* original_set = new Set("{[x,y] : x = f(N)}");
-    UFCallMapAndBounds ufcall_map(original_set->getTupleDecl());
-
-    // Construct the UFCallTerm f(N)
-    Exp *e1 = new Exp();  // N
-    e1->addTerm(new VarTerm("N"));
-        
-    UFCallTerm* ufcallptr = new UFCallTerm("f", 1);
-    ufcallptr->setParamExp(0,e1);
-
-    // boundByDomain is what we are testing
-    ufcall_map.boundByDomain(ufcallptr);
+    EXPECT_EQ("TermPartOrdGraph:\n\tmDoneInsertingTerms = 0\n"
+              "\tmNumTerms = 1\n\tmNonNegativeTerms = \n", 
+              g.toString());
+    //std::cout << g.toString();
     
-    // boundByDomain should modify the constraints UFCallMapAndBounds 
-    // is maintaining.
-    EXPECT_EQ(0u, ufcall_map.numTempVars());
-    Set* constraints = ufcall_map.cloneConstraints();
-    Set* expected = new Set("{[x,y] : lb_j<=N && N<=ub_j}");
-    EXPECT_EQ(expected->toString(), constraints->toString());
-    
+    delete v;
+}
 
-    delete constraints;
-    delete expected;
-    delete original_set;
-    delete ufcallptr;
+#pragma mark TermPartOrdGraphIsNonNegative
+// Test the toString method.
+TEST(TermPartOrdGraphTest, TermPartOrdGraphIsNonNegative) {
+
+    TermPartOrdGraph g;
+    VarTerm * v = new VarTerm( "N" );
+    g.insertTerm( v );
+    g.termNonNegative( v );
+
+    UFCallTerm* uf_call = new UFCallTerm("tau", 2); // tau(i,j)
+    Exp *tau_arg_1 = new Exp();
+    tau_arg_1->addTerm(new VarTerm("i"));
+    uf_call->setParamExp(0,tau_arg_1);
+    Exp *tau_arg_2 = new Exp();
+    tau_arg_2->addTerm(new VarTerm("j"));
+    uf_call->setParamExp(1,tau_arg_2);
+
+    g.insertTerm( uf_call );
+    
+    std::cout << g.toString();
+
+    EXPECT_EQ(true, g.isNonNegative( v ));
+    EXPECT_EQ(false, g.isNonNegative( uf_call ));
+    
+    delete v;
+    delete uf_call;
 }
 
