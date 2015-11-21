@@ -3495,7 +3495,7 @@ TEST_F(SetRelationTest, addConstraintsDueToMonotonicity){
     Set* result = s->addConstraintsDueToMonotonicity();
     Set* expected = new Set("{[i,j] : f(i)<g(j) && i<j}");
     
-    //EXPECT_EQ(expected->prettyPrintString(), result->prettyPrintString());
+    EXPECT_EQ(expected->prettyPrintString(), result->prettyPrintString());
 
     delete s;
     delete result;
@@ -3528,5 +3528,5 @@ TEST_F(SetRelationTest, addConstraintsDueToMonotonicity){
     delete result1;
     delete result2;
   }
-*/        
+*/ 
 }
