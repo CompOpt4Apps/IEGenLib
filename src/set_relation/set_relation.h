@@ -408,6 +408,10 @@ public:
     //! Visitor design pattern, see Visitor.h for usage
     void acceptVisitor(Visitor *v);
 
+    // Is tuple variable tupleID argument to an UFS?
+    bool isUFCallParam(int tupleID);
+
+
 // FIXME: what methods should we have to iterate over conjunctions so
 // this can go back to protected?
 //protected:

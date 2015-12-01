@@ -282,6 +282,9 @@ void Conjunction::addEquality(Exp* equality) {
         return;
     }
 
+    // Setting the type of expression
+    equality->setEquality();
+
     for (std::list<Exp*>::iterator i=mEqualities.begin();
                 i != mEqualities.end(); i++) {
         Exp* e = *i;
@@ -312,6 +315,10 @@ void Conjunction::addInequality(Exp* inequality) {
         delete inequality;
         return;
     }
+
+    // Setting the type of expression
+    inequality->setInequality();
+
     for (std::list<Exp*>::iterator i=mInequalities.begin();
                 i != mInequalities.end(); i++) {
         Exp* e = *i;
@@ -2944,5 +2951,53 @@ Relation* Relation::addConstraintsDueToMonotonicity() const {
     return retval;
 }
 
+/*****************************************************************************/
+#pragma mark -
+/*************** isUFCallParam *****************************/
+
+class VisitorIsUFCallParam : public Visitor {
+  private:
+    bool mResult;
+    int mTupleID;
+    bool mSeenTupleVar;
+    bool prevSeen;
+
+  public:
+    VisitorIsUFCallParam(int tupleID) : mResult(false),
+                 mTupleID(tupleID), mSeenTupleVar(false), prevSeen(false) {}
+
+    bool returnResult() { return mResult; }
+
+    void preVisitTupleVarTerm(iegenlib::TupleVarTerm *t) {
+        if (t->tvloc()==mTupleID) {
+            mSeenTupleVar = true;
+        }
+    }
+    void preVisitExp(iegenlib::Exp * e) {
+        // Recording value of mSeenTupleVar, so we can change it back in our
+        // post visit.
+        prevSeen = mSeenTupleVar;
+        mSeenTupleVar = false;
+    }
+    void postVisitExp(iegenlib::Exp * e) {
+        // An expression that is not an inequality or 
+        // an equality is a parameter to a UFCall.
+
+        if (e->isExpression() and mSeenTupleVar) {
+            mResult = true;
+        }
+        // Revive flag for any higher level expression in traversal
+        mSeenTupleVar = prevSeen;
+    }
+
+};
+
+bool SparseConstraints::isUFCallParam(int tupleID) {
+
+    VisitorIsUFCallParam * v = new VisitorIsUFCallParam(tupleID);
+    this->acceptVisitor(v);
+    bool result = v->returnResult();
+    return result;
+}
 
 }//end namespace iegenlib

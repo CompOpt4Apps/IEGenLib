@@ -3530,3 +3530,68 @@ TEST_F(SetRelationTest, addConstraintsDueToMonotonicity){
   }
 */        
 }
+
+
+//*********************** Testing isUFCallParam  ***************************
+
+//Testing isUFCallParam: is a tuple variable argument to a UFS? (with its index)
+
+TEST_F(SetRelationTest, isUFCallParam) {
+
+    Relation *r1 = new Relation("[n] -> { [i,j] -> [ip,jp] : i = col(jp) "
+       "and i < ip and 0 <= i and i < n and idx(i) <= j and j < idx(i+1) "
+         "and 0 <= ip and ip < n and idx(ip) <= jp and jp < idx(ip+1) }");
+
+    Relation *r2 = new Relation("[n] -> { [i,k,j1,j2] -> [ip,kp,jp1,jp2] :"
+    " i < ip and j1 = jp2 and 0 <= i and i < n and 0 <= ip and ip < n and "
+     "k+1 <= j1 and j1 < row(i+1) and kp+1 <= jp1 and jp1 < row(ip+1) and "
+       "diag(col(k))+1 <= j2 and j2 < row(col(k)+1) and diag(col(kp))+1 <="
+           " jp2 and jp2 < row(col(kp)+1) and row(i) <= k and k < diag(i) "
+           "and row(ip) <= kp and kp < diag(ip) }");
+
+   //  Test case for r2
+   string org_tup("11001100");
+   string ins_tup("00000000");
+ 
+   int ar = r2->arity();
+   for(int i = 0 ; i < ar ; i++)
+   {
+     if ( r2->isUFCallParam(i) )
+     {
+       ins_tup[i] = '1';
+//       std::cout << std::endl <<i << "   is UFS arg" << std::endl;
+     }
+     else
+     {
+       ins_tup[i] = '0';
+//       std::cout << std::endl <<i << "   is not UFS arg" << std::endl;
+     }
+   }
+
+    EXPECT_EQ( org_tup , ins_tup );
+
+
+   //  Test case for r1
+   string org_tup_r1("1011");
+   string ins_tup_r1("0000");
+ 
+   int ar_r1 = r1->arity();
+   for(int i = 0 ; i < ar_r1 ; i++)
+   {
+     if ( r1->isUFCallParam(i) )
+     {
+       ins_tup_r1[i] = '1';
+//       std::cout << std::endl <<i << "   is UFS arg" << std::endl;
+     }
+     else
+     {
+       ins_tup_r1[i] = '0';
+//       std::cout << std::endl <<i << "   is not UFS arg" << std::endl;
+     }
+   }
+
+    EXPECT_EQ( org_tup_r1 , ins_tup_r1 );
+
+   delete r1;
+   delete r2;
+}

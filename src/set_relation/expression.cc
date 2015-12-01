@@ -982,6 +982,8 @@ bool TupleExpTerm::factorMatches(const Term& other) const {
 //! Copy constructor
 Exp::Exp(const Exp& other) {
     *this = other;
+
+    setExpression();
 }
 
 void Exp::reset() {
