@@ -97,75 +97,81 @@ bool TermPartOrdGraph::isNonNegative( const Term* term ) const {
     return retval;
 }
 
+//! Templated helper routine to avoid repetitive code that
+//! loops over the type specific term maps to grab terms.
+//! FIXME: would still like to generalize this by passing 
+//! in a lambda to operate on each map in the pair.  Possible?
+//! Want to generalize with termMapToString used below.
+template <typename SetElemType, typename TermType>
+void termMapCopyTerms( const std::map<TermType,int>& termMap, 
+                       std::set<SetElemType>& targetSet ) {
+    typename std::map<TermType,int>::const_iterator iter;
+    for (iter=termMap.begin(); iter!=termMap.end(); iter++) {
+        targetSet.insert(new TermType(iter->first));
+    }
+}
 
 //! Returns a set of all unique UFCallTerms that have been inserted.
 //! Caller owns all of the return Terms.
 std::set<UFCallTerm*> TermPartOrdGraph::getUniqueUFCallTerms() const {
-    std::set<UFCallTerm*> retval;
-    
-    // Gather up all the UFCallTerms.
-    std::map<UFCallTerm,int>::const_iterator iter;
-    for (iter=mUFCallTerm2IntMap.begin(); 
-            iter!=mUFCallTerm2IntMap.end(); iter++) {
-        retval.insert(new UFCallTerm(iter->first));
-    }
-    return retval;
+    std::set<UFCallTerm*> uniqueUFCallTerms;
+    termMapCopyTerms<UFCallTerm*,UFCallTerm>(mUFCallTerm2IntMap,
+                                             uniqueUFCallTerms);
+    return uniqueUFCallTerms;
 }
 
 //! Returns a set of all unique terms that have been inserted.
 std::set<Term*> TermPartOrdGraph::getAllUniqueTerms() const {
-    std::set<Term*> retval;
-        
-    // Gather up all the UFCallTerms.
-    {
-        std::map<UFCallTerm,int>::const_iterator iter;
-        for (iter=mUFCallTerm2IntMap.begin(); 
-                iter!=mUFCallTerm2IntMap.end(); iter++) {
-            retval.insert(new UFCallTerm(iter->first));
-        }
-    }
-    
-    // Gather up all the TupleVarTerms.
-    {
-        std::map<TupleVarTerm,int>::const_iterator iter;
-        for (iter=mTupleVarTerm2IntMap.begin(); 
-                iter!=mTupleVarTerm2IntMap.end(); iter++) {
-            retval.insert(new TupleVarTerm(iter->first));
-        }
-    }
-    
-    // Gather up all the VarTerms.
-    {
-        std::map<VarTerm,int>::const_iterator iter;
-        for (iter=mVarTerm2IntMap.begin(); 
-                iter!=mVarTerm2IntMap.end(); iter++) {
-            retval.insert(new VarTerm(iter->first));
-        }
-    }
-    
-    return retval;
+    std::set<Term*> uniqueTerms;
+    termMapCopyTerms<Term*,UFCallTerm>(mUFCallTerm2IntMap, uniqueTerms);
+    termMapCopyTerms<Term*,TupleVarTerm>(mTupleVarTerm2IntMap, uniqueTerms);
+    termMapCopyTerms<Term*,VarTerm>(mVarTerm2IntMap, uniqueTerms);
+    return uniqueTerms;
 }
 
-// Want this to be templated.  How do I do that?
-//std::string termMapToString( 
-//        std::map<UFCallTerm,Int>::const_iterator iter;
-//        for (iter=mUFCallTerm2IntMap.begin(); iter!=mTerm2ExpMap.end(); iter++) {
-//            ss << "\tterm = " << iter->first->toString() 
-//               << ", exp = " << iter->second->toString() << std::endl;
-//    }
+//! Templated helper routine to avoid repetitive code that
+//! loops over the type specific term maps to generate a
+//! string.
+//! FIXME: would still like to generalize this by templating
+//! the return value and passing in a lambda to operate on
+//! each map in the pair.  Possible?
+template <typename TermType>
+std::string termMapToString( const std::map<TermType,int>& termMap ) {
+    std::stringstream ss;
+    typename std::map<TermType,int>::const_iterator iter;
+    for (iter=termMap.begin(); iter!=termMap.end(); iter++) {
+        ss << "\t\tterm = " << iter->first.toString() 
+           << ", id = "     << iter->second << std::endl;
+    }
+    return ss.str();
+}
 
 //! Returns a string representation of the class instance for debugging.
 std::string TermPartOrdGraph::toString() const {
     std::stringstream ss;
     ss << "TermPartOrdGraph:" << std::endl;
+    
     ss << "\tmDoneInsertingTerms = " << mDoneInsertingTerms << std::endl;
+    
     ss << "\tmNumTerms = " << mNumTerms << std::endl;
+    
     ss << "\tmNonNegativeTerms = " << std::endl;
     std::set<Term*>::const_iterator iter;
     for (iter=mNonNegativeTerms.begin(); iter!=mNonNegativeTerms.end(); iter++){
         ss << "\t\t" << (*iter)->toString() << std::endl;
     }
+    
+    // Output mapping of terms to integer ids.
+    ss << "\tmUFCallTerm2IntMap = " << std::endl;
+    ss << termMapToString<UFCallTerm>(mUFCallTerm2IntMap);
+    ss << "\tmTupleVarTerm2IntMap = " << std::endl;
+    ss << termMapToString<TupleVarTerm>(mTupleVarTerm2IntMap);
+    ss << "\tmVarTerm2IntMap = " << std::endl;
+    ss << termMapToString<VarTerm>(mVarTerm2IntMap);
+    
+    // Underlying partial ordering on integer ids.
     if (mGraphPtr!=NULL) { ss << mGraphPtr->toString(); }
+    
     return ss.str();
 }
     

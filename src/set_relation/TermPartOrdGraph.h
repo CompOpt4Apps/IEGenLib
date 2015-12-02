@@ -89,19 +89,24 @@ public:
     //! Call when all term insertions are done and ready for partial orders.
     void doneInsertingTerms();
 
-    //! NONE of the below take ownership of term.
-
+    //! ==== NONE of the below take ownership of term.
+    //! ==== They only work after doneInsertingTerms has been called.
     //! Term1 <= Term2, will pretend coeff's 1
     void insertLTE( Term* term1, Term* term2 );
     //! Term1 <= Term2, will pretend coeff's 1
     void insertLT( Term* term1, Term* term2 );
     //! Term1 <= Term2, will pretend coeff's 1
     void insertEqual( Term* term1, Term* term2 );
-    
+
+ 
+    //! ==== Query methods
+ 
     //! Returns a set of all unique UFCallTerms that have been inserted.
+    //! Caller will own returned terms.
     std::set<UFCallTerm*> getUniqueUFCallTerms() const;
 
     //! Returns a set of all unique terms that have been inserted.
+    //! Caller will own returned terms.
     std::set<Term*> getAllUniqueTerms() const;
    
      //! Returns a string representation of the class instance for debugging.
