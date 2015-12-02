@@ -19,8 +19,7 @@
 
 namespace iegenlib{
 
-TermPartOrdGraph::TermPartOrdGraph() : mDoneInsertingTerms(false),
-        mNumTerms(0), mGraphPtr(NULL) {}
+TermPartOrdGraph::TermPartOrdGraph() : mNumTerms(0), mGraphPtr(NULL) {}
 
 //! Delete all of the terms and expressions we are storing.
 TermPartOrdGraph::~TermPartOrdGraph() {
@@ -30,11 +29,12 @@ TermPartOrdGraph::~TermPartOrdGraph() {
     }
 }
 
-//! Use this to insert a term.
-//! TermPartOrdGraph takes ownership of expression.
-//! Changes coeff to 1 and then makes sure the term is unique.
-//! Does NOT take ownership of term.
-void TermPartOrdGraph::insertTerm( const Term* t ) {
+//! This should be only routine that uses RTTI to determine the term type.
+//! Don't want to expose IDs in TermPartOrdGraph interface.
+int TermPartOrdGraph::findOrInsertTermId(const Term* t) {
+    int termId = mNumTerms; // Initial assumption is insertion.
+    int initialNumTerms = mNumTerms;
+    
     Term* temp = t->clone();
     temp->setCoefficient(1);
 
@@ -43,24 +43,42 @@ void TermPartOrdGraph::insertTerm( const Term* t ) {
         UFCallTerm* ufterm = dynamic_cast<UFCallTerm*>(temp);
         if (mUFCallTerm2IntMap.find(*ufterm)==mUFCallTerm2IntMap.end()) {   
             mUFCallTerm2IntMap[*ufterm] = mNumTerms++;
+        } else {
+            termId = mUFCallTerm2IntMap[*ufterm];
         }
     } else if (temp->type()=="TupleVarTerm") {
         TupleVarTerm* tvterm = dynamic_cast<TupleVarTerm*>(temp);
         if (mTupleVarTerm2IntMap.find(*tvterm)==mTupleVarTerm2IntMap.end()) {
             mTupleVarTerm2IntMap[*tvterm] = mNumTerms++;
+        } else {
+            termId = mTupleVarTerm2IntMap[*tvterm];
         }
     } else if (temp->type()=="VarTerm") {
         VarTerm* vterm = dynamic_cast<VarTerm*>(temp);
         if (mVarTerm2IntMap.find(*vterm)==mVarTerm2IntMap.end()) {
             mVarTerm2IntMap[*vterm] = mNumTerms++;
+        } else {
+            termId = mVarTerm2IntMap[*vterm];
         }
     } else {
-        std::cerr << "TermPartOrdGraph::insertTerm: ERROR unhandled term type" 
-                  << std::endl;
+        std::cerr << "TermPartOrdGraph::findOrInsertTermId: "
+                     "ERROR unhandled term type" << std::endl;
         assert(0); // FIXME: should be using assert_exceptions instead!!
     }
     
     delete temp;
+    
+    // Check that we didn't just do an insertion after doneInsertingItems call.
+    assert(mGraphPtr and (initialNumTerms==mNumTerms));
+    
+    return termId;    
+}
+
+//! Use this to insert a term.
+//! Changes coeff to 1 and then makes sure the term is unique.
+//! Does NOT take ownership of term.
+void TermPartOrdGraph::insertTerm( const Term* t ) {
+    findOrInsertTermId(t);
 }
 
 //! Indicate the given term is non-negative.  Will pretend coeff 1.
@@ -96,6 +114,34 @@ bool TermPartOrdGraph::isNonNegative( const Term* term ) const {
     delete temp;
     return retval;
 }
+
+//===============================================================
+// Methods for creating partial orderings.
+
+//! Once user is done inserting items we can create an instance
+//! of the PartOrdGraph data structure.
+void TermPartOrdGraph::doneInsertingTerms() {
+    mGraphPtr = new PartOrdGraph(mNumTerms);
+}
+
+//! Term1 <= Term2, will pretend coeff's 1
+void TermPartOrdGraph::insertLTE( Term* term1, Term* term2 ) {
+    int term1Id = findOrInsertTermId(term1);
+    int term2Id = findOrInsertTermId(term2);
+    
+}
+
+//! Term1 <= Term2, will pretend coeff's 1
+void TermPartOrdGraph::insertLT( Term* term1, Term* term2 ) {
+}
+
+//! Term1 <= Term2, will pretend coeff's 1
+void TermPartOrdGraph::insertEqual( Term* term1, Term* term2 ) {
+}
+
+
+//===============================================================
+// Query Methods
 
 //! Templated helper routine to avoid repetitive code that
 //! loops over the type specific term maps to grab terms.
@@ -151,22 +197,22 @@ std::string TermPartOrdGraph::toString() const {
     std::stringstream ss;
     ss << "TermPartOrdGraph:" << std::endl;
     
-    ss << "\tmDoneInsertingTerms = " << mDoneInsertingTerms << std::endl;
+    ss << "\tDoneInsertingTerms = " << (mGraphPtr!=NULL) << std::endl;
     
-    ss << "\tmNumTerms = " << mNumTerms << std::endl;
+    ss << "\tNumTerms = " << mNumTerms << std::endl;
     
-    ss << "\tmNonNegativeTerms = " << std::endl;
+    ss << "\tNonNegativeTerms = " << std::endl;
     std::set<Term*>::const_iterator iter;
     for (iter=mNonNegativeTerms.begin(); iter!=mNonNegativeTerms.end(); iter++){
         ss << "\t\t" << (*iter)->toString() << std::endl;
     }
     
     // Output mapping of terms to integer ids.
-    ss << "\tmUFCallTerm2IntMap = " << std::endl;
+    ss << "\tUFCallTerm2IntMap = " << std::endl;
     ss << termMapToString<UFCallTerm>(mUFCallTerm2IntMap);
-    ss << "\tmTupleVarTerm2IntMap = " << std::endl;
+    ss << "\tTupleVarTerm2IntMap = " << std::endl;
     ss << termMapToString<TupleVarTerm>(mTupleVarTerm2IntMap);
-    ss << "\tmVarTerm2IntMap = " << std::endl;
+    ss << "\tVarTerm2IntMap = " << std::endl;
     ss << termMapToString<VarTerm>(mVarTerm2IntMap);
     
     // Underlying partial ordering on integer ids.

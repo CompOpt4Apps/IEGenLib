@@ -123,6 +123,11 @@ private:
     std::set<Term*>             mNonNegativeTerms;
     
     PartOrdGraph*               mGraphPtr;
+    
+    // Helper routines.
+    
+    int findOrInsertTermId(const Term* t);
+
 };
 
 }

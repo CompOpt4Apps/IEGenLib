@@ -71,10 +71,10 @@ TEST(TermPartOrdGraphTest, TermPartOrdGraphToString) {
     VarTerm * v = new VarTerm( "N" );
     g.insertTerm( v );
 
-    EXPECT_EQ("TermPartOrdGraph:\n\tmDoneInsertingTerms = 0\n"
-              "\tmNumTerms = 1\n\tmNonNegativeTerms = \n"
-              "\tmUFCallTerm2IntMap = \n\tmTupleVarTerm2IntMap ="
-              " \n\tmVarTerm2IntMap = \n\t\tterm = N, id = 0\n", 
+    EXPECT_EQ("TermPartOrdGraph:\n\tDoneInsertingTerms = 0\n"
+              "\tNumTerms = 1\n\tNonNegativeTerms = \n"
+              "\tUFCallTerm2IntMap = \n\tTupleVarTerm2IntMap ="
+              " \n\tVarTerm2IntMap = \n\t\tterm = N, id = 0\n", 
               g.toString());
     //std::cout << g.toString();
     
