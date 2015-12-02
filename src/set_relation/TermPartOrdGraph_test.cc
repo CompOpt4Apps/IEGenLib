@@ -72,7 +72,9 @@ TEST(TermPartOrdGraphTest, TermPartOrdGraphToString) {
     g.insertTerm( v );
 
     EXPECT_EQ("TermPartOrdGraph:\n\tmDoneInsertingTerms = 0\n"
-              "\tmNumTerms = 1\n\tmNonNegativeTerms = \n", 
+              "\tmNumTerms = 1\n\tmNonNegativeTerms = \n"
+              "\tmUFCallTerm2IntMap = \n\tmTupleVarTerm2IntMap ="
+              " \n\tmVarTerm2IntMap = \n\t\tterm = N, id = 0\n", 
               g.toString());
     //std::cout << g.toString();
     
@@ -98,7 +100,7 @@ TEST(TermPartOrdGraphTest, TermPartOrdGraphIsNonNegative) {
 
     g.insertTerm( uf_call );
     
-    std::cout << g.toString();
+    //std::cout << g.toString();
 
     EXPECT_EQ(true, g.isNonNegative( v ));
     EXPECT_EQ(false, g.isNonNegative( uf_call ));
@@ -107,3 +109,114 @@ TEST(TermPartOrdGraphTest, TermPartOrdGraphIsNonNegative) {
     delete uf_call;
 }
 
+#pragma mark TermPartOrdGraphUniqueTerms
+// Test the toString method.
+TEST(TermPartOrdGraphTest, TermPartOrdGraphUniqueTerms) {
+
+    TermPartOrdGraph g;
+    
+    // term = N
+    VarTerm * v = new VarTerm( 3, "N" );
+    g.insertTerm( v );
+    delete v;
+    g.termNonNegative( v );
+    VarTerm * v2 = new VarTerm( -1, "N" );
+    g.insertTerm( v2 );
+    delete v2;
+    
+    // Check that non-negative stayed the same.
+    EXPECT_EQ(true, g.isNonNegative( v ));
+    
+    {
+    // Check the size of the unique sets.
+    std::set<UFCallTerm*> ufCallTermSet = g.getUniqueUFCallTerms();
+    EXPECT_EQ(0,ufCallTermSet.size());
+    std::set<Term*> termSet = g.getAllUniqueTerms();
+    EXPECT_EQ(1,termSet.size());
+    }
+    
+    {
+    // term = tau(i,j)
+    UFCallTerm* uf_call = new UFCallTerm("tau", 2);
+    Exp *tau_arg_1 = new Exp();
+    tau_arg_1->addTerm(new VarTerm("i"));
+    uf_call->setParamExp(0,tau_arg_1);
+    Exp *tau_arg_2 = new Exp();
+    tau_arg_2->addTerm(new VarTerm("j"));
+    uf_call->setParamExp(1,tau_arg_2);
+
+    g.insertTerm( uf_call );
+    delete uf_call;
+    }
+
+    {
+    // Check the size of the unique sets.
+    std::set<UFCallTerm*> ufCallTermSet = g.getUniqueUFCallTerms();
+    EXPECT_EQ(1,ufCallTermSet.size());
+    std::set<Term*> termSet = g.getAllUniqueTerms();
+    EXPECT_EQ(2,termSet.size());
+    }
+        
+    { // Inserting same thing twice on purpose.
+    // term = tau(i,j)
+    UFCallTerm* uf_call = new UFCallTerm("tau", 2);
+    Exp *tau_arg_1 = new Exp();
+    tau_arg_1->addTerm(new VarTerm("i"));
+    uf_call->setParamExp(0,tau_arg_1);
+    Exp *tau_arg_2 = new Exp();
+    tau_arg_2->addTerm(new VarTerm("j"));
+    uf_call->setParamExp(1,tau_arg_2);
+
+    g.insertTerm( uf_call );
+    delete uf_call;
+    }
+
+    {
+    // Check the size of the unique sets.
+    std::set<UFCallTerm*> ufCallTermSet = g.getUniqueUFCallTerms();
+    EXPECT_EQ(1,ufCallTermSet.size());
+    std::set<Term*> termSet = g.getAllUniqueTerms();
+    EXPECT_EQ(2,termSet.size());
+    }
+
+    {
+    // term = g(3 __tv3)
+    UFCallTerm* uf_call = new UFCallTerm("g", 1);
+    Exp *g0 = new Exp();
+    g0->addTerm(new TupleVarTerm(3, 3));
+    uf_call->setParamExp(0,g0);
+    
+    g.insertTerm( uf_call );
+    delete uf_call;
+    }
+
+    {
+    // Check the size of the unique sets.
+    std::set<UFCallTerm*> ufCallTermSet = g.getUniqueUFCallTerms();
+    EXPECT_EQ(2,ufCallTermSet.size());
+    std::set<Term*> termSet = g.getAllUniqueTerms();
+    EXPECT_EQ(3,termSet.size());
+    }
+
+    {
+    // term = g(2 __tv3)
+    UFCallTerm* uf_call = new UFCallTerm("g", 1);
+    Exp *g0 = new Exp();
+    g0->addTerm(new TupleVarTerm(2, 3));
+    uf_call->setParamExp(0,g0);
+    
+    g.insertTerm( uf_call );
+    delete uf_call;
+    }
+
+    {
+    // Check the size of the unique sets.
+    std::set<UFCallTerm*> ufCallTermSet = g.getUniqueUFCallTerms();
+    EXPECT_EQ(3,ufCallTermSet.size());
+    std::set<Term*> termSet = g.getAllUniqueTerms();
+    EXPECT_EQ(4,termSet.size());
+    }
+
+    std::cout << g.toString();
+
+}
