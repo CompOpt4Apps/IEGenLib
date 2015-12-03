@@ -3595,3 +3595,109 @@ TEST_F(SetRelationTest, isUFCallParam) {
    delete r1;
    delete r2;
 }
+
+//*****************************************************************************
+// Testing project_out: project out tuple variable # tvar
+
+TEST_F(SetRelationTest, PROJECT_OUT) {
+
+    iegenlib::setCurrEnv();
+    iegenlib::appendCurrEnv("col",
+        new Set("{[i]:0<=i &&i<n}"), 
+        new Set("{[j]:0<=j &&j<n}"), true, iegenlib::Monotonic_NONE);
+    iegenlib::appendCurrEnv("idx",
+        new Set("{[i]:0<=i &&i<n}"), 
+        new Set("{[j]:0<=j &&j<n}"), true, iegenlib::Monotonic_NONE);
+    iegenlib::appendCurrEnv("row",
+        new Set("{[i]:0<=i &&i<n}"), 
+        new Set("{[j]:0<=j &&j<n}"), true, iegenlib::Monotonic_NONE);
+    iegenlib::appendCurrEnv("diag",
+        new Set("{[i]:0<=i &&i<n}"), 
+        new Set("{[j]:0<=j &&j<n}"), true, iegenlib::Monotonic_NONE);
+
+    Relation *r1 = new Relation("[n] -> { [i,j] -> [ip,jp] : i = col(jp) "
+       "and i < ip and 0 <= i and i < n and idx(i) <= j and j < idx(i+1) "
+         "and 0 <= ip and ip < n and idx(ip) <= jp and jp < idx(ip+1) }");
+
+    Relation *r2 = new Relation("[n] -> { [i,k,j1,j2] -> [ip,kp,jp1,jp2] :"
+    " i < ip and j1 = jp2 and 0 <= i and i < n and 0 <= ip and ip < n and "
+     "k+1 <= j1 and j1 < row(i+1) and kp+1 <= jp1 and jp1 < row(ip+1) and "
+       "diag(col(k))+1 <= j2 and j2 < row(col(k)+1) and diag(col(kp))+1 <="
+           " jp2 and jp2 < row(col(kp)+1) and row(i) <= k and k < diag(i) "
+           "and row(ip) <= kp and kp < diag(ip) }");
+
+    Set *s2 = new Set("[n] -> { [i,k,j1,j2,ip,kp,jp1,jp2] :"
+    " i < ip and j1 = jp2 and 0 <= i and i < n and 0 <= ip and ip < n and "
+     "k+1 <= j1 and j1 < row(i+1) and kp+1 <= jp1 and jp1 < row(ip+1) and "
+       "diag(col(k))+1 <= j2 and j2 < row(col(k)+1) and diag(col(kp))+1 <="
+           " jp2 and jp2 < row(col(kp)+1) and row(i) <= k and k < diag(i) "
+           "and row(ip) <= kp and kp < diag(ip) }");
+
+
+    std::string ex_r2("[ n ] -> { [i, k] -> [ip, kp] : i >= 0 && col(k) >= 0"
+     " && col(kp) >= 0 && diag(i) >= 0 && diag(ip) >= 0 && diag(col(k)) >= 0"
+   " && diag(col(kp)) >= 0 && row(i) >= 0 && row(i + 1) >= 0 && row(ip) >= 0"
+      " && row(ip + 1) >= 0 && row(col(k) + 1) >= 0 && row(col(kp) + 1) >= 0"
+               " && k - row(i) >= 0 && kp - row(ip) >= 0 && -i + ip - 1 >= 0"
+              " && -k + diag(i) - 1 >= 0 && -k + row(i + 1) - 2 >= 0 && -k +"
+  " row(col(kp) + 1) - 2 >= 0 && -ip + n - 2 >= 0 && -kp + diag(ip) - 1 >= 0"
+    " && -kp + row(ip + 1) - 2 >= 0 && n - col(k) - 2 >= 0 && n - col(k) - 1"
+   " >= 0 && n - col(kp) - 2 >= 0 && n - col(kp) - 1 >= 0 && n - diag(i) - 1"
+                " >= 0 && n - diag(ip) - 1 >= 0 && n - diag(col(k)) - 1 >= 0"
+    " && n - diag(col(kp)) - 1 >= 0 && n - row(i) - 1 >= 0 && n - row(i + 1)"
+              " - 1 >= 0 && n - row(ip) - 1 >= 0 && n - row(ip + 1) - 1 >= 0"
+          " && n - row(col(k) + 1) - 1 >= 0 && n - row(col(kp) + 1) - 1 >= 0"
+           " && -diag(col(k)) + row(col(k) + 1) - 2 >= 0 && -diag(col(kp)) +"
+       " row(i + 1) - 2 >= 0 && -diag(col(kp)) + row(col(kp) + 1) - 2 >= 0 }");
+
+    std::string ex_s2("[ n ] -> { [i, k, ip, kp] : i >= 0 && col(k) >= 0"
+     " && col(kp) >= 0 && diag(i) >= 0 && diag(ip) >= 0 && diag(col(k)) >= 0"
+   " && diag(col(kp)) >= 0 && row(i) >= 0 && row(i + 1) >= 0 && row(ip) >= 0"
+      " && row(ip + 1) >= 0 && row(col(k) + 1) >= 0 && row(col(kp) + 1) >= 0"
+               " && k - row(i) >= 0 && kp - row(ip) >= 0 && -i + ip - 1 >= 0"
+              " && -k + diag(i) - 1 >= 0 && -k + row(i + 1) - 2 >= 0 && -k +"
+  " row(col(kp) + 1) - 2 >= 0 && -ip + n - 2 >= 0 && -kp + diag(ip) - 1 >= 0"
+    " && -kp + row(ip + 1) - 2 >= 0 && n - col(k) - 2 >= 0 && n - col(k) - 1"
+   " >= 0 && n - col(kp) - 2 >= 0 && n - col(kp) - 1 >= 0 && n - diag(i) - 1"
+                " >= 0 && n - diag(ip) - 1 >= 0 && n - diag(col(k)) - 1 >= 0"
+    " && n - diag(col(kp)) - 1 >= 0 && n - row(i) - 1 >= 0 && n - row(i + 1)"
+              " - 1 >= 0 && n - row(ip) - 1 >= 0 && n - row(ip + 1) - 1 >= 0"
+          " && n - row(col(k) + 1) - 1 >= 0 && n - row(col(kp) + 1) - 1 >= 0"
+           " && -diag(col(k)) + row(col(k) + 1) - 2 >= 0 && -diag(col(kp)) +"
+       " row(i + 1) - 2 >= 0 && -diag(col(kp)) + row(col(kp) + 1) - 2 >= 0 }");
+
+   int iar = r2->inArity(), ar = r2->arity();
+
+   for(int i = ar-1 ; i >= 0 ; i--)
+   {
+     if (i == 0 || i == iar)
+       continue;
+
+     if ( !r2->isUFCallParam(i) )
+     {
+       r2->project_out(i);
+     }
+   }
+
+   int arS = s2->arity();
+   for(int i = arS-1 ; i >= 0 ; i--)
+   {
+     if ( !s2->isUFCallParam(i) )
+     {     
+       s2->project_out(i);
+     }
+   }
+
+//   std::cout << std::endl << "r2.pr = " << r2->toISLString() << std::endl;
+//   std::cout << std::endl << "s2.pr = " << s2->toISLString() << std::endl;
+
+   std::string res_r2(r2->toISLString());
+   std::string res_s2(s2->toISLString());
+
+   EXPECT_EQ( res_r2 , ex_r2 );
+   EXPECT_EQ( res_s2 , ex_s2 );
+
+	delete r1;
+	delete r2;
+	delete s2;
+}
