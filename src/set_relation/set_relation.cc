@@ -21,46 +21,56 @@ namespace iegenlib{
 
 /************************ ISL helper routines ****************************/
 
-// This function can be used for:
-// (1) proj = false: Simply converting relation/set string to isl format  
-// (2) proj = true: Projecting out a tuple variable from an affine
-//                  relation/set string using isl library
-//
-std::string isl_project_out (std::string relstr,
-                             unsigned pos=0, bool proj=false){
+// This function takes a Set/Relation string and returns equivalent isl_set*
+isl_set* islStringToSet( std::string relstr )
+{
   // Get an isl context
-  isl_ctx *ctx;
-  ctx = isl_ctx_alloc();
-  
-  // Get an isl printer and associate to an isl context
-  isl_printer * ip = NULL;
-  ip = isl_printer_to_str(ctx);
+  isl_ctx *ctx = isl_ctx_alloc();
   
   // load Relation r into ISL map
-  isl_set* iset = NULL;
-  iset = isl_set_read_from_str(ctx, relstr.c_str());
+  isl_set* iset = isl_set_read_from_str(ctx, relstr.c_str());
 
-  // Project out tuple variable No. pos
-  if ( proj ){
-    iset = isl_set_project_out(iset, isl_dim_out, pos, 1);
-  }
+  return iset;
+}
+
+// This function takes an isl_set* and returns equivalent Set/Relation string
+std::string islSetToString ( isl_set* iset )
+{
+  // Get an isl context
+  isl_ctx *ctx = isl_ctx_alloc();
+  
+  // Get an isl printer and associate to an isl context
+  isl_printer * ip = isl_printer_to_str(ctx);
 
   // get string back from ISL map
-  char * cstr;
   isl_printer_set_output_format(ip , ISL_FORMAT_ISL);
   isl_printer_print_set(ip ,iset);
-  cstr=isl_printer_get_str(ip);
-  std::string stringFromISL = cstr;
+  std::string stringFromISL (isl_printer_get_str(ip));
   
   // clean-up
   isl_printer_flush(ip);
   isl_printer_free(ip);
-  free(cstr);
   isl_set_free(iset);
   iset= NULL;
   isl_ctx_free(ctx); 
 
   return stringFromISL;
+}
+
+// runs the Set/Relation through ISL and returns the resulting string
+string getStringFromISL(string rstr) {
+
+   return  islSetToString ( islStringToSet(rstr) );
+}
+
+// This function can be used for Projecting out a tuple variable
+// from an affine relation/set string using isl library
+string islProjectOut(string rstr, unsigned pos) {
+
+    return  islSetToString ( 
+               isl_set_project_out(islStringToSet(rstr), 
+                                   isl_dim_out, pos, 1) 
+               );
 }
 
 #pragma mark -
@@ -1445,11 +1455,10 @@ Set* Conjunction::normalize() const {
 //std::cout << "Conjunction::normalize: fromStep1 = " << fromStep1 << std::endl;
  
     // (b) send through ISL
-    //std::string fromISL = isl_project_out(fromStep1);
 //std::cout << "Conjunction::normalize: fromISl = " << fromISL << std::endl;
     
     // (a & b) could do this as one statement (below), but broken apart (above) for testing
-    string fromISL = isl_project_out(retval1->toISLString());
+    string fromISL = getStringFromISL(retval1->toISLString());
 
 //std::cout << "Conjunction::normalize: fromISl = " << fromISL << std::endl;
 
@@ -1669,11 +1678,10 @@ Set* Conjunction::normalizeR() const
 //std::cout << "Conjunction::normalize: fromStep1 = " << fromStep1 << std::endl;
  
     // (b) send through ISL
-    //std::string fromISL = isl_project_out(fromStep1);
 //std::cout << "Conjunction::normalize: fromISl = " << fromISL << std::endl;
     
     // (a & b) could do this as one statement (below), but broken apart (above) for testing
-    string fromISL = isl_project_out(retval1->toISLString());
+    string fromISL = getStringFromISL(retval1->toISLString());
     
     //string fromISL = "[N, P] -> { [tstep, i, tstep, t, i, 0, t] : i >= 0 and t <= 0 and i <= -1 + N and t >= 1 - P }";
 
@@ -2975,7 +2983,7 @@ bool SparseConstraints::isUFCallParam(int tupleID) {
 /*****************************************************************************/
 #pragma mark -
 /*************** VisitorProjectOut *****************************/
-
+// Vistor Class used in projection process
 class VisitorProjectOut : public Visitor {
   private:
     int tvar;
@@ -2990,11 +2998,7 @@ class VisitorProjectOut : public Visitor {
 
 };
 
-/*   Projects out tuple varrable No. tvar
-     tvar is calculated based on total ariety (in+out) starting from 0.
-     Consequently, to project out jp from R: tvar = 2
-     R = {[i,j,k] -> [ip,jp,kp] : ...}
-*/
+//   Projects out tuple varrable No. tvar from Conjunction
 void VisitorProjectOut::preVisitConjunction(iegenlib::Conjunction * c)
 {
     Conjunction* selfcopy = new Conjunction(*c);
@@ -3028,7 +3032,7 @@ void VisitorProjectOut::preVisitConjunction(iegenlib::Conjunction * c)
     std::string fromStep1 = retval1->toISLString();
  
     // (b) send through ISL to project out desired tuple variable
-    string fromISL = isl_project_out(fromStep1, tvar, true);
+    string fromISL = islProjectOut(fromStep1, tvar);
 
     // (c) convert back to a Set
     Set* retval2 = new Set(fromISL);
@@ -3120,6 +3124,8 @@ void VisitorProjectOut::preVisitConjunction(iegenlib::Conjunction * c)
     delete retval2;
 }
 
+// This function sets the in/out arity of the relation to
+// new values of after project out 
 void VisitorProjectOut::preVisitRelation(iegenlib::Relation * r)
 {
     int ia = r->inArity();
@@ -3136,32 +3142,42 @@ void VisitorProjectOut::preVisitRelation(iegenlib::Relation * r)
     in_ar = ia;
 }
 
-bool Set::project_out(int tvar)
+//   Projects out tuple varrable No. tvar starting from 0
+Set* Set::projectOut(int tvar)
 {
     if (isUFCallParam(tvar)){
-      return false;
+      return NULL;
     }
-
-    VisitorProjectOut * v = new VisitorProjectOut(tvar);
-    this->acceptVisitor(v);
 
     Set *s = new Set(*this);
-    *this = *s;  
-    return true;
+    VisitorProjectOut * v = new VisitorProjectOut(tvar);
+    s->acceptVisitor(v);
+
+    Set *result = new Set(*s);
+    delete s;
+  
+    return result;
 }
 
-bool Relation::project_out(int tvar)
+/*   Projects out tuple varrable No. tvar
+     tvar is calculated based on total ariety (in+out) starting from 0.
+     Consequently, to project out jp from R: tvar = 5
+     R = {[i,j,k] -> [ip,jp,kp] : ...}
+*/
+Relation* Relation::projectOut(int tvar)
 {
     if (isUFCallParam(tvar)){
-      return false;
+      return NULL;
     }
 
-    VisitorProjectOut * v = new VisitorProjectOut(tvar);
-    this->acceptVisitor(v);
-
     Relation *r = new Relation(*this);
-    *this = *r;
-    return true;
+    VisitorProjectOut * v = new VisitorProjectOut(tvar);
+    r->acceptVisitor(v);
+
+    Relation *result = new Relation(*r);
+    delete r;
+
+    return result;
 }
 
 }//end namespace iegenlib

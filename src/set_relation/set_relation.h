@@ -524,10 +524,8 @@ public:
     //! Visitor design pattern, see Visitor.h for usage
     void acceptVisitor(Visitor *v);    
 
-    /* 
-       Projects out tuple varrable No. tvar
-    */
-    bool project_out(int tvar);
+    //  Projects out tuple varrable No. tvar
+    Set* projectOut(int tvar);
 
 private:
     int mArity;
@@ -666,10 +664,8 @@ public:
     //! Visitor design pattern, see Visitor.h for usage
     void acceptVisitor(Visitor *v);
 
-    /* 
-       Projects out tuple varrable No. tvar
-    */
-    bool project_out(int tvar);
+    // Projects out tuple varrable No. tvar
+    Relation* projectOut(int tvar);
 
 private:
 

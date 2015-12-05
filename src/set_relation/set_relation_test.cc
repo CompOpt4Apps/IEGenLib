@@ -3590,7 +3590,7 @@ TEST_F(SetRelationTest, isUFCallParam) {
      }
    }
 
-    EXPECT_EQ( org_tup_r1 , ins_tup_r1 );
+   EXPECT_EQ( org_tup_r1 , ins_tup_r1 );
 
    delete r1;
    delete r2;
@@ -3634,23 +3634,24 @@ TEST_F(SetRelationTest, PROJECT_OUT) {
            "and row(ip) <= kp and kp < diag(ip) }");
 
 
-    std::string ex_r2("[ n ] -> { [i, k] -> [ip, kp] : i >= 0 && col(k) >= 0"
-     " && col(kp) >= 0 && diag(i) >= 0 && diag(ip) >= 0 && diag(col(k)) >= 0"
-   " && diag(col(kp)) >= 0 && row(i) >= 0 && row(i + 1) >= 0 && row(ip) >= 0"
-      " && row(ip + 1) >= 0 && row(col(k) + 1) >= 0 && row(col(kp) + 1) >= 0"
-               " && k - row(i) >= 0 && kp - row(ip) >= 0 && -i + ip - 1 >= 0"
-              " && -k + diag(i) - 1 >= 0 && -k + row(i + 1) - 2 >= 0 && -k +"
-  " row(col(kp) + 1) - 2 >= 0 && -ip + n - 2 >= 0 && -kp + diag(ip) - 1 >= 0"
-    " && -kp + row(ip + 1) - 2 >= 0 && n - col(k) - 2 >= 0 && n - col(k) - 1"
-   " >= 0 && n - col(kp) - 2 >= 0 && n - col(kp) - 1 >= 0 && n - diag(i) - 1"
-                " >= 0 && n - diag(ip) - 1 >= 0 && n - diag(col(k)) - 1 >= 0"
-    " && n - diag(col(kp)) - 1 >= 0 && n - row(i) - 1 >= 0 && n - row(i + 1)"
-              " - 1 >= 0 && n - row(ip) - 1 >= 0 && n - row(ip + 1) - 1 >= 0"
-          " && n - row(col(k) + 1) - 1 >= 0 && n - row(col(kp) + 1) - 1 >= 0"
-           " && -diag(col(k)) + row(col(k) + 1) - 2 >= 0 && -diag(col(kp)) +"
-       " row(i + 1) - 2 >= 0 && -diag(col(kp)) + row(col(kp) + 1) - 2 >= 0 }");
+    Relation *ex_r2 = new Relation("[ n ] -> { [i, k] -> [ip, kp] : i >= 0"
+         " && col(k) >= 0 && col(kp) >= 0 && diag(i) >= 0 && diag(ip) >= 0"
+      " && diag(col(k)) >= 0 && diag(col(kp)) >= 0 && row(i) >= 0 && row(i"
+   " + 1) >= 0 && row(ip) >= 0 && row(ip + 1) >= 0 && row(col(k) + 1) >= 0"
+     " && row(col(kp) + 1) >= 0 && k - row(i) >= 0 && kp - row(ip) >= 0 &&"
+   " -i + ip - 1 >= 0 && -k + diag(i) - 1 >= 0 && -k + row(i + 1) - 2 >= 0"
+          " && -k + row(col(kp) + 1) - 2 >= 0 && -ip + n - 2 >= 0 && -kp +"
+       " diag(ip) - 1 >= 0 && -kp + row(ip + 1) - 2 >= 0 && n - col(k) - 2"
+      " >= 0 && n - col(k) - 1 >= 0 && n - col(kp) - 2 >= 0 && n - col(kp)"
+        " - 1 >= 0 && n - diag(i) - 1 >= 0 && n - diag(ip) - 1 >= 0 && n -"
+       " diag(col(k)) - 1 >= 0 && n - diag(col(kp)) - 1 >= 0 && n - row(i)"
+      " - 1 >= 0 && n - row(i + 1) - 1 >= 0 && n - row(ip) - 1 >= 0 && n -"
+             " row(ip + 1) - 1 >= 0 && n - row(col(k) + 1) - 1 >= 0 && n -"
+     " row(col(kp) + 1) - 1 >= 0 && -diag(col(k)) + row(col(k) + 1) - 2 >="
+             " 0 && -diag(col(kp)) + row(i + 1) - 2 >= 0 && -diag(col(kp))"
+                                           " + row(col(kp) + 1) - 2 >= 0 }");
 
-    std::string ex_s2("[ n ] -> { [i, k, ip, kp] : i >= 0 && col(k) >= 0"
+    Set *ex_s2  = new Set("[ n ] -> { [i, k, ip, kp] : i >= 0 && col(k) >= 0"
      " && col(kp) >= 0 && diag(i) >= 0 && diag(ip) >= 0 && diag(col(k)) >= 0"
    " && diag(col(kp)) >= 0 && row(i) >= 0 && row(i + 1) >= 0 && row(ip) >= 0"
       " && row(ip + 1) >= 0 && row(col(k) + 1) >= 0 && row(col(kp) + 1) >= 0"
@@ -3675,29 +3676,32 @@ TEST_F(SetRelationTest, PROJECT_OUT) {
 
      if ( !r2->isUFCallParam(i) )
      {
-       r2->project_out(i);
+       r2 = r2->projectOut(i);
      }
    }
 
+   Set *s3;
    int arS = s2->arity();
    for(int i = arS-1 ; i >= 0 ; i--)
    {
-     if ( !s2->isUFCallParam(i) )
+     if (i == 0 || i == iar)
+       continue;
+
+     s3 = s2->projectOut(i);
+
+     if ( s3 )
      {     
-       s2->project_out(i);
+       s2 = s3;
      }
    }
 
 //   std::cout << std::endl << "r2.pr = " << r2->toISLString() << std::endl;
 //   std::cout << std::endl << "s2.pr = " << s2->toISLString() << std::endl;
 
-   std::string res_r2(r2->toISLString());
-   std::string res_s2(s2->toISLString());
+   EXPECT_EQ( r2->toISLString() , ex_r2->toISLString() );
+   EXPECT_EQ( s2->toISLString() , ex_s2->toISLString() );
 
-   EXPECT_EQ( res_r2 , ex_r2 );
-   EXPECT_EQ( res_s2 , ex_s2 );
-
-	delete r1;
-	delete r2;
-	delete s2;
+   delete r1;
+   delete r2;
+   delete s2;
 }
