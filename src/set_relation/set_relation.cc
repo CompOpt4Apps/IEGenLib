@@ -2944,6 +2944,8 @@ class VisitorIsUFCallParam : public Visitor {
     VisitorIsUFCallParam(int tupleID) : mResult(false),
                  mTupleID(tupleID), mSeenTupleVar(false), prevSeen(false) {}
 
+    virtual ~VisitorIsUFCallParam(){ }
+
     bool returnResult() { return mResult; }
 
     void preVisitTupleVarTerm(iegenlib::TupleVarTerm *t) {
@@ -2975,6 +2977,8 @@ bool SparseConstraints::isUFCallParam(int tupleID) {
     VisitorIsUFCallParam * v = new VisitorIsUFCallParam(tupleID);
     this->acceptVisitor(v);
     bool result = v->returnResult();
+    delete v;
+
     return result;
 }
 
@@ -2990,9 +2994,8 @@ class VisitorProjectOut : public Visitor {
     int in_ar;
 
   public:
-    VisitorProjectOut(int tvarI)
-    { tvar = tvarI; in_ar = 0; }
-
+    VisitorProjectOut(int tvarI){ tvar = tvarI; in_ar = 0; }
+    virtual ~VisitorProjectOut(){ }
     void preVisitConjunction(iegenlib::Conjunction * c);
     void preVisitRelation(iegenlib::Relation * r);
 
@@ -3038,18 +3041,16 @@ void VisitorProjectOut::preVisitConjunction(iegenlib::Conjunction * c)
     Set* retval2 = new Set(fromISL);
 
     delete retval1;
-    
+
     /////////////////////
     // (step 3) In (step 3) we will need to use substitute to replace
     // extra tuple vars with UF calls by making queries to ufcallmap. Will
     // need to call setTupleDecl on retval to remove those extra tuple vars
     // that acted as temporaries to replace uf calls. Then return retval Set.
-
-    Conjunction* conj = retval2->mConjunctions.front();
     
     // Determine starting index of extra tuple vars
     int numTempVars = ufcallmap.numTempVars();
-    int expandedArity = conj->arity();
+    int expandedArity = (retval2->mConjunctions.front())->arity();
     int indexStart = expandedArity - numTempVars;
 
     SubMap affineSubstMap;
@@ -3084,7 +3085,7 @@ void VisitorProjectOut::preVisitConjunction(iegenlib::Conjunction * c)
       UFCallTerm* origUFCall = ufcallmap.cloneUFCall(j);
       Exp* tvExp = new Exp();
       tvExp->addTerm(origUFCall);
-		 
+
       // substitute affine results into original UFCall
       tvExp->substitute(affineSubstMap);
 		
@@ -3118,7 +3119,7 @@ void VisitorProjectOut::preVisitConjunction(iegenlib::Conjunction * c)
 
     *c = *(retval2->mConjunctions.front());
     c->setinarity( in_ar );
-  
+
     delete constraints;
     delete selfcopy;
     delete retval2;
@@ -3155,7 +3156,8 @@ Set* Set::projectOut(int tvar)
 
     Set *result = new Set(*s);
     delete s;
-  
+    delete v;
+
     return result;
 }
 
@@ -3176,6 +3178,7 @@ Relation* Relation::projectOut(int tvar)
 
     Relation *result = new Relation(*r);
     delete r;
+    delete v;
 
     return result;
 }
