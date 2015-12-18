@@ -415,9 +415,11 @@ public:
 
 
   protected:
+    // FIXME: can't we incorporate these into visitor?
     void addUFConstraintsHelper(std::string uf1str, 
                                 std::string opstr, std::string uf2str);
 
+    void addConstraintsDueToMonotonicityHelper();
 };
 
 /*!

@@ -27,6 +27,9 @@
 class Visitor {
 
   public:
+    Visitor() {}
+    virtual ~Visitor() {}
+  
     // Classes in expression.h
     virtual void preVisitTerm(iegenlib::Term * t) {}
     virtual void preVisitUFCallTerm(iegenlib::UFCallTerm * t) {}

@@ -27,6 +27,7 @@ TermPartOrdGraph::~TermPartOrdGraph() {
     for (iter=mNonNegativeTerms.begin(); iter!=mNonNegativeTerms.end(); iter++){
         delete (*iter);
     }
+    delete mGraphPtr;
 }
 
 //! This should be only routine that uses RTTI to determine the term type.
