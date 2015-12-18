@@ -28,25 +28,7 @@ using iegenlib::UFCallTerm;
 using iegenlib::TupleExpTerm;
 using iegenlib::Exp;
 
-/*      TermPartOrdGraph g;
- *      UFCallTerm uf = new UFCallTerm( ... );
- *      TupleVarTerm tv = new TupleVarTerm( ... );
- *      g.insertTerm( uf );
- *      g.insertTerm( tv );
- *      g.insertTerm( uf );     // Will do object comparison and only keep one.
- *      
- *      g.doneInsertingTerms();
- *
- *      // Insertions of orderings can only come after doneInsertingTerms.
- *      g.insertLTE( uf, tv);   // (*uf) <= (*tv)
- *      g.insertLT( uf, tv);    // (*uf) < (*tv)
- *      g.insertEqual( uf,tv ); // Will cause an error in this case.
- *
- *      // Indicating a term is non-negative can happen at anytime
- *      // after the term has been inserted.
- *      g.termNonNegative( tv );
- *
- *      //====== Queries ======
+ /*      //====== Queries ======
  *
  *      if (g.isNonNegative(uf)) { ... }
  *
@@ -64,7 +46,6 @@ using iegenlib::Exp;
 
 
 #pragma mark TermPartOrdGraphToString
-// Test the toString method.
 TEST(TermPartOrdGraphTest, TermPartOrdGraphToString) {
 
     TermPartOrdGraph g;
@@ -82,7 +63,6 @@ TEST(TermPartOrdGraphTest, TermPartOrdGraphToString) {
 }
 
 #pragma mark TermPartOrdGraphIsNonNegative
-// Test the toString method.
 TEST(TermPartOrdGraphTest, TermPartOrdGraphIsNonNegative) {
 
     TermPartOrdGraph g;
@@ -110,7 +90,6 @@ TEST(TermPartOrdGraphTest, TermPartOrdGraphIsNonNegative) {
 }
 
 #pragma mark TermPartOrdGraphUniqueTerms
-// Test the toString method.
 TEST(TermPartOrdGraphTest, TermPartOrdGraphUniqueTerms) {
 
     TermPartOrdGraph g;
@@ -217,6 +196,65 @@ TEST(TermPartOrdGraphTest, TermPartOrdGraphUniqueTerms) {
     EXPECT_EQ(4,termSet.size());
     }
 
+    //std::cout << g.toString();
+
+}
+
+#pragma mark TermPartOrdGraphPartOrd
+TEST(TermPartOrdGraphTest, TermPartOrdGraphPartOrd) {
+
+    TermPartOrdGraph g;
+    
+    // term = N
+    VarTerm * v = new VarTerm( 3, "N" );
+    g.insertTerm( v );
+    
+    // term = tau(i,j)
+    UFCallTerm* uf_call1 = new UFCallTerm("tau", 2);
+    Exp *tau_arg_1 = new Exp();
+    tau_arg_1->addTerm(new VarTerm("i"));
+    uf_call1->setParamExp(0,tau_arg_1);
+    Exp *tau_arg_2 = new Exp();
+    tau_arg_2->addTerm(new VarTerm("j"));
+    uf_call1->setParamExp(1,tau_arg_2);
+
+    g.insertTerm( uf_call1 );
+
+    // term = g(3 __tv3)
+    UFCallTerm* uf_call2 = new UFCallTerm("g", 1);
+    Exp* g0 = new Exp();
+    g0->addTerm(new TupleVarTerm(3, 3));
+    uf_call2->setParamExp(0,g0);
+    
+    g.insertTerm( uf_call2 );
+
+    // term = g(2 __tv3)
+    UFCallTerm* uf_call3 = new UFCallTerm("g", 1);
+    g0 = new Exp();
+    g0->addTerm(new TupleVarTerm(2, 3));
+    uf_call3->setParamExp(0,g0);
+    
+    g.insertTerm( uf_call3 );
+
+
+    g.doneInsertingTerms();
+
+    // Put in relationships between terms
+    // v < uf_call1, uf_call1 <= uf_call2, uf_call3 < uf_call1
+    g.insertLT(v,uf_call1);
+    g.insertLTE(uf_call1,uf_call2);
+    g.insertLT(uf_call3,uf_call1);
+    
     std::cout << g.toString();
+
+    EXPECT_EQ(true, g.isLT(v,uf_call2));
+    EXPECT_EQ(false, g.isLT(uf_call2,v));
+    EXPECT_EQ(true, g.isLT(uf_call3,uf_call2));
+    EXPECT_EQ(false, g.isEqual(uf_call3,uf_call2));
+
+    delete v;
+    delete uf_call1;
+    delete uf_call2;
+    delete uf_call3;
 
 }

@@ -69,7 +69,8 @@ int TermPartOrdGraph::findOrInsertTermId(const Term* t) {
     delete temp;
     
     // Check that we didn't just do an insertion after doneInsertingItems call.
-    assert(mGraphPtr and (initialNumTerms==mNumTerms));
+    assert( (isDoneInsertingTerms() and (initialNumTerms==mNumTerms))
+            || !isDoneInsertingTerms());
     
     return termId;    
 }
@@ -124,24 +125,62 @@ void TermPartOrdGraph::doneInsertingTerms() {
     mGraphPtr = new PartOrdGraph(mNumTerms);
 }
 
-//! Term1 <= Term2, will pretend coeff's 1
+//! Once user is done inserting items we can create an instance
+//! of the PartOrdGraph data structure.
+bool TermPartOrdGraph::isDoneInsertingTerms() const {
+    return mGraphPtr != NULL;
+}
+
+//! Term1 <= Term2
 void TermPartOrdGraph::insertLTE( Term* term1, Term* term2 ) {
+    assert(isDoneInsertingTerms());
     int term1Id = findOrInsertTermId(term1);
     int term2Id = findOrInsertTermId(term2);
-    
+    mGraphPtr->nonStrict(term1Id,term2Id);
 }
 
-//! Term1 <= Term2, will pretend coeff's 1
+//! Term1 < Term2
 void TermPartOrdGraph::insertLT( Term* term1, Term* term2 ) {
+    assert(isDoneInsertingTerms());
+    int term1Id = findOrInsertTermId(term1);
+    int term2Id = findOrInsertTermId(term2);
+    mGraphPtr->strict(term1Id,term2Id);
 }
 
-//! Term1 <= Term2, will pretend coeff's 1
+//! Term1 == Term2
 void TermPartOrdGraph::insertEqual( Term* term1, Term* term2 ) {
+    assert(isDoneInsertingTerms());
+    int term1Id = findOrInsertTermId(term1);
+    int term2Id = findOrInsertTermId(term2);
+    mGraphPtr->equal(term1Id,term2Id);
 }
 
 
 //===============================================================
 // Query Methods
+
+//! returns true if Term1 <= Term2
+bool TermPartOrdGraph::isLTE( Term* term1, Term* term2 ) {
+    assert(isDoneInsertingTerms());
+    int term1Id = findOrInsertTermId(term1);
+    int term2Id = findOrInsertTermId(term2);
+    return mGraphPtr->isNonStrict(term1Id,term2Id);
+}
+//! returns true if Term1 < Term2
+bool TermPartOrdGraph::isLT( Term* term1, Term* term2 ) {
+    assert(isDoneInsertingTerms());
+    int term1Id = findOrInsertTermId(term1);
+    int term2Id = findOrInsertTermId(term2);
+    return mGraphPtr->isStrict(term1Id,term2Id);
+}
+//! returns true if Term1 == Term2
+bool TermPartOrdGraph::isEqual( Term* term1, Term* term2 ) {
+    assert(isDoneInsertingTerms());
+    int term1Id = findOrInsertTermId(term1);
+    int term2Id = findOrInsertTermId(term2);
+    return mGraphPtr->isEqual(term1Id,term2Id);
+}
+
 
 //! Templated helper routine to avoid repetitive code that
 //! loops over the type specific term maps to grab terms.
@@ -197,7 +236,7 @@ std::string TermPartOrdGraph::toString() const {
     std::stringstream ss;
     ss << "TermPartOrdGraph:" << std::endl;
     
-    ss << "\tDoneInsertingTerms = " << (mGraphPtr!=NULL) << std::endl;
+    ss << "\tDoneInsertingTerms = " << isDoneInsertingTerms() << std::endl;
     
     ss << "\tNumTerms = " << mNumTerms << std::endl;
     

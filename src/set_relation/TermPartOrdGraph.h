@@ -90,17 +90,33 @@ public:
     void doneInsertingTerms();
 
     //! ==== NONE of the below take ownership of term.
+    //! ==== They all will pretend the coeffs are 1.
     //! ==== They only work after doneInsertingTerms has been called.
-    //! Term1 <= Term2, will pretend coeff's 1
+    //! ==== Will throw an assert exception if called before that.
+    //! Term1 <= Term2
     void insertLTE( Term* term1, Term* term2 );
-    //! Term1 <= Term2, will pretend coeff's 1
+    //! Term1 < Term2
     void insertLT( Term* term1, Term* term2 );
-    //! Term1 <= Term2, will pretend coeff's 1
+    //! Term1 == Term2
     void insertEqual( Term* term1, Term* term2 );
 
  
     //! ==== Query methods
  
+    //! Returns true if doneInsertingTerms() has been called.
+    bool isDoneInsertingTerms() const;
+ 
+    //! ==== NONE of the below take ownership of term.
+    //! ==== They all will pretend the coeffs are 1.
+    //! ==== They only work after doneInsertingTerms has been called.
+    //! ==== Will throw an assert exception if called before that.
+    //! returns true if Term1 <= Term2
+    bool isLTE( Term* term1, Term* term2 );
+    //! returns true if Term1 < Term2
+    bool isLT( Term* term1, Term* term2 );
+    //! returns true if Term1 == Term2
+    bool isEqual( Term* term1, Term* term2 );
+
     //! Returns a set of all unique UFCallTerms that have been inserted.
     //! Caller will own returned terms.
     std::set<UFCallTerm*> getUniqueUFCallTerms() const;
@@ -113,7 +129,6 @@ public:
     std::string toString() const;        
         
 private:
-    bool                        mDoneInsertingTerms;
     int                         mNumTerms;
 
     std::map<UFCallTerm,int>    mUFCallTerm2IntMap;
