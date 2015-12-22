@@ -22,11 +22,8 @@ namespace iegenlib{
 /************************ ISL helper routines ****************************/
 
 // This function takes a Set/Relation string and returns equivalent isl_set*
-isl_set* islStringToSet( std::string relstr )
+isl_set* islStringToSet( std::string relstr , isl_ctx *ctx )
 {
-  // Get an isl context
-  isl_ctx *ctx = isl_ctx_alloc();
-  
   // load Relation r into ISL map
   isl_set* iset = isl_set_read_from_str(ctx, relstr.c_str());
 
@@ -34,25 +31,24 @@ isl_set* islStringToSet( std::string relstr )
 }
 
 // This function takes an isl_set* and returns equivalent Set/Relation string
-std::string islSetToString ( isl_set* iset )
+// The function takes ownership of input arhument 'iset'
+std::string islSetToString ( isl_set* iset , isl_ctx *ctx )
 {
-  // Get an isl context
-  isl_ctx *ctx = isl_ctx_alloc();
-  
   // Get an isl printer and associate to an isl context
   isl_printer * ip = isl_printer_to_str(ctx);
 
   // get string back from ISL map
   isl_printer_set_output_format(ip , ISL_FORMAT_ISL);
   isl_printer_print_set(ip ,iset);
-  std::string stringFromISL (isl_printer_get_str(ip));
+  char *i_str = isl_printer_get_str(ip);
+  std::string stringFromISL (i_str); 
   
   // clean-up
   isl_printer_flush(ip);
   isl_printer_free(ip);
   isl_set_free(iset);
   iset= NULL;
-  isl_ctx_free(ctx); 
+  free(i_str);
 
   return stringFromISL;
 }
@@ -60,17 +56,29 @@ std::string islSetToString ( isl_set* iset )
 // runs the Set/Relation through ISL and returns the resulting string
 string getStringFromISL(string rstr) {
 
-   return  islSetToString ( islStringToSet(rstr) );
+  isl_ctx *ctx = isl_ctx_alloc();
+
+  string result =  islSetToString ( islStringToSet(rstr,ctx), ctx );
+
+  isl_ctx_free(ctx);
+
+  return result;
 }
 
 // This function can be used for Projecting out a tuple variable
 // from an affine relation/set string using isl library
 string islProjectOut(string rstr, unsigned pos) {
 
-    return  islSetToString ( 
-               isl_set_project_out(islStringToSet(rstr), 
-                                   isl_dim_out, pos, 1) 
+  isl_ctx *ctx = isl_ctx_alloc();
+
+  string result = islSetToString ( 
+               isl_set_project_out(islStringToSet(rstr,ctx), 
+                                   isl_dim_out, pos, 1), ctx 
                );
+
+  isl_ctx_free(ctx);
+
+  return result;
 }
 
 #pragma mark -
