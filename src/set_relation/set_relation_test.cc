@@ -471,13 +471,39 @@ TEST_F(SetRelationTest, SolveForFactor) {
     uf_call->setParamExp(0,arg0);
     exp->addTerm(uf_call);
 
-
     Exp* result = exp->solveForFactor(new VarTerm("y"));
     EXPECT_TRUE(result);
     EXPECT_EQ("f_inv(t)", result->toString());
     delete exp;
     delete result;
 }
+
+#pragma mark SolveForFactorMultipleTerms
+TEST_F(SetRelationTest, SolveForFactorMultipleTerms) {
+    iegenlib::setCurrEnv();
+    iegenlib::appendCurrEnv("f",
+        new Set("{[i]:0<=i &&i<G}"), new Set("{[i]:0<=i &&i<G}"), false,
+        iegenlib::Monotonic_NONE);
+
+    // Create the expression t - 2 f(y) + 3 x - 7 __tv1 + 42 = 0
+    Exp* exp = new Exp();
+    exp->addTerm(new VarTerm("t"));         // t
+    UFCallTerm* uf_call = new UFCallTerm(1, "f", 1);
+    Exp *arg0 = new Exp();
+    arg0->addTerm(new VarTerm("y"));
+    uf_call->setParamExp(0,arg0);
+    exp->addTerm(uf_call);                  // f(y)
+    exp->addTerm(new VarTerm(3,"x"));       // 3 x
+    exp->addTerm(new TupleVarTerm(-7,1));   // -7 __tv1
+    exp->addTerm(new Term(42));             // 42
+
+    Exp* result = exp->solveForFactor(new UFCallTerm(*uf_call));
+    EXPECT_TRUE(result);
+    EXPECT_EQ("7 __tv1 - t - 3 x - 42", result->toString());
+    delete exp;
+    delete result;
+}
+
 
 #pragma mark FindFunction
 TEST_F(SetRelationTest, FindFunction) {
