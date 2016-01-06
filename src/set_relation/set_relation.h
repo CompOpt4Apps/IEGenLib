@@ -160,8 +160,9 @@ public:
 
     //! Get our arity.
     int arity() const { return mTupleDecl.size(); }
-    //! Get inarity, for use with relations
+    //! Get/Set inarity, for use with relations
     int inarity() const { return mInArity; }
+    void setinarity(int in) { mInArity = in; }
     
     //! Returns true if the conjunction has at least one equality or inequality
     //! constraints.  If it contains none then this Conjunction is just
@@ -408,6 +409,10 @@ public:
     //! Visitor design pattern, see Visitor.h for usage
     void acceptVisitor(Visitor *v);
 
+    // Is tuple variable tupleID argument to an UFS?
+    bool isUFCallParam(int tupleID);
+
+
 // FIXME: what methods should we have to iterate over conjunctions so
 // this can go back to protected?
 //protected:
@@ -521,6 +526,9 @@ public:
     //! Visitor design pattern, see Visitor.h for usage
     void acceptVisitor(Visitor *v);    
 
+    //  Projects out tuple varrable No. tvar
+    Set* projectOut(int tvar);
+
 private:
     int mArity;
 };
@@ -557,8 +565,11 @@ public:
     //! Convert to a human-readable string (substitute in tuple vars).
     std::string prettyPrintString() const;
 
-    //! Get our in arity.
+    //! Get/Set our in/out arity.
     int inArity() const { return mInArity; }
+    int outArity() const { return mOutArity; }
+    void SetinArity(int in) { mInArity = in; }
+    void SetoutArity(int out) { mOutArity = out; }
 
     //! For all conjunctions, sets them to the given tuple declaration.
     //! If there are some constants that don't agree then throws exception.
@@ -654,6 +665,9 @@ public:
 
     //! Visitor design pattern, see Visitor.h for usage
     void acceptVisitor(Visitor *v);
+
+    // Projects out tuple varrable No. tvar
+    Relation* projectOut(int tvar);
 
 private:
 
