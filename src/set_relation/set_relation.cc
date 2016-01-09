@@ -2872,6 +2872,53 @@ private:
     
 };
 
+/* This visitor can visit expressions and indicates
+   whether all terms in the expression it has visited
+   are non-negative.  Resets for each expression.
+   
+   A visitor requires more code, but a method in expression.cc
+   would need to know about TermPartOrdGraph to ask about the
+   non-negativity of each of the terms.
+*/
+class VisitorExpNonNegTerms : public Visitor {
+  private:
+    bool                mAllNonNeg;
+    int                 mUFCallNesting;
+    TermPartOrdGraph    mPartOrd;
+     
+  public:
+    VisitorExpNonNegTerms(TermPartOrdGraph partOrd) 
+        : mAllNonNeg(false), mUFCallNesting(0), mPartOrd(partOrd) {}
+    
+    bool allTermsNonNeg() { return mAllNonNeg; }
+    
+    // Check that each term on the top level has a non-negative factor
+    // and has a non-negative coefficient.
+    bool isNonNegative(iegenlib::Term * t) {
+        return (t->coefficient()<0)  && mPartOrd.isNonNegative(t);
+    }
+    void preVisitExp(iegenlib::Exp * e) {
+        // reset for each new non parameter expression
+        if (mUFCallNesting==0) { mAllNonNeg = false; }
+    }
+    void postVisitTerm(iegenlib::Term * t) {
+        if (!isNonNegative(t)) { mAllNonNeg = false; }
+    }
+    void preVisitUFCallTerm(iegenlib::UFCallTerm * t) {
+        mUFCallNesting++;
+    }
+    void postVisitUFCallTerm(iegenlib::UFCallTerm * t) {
+        mUFCallNesting--;
+        if (!isNonNegative(t)) { mAllNonNeg = false; }
+    }
+    void postVisitTupleVarTerm(iegenlib::TupleVarTerm * t) {
+        if (!isNonNegative(t)) { mAllNonNeg = false; }
+    }
+    void postVisitVarTerm(iegenlib::VarTerm * t) {
+        if (!isNonNegative(t)) { mAllNonNeg = false; }
+    }
+};
+
 /*! This visitor will collect partial ordering relationships between
     non-constant terms (We don't need to record that 1 is less than 2).
     
@@ -2892,7 +2939,6 @@ private:
     
     This visitor does not take ownership of any of the terms.
 */
-
 class VisitorCollectPartOrd : public Visitor {
   private:
     bool                    mFoundNonNeg;
@@ -2926,21 +2972,48 @@ class VisitorCollectPartOrd : public Visitor {
         //If the constraint is an equality
         if (mCurrExp->isEquality()) {
             //and all of the terms in the solution are non-negative,
-            
-                //then this term is non-negative.
-                
+            //then this term is non-negative.
+            VisitorExpNonNegTerms vNonNegTerms(mPartOrd);
+            solution->acceptVisitor(&vNonNegTerms);
+            if (vNonNegTerms.allTermsNonNeg()) {
+                mPartOrd.termNonNegative(t);
+            }
+   
             //and there is only one other term in the solution with coeff 1,
-                //then this term is equal to the solution term.
+            //then this term is equal to the solution term.
+            Term* singleTerm = solution->getTerm();
+            if (singleTerm != NULL
+                    && singleTerm->isConst()
+                    && singleTerm->coefficient()==1) {
+                mPartOrd.insertEqual(singleTerm,t);
+            }
+
         }
-        
+
         //If the constraint is an inequality (exp>=0)
+        if (mCurrExp->isInequality()) {
             //record the sign of the term
+            bool posCoeff = (t->coefficient()>0);
+            
             //if the sign is positive and all terms in solution are non-negative
-                //then this term is non-negative
+            //then this term is non-negative
+            VisitorExpNonNegTerms vNonNegTerms(mPartOrd);
+            solution->acceptVisitor(&vNonNegTerms);
+            if (vNonNegTerms.allTermsNonNeg()) {
+                mPartOrd.termNonNegative(t);
+            }
                 
-                //if the constant is >=1
-                    //then this term is > all terms in the solution
-                    //else this term is >= all terms in the solution        
+            //if the constant is >=1
+            Term* constTerm = solution->getConstTerm();
+            if (constTerm->coefficient()>=1) {
+                //then this term is > all terms in the solution
+                // FIXME: stuck, really do need to get list
+                // of terms from an expression.
+                //mPartOrd.insertLT(
+            } else {
+                //else this term is >= all terms in the solution
+            }
+        }      
     }
 
     void postVisitTerm(iegenlib::Term * t) {

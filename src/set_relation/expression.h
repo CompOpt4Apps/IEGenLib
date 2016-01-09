@@ -673,7 +673,8 @@ public:
     //! Sets mExpType to Equality, to indicate Exp == 0
     inline void setEquality() { mExpType = Equality; }
 
-    //! Returns true if the Exp is a simple expression
+    //! Returns true if the Exp is a simple expression, not a constraint
+    //! Does not mean it is a UFCall param.
     inline bool isExpression() { return (getExpType() == Expression); }
 
     //! Returns true if the Exp is an inequality, ie expression >= 0
@@ -689,6 +690,11 @@ public:
     //! Otherwise returns NULL.
     //! this still owns Term.
     Term* getTerm() const;
+    
+    //! Return Term* for constant term if there is one.
+    //! Otherwise return NULL.
+    //! This expression still owns the Term.
+    Term* getConstTerm() const;
 
     //! Output the Exp in dot format.
     //! Note here, we still need to provide "digraph name {" and "}"
