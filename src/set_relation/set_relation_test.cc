@@ -8,10 +8,10 @@
  *
  * \date Started: 3/28/12
  *
- * \authors Michelle Strout and Joseph Strout
+ * \authors Michelle Strout, Joseph Strout, Mahdi Soltan Mohammadi
  *
  * Copyright (c) 2012, 2013 Colorado State University <br>
- * Copyright (c) 2015, University of Arizona <br>
+ * Copyright (c) 2015-2016, University of Arizona <br>
  * All rights reserved. <br>
  * See ../../COPYING for details. <br>
  */

@@ -22,76 +22,64 @@ namespace iegenlib{
 
 /************************ ISL helper routines ****************************/
 
+// This function takes a Set/Relation string and returns equivalent isl_set*
+isl_set* islStringToSet( std::string relstr , isl_ctx *ctx )
+{
+  // load Relation r into ISL map
+  isl_set* iset = isl_set_read_from_str(ctx, relstr.c_str());
 
-// runs the Relation through ISL and returns the resulting string
-string getRelationStringFromISL(string rstr) {
-
-    // Sending r thru ISL and returning resulting string
-    
-    // Get an isl context
-    isl_ctx *ctx;
-    ctx = isl_ctx_alloc();
-    
-    // Get an isl printer and associate to an isl context
-    isl_printer * ip = NULL;
-    ip = isl_printer_to_str(ctx);
-    
-    // load Relation r into ISL map
-    isl_map* imap = NULL;
-    imap = isl_map_read_from_str(ctx, rstr.c_str());
-    
-    // get string back from ISL map
-    char * cstr;
-    isl_printer_set_output_format(ip , ISL_FORMAT_ISL);
-    isl_printer_print_map(ip ,imap);
-    cstr=isl_printer_get_str(ip);
-    std::string stringFromISL = cstr;
-    
-    // clean-up
-    isl_printer_flush(ip);
-    isl_printer_free(ip);
-    free(cstr);
-    isl_map_free(imap);
-    imap= NULL;
-    isl_ctx_free(ctx);  
-
-	return stringFromISL;
+  return iset;
 }
 
-// runs the Relation through ISL using isl_basic_map 
-// and returns the resulting string
-std::string getRelationStringFromBasicISL(std::string rstr) {
+// This function takes an isl_set* and returns equivalent Set/Relation string
+// The function takes ownership of input arhument 'iset'
+std::string islSetToString ( isl_set* iset , isl_ctx *ctx )
+{
+  // Get an isl printer and associate to an isl context
+  isl_printer * ip = isl_printer_to_str(ctx);
 
-    // Sending r thru ISL and returning resulting string
-    
-    // Get an isl context
-    isl_ctx *ctx;
-    ctx = isl_ctx_alloc();
-    
-    // Get an isl printer and associate to an isl context
-    isl_printer * ip = NULL;
-    ip = isl_printer_to_str(ctx);
-    
-    // load Relation r into ISL map
-    isl_basic_map* imap = NULL;
-    imap = isl_basic_map_read_from_str(ctx, rstr.c_str());
-    
-    // get string back from ISL map
-    char * cstr;
-    isl_printer_set_output_format(ip , ISL_FORMAT_ISL);
-    isl_printer_print_basic_map(ip ,imap);
-    cstr=isl_printer_get_str(ip);
-    std::string stringFromISL = cstr;
-    
-    // clean-up
-    isl_printer_flush(ip);
-    isl_printer_free(ip);
-    free(cstr);
-    isl_basic_map_free(imap);
-    imap= NULL;
-    isl_ctx_free(ctx);  
+  // get string back from ISL map
+  isl_printer_set_output_format(ip , ISL_FORMAT_ISL);
+  isl_printer_print_set(ip ,iset);
+  char *i_str = isl_printer_get_str(ip);
+  std::string stringFromISL (i_str); 
+  
+  // clean-up
+  isl_printer_flush(ip);
+  isl_printer_free(ip);
+  isl_set_free(iset);
+  iset= NULL;
+  free(i_str);
 
-	return stringFromISL;
+  return stringFromISL;
+}
+
+// runs the Set/Relation through ISL and returns the resulting string
+string getStringFromISL(string rstr) {
+
+  isl_ctx *ctx = isl_ctx_alloc();
+
+  string result =  islSetToString ( islStringToSet(rstr,ctx), ctx );
+
+  isl_ctx_free(ctx);
+
+  return result;
+}
+
+// This function can be used for Projecting out a tuple variable
+// from an affine relation/set string using isl library
+string islProjectOut(string rstr, unsigned pos) {
+
+  isl_ctx *ctx = isl_ctx_alloc();
+
+  string result = islSetToString ( 
+               isl_set_project_out(islStringToSet(rstr,ctx), 
+                                   isl_dim_out, pos, 1), ctx 
+               );
+
+  isl_ctx_free(ctx);
+
+  return result;
 }
 
 #pragma mark -
@@ -283,6 +271,9 @@ void Conjunction::addEquality(Exp* equality) {
         return;
     }
 
+    // Setting the type of expression
+    equality->setEquality();
+
     for (std::list<Exp*>::iterator i=mEqualities.begin();
                 i != mEqualities.end(); i++) {
         Exp* e = *i;
@@ -313,6 +304,10 @@ void Conjunction::addInequality(Exp* inequality) {
         delete inequality;
         return;
     }
+
+    // Setting the type of expression
+    inequality->setInequality();
+
     for (std::list<Exp*>::iterator i=mInequalities.begin();
                 i != mInequalities.end(); i++) {
         Exp* e = *i;
@@ -1469,11 +1464,10 @@ Set* Conjunction::normalize() const {
 //std::cout << "Conjunction::normalize: fromStep1 = " << fromStep1 << std::endl;
  
     // (b) send through ISL
-    //std::string fromISL = getRelationStringFromISL(fromStep1);
 //std::cout << "Conjunction::normalize: fromISl = " << fromISL << std::endl;
     
     // (a & b) could do this as one statement (below), but broken apart (above) for testing
-    string fromISL = getRelationStringFromISL(retval1->toISLString());
+    string fromISL = getStringFromISL(retval1->toISLString());
 
 //std::cout << "Conjunction::normalize: fromISl = " << fromISL << std::endl;
 
@@ -1693,11 +1687,10 @@ Set* Conjunction::normalizeR() const
 //std::cout << "Conjunction::normalize: fromStep1 = " << fromStep1 << std::endl;
  
     // (b) send through ISL
-    //std::string fromISL = getRelationStringFromISL(fromStep1);
 //std::cout << "Conjunction::normalize: fromISl = " << fromISL << std::endl;
     
     // (a & b) could do this as one statement (below), but broken apart (above) for testing
-    string fromISL = getRelationStringFromISL(retval1->toISLString());
+    string fromISL = getStringFromISL(retval1->toISLString());
     
     //string fromISL = "[N, P] -> { [tstep, i, tstep, t, i, 0, t] : i >= 0 and t <= 0 and i <= -1 + N and t >= 1 - P }";
 
@@ -3014,5 +3007,258 @@ Relation* Relation::addConstraintsDueToMonotonicity() const {
     return retval;
 }
 
+/*****************************************************************************/
+#pragma mark -
+/*************** isUFCallParam *****************************/
+
+class VisitorIsUFCallParam : public Visitor {
+  private:
+    bool mResult;
+    int mTupleID;
+    bool mSeenTupleVar;
+    bool prevSeen;
+
+  public:
+    VisitorIsUFCallParam(int tupleID) : mResult(false),
+                 mTupleID(tupleID), mSeenTupleVar(false), prevSeen(false) {}
+
+    virtual ~VisitorIsUFCallParam(){ }
+
+    bool returnResult() { return mResult; }
+
+    void preVisitTupleVarTerm(iegenlib::TupleVarTerm *t) {
+        if (t->tvloc()==mTupleID) {
+            mSeenTupleVar = true;
+        }
+    }
+    void preVisitExp(iegenlib::Exp * e) {
+        // Recording value of mSeenTupleVar, so we can change it back in our
+        // post visit.
+        prevSeen = mSeenTupleVar;
+        mSeenTupleVar = false;
+    }
+    void postVisitExp(iegenlib::Exp * e) {
+        // An expression that is not an inequality or 
+        // an equality is a parameter to a UFCall.
+
+        if (e->isExpression() and mSeenTupleVar) {
+            mResult = true;
+        }
+        // Revive flag for any higher level expression in traversal
+        mSeenTupleVar = prevSeen;
+    }
+
+};
+
+bool SparseConstraints::isUFCallParam(int tupleID) {
+
+    VisitorIsUFCallParam * v = new VisitorIsUFCallParam(tupleID);
+    this->acceptVisitor(v);
+    bool result = v->returnResult();
+    delete v;
+
+    return result;
+}
+
+////////////////////////////////////
+
+/*****************************************************************************/
+#pragma mark -
+/*************** VisitorProjectOut *****************************/
+// Vistor Class used in projection process
+class VisitorProjectOut : public Visitor {
+  private:
+    int tvar;
+    int in_ar;
+
+  public:
+    VisitorProjectOut(int tvarI){ tvar = tvarI; in_ar = 0; }
+    virtual ~VisitorProjectOut(){ }
+    void preVisitConjunction(iegenlib::Conjunction * c);
+    void preVisitRelation(iegenlib::Relation * r);
+
+};
+
+//   Projects out tuple varrable No. tvar from Conjunction
+void VisitorProjectOut::preVisitConjunction(iegenlib::Conjunction * c)
+{
+    Conjunction* selfcopy = new Conjunction(*c);
+    TupleDecl origTupleDecl = selfcopy->getTupleDecl(); // for (step 3)
+ 
+    /////////////////////
+    // (step 1) Replace all uninterpreted function calls with temp
+    // variables and create a new affine conjunction that is a superset
+    // of the current conjunction.  UFCallMapAndBounds object will
+    // maintain the mapping of temporary variables to UF calls.
+    UFCallMapAndBounds ufcallmap(origTupleDecl);
+    selfcopy->ufCallsToTempVars( ufcallmap );
+
+    Set* constraints = ufcallmap.cloneConstraints();
+
+    // update the tuple declaration in selfcopy to match what is
+    // in the constraints
+    selfcopy->setTupleDecl( constraints->getTupleDecl() );
+    
+    // Also need to include all the constraints in selfcopy where UF calls
+    // were replaced by temporaries.
+    Set* selfcopyset = new Set(selfcopy->getTupleDecl());
+    selfcopyset->addConjunction(selfcopy);
+
+    Set* retval1 = constraints->Intersect(selfcopyset);
+    
+    //////////////////////
+    // (step 2) Send the result of step 1 to ISL and back.
+
+    // (a) get string from result of step 1
+    std::string fromStep1 = retval1->toISLString();
+ 
+    // (b) send through ISL to project out desired tuple variable
+    string fromISL = islProjectOut(fromStep1, tvar);
+
+    // (c) convert back to a Set
+    Set* retval2 = new Set(fromISL);
+
+    delete retval1;
+
+    /////////////////////
+    // (step 3) In (step 3) we will need to use substitute to replace
+    // extra tuple vars with UF calls by making queries to ufcallmap. Will
+    // need to call setTupleDecl on retval to remove those extra tuple vars
+    // that acted as temporaries to replace uf calls. Then return retval Set.
+    
+    // Determine starting index of extra tuple vars
+    int numTempVars = ufcallmap.numTempVars();
+    int expandedArity = (retval2->mConjunctions.front())->arity();
+    int indexStart = expandedArity - numTempVars;
+
+    SubMap affineSubstMap;
+    // Taking into account projection effect on tuple variable order:
+    // tv_n -> tv_n-1;  tv_n-1 -> tv_n-2; ... tv_tvar+1 -> tv_tvar
+    for (int i = tvar; i < expandedArity; i++) {
+
+    	TupleVarTerm* tvTerm = new TupleVarTerm(i+1);
+    	TupleVarTerm* tvTermJ = new TupleVarTerm(i);
+        Exp * tvExp = new Exp();
+        tvExp->addTerm(tvTermJ);
+
+        // Add this equivalence to affineSubstMap
+        affineSubstMap.insertPair(tvTerm,tvExp);
+    } 
+    	    
+    // Build up a map of non-affine information, we substituted them back in. 
+    SubMap nonAffineSubstMap;
+
+    for (int i = indexStart; i < expandedArity; i++) {
+
+      // considering projected out variable
+      int j;
+      if (i >= tvar){
+        j = i+1;
+      }
+      else {
+        j = i;
+      }
+
+      TupleVarTerm* tvTerm = new TupleVarTerm(i);
+      UFCallTerm* origUFCall = ufcallmap.cloneUFCall(j);
+      Exp* tvExp = new Exp();
+      tvExp->addTerm(origUFCall);
+
+      // substitute affine results into original UFCall
+      tvExp->substitute(affineSubstMap);
+		
+      // substitute non-affine results into original UFCall
+      tvExp->substitute(nonAffineSubstMap);
+
+      nonAffineSubstMap.insertPair(tvTerm, tvExp);
+    }
+
+    // SubstituteInConstraints using non-affine SubMap
+    retval2->substituteInConstraints(nonAffineSubstMap);
+    
+   // Remove extra tuple vars (since they have been "substituted", and 
+   // we have removed one tuple variable
+   TupleDecl redTupleDecl(origTupleDecl.size()-1);
+   for (int i = 0; i < int(redTupleDecl.size()) ; i++) {
+      // considering projected out variable
+      int j;
+      if (i >= tvar){
+        j = i+1;
+      }
+      else {
+        j = i;
+      }
+     redTupleDecl.setTupleElem(i , origTupleDecl.elemVarString(j));
+   }
+
+//std::cout<<std::endl<<"tuple shrink = "<<redTupleDecl.toString()<<std::endl;
+    retval2->setTupleDecl(redTupleDecl);
+//std::cout<<"After tuple shrink = "<<retval2->prettyPrintString()<<std::endl;
+
+    *c = *(retval2->mConjunctions.front());
+    c->setinarity( in_ar );
+
+    delete constraints;
+    delete selfcopy;
+    delete retval2;
+}
+
+// This function sets the in/out arity of the relation to
+// new values of after project out 
+void VisitorProjectOut::preVisitRelation(iegenlib::Relation * r)
+{
+    int ia = r->inArity();
+    int oa = r->outArity();
+    if (tvar < ia){
+      ia--;
+    }
+    else {
+      oa--;
+    }
+    r->SetinArity(ia);
+    r->SetoutArity(oa);
+
+    in_ar = ia;
+}
+
+//   Projects out tuple varrable No. tvar starting from 0
+Set* Set::projectOut(int tvar)
+{
+    if (isUFCallParam(tvar)){
+      return NULL;
+    }
+
+    Set *s = new Set(*this);
+    VisitorProjectOut * v = new VisitorProjectOut(tvar);
+    s->acceptVisitor(v);
+
+    Set *result = new Set(*s);
+    delete s;
+    delete v;
+
+    return result;
+}
+
+/*   Projects out tuple varrable No. tvar
+     tvar is calculated based on total ariety (in+out) starting from 0.
+     Consequently, to project out jp from R: tvar = 5
+     R = {[i,j,k] -> [ip,jp,kp] : ...}
+*/
+Relation* Relation::projectOut(int tvar)
+{
+    if (isUFCallParam(tvar)){
+      return NULL;
+    }
+
+    Relation *r = new Relation(*this);
+    VisitorProjectOut * v = new VisitorProjectOut(tvar);
+    r->acceptVisitor(v);
+
+    Relation *result = new Relation(*r);
+    delete r;
+    delete v;
+
+    return result;
+}
 
 }//end namespace iegenlib
