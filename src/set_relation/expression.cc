@@ -1853,5 +1853,14 @@ void Exp::acceptVisitor(Visitor *v) {
     v->postVisitExp(this);
 }
 
+#pragma mark -
+/****************************************************************************/
+
+//! Get a list of pointers to the terms in this expression.
+//! All pointers in this list will be owned by caller.
+std::list<Term*> Exp::getTermList() const {
+    return mTerms;
+}
+
 
 }//end namespace iegenlib

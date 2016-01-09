@@ -2919,6 +2919,19 @@ class VisitorExpNonNegTerms : public Visitor {
     }
 };
 
+bool termsNonNeg(Exp* e, TermPartOrdGraph partOrd) {
+    bool allNonNeg = true;
+    std::list<Term*> termList = e->getTermList();
+    for (std::list<Term*>::const_iterator i=termList.begin(); 
+            i != termList.end(); ++i) {
+        Term* t = (*i);
+        if (!(t->coefficient()>0)  && partOrd.isNonNegative(t)) {
+            allNonNeg = false;
+        }
+    }
+    return allNonNeg;
+}
+
 /*! This visitor will collect partial ordering relationships between
     non-constant terms (We don't need to record that 1 is less than 2).
     
@@ -2965,7 +2978,7 @@ class VisitorCollectPartOrd : public Visitor {
     // See class header for logic.
     void deriveInfo(iegenlib::Term * t) {
         int coeff = t->coefficient();
-        
+
         // solve for factor treats the constraint like exp=0
         Exp *solution = mCurrExp->solveForFactor(t->clone());
 
