@@ -234,6 +234,7 @@ public:
     void setParamExp(unsigned int i, Exp* param_exp);
     
     //! Returns a pointer to the ith parameter expression.
+    //! This UFCallTerm still owns the pointer.
     Exp* getParamExp(unsigned int i) const;
 
     //! Indicate if the function return value is being

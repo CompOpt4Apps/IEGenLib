@@ -106,6 +106,13 @@ Set* queryRangeCurrEnv(const std::string funcName) {
     return retval; 
 }
 
+//! search this environment for a function monotonicity type
+MonotonicType queryMonoTypeEnv(const std::string funcName) {
+    return currentEnv.funcMonoType(funcName);
+}
+
+
+
 //! search this environment for a function range arity
 unsigned int queryRangeArityCurrEnv(const std::string funcName) {
     Set* range = queryRangeCurrEnv(funcName);
@@ -216,6 +223,15 @@ Set* Environment::funcRange(const std::string funcName) const {
     if (mUninterpFuncMap.find(funcName) == mUninterpFuncMap.end()) return NULL;
     return new Set(*(mUninterpFuncMap.find(funcName)->second->getRange()));
 }
+
+//! Returns whether a function is monotonistic or not and how.
+MonotonicType Environment::funcMonoType(const std::string funcName) const {
+    if (mUninterpFuncMap.find(funcName) == mUninterpFuncMap.end()) {
+        return Monotonic_NONE;
+    }
+    return mUninterpFuncMap.find(funcName)->second->getMonoType();
+}
+
 
 std::string Environment::toString() const {
     std::stringstream ss;

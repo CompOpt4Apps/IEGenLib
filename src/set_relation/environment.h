@@ -69,6 +69,9 @@ Set* queryDomainCurrEnv(const std::string funcName);
 //! returned Set escapes
 Set* queryRangeCurrEnv(const std::string funcName);
 
+//! Returns the monotonicity type of the given function.
+MonotonicType queryMonoTypeEnv(const std::string funcName);
+
 //! search this environment for a function range arity
 unsigned int queryRangeArityCurrEnv(const std::string funcName);
 

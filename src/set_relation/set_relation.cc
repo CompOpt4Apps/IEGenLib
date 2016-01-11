@@ -2872,53 +2872,6 @@ private:
     
 };
 
-/* This visitor can visit expressions and indicates
-   whether all terms in the expression it has visited
-   are non-negative.  Resets for each expression.
-   
-   A visitor requires more code, but a method in expression.cc
-   would need to know about TermPartOrdGraph to ask about the
-   non-negativity of each of the terms.
-*/
-class VisitorExpNonNegTerms : public Visitor {
-  private:
-    bool                mAllNonNeg;
-    int                 mUFCallNesting;
-    TermPartOrdGraph    mPartOrd;
-     
-  public:
-    VisitorExpNonNegTerms(TermPartOrdGraph partOrd) 
-        : mAllNonNeg(false), mUFCallNesting(0), mPartOrd(partOrd) {}
-    
-    bool allTermsNonNeg() { return mAllNonNeg; }
-    
-    // Check that each term on the top level has a non-negative factor
-    // and has a non-negative coefficient.
-    bool isNonNegative(iegenlib::Term * t) {
-        return (t->coefficient()<0)  && mPartOrd.isNonNegative(t);
-    }
-    void preVisitExp(iegenlib::Exp * e) {
-        // reset for each new non parameter expression
-        if (mUFCallNesting==0) { mAllNonNeg = false; }
-    }
-    void postVisitTerm(iegenlib::Term * t) {
-        if (!isNonNegative(t)) { mAllNonNeg = false; }
-    }
-    void preVisitUFCallTerm(iegenlib::UFCallTerm * t) {
-        mUFCallNesting++;
-    }
-    void postVisitUFCallTerm(iegenlib::UFCallTerm * t) {
-        mUFCallNesting--;
-        if (!isNonNegative(t)) { mAllNonNeg = false; }
-    }
-    void postVisitTupleVarTerm(iegenlib::TupleVarTerm * t) {
-        if (!isNonNegative(t)) { mAllNonNeg = false; }
-    }
-    void postVisitVarTerm(iegenlib::VarTerm * t) {
-        if (!isNonNegative(t)) { mAllNonNeg = false; }
-    }
-};
-
 bool termsNonNeg(Exp* e, TermPartOrdGraph partOrd) {
     bool allNonNeg = true;
     std::list<Term*> termList = e->getTermList();
@@ -2969,6 +2922,7 @@ class VisitorCollectPartOrd : public Visitor {
     void preVisitExp(iegenlib::Exp * e) {
         if (e->isEquality() || e->isInequality()) {
             mCurrExp = e;
+            mFoundNonNeg = false;
         }
     }
     void postVisitExp(iegenlib::Exp * e) {
@@ -2977,21 +2931,20 @@ class VisitorCollectPartOrd : public Visitor {
 
     // See class header for logic.
     void deriveInfo(iegenlib::Term * t) {
-        int coeff = t->coefficient();
-
         // solve for factor treats the constraint like exp=0
+std::cout << "deriveInfo, before solveForFactor, t = " << t->toString() << std::endl;
+std::cout << "deriveInfo, before solveForFactor, mCurrExp = " << mCurrExp->toString() << std::endl;
         Exp *solution = mCurrExp->solveForFactor(t->clone());
 
+        // whether we have equality or inequality, if all the terms in
+        // the solution are non-negative then so is this term
+        if (termsNonNeg(solution,mPartOrd)  && !mPartOrd.isNonNegative(t)) {
+            mPartOrd.termNonNegative(t);
+            mFoundNonNeg = true;
+        }
+std::cout << "deriveInfo, after if, solution = " << solution->toString() << std::endl;
         //If the constraint is an equality
-        if (mCurrExp->isEquality()) {
-            //and all of the terms in the solution are non-negative,
-            //then this term is non-negative.
-            VisitorExpNonNegTerms vNonNegTerms(mPartOrd);
-            solution->acceptVisitor(&vNonNegTerms);
-            if (vNonNegTerms.allTermsNonNeg()) {
-                mPartOrd.termNonNegative(t);
-            }
-   
+        if (mCurrExp->isEquality()) {   
             //and there is only one other term in the solution with coeff 1,
             //then this term is equal to the solution term.
             Term* singleTerm = solution->getTerm();
@@ -3000,31 +2953,31 @@ class VisitorCollectPartOrd : public Visitor {
                     && singleTerm->coefficient()==1) {
                 mPartOrd.insertEqual(singleTerm,t);
             }
-
         }
-
+std::cout << "deriveInfo, after equality, mPartOrd = " << mPartOrd.toString() << std::endl;
         //If the constraint is an inequality (exp>=0)
-        if (mCurrExp->isInequality()) {
-            //record the sign of the term
-            bool posCoeff = (t->coefficient()>0);
-            
-            //if the sign is positive and all terms in solution are non-negative
-            //then this term is non-negative
-            VisitorExpNonNegTerms vNonNegTerms(mPartOrd);
-            solution->acceptVisitor(&vNonNegTerms);
-            if (vNonNegTerms.allTermsNonNeg()) {
-                mPartOrd.termNonNegative(t);
-            }
-                
+        if (mCurrExp->isInequality()) {            
             //if the constant is >=1
+            //then this term is >  or < all terms in the solution
+            //else this term is >= or <= all terms in the solution
             Term* constTerm = solution->getConstTerm();
-            if (constTerm->coefficient()>=1) {
-                //then this term is > all terms in the solution
-                // FIXME: stuck, really do need to get list
-                // of terms from an expression.
-                //mPartOrd.insertLT(
-            } else {
-                //else this term is >= all terms in the solution
+            std::list<Term*> termList = solution->getTermList();
+            std::list<Term*>::const_iterator i;
+            for (i=termList.begin(); i != termList.end(); ++i) {
+                Term* solution_term = (*i);
+                if (constTerm->coefficient()>=1) {
+                    if (t->coefficient()>0) {
+                        mPartOrd.insertLT(solution_term, t);
+                    } else {
+                        mPartOrd.insertLT(t, solution_term);
+                    }
+                } else {
+                    if (t->coefficient()>0) {
+                        mPartOrd.insertLTE(solution_term, t);
+                    } else {
+                        mPartOrd.insertLTE(t, solution_term);
+                    }
+                }
             }
         }      
     }
@@ -3040,8 +2993,7 @@ class VisitorCollectPartOrd : public Visitor {
     }
     void postVisitVarTerm(iegenlib::VarTerm * t) {
         deriveInfo(t);
-    }    
-    
+    }
 };
 
 
@@ -3060,36 +3012,76 @@ void SparseConstraints::addConstraintsDueToMonotonicityHelper() {
         Conjunction* conjunct = *iter;
 
         // Collect all of the terms and determine what terms are nonnegative
-        VisitorCollectTerms * v1 = new VisitorCollectTerms();
-        conjunct->acceptVisitor(v1);
-        TermPartOrdGraph partOrd = v1->returnPartOrd();
-        delete v1;
-        
+        VisitorCollectTerms v1;
+        conjunct->acceptVisitor(&v1);
+        TermPartOrdGraph partOrd = v1.returnPartOrd();
+       
         // Indicate we are done adding terms into the partial ordering.
         partOrd.doneInsertingTerms();
         
         // Call the visitor that will insert partial orderings.
-        //VisitorTermPartOrd * v2 = new VisitorTermPartOrd(partOrd);
-        //partOrd = v2->returnPartOrd();
-        
+        // Call in a loop until determination of non-negativity,
+        // which impacts partial orderings, has converged.
+        VisitorCollectPartOrd v2(partOrd);
+        do {
+std::cout << "in do while loop" << std::endl;
+            conjunct->acceptVisitor(&v2);
+        } while (!(v2.hasConverged()));
+        partOrd = v2.returnPartOrd();
+
         // For each UFCall term that involves monotonically non-decreasing
         // function, put in new constraints that can be derived based on
         // how that term is ordered with other terms that have same function.
-        
-    }
+        std::set<UFCallTerm*> ufCallTerms = partOrd.getUniqueUFCallTerms();
+        std::set<UFCallTerm*>::const_iterator i;
+        std::set<UFCallTerm*>::const_iterator j;
+        for (i = ufCallTerms.begin(); i!=ufCallTerms.end(); i++) {
+            for (j = ufCallTerms.begin(); j!=ufCallTerms.end(); j++) {
+                UFCallTerm* ufCall1 = (*i);
+                UFCallTerm* ufCall2 = (*j);
+std::cout << "ufCall1 = " << ufCall1->toString() << ", ufCall2 = " << ufCall2->toString() << std:: endl;
+                if (ufCall1->name()==ufCall2->name()
+                        && ufCall1->numArgs()==1
+                        && ufCall2->numArgs()==1
+                        && Monotonic_Nondecreasing
+                           ==queryMonoTypeEnv(ufCall1->name()) ) {
+                
+                    // if ufCall1(e1) == ufCall2(e2) then useful??
 
+                    // Create largerTerm - smallerTerm just in case need it.
+                    Exp* new_constraint = new Exp();
+                    Exp* smallerExp = ufCall1->getParamExp(0)->clone();
+                    smallerExp->multiplyBy(-1);
+                    new_constraint->addExp(smallerExp);
+                    new_constraint->addExp(ufCall2->getParamExp(0)->clone());
+
+                    // if ufCall1(e1) < ufCall2(e2) then e1 < e2
+                    if (partOrd.isLT(ufCall1,ufCall2)) {
+                        // largerTerm - smallerTerm - 1 >= 0
+                        new_constraint->addTerm(new Term(-1));
+                        conjunct->addInequality(new_constraint);
+                        
+                    // if ufCall1(e1) <= ufCall2(e2) then e1 <= e2
+                    } else if (partOrd.isLTE(ufCall1,ufCall2)) {
+                        // largerTerm - smallerTerm >= 0
+                        conjunct->addInequality(new_constraint);
+                    }
+                }   
+            }
+        }
+    }
 }
 
 
 Set* Set::addConstraintsDueToMonotonicity() const {
     Set* retval = new Set(*this);
-    //retval->addConstraintsDueToMonotonicity();
+    retval->addConstraintsDueToMonotonicityHelper();
     return retval;
 }
 
 Relation* Relation::addConstraintsDueToMonotonicity() const {
     Relation* retval = new Relation(*this);
-    //retval->addConstraintsDueToMonotonicity();
+    retval->addConstraintsDueToMonotonicityHelper();
     return retval;
 }
 

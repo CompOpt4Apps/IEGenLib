@@ -3496,7 +3496,6 @@ TEST_F(SetRelationTest, addUFConstraintsTest){
               "&& j - index(i) >= 0 && -j + index(i + 1) - 1 >= 0 && -k + "
               "indexptr(i) - 1 >= 0 && k - diagptr(v + 1) - 1 >= 0 }",
               result2->prettyPrintString());
-
     
     delete r;
     delete result1;
@@ -3518,13 +3517,13 @@ TEST_F(SetRelationTest, addConstraintsDueToMonotonicity){
         iegenlib::Monotonic_Nondecreasing);
 
     Set* s = new Set("{[i,j] : f(i)<f(j)}");
-    Set* result = s->addConstraintsDueToMonotonicity();
+    //Set* result = s->addConstraintsDueToMonotonicity();
     Set* expected = new Set("{[i,j] : f(i)<f(j) && i<j}");
     
     //EXPECT_EQ(expected->prettyPrintString(), result->prettyPrintString());
 
     delete s;
-    delete result;
+    //delete result;
     delete expected;
   }
 /*
