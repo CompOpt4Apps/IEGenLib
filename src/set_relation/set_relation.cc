@@ -2799,7 +2799,8 @@ Relation* Relation::addUFConstraints(std::string uf1str,
 /*! This visitor will collect all of the terms except for constants
     from the constraints and will indicate which of the terms are
     non-negative due to a constraint c <= term where c is a
-    constant integer that is >=0.
+    constant integer that is >=0.  It is also looking at any range
+    information associated with uninterpreted functions.
     
     This visitor does not take ownership of any of the terms visited.
 */
@@ -2823,6 +2824,9 @@ class VisitorCollectTerms : public Visitor {
     void postVisitUFCallTerm(iegenlib::UFCallTerm * t) {
         mPartOrd.insertTerm(t);
         nonConstTerm(t);
+        //iegenlib::queryInverseCurrEnv("f")
+        // Don't I have a routine that puts in all the
+        // constraints due to domain and range?
     }
     void postVisitTupleVarTerm(iegenlib::TupleVarTerm * t) {
         mPartOrd.insertTerm(t);
@@ -2832,12 +2836,12 @@ class VisitorCollectTerms : public Visitor {
         mPartOrd.insertTerm(t);
         nonConstTerm(t);
     }
-    // FIXME: do I really want to do the below?
+/*    // FIXME: do I really want to do the below?
     void postVisitTupleExpTerm(iegenlib::TupleExpTerm * t) {
         mPartOrd.insertTerm(t);
         nonConstTerm(t);
     }
-    
+*/    
     void preVisitExp(iegenlib::Exp * e) {
         mNonConstTerm = NULL;
         mNumNonConstTerms = 0;
@@ -2878,7 +2882,7 @@ bool termsNonNeg(Exp* e, TermPartOrdGraph partOrd) {
     for (std::list<Term*>::const_iterator i=termList.begin(); 
             i != termList.end(); ++i) {
         Term* t = (*i);
-        if (!(t->coefficient()>0)  && partOrd.isNonNegative(t)) {
+        if ((t->coefficient()<0) || (!partOrd.isNonNegative(t))) {
             allNonNeg = false;
         }
     }
@@ -2926,27 +2930,38 @@ class VisitorCollectPartOrd : public Visitor {
         }
     }
     void postVisitExp(iegenlib::Exp * e) {
-        mCurrExp = NULL;
+        if (e->isEquality() || e->isInequality()) {
+            mCurrExp = NULL;
+        }
     }
 
     // See class header for logic.
     void deriveInfo(iegenlib::Term * t) {
         // solve for factor treats the constraint like exp=0
-std::cout << "deriveInfo, before solveForFactor, t = " << t->toString() << std::endl;
-std::cout << "deriveInfo, before solveForFactor, mCurrExp = " << mCurrExp->toString() << std::endl;
-        Exp *solution = mCurrExp->solveForFactor(t->clone());
+        Term * t_with_coeff_1 = t->clone();
+        t_with_coeff_1->setCoefficient(1);
+        Exp *solution = mCurrExp->solveForFactor(t_with_coeff_1);
 
-        // whether we have equality or inequality, if all the terms in
-        // the solution are non-negative then so is this term
-        if (termsNonNeg(solution,mPartOrd)  && !mPartOrd.isNonNegative(t)) {
+        // No info to derive if can't solve for term.
+        if (solution==NULL) return;
+
+std::cout << "deriveInfo, t = " << t->toString() << ", mCurrExp = " << mCurrExp->toString() << ", solution = " << solution->toString() << std::endl;
+
+        // Whether we have equality or inequality with t having a positive
+        // coefficient (t + ... >=0), if all the terms in
+        // the solution for t's factor are non-negative then so is this term
+        if (termsNonNeg(solution,mPartOrd)
+                && t->coefficient() >=1
+                && !mPartOrd.isNonNegative(t)) {    // haven't found yet
             mPartOrd.termNonNegative(t);
             mFoundNonNeg = true;
         }
-std::cout << "deriveInfo, after if, solution = " << solution->toString() << std::endl;
-        //If the constraint is an equality
+std::cout << "deriveInfo, mFoundNonNeg = " << mFoundNonNeg << std::endl;
+
+        // If the constraint is an equality
         if (mCurrExp->isEquality()) {   
-            //and there is only one other term in the solution with coeff 1,
-            //then this term is equal to the solution term.
+            // and there is only one other term in the solution with coeff 1,
+            // then this term is equal to the solution term.
             Term* singleTerm = solution->getTerm();
             if (singleTerm != NULL
                     && singleTerm->isConst()
@@ -2954,32 +2969,65 @@ std::cout << "deriveInfo, after if, solution = " << solution->toString() << std:
                 mPartOrd.insertEqual(singleTerm,t);
             }
         }
-std::cout << "deriveInfo, after equality, mPartOrd = " << mPartOrd.toString() << std::endl;
-        //If the constraint is an inequality (exp>=0)
-        if (mCurrExp->isInequality()) {            
-            //if the constant is >=1
-            //then this term is >  or < all terms in the solution
-            //else this term is >= or <= all terms in the solution
+
+        // If the constraint is an inequality (exp>=0)
+        if (mCurrExp->isInequality()) {
+        
+            // Was this term's coefficient positive or negative originally?
+//            bool posCoeffForTerm = (t->coefficient()>0);
+            
+             // Get the constant in the solution.
             Term* constTerm = solution->getConstTerm();
-            std::list<Term*> termList = solution->getTermList();
-            std::list<Term*>::const_iterator i;
-            for (i=termList.begin(); i != termList.end(); ++i) {
-                Term* solution_term = (*i);
-                if (constTerm->coefficient()>=1) {
-                    if (t->coefficient()>0) {
+            int c = (constTerm ? constTerm->coefficient() : 0);  
+
+
+/* DON't want this.  Can't do part ord when coeff in solution are neg.           
+            // How many non constant terms are in the solution?
+            // If constant is zero, then won't have an explicit
+            // constant terms (ASSUMPTION)
+            int non_const_terms=(c==0?termList->size():termList->size()-1);
+*/
+     
+            // We want to iterate over the solution terms if
+            // the solution has all non negative terms.
+            if (termsNonNeg(solution,mPartOrd)) {
+            
+                // Iterate over the list of terms in the solution.
+                std::list<Term*> termList = solution->getTermList();
+                std::list<Term*>::const_iterator i;
+                for (i=termList.begin(); i != termList.end(); ++i) {
+                    Term* solution_term = (*i);
+                    
+                    // Don't want to have partial ordering with a constant.
+                    if (solution_term->isConst()) continue;
+                    
+                    // t >= solution_term + (other noneg terms) + c, c>=1
+                    if (c>=1 && t->coefficient()>0) {
                         mPartOrd.insertLT(solution_term, t);
-                    } else {
+//std::cout << "deriveInfo, mPartOrd.insertLT(solution_term, t);" << std::endl;
+
+                    // t <= solution_term + (other noneg terms) + c, c>=1
+                    } else if (c>=1 && t->coefficient()<0) {
                         mPartOrd.insertLT(t, solution_term);
-                    }
-                } else {
-                    if (t->coefficient()>0) {
+//std::cout << "deriveInfo, mPartOrd.insertLT(t,solution_term);" << std::endl;
+
+                    // t >= solution_term + (other noneg terms) + c, c==0
+                    } else if (c==0 && t->coefficient()>0) {
                         mPartOrd.insertLTE(solution_term, t);
-                    } else {
+//std::cout << "deriveInfo, mPartOrd.insertLTE(solution_term, t);" << std::endl;
+
+                   // t <= solution_term + (other noneg terms) + c, c==0
+                    } else if (c==0 && t->coefficient()<0) {
                         mPartOrd.insertLTE(t, solution_term);
+//std::cout << "deriveInfo, mPartOrd.insertLTE(t,solution_term);" << std::endl;
                     }
                 }
-            }
-        }      
+            } // endif termsNonNeg(solution,mPartOrd)
+            
+        } // endif mCurrExp->isInequality()
+
+std::cout << "deriveInfo, end of method, mPartOrd = " << mPartOrd.toString() << std::endl;
+        
     }
 
     void postVisitTerm(iegenlib::Term * t) {
@@ -3015,7 +3063,8 @@ void SparseConstraints::addConstraintsDueToMonotonicityHelper() {
         VisitorCollectTerms v1;
         conjunct->acceptVisitor(&v1);
         TermPartOrdGraph partOrd = v1.returnPartOrd();
-       
+std::cout << "after VisitorCollectTerms, partOrd = " << partOrd.toString() << std::endl;
+
         // Indicate we are done adding terms into the partial ordering.
         partOrd.doneInsertingTerms();
         
@@ -3065,6 +3114,8 @@ std::cout << "ufCall1 = " << ufCall1->toString() << ", ufCall2 = " << ufCall2->t
                     } else if (partOrd.isLTE(ufCall1,ufCall2)) {
                         // largerTerm - smallerTerm >= 0
                         conjunct->addInequality(new_constraint);
+                    } else {
+                        delete new_constraint;
                     }
                 }   
             }
@@ -3075,6 +3126,13 @@ std::cout << "ufCall1 = " << ufCall1->toString() << ", ufCall2 = " << ufCall2->t
 
 Set* Set::addConstraintsDueToMonotonicity() const {
     Set* retval = new Set(*this);
+    
+    // Add in constraints due to domain and range.
+    // FIXME: not happy about how this works now.
+//    UFCallMapAndBounds ufcallmap(getTupleDecl());
+//    retval->ufCallsToTempVars(ufcallmap);
+//std::cout << "After ufCallsToTempVars, retval = " << retval->toString() << std::endl;
+    
     retval->addConstraintsDueToMonotonicityHelper();
     return retval;
 }

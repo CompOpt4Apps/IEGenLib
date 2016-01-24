@@ -71,6 +71,13 @@ namespace iegenlib{
 class TermPartOrdGraph {
 public:
     TermPartOrdGraph();
+    
+    //! Copy constructor.  Performs a deep copy of PartOrdGraph, but does not
+    //! own any Terms so just copying their pointers.
+    TermPartOrdGraph(const TermPartOrdGraph& other);
+    //! Copy assignment.
+    TermPartOrdGraph& operator=(const TermPartOrdGraph& other);
+
     ~TermPartOrdGraph();
     
     //! Insert a term into graph vertex set.  Will pretend coeff 1.
@@ -124,8 +131,8 @@ public:
     //! Returns a set of all unique terms that have been inserted.
     //! Caller will own returned terms.
     std::set<Term*> getAllUniqueTerms() const;
-   
-     //! Returns a string representation of the class instance for debugging.
+    
+    //! Returns a string representation of the class instance for debugging.
     std::string toString() const;        
         
 private:

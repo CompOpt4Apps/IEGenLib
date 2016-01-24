@@ -41,6 +41,37 @@
 #include <sstream>
 #include <assert.h>
 
+PartOrdGraph::PartOrdGraph(unsigned int N) {
+    this->mN = N;
+    this->mAdjacencyMatrix = new CompareEnum[N*N];
+    // Initialize all 
+    for (int i=0; i<N; i++) {
+        for (int j=0; j<N; j++) {
+            mAdjacencyMatrix[getIndex(i,j)] = NO_ORD;
+            if (i==j) {
+                mAdjacencyMatrix[getIndex(i,j)] = EQUAL;
+            }
+        }
+    }
+}
+
+//! Copy constructor.  Performs a deep copy.
+PartOrdGraph::PartOrdGraph(const PartOrdGraph& other) {
+    *this = other;
+}
+
+//! Copy assignment.
+PartOrdGraph& PartOrdGraph::operator=(const PartOrdGraph& other) {
+    mN = other.mN;
+    *mAdjacencyMatrix = *(other.mAdjacencyMatrix);
+    return *this;
+}
+
+//! Destructor will delete the adjacency matrix.
+PartOrdGraph::~PartOrdGraph() {
+    delete mAdjacencyMatrix;
+}
+
 // Maintaining the above constraints when assigning an ordering to
 // a pair.  When wanting to update "from" to "to" will return what
 // value should become.
@@ -84,19 +115,7 @@ CompareEnum PartOrdGraph::meet(CompareEnum op1, CompareEnum op2) {
     }
 }
 
-PartOrdGraph::PartOrdGraph(unsigned int N) {
-    this->mN = N;
-    this->mAdjacencyMatrix = new CompareEnum[N*N];
-    // Initialize all 
-    for (int i=0; i<N; i++) {
-        for (int j=0; j<N; j++) {
-            mAdjacencyMatrix[getIndex(i,j)] = NO_ORD;
-            if (i==j) {
-                mAdjacencyMatrix[getIndex(i,j)] = EQUAL;
-            }
-        }
-    }
-}
+
 
 void PartOrdGraph::updatePair(unsigned int a, unsigned int b, CompareEnum to) {
     // Check vertices are within range of partial ordering.

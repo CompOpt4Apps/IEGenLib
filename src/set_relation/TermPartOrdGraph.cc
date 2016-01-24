@@ -15,11 +15,40 @@
 #include "TermPartOrdGraph.h"
 #include <util/util.h>
 #include <iostream>
-#include <assert.h>
 
 namespace iegenlib{
 
 TermPartOrdGraph::TermPartOrdGraph() : mNumTerms(0), mGraphPtr(NULL) {}
+
+//! Copy constructor.  Performs a deep copy of PartOrdGraph, but does not
+//! own any Terms so just copying their pointers.
+TermPartOrdGraph::TermPartOrdGraph(const TermPartOrdGraph& other) {
+    *this = other;
+}
+
+//! Copy assignment.
+TermPartOrdGraph& TermPartOrdGraph::operator=(const TermPartOrdGraph& other) {
+    mNumTerms               = other.mNumTerms;
+    mUFCallTerm2IntMap      = other.mUFCallTerm2IntMap;
+    mTupleVarTerm2IntMap    = other.mTupleVarTerm2IntMap;
+    mVarTerm2IntMap         = other.mVarTerm2IntMap;
+    std::set<Term*>::const_iterator iter;
+    for (iter=other.mNonNegativeTerms.begin();
+            iter!=other.mNonNegativeTerms.end(); iter++){
+        Term* nonNegTerm = (*iter);
+        mNonNegativeTerms.insert(nonNegTerm->clone());
+    }
+    
+    mGraphPtr = NULL;
+    if (other.mGraphPtr!=NULL) {
+        if (mGraphPtr==NULL) {
+            mGraphPtr = new PartOrdGraph(other.mGraphPtr->numItems());
+        }
+        *mGraphPtr = *(other.mGraphPtr);
+    }
+    return *this;
+}
+
 
 //! Delete all of the terms and expressions we are storing.
 TermPartOrdGraph::~TermPartOrdGraph() {
@@ -64,15 +93,18 @@ int TermPartOrdGraph::findOrInsertTermId(const Term* t) {
     } else {
         std::cerr << "TermPartOrdGraph::findOrInsertTermId: "
                      "ERROR unhandled term type" << std::endl;
-        assert(0); // FIXME: should be using assert_exceptions instead!!
+        throw assert_exception( "TermPartOrdGraph::findOrInsertTermId: "
+                                "ERROR unhandled term type");
     }
     
     delete temp;
     
     // Check that we didn't just do an insertion after doneInsertingItems call.
-    assert( (isDoneInsertingTerms() and (initialNumTerms==mNumTerms))
-            || !isDoneInsertingTerms());
-    
+    if ( !((isDoneInsertingTerms() and (initialNumTerms==mNumTerms))
+            || !isDoneInsertingTerms()) ) {
+        throw assert_exception( "TermPartOrdGraph: insertion after "
+                                "doneInsertingItems() call");
+    }
     return termId;    
 }
 
@@ -85,6 +117,7 @@ void TermPartOrdGraph::insertTerm( const Term* t ) {
 
 //! Indicate the given term is non-negative.  Will pretend coeff 1.
 //! Assumes that given term has already been inserted.
+//! Creates a copy of the term and owns that copy.
 void TermPartOrdGraph::termNonNegative( const Term* t ) {
     Term* temp = t->clone();
     temp->setCoefficient(1);
@@ -99,15 +132,19 @@ void TermPartOrdGraph::termNonNegative( const Term* t ) {
 }
 
 bool TermPartOrdGraph::isNonNegative( const Term* term ) const {
+    if (term->isConst()) {
+        return (term->coefficient()>0);
+    }
+    // If have a non-constant term, clone it and set clone coeff to 1.
     Term* temp = term->clone();
     temp->setCoefficient(1);
     bool retval = false;
-
+std::cout << "TermPartOrdGraph::isNonNegative: temp = " << temp->toString() << std::endl;
     // Search through the Set of non-negative terms and see
     // if it is in there.
     std::set<Term*>::const_iterator iter;
     for (iter=mNonNegativeTerms.begin(); iter!=mNonNegativeTerms.end(); iter++){
-        Term* nonNegTerm = *iter;
+        Term* nonNegTerm = (*iter);
         if (*nonNegTerm == *temp) {
             retval = true;
         }
@@ -134,7 +171,9 @@ bool TermPartOrdGraph::isDoneInsertingTerms() const {
 
 //! Term1 <= Term2
 void TermPartOrdGraph::insertLTE( Term* term1, Term* term2 ) {
-    assert(isDoneInsertingTerms());
+    if (!isDoneInsertingTerms()) {
+        throw assert_exception("TermPartOrdGraph: Not done inserting items");
+    }
     int term1Id = findOrInsertTermId(term1);
     int term2Id = findOrInsertTermId(term2);
     mGraphPtr->nonStrict(term1Id,term2Id);
@@ -142,7 +181,9 @@ void TermPartOrdGraph::insertLTE( Term* term1, Term* term2 ) {
 
 //! Term1 < Term2
 void TermPartOrdGraph::insertLT( Term* term1, Term* term2 ) {
-    assert(isDoneInsertingTerms());
+    if (!isDoneInsertingTerms()) {
+        throw assert_exception("TermPartOrdGraph: Not done inserting items");
+    }
     int term1Id = findOrInsertTermId(term1);
     int term2Id = findOrInsertTermId(term2);
     mGraphPtr->strict(term1Id,term2Id);
@@ -150,7 +191,9 @@ void TermPartOrdGraph::insertLT( Term* term1, Term* term2 ) {
 
 //! Term1 == Term2
 void TermPartOrdGraph::insertEqual( Term* term1, Term* term2 ) {
-    assert(isDoneInsertingTerms());
+    if (!isDoneInsertingTerms()) {
+        throw assert_exception("TermPartOrdGraph: Not done inserting items");
+    }
     int term1Id = findOrInsertTermId(term1);
     int term2Id = findOrInsertTermId(term2);
     mGraphPtr->equal(term1Id,term2Id);
@@ -162,21 +205,27 @@ void TermPartOrdGraph::insertEqual( Term* term1, Term* term2 ) {
 
 //! returns true if Term1 <= Term2
 bool TermPartOrdGraph::isLTE( Term* term1, Term* term2 ) {
-    assert(isDoneInsertingTerms());
+    if (!isDoneInsertingTerms()) {
+        throw assert_exception("TermPartOrdGraph: Not done inserting items");
+    }
     int term1Id = findOrInsertTermId(term1);
     int term2Id = findOrInsertTermId(term2);
     return mGraphPtr->isNonStrict(term1Id,term2Id);
 }
 //! returns true if Term1 < Term2
 bool TermPartOrdGraph::isLT( Term* term1, Term* term2 ) {
-    assert(isDoneInsertingTerms());
+    if (!isDoneInsertingTerms()) {
+        throw assert_exception("TermPartOrdGraph: Not done inserting items");
+    }
     int term1Id = findOrInsertTermId(term1);
     int term2Id = findOrInsertTermId(term2);
     return mGraphPtr->isStrict(term1Id,term2Id);
 }
 //! returns true if Term1 == Term2
 bool TermPartOrdGraph::isEqual( Term* term1, Term* term2 ) {
-    assert(isDoneInsertingTerms());
+    if (!isDoneInsertingTerms()) {
+        throw assert_exception("TermPartOrdGraph: Not done inserting items");
+    }
     int term1Id = findOrInsertTermId(term1);
     int term2Id = findOrInsertTermId(term2);
     return mGraphPtr->isEqual(term1Id,term2Id);
