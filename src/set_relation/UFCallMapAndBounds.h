@@ -4,9 +4,6 @@
  * \brief Interface of UFCallMapAndBounds class
  *
  * \date Started: 2013-07-30
- * # $Revision:: 787                $: last committed revision
- * # $Date:: 2013-08-20 03:55:39 -0#$: date of last committed revision
- * # $Author:: mstrout              $: author of last committed revision
  *
  * \authors Michelle Strout
  *

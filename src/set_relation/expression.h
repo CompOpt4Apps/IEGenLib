@@ -234,6 +234,7 @@ public:
     void setParamExp(unsigned int i, Exp* param_exp);
     
     //! Returns a pointer to the ith parameter expression.
+    //! This UFCallTerm still owns the pointer.
     Exp* getParamExp(unsigned int i) const;
 
     //! Indicate if the function return value is being
@@ -584,7 +585,7 @@ public:
     void divideBy(int divisor);
    
     //! Assumes the equality Exp=0 and solves for the given factor.
-    //! FIXME: should only work on equality expressions.
+    //! FIXME: should only work on equality expressions.  Really?
     //! /param factor (adopted) 
     Exp* solveForFactor(Term* factor) const;
 
@@ -593,7 +594,7 @@ public:
         constraint, exp=0, that exposes the term with the factor.
         Returns NULL if can't do this.
     */
-    //! FIXME: should only work on equality expressions.
+    //! FIXME: should only work on equality expressions.  Really?
     Exp* invertFuncToExposeFactor(Term * factor) const;
 
     //! Substitute each expression for the factor (i.e. the non-coefficient
@@ -673,7 +674,8 @@ public:
     //! Sets mExpType to Equality, to indicate Exp == 0
     inline void setEquality() { mExpType = Equality; }
 
-    //! Returns true if the Exp is a simple expression
+    //! Returns true if the Exp is a simple expression, not a constraint
+    //! Does not mean it is a UFCall param.
     inline bool isExpression() { return (getExpType() == Expression); }
 
     //! Returns true if the Exp is an inequality, ie expression >= 0
@@ -689,6 +691,11 @@ public:
     //! Otherwise returns NULL.
     //! this still owns Term.
     Term* getTerm() const;
+    
+    //! Return Term* for constant term if there is one.
+    //! Otherwise return NULL.
+    //! This expression still owns the Term.
+    Term* getConstTerm() const;
 
     //! Output the Exp in dot format.
     //! Note here, we still need to provide "digraph name {" and "}"
@@ -704,6 +711,11 @@ public:
 
     //! Visitor design pattern, see Visitor.h for usage
     void acceptVisitor(Visitor *v);
+    
+    //! Get a list of pointers to the terms in this expression.
+    //! All pointers in this list are still owned by the expression.
+    //! Caller should NOT modify expressions or delete them.
+    std::list<Term*> getTermList() const;
 
 protected:
 

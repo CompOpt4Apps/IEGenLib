@@ -1673,6 +1673,20 @@ Term* Exp::getTerm() const {
     }
 }
 
+//! Return Term* for constant term if there is one.
+//! Otherwise return NULL.
+//! This expression still owns the Term.
+Term* Exp::getConstTerm() const {
+    for (std::list<Term*>::const_iterator i=mTerms.begin(); 
+            i != mTerms.end(); i++) {
+        Term* t = (*i);
+        if (t->isConst()) {
+            return t;
+        }
+    }
+    return NULL;
+}
+
 //! Output the Exp in dot format.
 //! Pass in the next node id.
 //! The next node id will be set to next id upon exit from this routine.
@@ -1837,6 +1851,15 @@ void Exp::acceptVisitor(Visitor *v) {
         (*i)->acceptVisitor(v);
     }
     v->postVisitExp(this);
+}
+
+#pragma mark -
+/****************************************************************************/
+
+//! Get a list of pointers to the terms in this expression.
+//! All pointers in this list will be owned by caller.
+std::list<Term*> Exp::getTermList() const {
+    return mTerms;
 }
 
 

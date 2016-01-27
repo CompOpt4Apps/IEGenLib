@@ -4,11 +4,8 @@
  * \brief Test for the UFCallMapAndBounds class.
  *
  * \date Started: 7/30/2013
- * # $Revision:: 628                $: last committed revision
- * # $Date:: 2013-01-25             $: date of last committed revision
- * # $Author:: heim                 $: author of last committed revision
  *
- * \authors Michelle Strout
+ * \authors Michelle Strout and Mark Heim
  *
  * Copyright (c) 2013, Colorado State University <br>
  * All rights reserved. <br>

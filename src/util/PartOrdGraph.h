@@ -36,6 +36,12 @@ typedef enum {
 class PartOrdGraph {
     public:
         PartOrdGraph(unsigned int N);
+        //! Copy constructor.  Performs a deep copy.
+        PartOrdGraph(const PartOrdGraph& other);
+        //! Copy assignment.
+        PartOrdGraph& operator=(const PartOrdGraph& other);
+        //! Destructor will delete the adjacency matrix.
+        ~PartOrdGraph();
 
         void strict(unsigned int, unsigned int);
         void nonStrict(unsigned int, unsigned int);
@@ -45,6 +51,8 @@ class PartOrdGraph {
         bool isNonStrict(unsigned int, unsigned int);
         bool isEqual(unsigned int, unsigned int);
         bool isNoOrder(unsigned int, unsigned int);
+
+        int numItems() { return mN; }
 
         std::string toString(); 
 

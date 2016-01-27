@@ -15,6 +15,7 @@
 
 #include "set_relation.h"
 #include "Visitor.h"
+#include "TermPartOrdGraph.h"
 #include <assert.h>
 
 namespace iegenlib{
@@ -2795,145 +2796,350 @@ Relation* Relation::addUFConstraints(std::string uf1str,
 /******************************************************************************/
 #pragma mark -
 /*************** addConstraintsDueToMonotonicity ******************************/
-/*
-class VisitorUniqueFactorToIntMap : public Visitor {
-  private:
-    // Gonna use the built-in comparison for std::set to make
-    // sure we only record unique terms.
-    std::set<Term> mTerms;
-    std::set<TupleVarTerm>  mTupleVarTerms;
-    std::set<TupleExpTerm>  mTupleExpTerms;
-    std::set<VarTerm>       mVarTerms;
-    std::set<UFCallTerm>    mUFCallTerms;
+/*! This visitor will collect all of the terms except for constants
+    from the constraints and will indicate which of the terms are
+    non-negative due to a constraint c <= term where c is a
+    constant integer that is >=0.  It is also looking at any range
+    information associated with uninterpreted functions.
     
-    std::set<Term*> mUniqueFactors;
+    This visitor does not take ownership of any of the terms visited.
+*/
+class VisitorCollectTerms : public Visitor {
+  private:
+    TermPartOrdGraph        mPartOrd;
+    Term*                   mNonConstTerm; // will be NULL if none or >1
+    int                     mNumNonConstTerms;
+    int                     mConstTermVal;
+    bool                    mInUFArg;
     
   public:
-    VisitorFindUFCallTerms(std::string targetUF) : mTargetUF(targetUF) {}
+    VisitorCollectTerms() {}
+    ~VisitorCollectTerms() {}
   
-    std::set<UFCallTerm> returnResult() { return mTerms; }
-    
-    void visitUFCallTerm(iegenlib::UFCallTerm * t) {
-        if (t->name() == mTargetUF) {
-            UFCallTerm termCopy = *t;
-            termCopy.setCoefficient(1);
-            mTerms.insert(termCopy);
-        }
+    TermPartOrdGraph returnPartOrd() { return mPartOrd; }
+
+    void postVisitTerm(iegenlib::Term * t) {
+        mConstTermVal = t->coefficient();
     }
-};
-*/
-
-
-/*! For adding constraints involving uninterpreted functions.
-**  For example, if forall e, index(e)<=diagptr(e), then
-**  this method will find all instances of index() and diagptr()
-**  in the current constraints and using the current parameters
-**  add in the provided constraint.  Let's say that diagptr is
-**  called with diagptr(foo) and diagptr(x+1) and index is called
-**  with index(y).  Then the following constraints will be added
-**      index(foo)<=diagptr(foo)
-**      index(x+1)<=diagptr(x+1)
-**      index(y)<=diagptr(y)
-**  Makes changes to the current SparseConstraints object.
-*/
-/*
-void SparseConstraints::addUFConstraintsHelper(std::string uf1str, 
-        std::string opstr, std::string uf2str) {
-
-    // Have visitors that collects UFTerms.
-    VisitorFindUFCallTerms * v1 = new VisitorFindUFCallTerms(uf1str);
-    this->acceptVisitor(v1);
-    std::set<UFCallTerm> uf1Terms = v1->returnResult();
-    VisitorFindUFCallTerms * v2 = new VisitorFindUFCallTerms(uf2str);
-    this->acceptVisitor(v2);
-    std::set<UFCallTerm> uf2Terms = v2->returnResult();
-    
-    // Rename all of the uf2Terms functions to uf1 and
-    // insert into uf1Terms set so don't get repetition of same
-    // parameters.
-    for (std::set<UFCallTerm>::const_iterator tIter=uf2Terms.begin();
-            tIter != uf2Terms.end(); tIter++) {
-        UFCallTerm uf2term = (*tIter);
-        uf2term.setName( uf1str );
-        uf1Terms.insert( uf2term );
+    void postVisitUFCallTerm(iegenlib::UFCallTerm * t) {
+        mPartOrd.insertTerm(t);
+        nonConstTerm(t);
+        //iegenlib::queryInverseCurrEnv("f")
+        // Don't I have a routine that puts in all the
+        // constraints due to domain and range?
     }
-     
-    // Create a set of new constraints for all of the instances
-    // in uf1Terms.
-    for (std::set<UFCallTerm>::const_iterator tIter=uf1Terms.begin();
-            tIter != uf1Terms.end(); tIter++) {
-        
-        UFCallTerm uf1term = (*tIter);
-        
-        // Copy uf1 term and then name the function to uf2 in copy.
-        // Need to copies because constraints will own both terms.
-        UFCallTerm *uf1copy1 = new UFCallTerm(uf1term);
-        UFCallTerm *uf1copy2 = new UFCallTerm(uf1term);
-        uf1copy2->setName(uf2str);
-        Exp* constraint = new Exp();
-        
-        // uf1 = uf2, uf1 - uf2 = 0
-        if (opstr=="=") {
-            uf1copy2->multiplyBy(-1);
-            constraint->setEquality();
-            
-        // uf1 <= uf2, uf2 - uf1 >= 0
-        } else if (opstr=="<=") {
-            uf1copy1->multiplyBy(-1);
-            constraint->setInequality();
-                   
-        // uf1 >= uf2, uf1 - uf2 >= 0
-        } else if (opstr==">=") {
-            uf1copy2->multiplyBy(-1);
-            constraint->setInequality();
-
-        // uf1 > uf2, uf1 - uf2 + 1 >= 0
-        } else if (opstr==">") {
-            uf1copy2->multiplyBy(-1);
-            constraint->addTerm( new Term(1) );
-            constraint->setInequality();
-
-        // uf1 < uf2, uf2 - uf1 + 1 >= 0
-        } else if (opstr=="<") {
-            uf1copy1->multiplyBy(-1);
-            constraint->addTerm( new Term(1) );
-            constraint->setInequality();
-
-        // Otherwise have comparison operator we don't handle.
+    void postVisitTupleVarTerm(iegenlib::TupleVarTerm * t) {
+        mPartOrd.insertTerm(t);
+        nonConstTerm(t);
+    }
+    void postVisitVarTerm(iegenlib::VarTerm * t) {
+        mPartOrd.insertTerm(t);
+        nonConstTerm(t);
+    }
+/*    // FIXME: do I really want to do the below?
+    void postVisitTupleExpTerm(iegenlib::TupleExpTerm * t) {
+        mPartOrd.insertTerm(t);
+        nonConstTerm(t);
+    }
+*/    
+    void preVisitExp(iegenlib::Exp * e) {
+        mNonConstTerm = NULL;
+        mNumNonConstTerms = 0;
+        mConstTermVal = 0;
+        // Can only determine non-negative property for terms in
+        // equality and inequality constraints.  See nonConstTerm().
+        if (!e->isEquality() && !e->isInequality()) {
+            mInUFArg = true;
         } else {
-            std::cerr << "SparseConstraints::addUFConstraintsHelper: "
-                      << "operator not handled " << opstr << std::endl;
-            assert(0);
+            mInUFArg = false;
         }
-        
-        // Actually add in the constraint.
-        constraint->addTerm(uf1copy1);
-        constraint->addTerm(uf1copy2);
-        
-        // Put constraint into each of our conjunctions.
-        for (std::list<Conjunction*>::iterator iter=mConjunctions.begin();
-                iter != mConjunctions.end(); iter++) {
-            if (constraint->isEquality()) {
-                (*iter)->addEquality(constraint);
-            } else {
-                (*iter)->addInequality(constraint);
+    }
+    void postVisitExp(iegenlib::Exp * e) {
+        if ((e->isEquality() || e->isInequality())
+                && mNonConstTerm!=NULL && mConstTermVal>=0) {
+            mPartOrd.termNonNegative( mNonConstTerm );
+        }
+    }
+
+private:
+    // Called when visiting each non-const term.  If only
+    // end up with 1 non-const term, then the postVisitExp will determine
+    // if that non constant term is non-negative.
+    void nonConstTerm(const iegenlib::Term* t) {
+        if (!mInUFArg) {
+            mNumNonConstTerms++;
+            if (mNumNonConstTerms>0) {
+                mNonConstTerm = NULL;
+            }
+        }
+    }
+    
+};
+
+bool termsNonNeg(Exp* e, TermPartOrdGraph partOrd) {
+    bool allNonNeg = true;
+    std::list<Term*> termList = e->getTermList();
+    for (std::list<Term*>::const_iterator i=termList.begin(); 
+            i != termList.end(); ++i) {
+        Term* t = (*i);
+        if ((t->coefficient()<0) || (!partOrd.isNonNegative(t))) {
+            allNonNeg = false;
+        }
+    }
+    return allNonNeg;
+}
+
+/*! This visitor will collect partial ordering relationships between
+    non-constant terms (We don't need to record that 1 is less than 2).
+    
+    The visitor will put the partial ordering relationships in the 
+    TermPartOrdGraph data structure and also mark any new non-negative
+    terms it finds.
+    
+    This visitor should be used multiple times until convergence
+    has been reached.  Check for convergence with the method hasConverged().
+    Convergence is needed because anytime a new non-negative term has been
+    found that might result in more non-negative terms and/or partial orderings.
+    
+    
+    This visitor will keep a pointer to the current constraint it is visiting.
+    When visiting a term within this constraint, the visitor will solve for that
+    term using solveForFactor.  More logic is in deriveInfo().
+    
+    
+    This visitor does not take ownership of any of the terms.
+*/
+class VisitorCollectPartOrd : public Visitor {
+  private:
+    bool                    mFoundNonNeg;
+    TermPartOrdGraph        mPartOrd;
+    Exp*                    mCurrExp;
+    
+  public:
+    VisitorCollectPartOrd(TermPartOrdGraph partOrd) :
+        mFoundNonNeg(false), mPartOrd(partOrd), mCurrExp(NULL) {}
+    ~VisitorCollectPartOrd() {}
+  
+    bool hasConverged() { return !mFoundNonNeg; }
+    TermPartOrdGraph returnPartOrd() { return mPartOrd; }
+
+    void preVisitExp(iegenlib::Exp * e) {
+        if (e->isEquality() || e->isInequality()) {
+            mCurrExp = e;
+            mFoundNonNeg = false;
+        }
+    }
+    void postVisitExp(iegenlib::Exp * e) {
+        if (e->isEquality() || e->isInequality()) {
+            mCurrExp = NULL;
+        }
+    }
+
+    // See class header for logic.
+    void deriveInfo(iegenlib::Term * t) {
+        // solve for factor treats the constraint like exp=0
+        Term * t_with_coeff_1 = t->clone();
+        t_with_coeff_1->setCoefficient(1);
+        Exp *solution = mCurrExp->solveForFactor(t_with_coeff_1);
+
+        // No info to derive if can't solve for term.
+        if (solution==NULL) return;
+
+std::cout << "deriveInfo, t = " << t->toString() << ", mCurrExp = " << mCurrExp->toString() << ", solution = " << solution->toString() << std::endl;
+
+        // Whether we have equality or inequality with t having a positive
+        // coefficient (t + ... >=0), if all the terms in
+        // the solution for t's factor are non-negative then so is this term
+        if (termsNonNeg(solution,mPartOrd)
+                && t->coefficient() >=1
+                && !mPartOrd.isNonNegative(t)) {    // haven't found yet
+            mPartOrd.termNonNegative(t);
+            mFoundNonNeg = true;
+        }
+std::cout << "deriveInfo, mFoundNonNeg = " << mFoundNonNeg << std::endl;
+
+        // If the constraint is an equality
+        if (mCurrExp->isEquality()) {   
+            // and there is only one other term in the solution with coeff 1,
+            // then this term is equal to the solution term.
+            Term* singleTerm = solution->getTerm();
+            if (singleTerm != NULL
+                    && singleTerm->isConst()
+                    && singleTerm->coefficient()==1) {
+                mPartOrd.insertEqual(singleTerm,t);
             }
         }
 
+        // If the constraint is an inequality (exp>=0)
+        if (mCurrExp->isInequality()) {
+        
+            // Was this term's coefficient positive or negative originally?
+//            bool posCoeffForTerm = (t->coefficient()>0);
+            
+             // Get the constant in the solution.
+            Term* constTerm = solution->getConstTerm();
+            int c = (constTerm ? constTerm->coefficient() : 0);  
+
+
+/* DON't want this.  Can't do part ord when coeff in solution are neg.           
+            // How many non constant terms are in the solution?
+            // If constant is zero, then won't have an explicit
+            // constant terms (ASSUMPTION)
+            int non_const_terms=(c==0?termList->size():termList->size()-1);
+*/
+     
+            // We want to iterate over the solution terms if
+            // the solution has all non negative terms.
+            if (termsNonNeg(solution,mPartOrd)) {
+            
+                // Iterate over the list of terms in the solution.
+                std::list<Term*> termList = solution->getTermList();
+                std::list<Term*>::const_iterator i;
+                for (i=termList.begin(); i != termList.end(); ++i) {
+                    Term* solution_term = (*i);
+                    
+                    // Don't want to have partial ordering with a constant.
+                    if (solution_term->isConst()) continue;
+                    
+                    // t >= solution_term + (other noneg terms) + c, c>=1
+                    if (c>=1 && t->coefficient()>0) {
+                        mPartOrd.insertLT(solution_term, t);
+//std::cout << "deriveInfo, mPartOrd.insertLT(solution_term, t);" << std::endl;
+
+                    // t <= solution_term + (other noneg terms) + c, c>=1
+                    } else if (c>=1 && t->coefficient()<0) {
+                        mPartOrd.insertLT(t, solution_term);
+//std::cout << "deriveInfo, mPartOrd.insertLT(t,solution_term);" << std::endl;
+
+                    // t >= solution_term + (other noneg terms) + c, c==0
+                    } else if (c==0 && t->coefficient()>0) {
+                        mPartOrd.insertLTE(solution_term, t);
+//std::cout << "deriveInfo, mPartOrd.insertLTE(solution_term, t);" << std::endl;
+
+                   // t <= solution_term + (other noneg terms) + c, c==0
+                    } else if (c==0 && t->coefficient()<0) {
+                        mPartOrd.insertLTE(t, solution_term);
+//std::cout << "deriveInfo, mPartOrd.insertLTE(t,solution_term);" << std::endl;
+                    }
+                }
+            } // endif termsNonNeg(solution,mPartOrd)
+            
+        } // endif mCurrExp->isInequality()
+
+std::cout << "deriveInfo, end of method, mPartOrd = " << mPartOrd.toString() << std::endl;
+        
     }
 
-}
+    void postVisitTerm(iegenlib::Term * t) {
+        deriveInfo(t);
+    }
+    void postVisitUFCallTerm(iegenlib::UFCallTerm * t) {
+        deriveInfo(t);
+    }
+    void postVisitTupleVarTerm(iegenlib::TupleVarTerm * t) {
+        deriveInfo(t);
+    }
+    void postVisitVarTerm(iegenlib::VarTerm * t) {
+        deriveInfo(t);
+    }
+};
+
+
+/*! For adding constraints due to monotonicity characteristics
+    of uninterpreted functions.
 */
+void SparseConstraints::addConstraintsDueToMonotonicityHelper() {
+
+    // Visit each conjunction to determine what monotonicity constraints 
+    // can be added to the specific conjunction.
+    // Has be be by conjunction because might use information about what
+    // terms are non-zero in a conjunction.
+    for (std::list<Conjunction*>::iterator iter=mConjunctions.begin();
+            iter != mConjunctions.end(); iter++) {
+
+        Conjunction* conjunct = *iter;
+
+        // Collect all of the terms and determine what terms are nonnegative
+        VisitorCollectTerms v1;
+        conjunct->acceptVisitor(&v1);
+        TermPartOrdGraph partOrd = v1.returnPartOrd();
+std::cout << "after VisitorCollectTerms, partOrd = " << partOrd.toString() << std::endl;
+
+        // Indicate we are done adding terms into the partial ordering.
+        partOrd.doneInsertingTerms();
+        
+        // Call the visitor that will insert partial orderings.
+        // Call in a loop until determination of non-negativity,
+        // which impacts partial orderings, has converged.
+        VisitorCollectPartOrd v2(partOrd);
+        do {
+std::cout << "in do while loop" << std::endl;
+            conjunct->acceptVisitor(&v2);
+        } while (!(v2.hasConverged()));
+        partOrd = v2.returnPartOrd();
+
+        // For each UFCall term that involves monotonically non-decreasing
+        // function, put in new constraints that can be derived based on
+        // how that term is ordered with other terms that have same function.
+        std::set<UFCallTerm*> ufCallTerms = partOrd.getUniqueUFCallTerms();
+        std::set<UFCallTerm*>::const_iterator i;
+        std::set<UFCallTerm*>::const_iterator j;
+        for (i = ufCallTerms.begin(); i!=ufCallTerms.end(); i++) {
+            for (j = ufCallTerms.begin(); j!=ufCallTerms.end(); j++) {
+                UFCallTerm* ufCall1 = (*i);
+                UFCallTerm* ufCall2 = (*j);
+std::cout << "ufCall1 = " << ufCall1->toString() << ", ufCall2 = " << ufCall2->toString() << std:: endl;
+                if (ufCall1->name()==ufCall2->name()
+                        && ufCall1->numArgs()==1
+                        && ufCall2->numArgs()==1
+                        && Monotonic_Nondecreasing
+                           ==queryMonoTypeEnv(ufCall1->name()) ) {
+                
+                    // if ufCall1(e1) == ufCall2(e2) then useful??
+
+                    // Create largerTerm - smallerTerm just in case need it.
+                    Exp* new_constraint = new Exp();
+                    Exp* smallerExp = ufCall1->getParamExp(0)->clone();
+                    smallerExp->multiplyBy(-1);
+                    new_constraint->addExp(smallerExp);
+                    new_constraint->addExp(ufCall2->getParamExp(0)->clone());
+
+                    // if ufCall1(e1) < ufCall2(e2) then e1 < e2
+                    if (partOrd.isLT(ufCall1,ufCall2)) {
+                        // largerTerm - smallerTerm - 1 >= 0
+                        new_constraint->addTerm(new Term(-1));
+                        conjunct->addInequality(new_constraint);
+                        
+                    // if ufCall1(e1) <= ufCall2(e2) then e1 <= e2
+                    } else if (partOrd.isLTE(ufCall1,ufCall2)) {
+                        // largerTerm - smallerTerm >= 0
+                        conjunct->addInequality(new_constraint);
+                    } else {
+                        delete new_constraint;
+                    }
+                }   
+            }
+        }
+    }
+}
+
 
 Set* Set::addConstraintsDueToMonotonicity() const {
     Set* retval = new Set(*this);
-    //retval->addConstraintsDueToMonotonicity(uf1str,opstr,uf2str);
+    
+    // Add in constraints due to domain and range.
+    // FIXME: not happy about how this works now.
+//    UFCallMapAndBounds ufcallmap(getTupleDecl());
+//    retval->ufCallsToTempVars(ufcallmap);
+//std::cout << "After ufCallsToTempVars, retval = " << retval->toString() << std::endl;
+    
+    retval->addConstraintsDueToMonotonicityHelper();
     return retval;
 }
 
 Relation* Relation::addConstraintsDueToMonotonicity() const {
     Relation* retval = new Relation(*this);
-    //retval->addUFConstraintsHelper(uf1str,opstr,uf2str);
+    retval->addConstraintsDueToMonotonicityHelper();
     return retval;
 }
 

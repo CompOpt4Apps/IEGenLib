@@ -8,10 +8,10 @@
  *
  * \date Started: 3/28/12
  *
- * \authors Michelle Strout and Joseph Strout
+ * \authors Michelle Strout, Joseph Strout, Mahdi Soltan Mohammadi
  *
  * Copyright (c) 2012, 2013 Colorado State University <br>
- * Copyright (c) 2015, University of Arizona <br>
+ * Copyright (c) 2015-2016, University of Arizona <br>
  * All rights reserved. <br>
  * See ../../COPYING for details. <br>
  */
@@ -471,13 +471,39 @@ TEST_F(SetRelationTest, SolveForFactor) {
     uf_call->setParamExp(0,arg0);
     exp->addTerm(uf_call);
 
-
     Exp* result = exp->solveForFactor(new VarTerm("y"));
     EXPECT_TRUE(result);
     EXPECT_EQ("f_inv(t)", result->toString());
     delete exp;
     delete result;
 }
+
+#pragma mark SolveForFactorMultipleTerms
+TEST_F(SetRelationTest, SolveForFactorMultipleTerms) {
+    iegenlib::setCurrEnv();
+    iegenlib::appendCurrEnv("f",
+        new Set("{[i]:0<=i &&i<G}"), new Set("{[i]:0<=i &&i<G}"), false,
+        iegenlib::Monotonic_NONE);
+
+    // Create the expression t - 2 f(y) + 3 x - 7 __tv1 + 42 = 0
+    Exp* exp = new Exp();
+    exp->addTerm(new VarTerm("t"));         // t
+    UFCallTerm* uf_call = new UFCallTerm(1, "f", 1);
+    Exp *arg0 = new Exp();
+    arg0->addTerm(new VarTerm("y"));
+    uf_call->setParamExp(0,arg0);
+    exp->addTerm(uf_call);                  // f(y)
+    exp->addTerm(new VarTerm(3,"x"));       // 3 x
+    exp->addTerm(new TupleVarTerm(-7,1));   // -7 __tv1
+    exp->addTerm(new Term(42));             // 42
+
+    Exp* result = exp->solveForFactor(new UFCallTerm(*uf_call));
+    EXPECT_TRUE(result);
+    EXPECT_EQ("7 __tv1 - t - 3 x - 42", result->toString());
+    delete exp;
+    delete result;
+}
+
 
 #pragma mark FindFunction
 TEST_F(SetRelationTest, FindFunction) {
@@ -3470,7 +3496,6 @@ TEST_F(SetRelationTest, addUFConstraintsTest){
               "&& j - index(i) >= 0 && -j + index(i + 1) - 1 >= 0 && -k + "
               "indexptr(i) - 1 >= 0 && k - diagptr(v + 1) - 1 >= 0 }",
               result2->prettyPrintString());
-
     
     delete r;
     delete result1;
@@ -3495,11 +3520,11 @@ TEST_F(SetRelationTest, addConstraintsDueToMonotonicity){
     Set* result = s->addConstraintsDueToMonotonicity();
     Set* expected = new Set("{[i,j] : f(i)<f(j) && i<j}");
     
-    //EXPECT_EQ(expected->prettyPrintString(), result->prettyPrintString());
+    EXPECT_EQ(expected->prettyPrintString(), result->prettyPrintString());
 
-    delete s;
-    delete result;
-    delete expected;
+    //delete s;
+    //delete result;
+    //delete expected;
   }
 /*
   {
@@ -3528,7 +3553,7 @@ TEST_F(SetRelationTest, addConstraintsDueToMonotonicity){
     delete result1;
     delete result2;
   }
-*/        
+*/ 
 }
 
 
