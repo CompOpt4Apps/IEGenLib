@@ -299,4 +299,3 @@ TEST(UFCallMapAndBoundsTest, UFCallMapAndBoundsRange2D) {
     delete fetched_ufcall;
     delete constraints;
 }
-
