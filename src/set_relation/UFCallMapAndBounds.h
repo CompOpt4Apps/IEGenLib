@@ -98,8 +98,9 @@ private:
 
 /*!
  * \class UFCmap
- *
- * 
+ * This class can store UFcalls and their equ. symbolic constants. 
+ * We need this in functionality of creating affine sets out of
+ * non-affine sets, where UFcalls get replaced with symbolic constants.
  */
 class UFCmap {
 public:
