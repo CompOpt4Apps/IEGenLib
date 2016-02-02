@@ -299,3 +299,39 @@ TEST(UFCallMapAndBoundsTest, UFCallMapAndBoundsRange2D) {
     delete fetched_ufcall;
     delete constraints;
 }
+
+#pragma mark UFCmap
+// Test the UFCmap
+TEST(UFCallMapAndBoundsTest, UFCmap) {
+
+    // Constructing sample UFC
+    Exp *e1 = new Exp();  // __tv0 + 1
+    e1->addTerm(new TupleVarTerm( 0 ));
+    e1->addTerm(new Term(1));
+    
+    Exp *e2 = new Exp();  // __tv2 + n
+    e2->addTerm(new TupleVarTerm(2));
+    e2->addTerm(new VarTerm(-1,"n"));
+    
+    UFCallTerm *ufcall = new UFCallTerm("row", 2);
+    ufcall->setParamExp(0,e1);
+    ufcall->setParamExp(1,e2);
+
+//////// Defining the UFCmap
+    iegenlib::UFCmap map;
+
+//////// Inserting a UFC into the map
+    map.insert(*ufcall);
+
+//////// Finding a UFC in the map, and geting its "symbolic constant" form.
+    std::string symCons = map.find(*ufcall);
+
+
+    EXPECT_EQ( "row___tv0P1__tv2Mn_" , symCons );
+    EXPECT_EQ( *ufcall , (map.find(symCons)) );
+
+//    std::cout<<std::endl<<map.toString()<<std::endl;
+
+    delete ufcall;
+
+}
