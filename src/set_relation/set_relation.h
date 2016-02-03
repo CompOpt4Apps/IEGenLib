@@ -26,6 +26,7 @@
 #include "expression.h"
 #include "UFCallMapAndBounds.h"
 #include "SubMap.h"
+#include "UFCallMap.h"
 class Visitor;
 
 #include <set>
@@ -412,6 +413,11 @@ public:
     // Is tuple variable tupleID argument to an UFS?
     bool isUFCallParam(int tupleID);
 
+    // The function traverses all conjunctions to find UFcalls.
+    // For every distinct UGCall, it creates a equ. symbolic constant (string)
+    // and stores the (UFC, Sym) pair in a UFCallMap. The function returns
+    // a pointer to final UFCallMap that the user is responsible for deleting.
+    UFCallMap* mapUFCtoSym();
 
 // FIXME: what methods should we have to iterate over conjunctions so
 // this can go back to protected?

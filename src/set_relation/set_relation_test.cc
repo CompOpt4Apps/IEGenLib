@@ -3751,3 +3751,36 @@ TEST_F(SetRelationTest, PROJECT_OUT) {
    delete ex_r1;
    delete ex_s1;
 }
+
+#pragma mark mapUFCtoSym
+//Testing mapUFCtoSym: get a map of all UFCalls to equ. symbolic constant
+TEST_F(SetRelationTest, mapUFCtoSym) {
+
+    Relation *r = new Relation("[n] -> { [i,j] -> [ip,jp] : i = col(jp) "
+       "and i < ip and 0 <= i and i < n and idx(i) <= j and j < idx(i+1) "
+         "and 0 <= ip and ip < n and idx(ip) <= jp and jp < idx(ip+1) }");
+
+    //! Creating expected expression
+    std::stringstream ss;
+    ss<<"UFCallMap:" << std::endl;
+    ss<<"\tUFC = col(__tv3)  ,  sym = col___tv3_"<< std::endl;
+    ss<<"\tUFC = idx(__tv0)  ,  sym = idx___tv0_"<< std::endl;
+    ss<<"\tUFC = idx(__tv0 + 1)  ,  sym = idx___tv0P1_"<< std::endl;
+    ss<<"\tUFC = idx(__tv2)  ,  sym = idx___tv2_"<< std::endl;
+    ss<<"\tUFC = idx(__tv2 + 1)  ,  sym = idx___tv2P1_"<< std::endl;
+    string exp_str = ss.str();
+
+    iegenlib::UFCallMap *map;
+
+    // ---------        Geting a map of UFCalls    ---------------
+    map = r->mapUFCtoSym();
+
+
+    EXPECT_EQ( exp_str , map->toString() );
+
+
+//    std::cout<<std::endl<<map->toString()<<std::endl;
+    delete r;
+    delete map;
+}
+
