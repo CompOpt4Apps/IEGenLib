@@ -41,17 +41,24 @@ public:
     //! Copy constructor.
     UFCallMap( const UFCallMap& other ){ *this = other; }
 
+    //! Assignment operator.
+    UFCallMap& operator=( const UFCallMap& other );
+
     //! returns a string representing ufcterm as a symbolic constant
     string symUFC( std::string &ufcName );
 
     //! Use this to insert a UFC term to maps.
     //  The function creats an string representing the UFC then,
     //  adds (ufc,str) to mUFC2Str & adds (ufc,str) to mStr2UFC
-    void insert( UFCallTerm &ufcterm );
+    //  The class does not own the object pointed by *ufcterm,
+    //  so users are responcible for freeing the memory.
+    void insert( UFCallTerm *ufcterm );
 
     //! Searches for ufcterm in mUFC2Str. If it exists in the map, returns
     // the equ. symbol, otherwise returns an empty string.
-    string find( UFCallTerm &ufcterm );
+    //  The class does not own the object pointed by *ufcterm,
+    //  so users are responcible for freeing the memory.
+    string find( UFCallTerm *ufcterm );
 
     //! Searches for a symbol in mStr2UFC. If it exists in the map, returns the
     //  equ. UFC, otherwise returns foo() (representing empty UFC)

@@ -51,11 +51,11 @@ TEST(UFCallMapTest, UFCallMap) {
     iegenlib::UFCallMap map;
 
 //////// Inserting a UFC into the map
-    map.insert(*ufcall);
+    map.insert(ufcall);
 
 //////// Checking: UFC -> Symbolic Cnstant    ---LOOK UP
    ///   Finding a UFC in the map, and geting its "symbolic constant" form.
-    std::string symCons = map.find(*ufcall);
+    std::string symCons = map.find(ufcall);
 
     EXPECT_EQ( "row___tv0P1__tv2Mn_" , symCons );
 

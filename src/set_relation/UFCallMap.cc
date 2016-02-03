@@ -19,6 +19,15 @@
 
 namespace iegenlib{
 
+//! Assignment operator.
+UFCallMap& UFCallMap::operator=( const UFCallMap& other) {
+
+    mUFC2Str = other.mUFC2Str;
+    mStr2UFC = other.mStr2UFC;
+
+    return *this;
+}
+
 //! Returns a string representing ufcterm as a symbolic constant
 // The result is in a format that isl and Omega+ libraries can handle
 // It is going to look like:
@@ -50,33 +59,32 @@ string UFCallMap::symUFC( std::string &ufcName )
     return sym;
 }
 
-
 //! Inserts a UFC term to both of themaps.
 //  The function creats an string representing the UFC as symbolic constant,
 //  then,  adds (ufc,str) to mUFC2Str & adds (ufc,str) to mStr2UFC
 //  It does not add repetitive UFCs
-void UFCallMap::insert( UFCallTerm &ufcterm )
+void UFCallMap::insert( UFCallTerm *ufcterm )
 {
     if( find(ufcterm) != string("") ){
         return;
     }
 
-    std::string symCons = ufcterm.toString();
+    std::string symCons = ufcterm->toString();
     
     symCons = symUFC(symCons);
     
-    mUFC2Str.insert ( std::pair<UFCallTerm,std::string>(ufcterm,symCons) );
-    mStr2UFC.insert ( std::pair<std::string,UFCallTerm>(symCons,ufcterm) );
+    mUFC2Str.insert ( std::pair<UFCallTerm,std::string>(*ufcterm,symCons) );
+    mStr2UFC.insert ( std::pair<std::string,UFCallTerm>(symCons,*ufcterm) );
 }
 
 //! Searches for ufcterm in mUFC2Str. If it exists in the map, returns
 // the equ. symbol, otherwise returns an empty string.
-string UFCallMap::find( UFCallTerm &ufcterm )
+string UFCallMap::find( UFCallTerm *ufcterm )
 {
     std::string symCons("");
     std::map<UFCallTerm,std::string>::iterator it;
     
-    it = mUFC2Str.find(ufcterm);
+    it = mUFC2Str.find(*ufcterm);
     if (it != mUFC2Str.end()){
         symCons = it->second;
     }
