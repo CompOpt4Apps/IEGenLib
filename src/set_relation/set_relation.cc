@@ -3397,4 +3397,36 @@ Relation* Relation::projectOut(int tvar)
     return result;
 }
 
+/*****************************************************************************/
+#pragma mark -
+/*************** VisitorProjectOut *****************************/
+// Vistor Class used in traversing conjunctions for finding UFCalls
+class VisitorUFCtoParam : public Visitor {
+  private:
+         UFCallMap* map;
+  public:
+         VisitorUFCtoParam() { map = new UFCallMap(); }
+         inline UFCallMap* getMap() { return map; }
+         void preVisitUFCallTerm(iegenlib::UFCallTerm * t);
+};
+
+void VisitorUFCtoParam::preVisitUFCallTerm(iegenlib::UFCallTerm * t){
+
+    UFCallTerm clone = *t;
+    clone.setCoefficient(1);
+    map->insert(&clone);
+}
+
+// The function traverses all conjunctions to find UFcalls.
+// For every distinct UFCall, it creates a equ. symbolic constant (string)
+// and stores the (UFC, Sym) pair in a UFCallMap. The function returns
+// a pointer to final UFCallMap that the user is responsible for deleting.
+UFCallMap* SparseConstraints::mapUFCtoSym()
+{
+    VisitorUFCtoParam * v = new VisitorUFCtoParam();
+    this->acceptVisitor(v);
+    
+    return (v->getMap());
+}
+
 }//end namespace iegenlib

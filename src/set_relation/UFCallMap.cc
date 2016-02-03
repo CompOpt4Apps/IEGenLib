@@ -60,7 +60,7 @@ string UFCallMap::symUFC( std::string &ufcName )
 }
 
 //! Inserts a UFC term to both of themaps.
-//  The function creats an string representing the UFC as symbolic constant,
+//  The function creates an string representing the UFC as symbolic constant,
 //  then,  adds (ufc,str) to mUFC2Str & adds (ufc,str) to mStr2UFC
 //  It does not add repetitive UFCs
 void UFCallMap::insert( UFCallTerm *ufcterm )

@@ -54,13 +54,13 @@ TEST(UFCallMapTest, UFCallMap) {
     map.insert(ufcall);
 
 //////// Checking: UFC -> Symbolic Cnstant    ---LOOK UP
-   ///   Finding a UFC in the map, and geting its "symbolic constant" form.
+   ///   Finding a UFC in the map, and getting its "symbolic constant" form.
     std::string symCons = map.find(ufcall);
 
     EXPECT_EQ( "row___tv0P1__tv2Mn_" , symCons );
 
-//////// Checking: Symbolic Cnstant -> UFC    ---LOOK UP
-   ///   Finding a "symbolic constant" in the map, and geting its equ. UFCall.
+//////// Checking: Symbolic Constant -> UFC    ---LOOK UP
+   ///   Finding a "symbolic constant" in the map, and getting its equ. UFCall.
     UFCallTerm r_ufcall("foo", 0);
     r_ufcall = map.find(symCons);
 
