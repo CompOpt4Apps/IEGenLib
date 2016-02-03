@@ -5,7 +5,7 @@
  *
  * \date Started: 2016-02-02
  *
- * \author Michelle Strout
+ * \authors Michelle Strout, Mahdi Soltan Mohammadi
  *
  * Copyright (c) 2015-2016, University of Arizona <br>
  * All rights reserved. 
