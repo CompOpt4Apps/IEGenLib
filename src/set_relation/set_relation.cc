@@ -3432,8 +3432,9 @@ UFCallMap* SparseConstraints::mapUFCtoSym()
 /*****************************************************************************/
 #pragma mark -
 /*************** VisitorBoundDomainRange *****************************/
-// Vistor Class used in 
-// Vistor Class used in traversing conjunctions for finding UFCalls
+// Vistor Class used in BoundDomain Range
+// Vistor Class used in traversing conjunctions for adding constarints due to
+// Domain and Range of UFCalls
 class VisitorBoundDomainRange : public Visitor {
   private:
          UFCallMap* ufcmap;
@@ -3548,6 +3549,8 @@ void VisitorBoundDomainRange::preVisitConjunction(Conjunction* c){
     delete newSet;
 }
 
+//! Adds constraints due to domain and range of all UFCalls in UFCallmap
+//  Users own the returned Set object.
 Set* Set::boundDomainRange(UFCallMap* ufcmap)
 {
     Set* s = new Set(*this);
@@ -3558,6 +3561,8 @@ Set* Set::boundDomainRange(UFCallMap* ufcmap)
     return s;
 }
 
+//! Adds constraints due to domain and range of all UFCalls in UFCallmap
+//  Users own the returned Relation object.
 Relation* Relation::boundDomainRange(UFCallMap* ufcmap)
 {
     Relation* r = new Relation(*this);
@@ -3567,6 +3572,5 @@ Relation* Relation::boundDomainRange(UFCallMap* ufcmap)
 
     return r;
 }
-
 
 }//end namespace iegenlib

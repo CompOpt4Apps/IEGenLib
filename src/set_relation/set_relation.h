@@ -533,7 +533,7 @@ public:
     //! Visitor design pattern, see Visitor.h for usage
     void acceptVisitor(Visitor *v);    
 
-    //! Adds constraints due to domain and range of all UFCall in UFCallmap
+    //! Adds constraints due to domain and range of all UFCalls in UFCallmap
     //  Users own the returned Set object.
     Set* boundDomainRange(UFCallMap* ufcmap);
 
@@ -677,8 +677,8 @@ public:
     //! Visitor design pattern, see Visitor.h for usage
     void acceptVisitor(Visitor *v);
 
-    //! Adds constraints due to domain and range of all UFCall in UFCallmap
-    //  Users own the returned Set object.
+    //! Adds constraints due to domain and range of all UFCalls in UFCallmap
+    //  Users own the returned Relation object.
     Relation* boundDomainRange(UFCallMap* ufcmap);
 
     // Projects out tuple varrable No. tvar
