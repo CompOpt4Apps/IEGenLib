@@ -3429,4 +3429,144 @@ UFCallMap* SparseConstraints::mapUFCtoSym()
     return (v->getMap());
 }
 
+/*****************************************************************************/
+#pragma mark -
+/*************** VisitorBoundDomainRange *****************************/
+// Vistor Class used in 
+// Vistor Class used in traversing conjunctions for finding UFCalls
+class VisitorBoundDomainRange : public Visitor {
+  private:
+         UFCallMap* ufcmap;
+          
+  public:
+         VisitorBoundDomainRange (UFCallMap* imap) { ufcmap = imap; }
+         void preVisitConjunction(iegenlib::Conjunction * c);
+};
+
+void VisitorBoundDomainRange::preVisitConjunction(Conjunction* c){
+
+    int in = c->inarity();
+    c->setinarity(0);
+    Set* newSet = new Set(c->prettyPrintString());
+
+    //!  Iterating over all UFCalls
+    for(std::map<UFCallTerm,string>::iterator it  = ufcmap->begin();
+                                              it != ufcmap->end(); it++){
+        const UFCallTerm* uf_call = &(it->first);
+
+
+        //! Bounding argument expressions of UFCalls by their domain, 
+        //  and adding them as inequalities to constraints set
+        {
+        // Create a TupleExpTerm from the parameter expressions.
+        TupleExpTerm tuple_exp(uf_call->numArgs());
+        for (unsigned int count=0; count<uf_call->numArgs(); count++) {
+            tuple_exp.setExpElem(count, uf_call->getParamExp(count)->clone());
+        }
+
+        // look up bound for uninterpreted function
+        Set* domain = iegenlib::queryDomainCurrEnv(uf_call->name());
+
+        // have the domain create the constraints and store those constraints
+        Set* constraintSet = domain->boundTupleExp(tuple_exp);
+
+        // The constraintSet returned by boundTupleExp will not have any
+        // tuple variables. We want the tuple variable declaration to line up.
+        constraintSet->setTupleDecl( newSet->getTupleDecl() );
+    
+        // Intersect the new set of constraints with the existing constraints.
+        Set* mCC = newSet;     // pointer to current set
+        newSet = mCC->Intersect(constraintSet);
+    
+        delete mCC; // cleanup old guy
+        delete constraintSet;
+        delete domain;
+        }
+
+        //! Bounding UFCalls by their range, 
+        //  and adding them as inequalities to constraints set
+        {
+        // look up range for uninterpreted function
+        Set* range = iegenlib::queryRangeCurrEnv(uf_call->name());
+    
+        // Assuming that uf call and its range align.
+        if (! uf_call->isIndexed() 
+            && ((unsigned)range->arity() != uf_call->size()) ) {
+            throw assert_exception("Set::boundDomainRange: "
+            "ufcall returning fewer dimensions than declared range");
+        }
+
+        // For each dimension of the return value create a instance
+        TupleExpTerm tuple_exp(uf_call->size());
+    
+        // Determine what the output arity of this particular UF call is
+        // taking into consideration that it could be indexed.
+        unsigned int out_arity = range->arity();
+        if (uf_call->isIndexed()) {
+            out_arity = 1; // only one element is being accessed
+        } 
+
+        for (unsigned int i=0; i<out_arity; i++) {    
+            // Create a temporary variable and maintain correspondence 
+            // with UFCallTerm.  Add one more tuple var to constraints.
+            UFCallTerm* indexed_uf_call;
+            if (out_arity==1) {
+                indexed_uf_call = new UFCallTerm(*uf_call);
+            } else {
+                indexed_uf_call = new UFCallTerm(*uf_call);
+                indexed_uf_call->setTupleIndex( i );
+            }
+        
+            // Create a TupleExpTerm from the new temporary var.
+            Exp* tuple_var_exp = new Exp();
+            tuple_var_exp->addTerm(indexed_uf_call);
+            tuple_exp.setExpElem(i,tuple_var_exp);   
+        }
+
+        // have the range create the constraints and store those constraints
+        Set* constraintSet = range->boundTupleExp(tuple_exp);
+
+        // Same as Domain
+        constraintSet->setTupleDecl( newSet->getTupleDecl() );
+    
+        // Intersect the new set of constraints with the existing constraints.
+        Set* mCC = newSet;     // pointer to current set
+        newSet = mCC->Intersect(constraintSet);
+
+        delete mCC;
+        delete constraintSet;
+        delete range;
+        }
+    }
+
+    Conjunction* res = new 
+                     Conjunction(*(newSet->mConjunctions.front()));
+    *c = *res;
+    c->setinarity(in);
+
+    delete res;
+    delete newSet;
+}
+
+Set* Set::boundDomainRange(UFCallMap* ufcmap)
+{
+    Set* s = new Set(*this);
+    VisitorBoundDomainRange *v = new VisitorBoundDomainRange(ufcmap);
+    
+    s->acceptVisitor(v);
+
+    return s;
+}
+
+Relation* Relation::boundDomainRange(UFCallMap* ufcmap)
+{
+    Relation* r = new Relation(*this);
+    VisitorBoundDomainRange *v = new VisitorBoundDomainRange(ufcmap);
+    
+    r->acceptVisitor(v);
+
+    return r;
+}
+
+
 }//end namespace iegenlib

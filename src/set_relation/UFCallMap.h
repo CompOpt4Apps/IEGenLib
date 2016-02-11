@@ -44,6 +44,16 @@ public:
     //! Assignment operator.
     UFCallMap& operator=( const UFCallMap& other );
 
+    //! Returns a iterator to the first element in mUFC2Str map
+    inline std::map<UFCallTerm,string>::iterator begin(){
+        return (mUFC2Str.begin());
+    }
+
+    //! Returns a iterator to the last element in mUFC2Str map
+    inline std::map<UFCallTerm,string>::iterator end(){
+        return (mUFC2Str.end());
+    }
+
     //! returns a string representing ufcterm as a symbolic constant
     string symUFC( std::string &ufcName );
 
