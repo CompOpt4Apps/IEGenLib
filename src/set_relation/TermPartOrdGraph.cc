@@ -139,7 +139,7 @@ bool TermPartOrdGraph::isNonNegative( const Term* term ) const {
     Term* temp = term->clone();
     temp->setCoefficient(1);
     bool retval = false;
-std::cout << "TermPartOrdGraph::isNonNegative: temp = " << temp->toString() << std::endl;
+
     // Search through the Set of non-negative terms and see
     // if it is in there.
     std::set<Term*>::const_iterator iter;

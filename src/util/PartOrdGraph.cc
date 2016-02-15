@@ -63,7 +63,13 @@ PartOrdGraph::PartOrdGraph(const PartOrdGraph& other) {
 //! Copy assignment.
 PartOrdGraph& PartOrdGraph::operator=(const PartOrdGraph& other) {
     mN = other.mN;
-    *mAdjacencyMatrix = *(other.mAdjacencyMatrix);
+    this->mAdjacencyMatrix = new CompareEnum[mN*mN];
+    for (int i=0; i<mN; i++) {
+        for (int j=0; j<mN; j++) {
+            mAdjacencyMatrix[getIndex(i,j)]
+                = other.mAdjacencyMatrix[getIndex(i,j)];
+        }
+    }
     return *this;
 }
 
