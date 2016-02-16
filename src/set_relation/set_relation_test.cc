@@ -3827,23 +3827,16 @@ TEST_F(SetRelationTest, boundDomainRange) {
 
 
     //!  ----------------   Testing boundDomainRange for Set ------------
-    iegenlib::UFCallMap *mapS;
 
-    // ---------        Geting a map of UFCalls    ---------------
-    mapS = s->mapUFCtoSym();
-
-    Set* ns = s->boundDomainRange(mapS);
+    Set* ns = s->boundDomainRange();
 //    std::cout<<std::endl<<ns->prettyPrintString()<<std::endl;
 
     EXPECT_EQ( ex_s->prettyPrintString() , ns->prettyPrintString() );
 
+
     //!  ----------------   Testing boundDomainRange for Relation -------
-    iegenlib::UFCallMap *mapR;
 
-    // ---------        Geting a map of UFCalls    ---------------
-    mapR = r->mapUFCtoSym();
-
-    Relation* nr = r->boundDomainRange(mapR);
+    Relation* nr = r->boundDomainRange();
 //    std::cout<<std::endl<<nr->prettyPrintString()<<std::endl;
 
     EXPECT_EQ( ex_r->prettyPrintString() , nr->prettyPrintString() );
@@ -3852,10 +3845,8 @@ TEST_F(SetRelationTest, boundDomainRange) {
     delete s;
     delete ex_s;
     delete ns;
-    delete mapS;
     delete r;
     delete ex_r;
     delete nr;
-    delete mapR;
 }
 

@@ -535,7 +535,7 @@ public:
 
     //! Adds constraints due to domain and range of all UFCalls in UFCallmap
     //  Users own the returned Set object.
-    Set* boundDomainRange(UFCallMap* ufcmap);
+    Set* boundDomainRange();
 
     //  Projects out tuple varrable No. tvar
     Set* projectOut(int tvar);
@@ -679,7 +679,7 @@ public:
 
     //! Adds constraints due to domain and range of all UFCalls in UFCallmap
     //  Users own the returned Relation object.
-    Relation* boundDomainRange(UFCallMap* ufcmap);
+    Relation* boundDomainRange();
 
     // Projects out tuple varrable No. tvar
     Relation* projectOut(int tvar);
