@@ -3439,8 +3439,9 @@ class VisitorBoundDomainRange : public Visitor {
          Set* addedConstSet;
          int in_ar;
   public:
+         //! For each UFC adds Domain & Range constraints to addedConstSet
          void preVisitUFCallTerm(UFCallTerm * t);
-         //! Initials addedConstSet and in_ar for c
+         //! Initials addedConstSet and in_ar for each c
          void preVisitConjunction(iegenlib::Conjunction * c);
          //! Adds in all of the gathered constraints in addedConstSet for c
          void postVisitConjunction(iegenlib::Conjunction * c);
