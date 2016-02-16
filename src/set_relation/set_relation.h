@@ -419,6 +419,7 @@ public:
     // a pointer to final UFCallMap that the user is responsible for deleting.
     UFCallMap* mapUFCtoSym();
 
+
 // FIXME: what methods should we have to iterate over conjunctions so
 // this can go back to protected?
 //protected:
@@ -531,6 +532,10 @@ public:
     
     //! Visitor design pattern, see Visitor.h for usage
     void acceptVisitor(Visitor *v);    
+
+    //! Adds constraints due to domain and range of all UFCalls in UFCallmap
+    //  Users own the returned Set object.
+    Set* boundDomainRange();
 
     //  Projects out tuple varrable No. tvar
     Set* projectOut(int tvar);
@@ -671,6 +676,10 @@ public:
 
     //! Visitor design pattern, see Visitor.h for usage
     void acceptVisitor(Visitor *v);
+
+    //! Adds constraints due to domain and range of all UFCalls in UFCallmap
+    //  Users own the returned Relation object.
+    Relation* boundDomainRange();
 
     // Projects out tuple varrable No. tvar
     Relation* projectOut(int tvar);
