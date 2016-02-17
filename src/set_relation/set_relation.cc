@@ -2619,11 +2619,13 @@ void Conjunction::acceptVisitor(Visitor *v) {
     
     std::list<Exp*>::iterator expIter = mEqualities.begin();
     while (expIter != mEqualities.end()) {
+        (*expIter)->setEquality();
         (*expIter)->acceptVisitor(v);
         expIter++;
     }
     expIter=mInequalities.begin();
     while (expIter != mInequalities.end()) {
+        (*expIter)->setInequality();
         (*expIter)->acceptVisitor(v);
         expIter++;
     }
@@ -3399,7 +3401,7 @@ Relation* Relation::projectOut(int tvar)
 
 /*****************************************************************************/
 #pragma mark -
-/*************** VisitorProjectOut *****************************/
+/*************** VisitorUFCtoParam *****************************/
 // Vistor Class used in traversing conjunctions for finding UFCalls
 class VisitorUFCtoParam : public Visitor {
   private:
@@ -3425,8 +3427,11 @@ UFCallMap* SparseConstraints::mapUFCtoSym()
 {
     VisitorUFCtoParam * v = new VisitorUFCtoParam();
     this->acceptVisitor(v);
-    
-    return (v->getMap());
+    UFCallMap* ufcmap = v->getMap();
+
+    delete v;
+
+    return ufcmap;
 }
 
 /*****************************************************************************/
@@ -3562,6 +3567,8 @@ Set* Set::boundDomainRange()
     
     s->acceptVisitor(v);
 
+    delete v;
+
     return (s);
 }
 
@@ -3574,7 +3581,153 @@ Relation* Relation::boundDomainRange()
     
     r->acceptVisitor(v);
 
+    delete v;
+
     return r;
 }
+
+/*****************************************************************************/
+#pragma mark -
+/*************** VisitorSuperAffineSet *****************************/
+// Vistor Class used in SuperAffineSet
+// Used in traversing a Set/Relation to replace UFCalls with symbolic constants
+// We will build up a affineSet (or affineRelation), term by term.
+// And if a term is UFCall, we will convert it to symbolic constant,
+// which is pre-computed and stored in the ufcmap
+class VisitorSuperAffineSet : public Visitor {
+  private:
+         UFCallMap* ufcmap;
+         Set* affineSet;
+         Relation* affineRelation;
+         Conjunction* affineConj;
+         bool rel;         // To know whether we are traversing a Relation
+  public:
+         VisitorSuperAffineSet(UFCallMap* imap){ ufcmap = imap;}
+         //! Builds up an affineExp and adds it to affineConj
+         void preVisitExp(iegenlib::Exp * e);
+         //! Initializes an affineConj
+         void preVisitConjunction(iegenlib::Conjunction * c);
+         //! adds the current affineConj to affineSet (affineRelation)
+         void postVisitConjunction(iegenlib::Conjunction * c);
+         //! Initializes affineSet and rel
+         void preVisitSet(iegenlib::Set * s);
+         //! Initializes affineRelation and rel
+         void preVisitRelation(iegenlib::Relation * r);
+
+         Set * getSet(){ return affineSet; }
+         Relation * getRelation(){ return affineRelation; }
+};
+
+void VisitorSuperAffineSet::preVisitExp(iegenlib::Exp * e)
+{
+    //! If this is a argument to a UFCall, we don't want to modify it. 
+    if( e->isExpression() ){
+        return;
+    }
+
+    Exp* affineExp = new Exp();
+
+    //! We iterate over terms in Exp, if the term is not a UFCall
+    //  then we just add it to our affine set.
+    //  On the other hand, We need to turn UFCalls into
+    //  symbolic constants to make an affine set.
+    std::list<Term*> terms = e->getTermList();
+    for(std::list<Term*>::iterator i=terms.begin(); i != terms.end(); i++){
+       if( !( (*i)->isUFCall() ) ){
+           affineExp->addTerm( (*i)->clone() );
+       }
+       else{
+           UFCallTerm* cufc = dynamic_cast<UFCallTerm*>(*i);
+           cufc = dynamic_cast<UFCallTerm*>(cufc->clone());
+           int cof = cufc->coefficient();
+           cufc->setCoefficient(1);
+           std::string SymConst = ufcmap->find( cufc ); 
+           VarTerm* vt = new VarTerm( cof , SymConst );
+           affineExp->addTerm( vt );
+           delete cufc;
+       }
+    }
+
+    if( e->isInequality() ){
+        affineExp->setInequality();
+        affineConj->addInequality( affineExp );
+    }
+    else if( e->isEquality() ){
+        affineExp->setEquality();
+        affineConj->addEquality( affineExp );
+    }
+}
+
+void VisitorSuperAffineSet::preVisitConjunction(iegenlib::Conjunction * c)
+{
+    affineConj = new Conjunction( c->getTupleDecl() );
+    affineConj->setinarity( c->inarity() );
+}
+
+void VisitorSuperAffineSet::postVisitConjunction(iegenlib::Conjunction * c)
+{
+    //! Are we traversing a Relation or Set?
+    if( rel )
+    {
+        affineRelation->addConjunction( affineConj );
+    }
+    else
+    {
+        affineSet->addConjunction( affineConj );
+    }
+}
+
+void VisitorSuperAffineSet::preVisitSet(iegenlib::Set * s)
+{
+    rel = false;
+    affineSet = new Set( s->arity() );
+}
+
+void VisitorSuperAffineSet::preVisitRelation(iegenlib::Relation * r)
+{
+    rel = true;
+    affineRelation = new Relation( r->inArity() , r->outArity() );
+}
+
+//! Creates a super affine set from a non-affine set.
+//  To do this:
+//    (1) We add constraints due to all UFCalls' domain and range
+//    (2) We replace all UFCalls with symbolic constants found in the ufc map.
+//  The function does not own the ufcmap.
+Set* Set::superAffineSet(UFCallMap* ufcmap)
+{
+    Set* copySet = new Set( this->toISLString() );
+    VisitorSuperAffineSet* v = new VisitorSuperAffineSet(ufcmap);
+    
+    copySet = copySet->boundDomainRange();
+
+    copySet->acceptVisitor( v );
+    
+    Set* result = (v->getSet());
+    
+    delete copySet;
+    delete v;
+
+    return result;
+}
+
+//! Same as Set
+Relation* Relation::superAffineRelation(UFCallMap* ufcmap)
+{
+    Relation* copyRelation = new Relation( inArity(), outArity());
+    VisitorSuperAffineSet* v = new VisitorSuperAffineSet(ufcmap);
+    
+    copyRelation = this->boundDomainRange();
+
+    copyRelation->acceptVisitor( v );
+
+    Relation* result = (v->getRelation());
+
+    delete copyRelation;
+    delete v;
+
+    return result;
+}
+
 
 }//end namespace iegenlib
