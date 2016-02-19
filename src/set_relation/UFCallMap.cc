@@ -36,27 +36,30 @@ UFCallMap& UFCallMap::operator=( const UFCallMap& other) {
 string UFCallMap::symUFC( std::string &ufcName )
 {
     int len = ufcName.length();
-    std::string sym; 
+    std::stringstream ss;
 
     for (int i = 0 ; i < len ; i++){
         char c = ufcName[i];
         if( c != ' ' && c != ','){
             if( c == '(' || c == ')'){
-                sym.append<int>( 1, '_');
+                ss <<'_';
+            }
+            else if( c == '[' || c == ']'){
+                ss <<'B';
             }
             else if( c == '+' ){
-                sym.append<int>( 1, 'P');
+                ss <<'P';
             }
             else if( c == '-' ){
-                sym.append<int>( 1, 'M');
+                ss <<'M';
             }
             else{
-                sym.append<int>( 1, c);
+                ss <<c;
             }
         }
     }
 
-    return sym;
+    return (ss.str());
 }
 
 //! Inserts a UFC term to both of themaps.

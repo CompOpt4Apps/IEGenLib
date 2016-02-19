@@ -537,6 +537,13 @@ public:
     //  Users own the returned Set object.
     Set* boundDomainRange();
 
+    //! Creates a super affine set from a non-affine set.
+    //  To do this:
+    //    (1) We add constraints due to all UFCalls' domain and range
+    //    (2) We replace all UFCalls with symbolic constants found in the ufc map.
+    //  The function does not own the ufcmap.
+    Set* superAffineSet(UFCallMap* ufcmap);
+
     //  Projects out tuple varrable No. tvar
     Set* projectOut(int tvar);
 
@@ -680,6 +687,13 @@ public:
     //! Adds constraints due to domain and range of all UFCalls in UFCallmap
     //  Users own the returned Relation object.
     Relation* boundDomainRange();
+
+    //! Creates a super affine Relation from a non-affine Relation.
+    //  To do this:
+    //    (1) We add constraints due to all UFCalls' domain and range
+    //    (2) We replace all UFCalls with symbolic constants found in the ufc map.
+    //  The function does not own the ufcmap.
+    Relation* superAffineRelation(UFCallMap* ufcmap);
 
     // Projects out tuple varrable No. tvar
     Relation* projectOut(int tvar);
