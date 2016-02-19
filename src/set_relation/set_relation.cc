@@ -2619,13 +2619,11 @@ void Conjunction::acceptVisitor(Visitor *v) {
     
     std::list<Exp*>::iterator expIter = mEqualities.begin();
     while (expIter != mEqualities.end()) {
-        (*expIter)->setEquality();
         (*expIter)->acceptVisitor(v);
         expIter++;
     }
     expIter=mInequalities.begin();
     while (expIter != mInequalities.end()) {
-        (*expIter)->setInequality();
         (*expIter)->acceptVisitor(v);
         expIter++;
     }
@@ -3401,18 +3399,18 @@ Relation* Relation::projectOut(int tvar)
 
 /*****************************************************************************/
 #pragma mark -
-/*************** VisitorUFCtoParam *****************************/
+/*************** VisitorUFCtoParamVar *****************************/
 // Vistor Class used in traversing conjunctions for finding UFCalls
-class VisitorUFCtoParam : public Visitor {
+class VisitorUFCtoParamVar : public Visitor {
   private:
          UFCallMap* map;
   public:
-         VisitorUFCtoParam() { map = new UFCallMap(); }
+         VisitorUFCtoParamVar() { map = new UFCallMap(); }
          inline UFCallMap* getMap() { return map; }
          void preVisitUFCallTerm(iegenlib::UFCallTerm * t);
 };
 
-void VisitorUFCtoParam::preVisitUFCallTerm(iegenlib::UFCallTerm * t){
+void VisitorUFCtoParamVar::preVisitUFCallTerm(iegenlib::UFCallTerm * t){
 
     UFCallTerm clone = *t;
     clone.setCoefficient(1);
@@ -3425,7 +3423,7 @@ void VisitorUFCtoParam::preVisitUFCallTerm(iegenlib::UFCallTerm * t){
 // a pointer to final UFCallMap that the user is responsible for deleting.
 UFCallMap* SparseConstraints::mapUFCtoSym()
 {
-    VisitorUFCtoParam * v = new VisitorUFCtoParam();
+    VisitorUFCtoParamVar * v = new VisitorUFCtoParamVar();
     this->acceptVisitor(v);
     UFCallMap* ufcmap = v->getMap();
 
@@ -3589,45 +3587,44 @@ Relation* Relation::boundDomainRange()
 /*****************************************************************************/
 #pragma mark -
 /*************** VisitorSuperAffineSet *****************************/
-// Vistor Class used in SuperAffineSet
-// Used in traversing a Set/Relation to replace UFCalls with symbolic constants
-// We will build up a affineSet (or affineRelation), term by term.
-// And if a term is UFCall, we will convert it to symbolic constant,
-// which is pre-computed and stored in the ufcmap
+//! Vistor Class used in SuperAffineSet
+//  Used in traversing a Set/Relation to replace UFCs with symbolic constants
+//  We will build up a affineSet (or affineRelation), term by term.
+//  And if a term is UFCall, we will convert it to symbolic constant,
+//  which is pre-computed and stored in the ufcmap
 class VisitorSuperAffineSet : public Visitor {
   private:
          UFCallMap* ufcmap;
          Set* affineSet;
          Relation* affineRelation;
          Conjunction* affineConj;
-         bool rel;         // To know whether we are traversing a Relation
+         std::list<Conjunction*> maffineConj;
   public:
          VisitorSuperAffineSet(UFCallMap* imap){ ufcmap = imap;}
-         //! Builds up an affineExp and adds it to affineConj
          void preVisitExp(iegenlib::Exp * e);
-         //! Initializes an affineConj
          void preVisitConjunction(iegenlib::Conjunction * c);
-         //! adds the current affineConj to affineSet (affineRelation)
          void postVisitConjunction(iegenlib::Conjunction * c);
-         //! Initializes affineSet and rel
-         void preVisitSet(iegenlib::Set * s);
-         //! Initializes affineRelation and rel
-         void preVisitRelation(iegenlib::Relation * r);
-
-         Set * getSet(){ return affineSet; }
-         Relation * getRelation(){ return affineRelation; }
+         void postVisitSet(iegenlib::Set * s);
+         void postVisitRelation(iegenlib::Relation * r);
+         Set* getSet(){ return affineSet; }
+         Relation* getRelation(){ return affineRelation; }
 };
 
+//! Builds up an affineExp and adds it to affineConj
 void VisitorSuperAffineSet::preVisitExp(iegenlib::Exp * e)
 {
-    //! If this is a argument to a UFCall, we don't want to modify it. 
+    // If this is a argument to a UFCall, we don't want to modify it.
+    // This is because A(B(i+1)) gets replaced with A_B_iP1__ without 
+    // doing anything about B(i+1). And keep in mind that we have already
+    // added constraints related to function B's domain and range 
+    // (L < B(i+1) < U) with boundDomainRange functionality.
     if( e->isExpression() ){
         return;
     }
 
     Exp* affineExp = new Exp();
 
-    //! We iterate over terms in Exp, if the term is not a UFCall
+    // We iterate over terms in Exp, if the term is not a UFCall
     //  then we just add it to our affine set.
     //  On the other hand, We need to turn UFCalls into
     //  symbolic constants to make an affine set.
@@ -3648,45 +3645,49 @@ void VisitorSuperAffineSet::preVisitExp(iegenlib::Exp * e)
        }
     }
 
-    if( e->isInequality() ){
-        affineExp->setInequality();
+    if( e->isInequality() )
+    {
         affineConj->addInequality( affineExp );
     }
-    else if( e->isEquality() ){
-        affineExp->setEquality();
+    else if( e->isEquality() )
+    {
         affineConj->addEquality( affineExp );
     }
 }
 
+//! Initializes an affineConj
 void VisitorSuperAffineSet::preVisitConjunction(iegenlib::Conjunction * c)
 {
     affineConj = new Conjunction( c->getTupleDecl() );
     affineConj->setinarity( c->inarity() );
 }
 
+//! adds the current affineConj to maffineConj
 void VisitorSuperAffineSet::postVisitConjunction(iegenlib::Conjunction * c)
 {
-    //! Are we traversing a Relation or Set?
-    if( rel )
-    {
-        affineRelation->addConjunction( affineConj );
-    }
-    else
-    {
-        affineSet->addConjunction( affineConj );
-    }
-}
+    maffineConj.push_back(affineConj->clone());
 
-void VisitorSuperAffineSet::preVisitSet(iegenlib::Set * s)
+    delete affineConj;
+}
+//! Add Conjunctions in maffineConj to affineSet
+void VisitorSuperAffineSet::postVisitSet(iegenlib::Set * s)
 {
-    rel = false;
     affineSet = new Set( s->arity() );
-}
 
-void VisitorSuperAffineSet::preVisitRelation(iegenlib::Relation * r)
+    for (std::list<Conjunction*>::const_iterator i=maffineConj.begin();
+                i != maffineConj.end(); i++) {
+        affineSet->addConjunction((*i));
+    }
+}
+//! Add Conjunctions in maffineConj to affineRelation
+void VisitorSuperAffineSet::postVisitRelation(iegenlib::Relation * r)
 {
-    rel = true;
     affineRelation = new Relation( r->inArity() , r->outArity() );
+
+    for (std::list<Conjunction*>::const_iterator i=maffineConj.begin();
+                i != maffineConj.end(); i++) {
+        affineRelation->addConjunction((*i));
+    }
 }
 
 //! Creates a super affine set from a non-affine set.

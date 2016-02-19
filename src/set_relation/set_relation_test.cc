@@ -3856,69 +3856,77 @@ TEST_F(SetRelationTest, superAffineSet) {
 
     iegenlib::setCurrEnv();
     iegenlib::appendCurrEnv("col",
-        new Set("{[i]:0<=i &&i<m}"), 
+        new Set("{[i,t]:0<=i && i< m && 0<=t && t< m}"), 
         new Set("{[j]:0<=j &&j<n}"), true, iegenlib::Monotonic_NONE);
     iegenlib::appendCurrEnv("idx",
         new Set("{[i]:0<=i &&i<n}"), 
         new Set("{[j]:0<=j &&j<m}"), true, iegenlib::Monotonic_NONE);
 
-    Set *s = new Set("[n] -> { [i,j,ip,jp] : i = col(jp) "
-       "and i < ip and 0 <= i and i < n and idx(i) <= j and j < idx(i+1) "
-         "and 0 <= ip and ip < n and idx(ip) <= jp and jp < idx(ip+1) }");
-
-    std::string ex_s ("{ [i, j, ip, jp] : __tv0 - col___tv3_ = 0 &&"
-       " __tv0 >= 0 && __tv2 >= 0 && __tv3 >= 0 && col___tv3_ >= 0 &&"
-       " idx___tv0P1_ >= 0 && idx___tv0_ >= 0 && idx___tv2P1_ >= 0 &&"
-    " idx___tv2_ >= 0 && __tv0 + 1 >= 0 && __tv1 - idx___tv0_ >= 0 &&"
-        " __tv2 + 1 >= 0 && __tv3 - idx___tv2_ >= 0 && -__tv0 + __tv2"
-          " - 1 >= 0 && -__tv0 + n - 2 >= 0 && -__tv0 + n - 1 >= 0 &&"
-    " -__tv1 + idx___tv0P1_ - 1 >= 0 && -__tv2 + n - 2 >= 0 && -__tv2"
-       " + n - 1 >= 0 && -__tv3 + idx___tv2P1_ - 1 >= 0 && -__tv3 + m"
-   " - 1 >= 0 && -col___tv3_ + n - 1 >= 0 && -idx___tv0P1_ + m - 1 >="
-     " 0 && -idx___tv0_ + m - 1 >= 0 && -idx___tv2P1_ + m - 1 >= 0 &&"
-                                       " -idx___tv2_ + m - 1 >= 0 }");
-
-    Relation* r = new Relation("[n] -> { [i,j] -> [ip,jp] : i = col(jp) "
-       "and i < ip and 0 <= i and i < n and idx(i) <= j and j < idx(i+1) "
-         "and 0 <= ip and ip < n and idx(ip) <= jp and jp < idx(ip+1) }");
-
-    std::string ex_r ("{ [i, j] -> [ip, jp] : __tv0 - col___tv3_"
-  " = 0 && __tv0 >= 0 && __tv2 >= 0 && __tv3 >= 0 && col___tv3_ >= 0 &&"
-         " idx___tv0P1_ >= 0 && idx___tv0_ >= 0 && idx___tv2P1_ >= 0 &&"
-      " idx___tv2_ >= 0 && __tv0 + 1 >= 0 && __tv1 - idx___tv0_ >= 0 &&"
-          " __tv2 + 1 >= 0 && __tv3 - idx___tv2_ >= 0 && -__tv0 + __tv2"
-            " - 1 >= 0 && -__tv0 + n - 2 >= 0 && -__tv0 + n - 1 >= 0 &&"
-      " -__tv1 + idx___tv0P1_ - 1 >= 0 && -__tv2 + n - 2 >= 0 && -__tv2"
-         " + n - 1 >= 0 && -__tv3 + idx___tv2P1_ - 1 >= 0 && -__tv3 + m"
-     " - 1 >= 0 && -col___tv3_ + n - 1 >= 0 && -idx___tv0P1_ + m - 1 >="
-       " 0 && -idx___tv0_ + m - 1 >= 0 && -idx___tv2P1_ + m - 1 >= 0 &&"
-                                         " -idx___tv2_ + m - 1 >= 0 }");
-
+    iegenlib::UFCallMap *ufcmap;
 
     //!  ----------------   Testing superAffineSet     ------------
+
+    Set *s1 = new Set("[n] -> { [i,j] : idx(col(i,j)) < n}");
+
+    std::string ex_s1 ("{ [i, j] : __tv0 >= 0 && __tv1 >= 0 &&"
+       " col___tv0__tv1_ >= 0 && idx_col___tv0__tv1__ >= 0 &&"
+            " -__tv0 + m - 1 >= 0 && -__tv1 + m - 1 >= 0 &&"
+    " -col___tv0__tv1_ + n - 1 >= 0 && -idx_col___tv0__tv1__"
+       " + m - 1 >= 0 && -idx_col___tv0__tv1__ + n - 1 >= 0 }");
+
     //! Geting a map of UFCalls  ---------------
-    iegenlib::UFCallMap *ufcmap;
-    ufcmap = s->mapUFCtoSym();
+    ufcmap = s1->mapUFCtoSym();
     //! Getting the superAffineSet
-    Set* su_s = s->superAffineSet(ufcmap);
-//    std::cout<<std::endl<<su_s->toString()<<std::endl;
+    Set* su_s1 = s1->superAffineSet(ufcmap);
+//    std::cout<<std::endl<<su_s1->toString()<<std::endl;
 
-    EXPECT_EQ( ex_s , su_s->toString() );
-
-
-    //!  ----------------   Testing superAffineRelation  ---------
-    //! Geting a map of UFCalls  ---------------
-    iegenlib::UFCallMap *ufcmap2;
-    ufcmap2 = r->mapUFCtoSym();
-    Relation* su_r = r->superAffineRelation(ufcmap);
-//    std::cout<<std::endl<<su_r->toString()<<std::endl;
-
-    EXPECT_EQ( ex_r , su_r->toString() );
+    EXPECT_EQ( ex_s1 , su_s1->toString() );
 
     delete ufcmap;
-    delete ufcmap2;
-    delete s;
-    delete su_s;
-    delete r;
-    delete su_r;
+
+    Set* s2 = new Set( "{[i]: 0<=idx(i)[0] && idx(i)[1]<Nv}");
+
+    std::string ex_s2 ("{ [i] : __tv0 >= 0 && idx___tv0_B0B >= 0"
+               " && idx___tv0_B1B >= 0 && -__tv0 + n - 1 >= 0 &&"
+                 " Nv - idx___tv0_B1B - 1 >= 0 && -idx___tv0_B0B"
+                 " + m - 1 >= 0 && -idx___tv0_B1B + m - 1 >= 0 }");
+
+    //! Geting a map of UFCalls  ---------------
+    ufcmap = s2->mapUFCtoSym();
+    //! Getting the superAffineSet
+    Set* su_s2 = s2->superAffineSet(ufcmap);
+//    std::cout<<std::endl<<su_s2->toString()<<std::endl;
+
+    EXPECT_EQ( ex_s2 , su_s2->toString() );
+
+    delete ufcmap;
+
+    //!  ----------------   Testing superAffineRelation  ---------
+
+    Relation* r1 = new Relation("[n] -> { [i,j] -> [ip,jp] :"
+       " i = col(jp,idx(j)) and i < ip and ip < n }");
+
+    std::string ex_r1 ("{ [i, j] -> [ip, jp] :"
+  " __tv0 - col___tv3idx___tv1__ = 0 && __tv1 >= 0 && __tv3 >= 0 &&"
+         " col___tv3idx___tv1__ >= 0 && idx___tv1_ >= 0 && -__tv0 +"
+       " __tv2 - 1 >= 0 && -__tv1 + n - 1 >= 0 && -__tv2 + n - 1 >="
+            " 0 && -__tv3 + m - 1 >= 0 && -col___tv3idx___tv1__ + n"
+                       " - 1 >= 0 && -idx___tv1_ + m - 1 >= 0 }");
+
+    //! Geting a map of UFCalls  ---------------
+    ufcmap = r1->mapUFCtoSym();
+    Relation* su_r1 = r1->superAffineRelation(ufcmap);
+//    std::cout<<std::endl<<su_r1->toString()<<std::endl;
+
+    EXPECT_EQ( ex_r1 , su_r1->toString() );
+
+    delete ufcmap;
+
+    delete s1;
+    delete su_s1;
+    delete s2;
+    delete su_s2;
+    delete r1;
+    delete su_r1;
+
 }
