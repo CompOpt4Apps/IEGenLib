@@ -3018,8 +3018,6 @@ class VisitorCollectPartOrd : public Visitor {
             
         } // endif e->isInequality()
 
-std::cout << "mPartOrd = " << mPartOrd.toString() << std::endl;
-
     }
 
     void postVisitTerm(iegenlib::Term * t) {
@@ -3068,8 +3066,6 @@ void SparseConstraints::addConstraintsDueToMonotonicityHelper() {
             conjunct->acceptVisitor(&v2);
         } while (!(v2.hasConverged()));
         partOrd = v2.returnPartOrd();
-std::cout << "partOrd = " << partOrd.toString() << std::endl;
-    
 
         // For each UFCall term that involves monotonically non-decreasing
         // function, put in new constraints that can be derived based on
@@ -3097,19 +3093,16 @@ std::cout << "partOrd = " << partOrd.toString() << std::endl;
                     new_constraint->addExp(smallerExp);
                     new_constraint->addExp(ufCall2->getParamExp(0)->clone());
 
-std::cout << "partOrd.isLT(ufCall1,ufCall2) = " << partOrd.isLT(ufCall1,ufCall2) << std::endl;
                     // if ufCall1(e1) < ufCall2(e2) then e1 < e2
                     if (partOrd.isLT(ufCall1,ufCall2)) {
                         // largerTerm - smallerTerm - 1 >= 0
                         new_constraint->addTerm(new Term(-1));
                         conjunct->addInequality(new_constraint);
-std::cout << "new_constraint being added = " << new_constraint->toString() << std:: endl;
                         
                     // if ufCall1(e1) <= ufCall2(e2) then e1 <= e2
                     } else if (partOrd.isLTE(ufCall1,ufCall2)) {
                         // largerTerm - smallerTerm >= 0
                         conjunct->addInequality(new_constraint);
-std::cout << "new_constraint being added = " << new_constraint->toString() << std:: endl;
                         
                     } else {
                         delete new_constraint;
@@ -3122,9 +3115,12 @@ std::cout << "new_constraint being added = " << new_constraint->toString() << st
 
 
 Set* Set::addConstraintsDueToMonotonicity() const {
-    Set* retval = new Set(*this);
     
     // Add in constraints due to domain and range.
+    // We always want to do this hear because otherwise we don't get
+    // any of the uninterpreted functions as non-negative.
+    Set* retval = new Set(*this);
+    
     // FIXME: not happy about how this works now.  Mahdi is fixing.
 //    UFCallMapAndBounds ufcallmap(getTupleDecl());
 //    retval->ufCallsToTempVars(ufcallmap);
