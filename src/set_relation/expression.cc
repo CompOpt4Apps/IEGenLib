@@ -982,8 +982,6 @@ bool TupleExpTerm::factorMatches(const Term& other) const {
 //! Copy constructor
 Exp::Exp(const Exp& other) {
     *this = other;
-
-    setExpression();
 }
 
 void Exp::reset() {
@@ -1000,6 +998,8 @@ Exp& Exp::operator=(const Exp& other) {
                 i != other.mTerms.end(); ++i) {
         mTerms.push_back((*i)->clone());
     }
+    mExpType = other.mExpType;
+
     return *this;
 }
 
