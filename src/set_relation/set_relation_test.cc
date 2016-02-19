@@ -3752,3 +3752,102 @@ TEST_F(SetRelationTest, PROJECT_OUT) {
    delete ex_r1;
    delete ex_s1;
 }
+
+#pragma mark mapUFCtoSym
+//Testing mapUFCtoSym: get a map of all UFCalls to equ. symbolic constant
+TEST_F(SetRelationTest, mapUFCtoSym) {
+
+    Relation *r = new Relation("[n] -> { [i,j] -> [ip,jp] : i = col(jp) "
+       "and i < ip and 0 <= i and i < n and idx(i) <= j and j < idx(i+1) "
+         "and 0 <= ip and ip < n and idx(ip) <= jp and jp < idx(ip+1) }");
+
+    //! Creating expected expression
+    std::stringstream ss;
+    ss<<"UFCallMap:" << std::endl;
+    ss<<"\tUFC = col(__tv3)  ,  sym = col___tv3_"<< std::endl;
+    ss<<"\tUFC = idx(__tv0)  ,  sym = idx___tv0_"<< std::endl;
+    ss<<"\tUFC = idx(__tv0 + 1)  ,  sym = idx___tv0P1_"<< std::endl;
+    ss<<"\tUFC = idx(__tv2)  ,  sym = idx___tv2_"<< std::endl;
+    ss<<"\tUFC = idx(__tv2 + 1)  ,  sym = idx___tv2P1_"<< std::endl;
+    string exp_str = ss.str();
+
+    iegenlib::UFCallMap *map;
+
+    // ---------        Geting a map of UFCalls    ---------------
+    map = r->mapUFCtoSym();
+
+
+    EXPECT_EQ( exp_str , map->toString() );
+
+
+//    std::cout<<std::endl<<map->toString()<<std::endl;
+    delete r;
+    delete map;
+}
+
+
+#pragma mark boundDomainRange
+//Testing boundDomainRange: bounding by domain and range of UFCalls
+TEST_F(SetRelationTest, boundDomainRange) {
+
+    iegenlib::setCurrEnv();
+    iegenlib::appendCurrEnv("col",
+        new Set("{[i]:0<=i &&i<m}"), 
+        new Set("{[j]:0<=j &&j<n}"), true, iegenlib::Monotonic_NONE);
+    iegenlib::appendCurrEnv("idx",
+        new Set("{[i]:0<=i &&i<n}"), 
+        new Set("{[j]:0<=j &&j<m}"), true, iegenlib::Monotonic_NONE);
+
+    Set *s = new Set("[n] -> { [i,j,ip,jp] : i = col(jp) "
+       "and i < ip and 0 <= i and i < n and idx(i) <= j and j < idx(i+1) "
+         "and 0 <= ip and ip < n and idx(ip) <= jp and jp < idx(ip+1) }");
+
+    Set *ex_s = new Set("{ [i, j, ip, jp] : i - col(jp) = 0 && i >= 0 &&"
+                  " ip >= 0 && jp >= 0 && col(jp) >= 0 && idx(i) >= 0 &&"
+  " idx(i + 1) >= 0 && idx(ip) >= 0 && idx(ip + 1) >= 0 && i + 1 >= 0 &&"
+                " j - idx(i) >= 0 && ip + 1 >= 0 && jp - idx(ip) >= 0 &&"
+             " -i + ip - 1 >= 0 && -i + n - 2 >= 0 && -i + n - 1 >= 0 &&"
+   " -j + idx(i + 1) - 1 >= 0 && -ip + n - 2 >= 0 && -ip + n - 1 >= 0 &&"
+          " -jp + m - 1 >= 0 && -jp + idx(ip + 1) - 1 >= 0 && m - idx(i)"
+      " - 1 >= 0 && m - idx(i + 1) - 1 >= 0 && m - idx(ip) - 1 >= 0 && m"
+                      " - idx(ip + 1) - 1 >= 0 && n - col(jp) - 1 >= 0 }");
+
+    Relation* r = new Relation("[n] -> { [i,j] -> [ip,jp] : i = col(jp) "
+       "and i < ip and 0 <= i and i < n and idx(i) <= j and j < idx(i+1) "
+         "and 0 <= ip and ip < n and idx(ip) <= jp and jp < idx(ip+1) }");
+
+    Relation *ex_r = new Relation("{ [i, j] -> [ip, jp] : i - col(jp) = "
+    "0 && i >= 0 && ip >= 0 && jp >= 0 && col(jp) >= 0 && idx(i) >= 0 &&"
+  " idx(i + 1) >= 0 && idx(ip) >= 0 && idx(ip + 1) >= 0 && i + 1 >= 0 &&"
+                " j - idx(i) >= 0 && ip + 1 >= 0 && jp - idx(ip) >= 0 &&"
+             " -i + ip - 1 >= 0 && -i + n - 2 >= 0 && -i + n - 1 >= 0 &&"
+   " -j + idx(i + 1) - 1 >= 0 && -ip + n - 2 >= 0 && -ip + n - 1 >= 0 &&"
+          " -jp + m - 1 >= 0 && -jp + idx(ip + 1) - 1 >= 0 && m - idx(i)"
+      " - 1 >= 0 && m - idx(i + 1) - 1 >= 0 && m - idx(ip) - 1 >= 0 && m"
+                      " - idx(ip + 1) - 1 >= 0 && n - col(jp) - 1 >= 0 }");
+
+
+    //!  ----------------   Testing boundDomainRange for Set ------------
+
+    Set* ns = s->boundDomainRange();
+//    std::cout<<std::endl<<ns->prettyPrintString()<<std::endl;
+
+    EXPECT_EQ( ex_s->prettyPrintString() , ns->prettyPrintString() );
+
+
+    //!  ----------------   Testing boundDomainRange for Relation -------
+
+    Relation* nr = r->boundDomainRange();
+//    std::cout<<std::endl<<nr->prettyPrintString()<<std::endl;
+
+    EXPECT_EQ( ex_r->prettyPrintString() , nr->prettyPrintString() );
+
+
+    delete s;
+    delete ex_s;
+    delete ns;
+    delete r;
+    delete ex_r;
+    delete nr;
+}
+
