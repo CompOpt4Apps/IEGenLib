@@ -544,8 +544,8 @@ public:
     //  The function does not own the ufcmap.
     Set* superAffineSet(UFCallMap* ufcmap);
 
-    //! Creates a sun non-affine set from a affine set.
-    //  By replacing symbolic constants that are representitive of UFCalls
+    //! Creates a sub non-affine set from an affine set.
+    //  By replacing symbolic constants that are representative of UFCalls
     //  with their respective UFCalls.
     //  The function does not own the ufcmap.
     Set* subNonAffineSet(UFCallMap* ufcmap);
@@ -701,8 +701,8 @@ public:
     //  The function does not own the ufcmap.
     Relation* superAffineRelation(UFCallMap* ufcmap);
 
-    //! Creates a sun non-affine set from a affine Relation.
-    //  By replacing symbolic constants that are representitive of UFCalls
+    //! Creates a sub non-affine set from an affine Relation.
+    //  By replacing symbolic constants that are representative of UFCalls
     //  with their respective UFCalls.
     //  The function does not own the ufcmap.
     Relation* subNonAffineRelation(UFCallMap* ufcmap);

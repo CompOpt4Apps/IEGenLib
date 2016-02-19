@@ -3807,7 +3807,7 @@ class VisitorsubNonAffineSet : public Visitor {
 //! We iterate over terms in Exp, if the term is not a VarTerm
 //  then we just add it to our non-affine set.
 //  On the other hand, if a symbolic constants is in our ufcmap,
-//  we need to turn it into coresponding UFCalls to make an non-affine set.
+//  we need to turn it into corresponding UFCalls to make an non-affine set.
 void VisitorsubNonAffineSet::preVisitVarTerm(VarTerm * t)
 {
     if(!visit){
