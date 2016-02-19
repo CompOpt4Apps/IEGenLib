@@ -544,6 +544,12 @@ public:
     //  The function does not own the ufcmap.
     Set* superAffineSet(UFCallMap* ufcmap);
 
+    //! Creates a sun non-affine set from a affine set.
+    //  By replacing symbolic constants that are representitive of UFCalls
+    //  with their respective UFCalls.
+    //  The function does not own the ufcmap.
+    Set* subNonAffineSet(UFCallMap* ufcmap);
+
     //  Projects out tuple varrable No. tvar
     Set* projectOut(int tvar);
 
@@ -694,6 +700,12 @@ public:
     //    (2) We replace all UFCalls with symbolic constants found in the ufc map.
     //  The function does not own the ufcmap.
     Relation* superAffineRelation(UFCallMap* ufcmap);
+
+    //! Creates a sun non-affine set from a affine Relation.
+    //  By replacing symbolic constants that are representitive of UFCalls
+    //  with their respective UFCalls.
+    //  The function does not own the ufcmap.
+    Relation* subNonAffineRelation(UFCallMap* ufcmap);
 
     // Projects out tuple varrable No. tvar
     Relation* projectOut(int tvar);

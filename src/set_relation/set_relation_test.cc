@@ -3930,3 +3930,86 @@ TEST_F(SetRelationTest, superAffineSet) {
     delete su_r1;
 
 }
+
+#pragma mark subNonAffineSet
+//Testing subNonAffineSet/Relation: creating sub non-affine Sets
+TEST_F(SetRelationTest, subNonAffineRelation) {
+
+    iegenlib::setCurrEnv();
+    iegenlib::appendCurrEnv("col",
+        new Set("{[i,t]:0<=i && i< m && 0<=t && t< m}"), 
+        new Set("{[j]:0<=j &&j<n}"), true, iegenlib::Monotonic_NONE);
+    iegenlib::appendCurrEnv("idx",
+        new Set("{[i]:0<=i &&i<n}"), 
+        new Set("{[j]:0<=j &&j<m}"), true, iegenlib::Monotonic_NONE);
+
+    iegenlib::UFCallMap *ufcmap;
+
+    //!  ----------------   Testing subNonAffineSet     ------------
+
+    Set *s1 = new Set("[n] -> { [i,j] : idx(col(i,j)) < n}");
+
+    Set *ex_s1 = new Set ("{ [i, j] : i >= 0 && j >= 0 && col(i,j) >= 0 &&"
+          " idx(col(i, j)) >= 0 && i < m && j < m && idx(col(i, j)) < m &&"
+                                     " col(i, j) < n && idx(col(i,j))< n }");
+
+    //! Geting a map of UFCalls  ---------------
+    ufcmap = s1->mapUFCtoSym();
+    //! Getting the superAffineSet
+    Set* su_s1 = s1->superAffineSet(ufcmap);
+
+    //! Getting the subNonAffineSet
+    Set* sub_s1 = su_s1->subNonAffineSet(ufcmap);
+//    std::cout<<std::endl<<sub_s1->toString()<<std::endl;
+
+    EXPECT_EQ( ex_s1->toString() , sub_s1->toString() );
+
+    delete ufcmap;
+
+    Set* s2 = new Set( "{[i]: 0<=idx(i)[0] && idx(i)[1]<Nv}");
+
+    Set *ex_s2 = new Set ("{ [i] : i >= 0 && idx(i)[0] >= 0 && idx(i)[1] >= 0"
+            " && i < n && idx(i)[1] < Nv && idx(i)[0] < m && idx(i)[1] < m}");
+
+    //! Geting a map of UFCalls  ---------------
+    ufcmap = s2->mapUFCtoSym();
+    //! Getting the superAffineSet
+    Set* su_s2 = s2->superAffineSet(ufcmap);
+
+     //! Getting the subNonAffineSet
+    Set* sub_s2 = su_s2->subNonAffineSet(ufcmap);
+//    std::cout<<std::endl<<sub_s2->toString()<<std::endl;
+
+    EXPECT_EQ( ex_s2->toString() , sub_s2->toString() );
+
+    delete ufcmap;
+
+    //!  ----------------   Testing subNonAffineRelation  ---------
+
+    Relation* r1 = new Relation("[n] -> { [i,j] -> [ip,jp] :"
+       " i = col(jp,idx(j)) and i < ip and ip < n }");
+
+    Relation* ex_r1 = new Relation("{ [i, j] -> [ip, jp] : i = col(jp, idx(j))"
+      " && j >= 0 && jp >= 0 && col(jp, idx(j)) >= 0 && idx(j) >= 0 && i < ip"
+       " && j < n && ip < n && jp < m && idx(j)< m && col(jp, idx(j)) < n }");
+
+    //! Geting a map of UFCalls  ---------------
+    ufcmap = r1->mapUFCtoSym();
+    Relation* su_r1 = r1->superAffineRelation(ufcmap);
+
+    //! Getting the subNonAffineSet
+    Relation* sub_r1 = su_r1->subNonAffineRelation(ufcmap);
+//    std::cout<<std::endl<<sub_r1->toString()<<std::endl;
+
+    EXPECT_EQ( ex_r1->toString() , sub_r1->toString() );
+
+    delete ufcmap;
+
+    delete s1;
+    delete su_s1;
+    delete s2;
+    delete su_s2;
+    delete r1;
+    delete su_r1;
+
+}
