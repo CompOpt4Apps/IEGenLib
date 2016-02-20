@@ -3435,8 +3435,9 @@ UFCallMap* SparseConstraints::mapUFCtoSym()
 /*****************************************************************************/
 #pragma mark -
 /*************** VisitorBoundDomainRange *****************************/
-// Vistor Class used in BoundDomainRange
-// Traverses UFCalls for adding constarints due to their Domain and Range
+/*! Vistor Class used in BoundDomainRange
+** Traverses UFCalls for adding constarints due to their Domain and Range
+*/
 class VisitorBoundDomainRange : public Visitor {
   private:
          Set* addedConstSet;
@@ -3445,9 +3446,18 @@ class VisitorBoundDomainRange : public Visitor {
          //! For each UFC adds Domain & Range constraints to addedConstSet
          void preVisitUFCallTerm(UFCallTerm * t);
          //! Initials addedConstSet and in_ar for each c
-         void preVisitConjunction(iegenlib::Conjunction * c);
+         void preVisitConjunction(iegenlib::Conjunction * c){
+             in_ar = c->inarity();
+             addedConstSet = new Set(c->getTupleDecl());
+         }
          //! Adds in all of the gathered constraints in addedConstSet for c
-         void postVisitConjunction(iegenlib::Conjunction * c);
+         void postVisitConjunction(iegenlib::Conjunction * c){
+             Conjunction *ct = c->Intersect( addedConstSet->mConjunctions.front() );
+             *c = *ct;
+             c->setinarity( in_ar );
+             delete addedConstSet;
+             delete ct;
+         }
 };
 
 void VisitorBoundDomainRange::preVisitUFCallTerm(UFCallTerm * t){
@@ -3455,9 +3465,9 @@ void VisitorBoundDomainRange::preVisitUFCallTerm(UFCallTerm * t){
     UFCallTerm *uf_call = new UFCallTerm(*t);
     uf_call->setCoefficient(1);
 
-    //! Bounding argument expressions of UFCalls by their domain, 
-    //  and adding them as inequalities to constraints set
-    {
+   // Bounding argument expressions of UFCalls by their domain, 
+   // and adding them as inequalities to constraints set
+   {
     // Create a TupleExpTerm from the parameter expressions.
     TupleExpTerm tuple_exp(uf_call->numArgs());
     for (unsigned int count=0; count<uf_call->numArgs(); count++) {
@@ -3481,11 +3491,11 @@ void VisitorBoundDomainRange::preVisitUFCallTerm(UFCallTerm * t){
     delete mCC; // cleanup old guy
     delete constraintSet;
     delete domain;
-    }
+   }
 
-    //! Bounding UFCalls by their range, 
-    //  and adding them as inequalities to constraints set
-    {
+   // Bounding UFCalls by their range, 
+   // and adding them as inequalities to constraints set
+   {
     // look up range for uninterpreted function
     Set* range = iegenlib::queryRangeCurrEnv(uf_call->name());
     
@@ -3536,24 +3546,9 @@ void VisitorBoundDomainRange::preVisitUFCallTerm(UFCallTerm * t){
     delete mCC;
     delete constraintSet;
     delete range;
-    }
+   }
 
     delete uf_call;
-}
-
-void VisitorBoundDomainRange::preVisitConjunction(Conjunction * c)
-{
-    in_ar = c->inarity();
-    addedConstSet = new Set(c->getTupleDecl());
-}
-
-void VisitorBoundDomainRange::postVisitConjunction(Conjunction * c)
-{
-    Conjunction *ct = c->Intersect( addedConstSet->mConjunctions.front() );
-    *c = *ct;
-    c->setinarity( in_ar );
-    delete addedConstSet;
-    delete ct;
 }
 
 //! Adds constraints due to domain and range of all UFCalls in UFCallmap
@@ -3587,11 +3582,12 @@ Relation* Relation::boundDomainRange()
 /*****************************************************************************/
 #pragma mark -
 /*************** VisitorSuperAffineSet *****************************/
-//! Vistor Class used in SuperAffineSet
-//  Used in traversing a Set/Relation to replace UFCs with symbolic constants
-//  We will build up a affineSet (or affineRelation), term by term.
-//  And if a term is UFCall, we will convert it to symbolic constant,
-//  which is pre-computed and stored in the ufcmap
+/*! Vistor Class used in SuperAffineSet
+**  Used in traversing a Set/Relation to replace UFCs with symbolic constants
+**  We will build up a affineSet (or affineRelation), term by term.
+**  And if a term is UFCall, we will convert it to symbolic constant,
+**  which is pre-computed and stored in the ufcmap
+*/
 class VisitorSuperAffineSet : public Visitor {
   private:
          UFCallMap* ufcmap;
@@ -3607,10 +3603,11 @@ class VisitorSuperAffineSet : public Visitor {
          void preVisitTerm(Term * t) {
              if(visit){ affineExp->addTerm( t->clone() ); }
          }
-         //! We iterate over terms in Exp, if the term is not a UFCall
-         //  then we just add it to our affine set.
-         //  On the other hand, We need to turn UFCalls into
-         //  symbolic constants to make an affine set.
+         /*! We iterate over terms in Exp, if the term is not a UFCall
+         **  then we just add it to our affine set.
+         **  On the other hand, We need to turn UFCalls into
+         **  symbolic constants to make an affine set.
+         */
          void preVisitUFCallTerm(UFCallTerm * t){
              if(visit){
                  VarTerm* vt = ufcmap->find( t );
@@ -3627,11 +3624,12 @@ class VisitorSuperAffineSet : public Visitor {
          void preVisitTupleExpTerm(TupleExpTerm * t){ 
              if(visit){ affineExp->addTerm( t->clone() ); }
          }
-         //! Intialize an affineExp if Exp is not a UFCall argument
-         // If this is a argument to a UFCall, we don't want to modify it.
-         // This is because A(B(i+1)) gets replaced with A_B_iP1__ without 
-         // doing anything about B(i+1). And keep in mind that we have already
-         // added constraints related to function B's domain and range.
+         /*! Intialize an affineExp if Exp is not a UFCall argument
+         ** If this is a argument to a UFCall, we don't want to modify it.
+         ** This is because A(B(i+1)) gets replaced with A_B_iP1__ without 
+         ** doing anything about B(i+1). And keep in mind that we have already
+         ** added constraints related to function B's domain and range.
+         */
          void preVisitExp(iegenlib::Exp * e){
              if( e->isExpression() ){
                  visit = false;
@@ -3640,8 +3638,14 @@ class VisitorSuperAffineSet : public Visitor {
                  affineExp = new Exp();  
              }
          }
+         /*! We don't care about e's that are argument to an UFCall
+         **  Nonetheless, we should set visit = true, because of the nested
+         **  expressions: we are care about the whole expression i = row(j+1)
+         **  but not the sub-expression (j+1) that an is argument to row.
+         */ 
          void postVisitExp(iegenlib::Exp * e){
              if( e->isExpression() ){
+                 // we need visit = true for nested expressions
                  visit = true;
                  return;
              }
@@ -3652,7 +3656,6 @@ class VisitorSuperAffineSet : public Visitor {
                  affineConj->addEquality( CaffineExp );
              }
              delete affineExp;
-             visit = true;
          }
          //! Initializes an affineConj
          void preVisitConjunction(iegenlib::Conjunction * c){
@@ -3687,11 +3690,12 @@ class VisitorSuperAffineSet : public Visitor {
          Relation* getRelation(){ return affineRelation; }
 };
 
-//! Creates a super affine set from a non-affine set.
-//  To do this:
-//    (1) We add constraints due to all UFCalls' domain and range
-//    (2) We replace all UFCalls with symbolic constants found in the ufc map.
-//  The function does not own the ufcmap.
+/*! Creates a super affine set from a non-affine set.
+**  To do this:
+**    (1) We add constraints due to all UFCalls' domain and range
+**    (2) We replace all UFCalls with symbolic constants found in the ufc map.
+**  The function does not own the ufcmap.
+*/
 Set* Set::superAffineSet(UFCallMap* ufcmap)
 {
     Set* copySet = new Set( this->toISLString() );
@@ -3730,11 +3734,12 @@ Relation* Relation::superAffineRelation(UFCallMap* ufcmap)
 /*****************************************************************************/
 #pragma mark -
 /*************** VisitorReverseAffineSubstitution *****************************/
-//! Vistor Class used in SuperAffineSet
-//  Used in traversing a Set/Relation to replace UFCs with symbolic constants
-//  We will build up a nonAffineSet (or nonAffineRelation), term by term.
-//  And if a term is UFCall, we will convert it to symbolic constant,
-//  which is pre-computed and stored in the ufcmap
+/*! Vistor Class used in SuperAffineSet
+**  Used in traversing a Set/Relation to replace UFCs with symbolic constants
+**  We will build up a nonAffineSet (or nonAffineRelation), term by term.
+**  And if a term is UFCall, we will convert it to symbolic constant,
+**  which is pre-computed and stored in the ufcmap
+*/
 class VisitorReverseAffineSubstitution : public Visitor {
   private:
          UFCallMap* ufcmap;
@@ -3747,10 +3752,11 @@ class VisitorReverseAffineSubstitution : public Visitor {
   public:
          VisitorReverseAffineSubstitution(UFCallMap* imap){ufcmap = imap;}
 
-         //! We iterate over terms in Exp, if the term is not a VarTerm
-         //  then we just add it to our non-affine set. On the other hand,
-         //  if a symbolic constants is in our ufcmap, we need to turn it
-         //  into corresponding UFCalls to make an non-affine set.
+         /*! We iterate over terms in Exp, if the term is not a VarTerm
+         **  then we just add it to our non-affine set. On the other hand,
+         **  if a symbolic constants is in our ufcmap, we need to turn it
+         **  into corresponding UFCalls to make an non-affine set.
+         */
          void preVisitTerm(Term * t) {
              if(visit){ nonAffineExp->addTerm( t->clone() ); }
          }
@@ -3776,8 +3782,9 @@ class VisitorReverseAffineSubstitution : public Visitor {
          void preVisitTupleExpTerm(TupleExpTerm * t){ 
              if(visit){ nonAffineExp->addTerm( t->clone() ); }
          }
-         //! Intialize an nonAffineExp if Exp is not a UFCall argument
-         //  See VisitorsuperAffineSet::preVisitExp for more details
+         /*! Intialize an nonAffineExp if Exp is not a UFCall argument
+         **  See VisitorsuperAffineSet::preVisitExp for more details
+         */
          void preVisitExp(iegenlib::Exp * e){
              if( e->isExpression() ){
                  visit = false;
@@ -3786,8 +3793,12 @@ class VisitorReverseAffineSubstitution : public Visitor {
                  nonAffineExp = new Exp();  
              }
          }
+         /*! There cannot be argument to UFCalls in affine set, since there
+         **  cannot be UFCalls in affine set. preVisitUFCallTerm for details 
+         */ 
          void postVisitExp(iegenlib::Exp * e){
              if( e->isExpression() ){
+                 // we need visit = true for nested expressions
                  visit = true;
                  return;
              }
@@ -3798,7 +3809,6 @@ class VisitorReverseAffineSubstitution : public Visitor {
                  nonAffineConj->addEquality( CaffineExp );
              }
              delete nonAffineExp;
-             visit = true;
          }
          //! Initializes an nonAffineConj
          void preVisitConjunction(iegenlib::Conjunction * c){
@@ -3831,11 +3841,12 @@ class VisitorReverseAffineSubstitution : public Visitor {
          Relation* getRelation(){ return nonAffineRelation; }
 };
 
-//! Creates a super affine set from a non-affine set.
-//  To do this:
-//    (1) We add constraints due to all UFCalls' domain and range
-//    (2) We replace all UFCalls with symbolic constants found in the ufc map.
-//  The function does not own the ufcmap.
+/*! Creates a super affine set from a non-affine set.
+**  To do this:
+**    (1) We add constraints due to all UFCalls' domain and range
+**    (2) We replace all UFCalls with symbolic constants found in the ufc map.
+**  The function does not own the ufcmap.
+*/
 Set* Set::reverseAffineSubstitution(UFCallMap* ufcmap)
 {
     Set* copySet = new Set( this->toISLString() );
