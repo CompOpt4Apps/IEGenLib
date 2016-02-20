@@ -3931,9 +3931,9 @@ TEST_F(SetRelationTest, superAffineSet) {
 
 }
 
-#pragma mark subNonAffineSet
-//Testing subNonAffineSet/Relation: creating sub non-affine Sets
-TEST_F(SetRelationTest, subNonAffineRelation) {
+#pragma mark reverseAffineSubstitution
+//Testing reverseAffineSubstitution: creating sub non-affine Sets
+TEST_F(SetRelationTest, reverseAffineSubstitution) {
 
     iegenlib::setCurrEnv();
     iegenlib::appendCurrEnv("col",
@@ -3945,7 +3945,7 @@ TEST_F(SetRelationTest, subNonAffineRelation) {
 
     iegenlib::UFCallMap *ufcmap;
 
-    //!  ----------------   Testing subNonAffineSet     ------------
+    //! --------   Testing reverseAffineSubstitution for Set ---
 
     Set *s1 = new Set("[n] -> { [i,j] : idx(col(i,j)) < n}");
 
@@ -3959,7 +3959,7 @@ TEST_F(SetRelationTest, subNonAffineRelation) {
     Set* su_s1 = s1->superAffineSet(ufcmap);
 
     //! Getting the subNonAffineSet
-    Set* sub_s1 = su_s1->subNonAffineSet(ufcmap);
+    Set* sub_s1 = su_s1->reverseAffineSubstitution(ufcmap);
 //    std::cout<<std::endl<<sub_s1->toString()<<std::endl;
 
     EXPECT_EQ( ex_s1->toString() , sub_s1->toString() );
@@ -3977,14 +3977,14 @@ TEST_F(SetRelationTest, subNonAffineRelation) {
     Set* su_s2 = s2->superAffineSet(ufcmap);
 
      //! Getting the subNonAffineSet
-    Set* sub_s2 = su_s2->subNonAffineSet(ufcmap);
+    Set* sub_s2 = su_s2->reverseAffineSubstitution(ufcmap);
 //    std::cout<<std::endl<<sub_s2->toString()<<std::endl;
 
     EXPECT_EQ( ex_s2->toString() , sub_s2->toString() );
 
     delete ufcmap;
 
-    //!  ----------------   Testing subNonAffineRelation  ---------
+    //! --------   Testing reverseAffineSubstitution  for Relation ---
 
     Relation* r1 = new Relation("[n] -> { [i,j] -> [ip,jp] :"
        " i = col(jp,idx(j)) and i < ip and ip < n }");
@@ -3998,7 +3998,7 @@ TEST_F(SetRelationTest, subNonAffineRelation) {
     Relation* su_r1 = r1->superAffineRelation(ufcmap);
 
     //! Getting the subNonAffineSet
-    Relation* sub_r1 = su_r1->subNonAffineRelation(ufcmap);
+    Relation* sub_r1 = su_r1->reverseAffineSubstitution(ufcmap);
 //    std::cout<<std::endl<<sub_r1->toString()<<std::endl;
 
     EXPECT_EQ( ex_r1->toString() , sub_r1->toString() );
