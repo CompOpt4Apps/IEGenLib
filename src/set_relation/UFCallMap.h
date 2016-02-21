@@ -53,24 +53,31 @@ public:
     /*! Use this to insert a UFCallTerm to map.
     **  The function creates an VarTerm representing the UFC then,
     **  adds (ufc,vt) to mUFC2VarParam & adds (vt,str) to mVarParam2UFC
-    **  The class does not own the object pointed by *ufcterm,
-    **  so users are responsible for freeing the memory.
-    **  There is no need to set coefficient of ufc, function insert a UFCallTerm
-    **  with coefficient = 1 to the map ithout changing ufc objevt.
+    **  The class does not own the object pointed by ufcterm,
+    **  and it is left unchanged.
+    **
+    **  NOTE: The function ignores coefficient of the UFCallTerm.
+    **        So, -2*row(i)  is considered as just row(i)
     */
     void insert( UFCallTerm *ufc);
 
-    /*! Searches for ufcterm (with coefficient = 1) in the map. If ufcterm
-    **  exists, it returns a pointer to equ. VarTerm, otherwise returns NULL.
+    /*! Searches for ufcterm in the map. If ufcterm exists, it returns
+    **  a pointer to equ. VarTerm, otherwise returns NULL.
     **  The class does not own the object pointed by ufcterm,
     **  and it is left unchanged.
+    **
+    **  NOTE: The function ignores coefficient of the UFCallTerm.
+    **        So, -2*row(i)  is considered as just row(i)
     */
     VarTerm* find( UFCallTerm* ufc );
 
-    /*! Searches for a VarTerm (with coefficient = 1) in the map. If VarTerm
-    **  exists in the map, returns the pointer to equ. UFC,
-    **  otherwise returns NULL. The class does not own the object
-    **  pointed by symbol, and it is left unchanged.
+    /*! Searches for a VarTerm in the map. If VarTerm exists in the map,
+    **  it returns the pointer to equ. UFC, otherwise returns NULL. 
+    **  The class does not own the object pointed by symbol,
+    **  and it is left unchanged.
+    **
+    **  NOTE: The function ignores coefficient of the VarTerm.
+    **        So, -2*row_i_  is considered as just row_i_
     */
     UFCallTerm* find( VarTerm* symbol );
 

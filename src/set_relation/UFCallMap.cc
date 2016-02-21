@@ -62,13 +62,18 @@ string UFCallMap::symUFC( std::string &ufcName )
     return (ss.str());
 }
 
-//! Inserts a UFC term to both of themaps.
-//  The function creates an string representing the UFC as symbolic constant,
-//  then, adds (ufc,vt) & (vt,ufc) to mUFC2VarParam & mVarParam2UFC
-//  It does not add repetitive UFCs. The function does not own ufcterm.
+/*! Use this to insert a UFCallTerm to map.
+**  The function creates an VarTerm representing the UFC then,
+**  adds (ufc,vt) to mUFC2VarParam & adds (vt,str) to mVarParam2UFC
+**  The class does not own the object pointed by ufcterm,
+**  and it is left unchanged.
+**
+**  NOTE: The function ignores coefficient of the UFCallTerm.
+**        So, -2*row(i)  is considered as just row(i)
+*/
 void UFCallMap::insert( UFCallTerm *ufc )
 {
-    UFCallTerm* ufcterm = ( (UFCallTerm*)(ufc->clone()) );
+    UFCallTerm* ufcterm = new UFCallTerm (*ufc);
     ufcterm->setCoefficient(1);
     if( find(ufcterm) ){
         return;
@@ -84,11 +89,17 @@ void UFCallMap::insert( UFCallTerm *ufc )
     delete ufcterm;
 }
 
-//! Searches for ufcterm in mUFC2VarParam. If it exists in the map, returns
-// the equ. symbol, otherwise returns an empty string.
+/*! Searches for ufcterm in the map. If ufcterm exists, it returns
+**  a pointer to equ. VarTerm, otherwise returns NULL.
+**  The class does not own the object pointed by ufcterm,
+**  and it is left unchanged.
+**
+**  NOTE: The function ignores coefficient of the UFCallTerm.
+**        So, -2*row(i)  is considered as just row(i)
+*/
 VarTerm* UFCallMap::find( UFCallTerm* ufc )
 {
-    UFCallTerm* ufcterm = ( (UFCallTerm*)(ufc->clone()) );
+    UFCallTerm* ufcterm = new UFCallTerm(*ufc);
     ufcterm->setCoefficient(1);
 
     std::map<UFCallTerm,VarTerm>::iterator it;
@@ -100,14 +111,21 @@ VarTerm* UFCallMap::find( UFCallTerm* ufc )
         return NULL;
     }
 
-    return ( (VarTerm*)(it->second).clone() );
+    VarTerm* result = new VarTerm(it->second);
+    return result;
 }
 
-//! Searches for a symbol in mVarParam2UFC. If it exists in the map, returns the
-//  equ. UFC, otherwise returns foo() (representing empty UFC)
+/*! Searches for a VarTerm in the map. If VarTerm exists in the map,
+**  it returns the pointer to equ. UFC, otherwise returns NULL. 
+**  The class does not own the object pointed by symbol,
+**  and it is left unchanged.
+**
+**  NOTE: The function ignores coefficient of the VarTerm.
+**        So, -2*row_i_  is considered as just row_i_
+*/
 UFCallTerm* UFCallMap::find( VarTerm* vt )
 {
-    VarTerm* sym = ( (VarTerm*)(vt->clone()) );
+    VarTerm* sym = new VarTerm(*vt);
     sym->setCoefficient(1);
     std::map<VarTerm,UFCallTerm>::iterator it;
 
@@ -117,7 +135,8 @@ UFCallTerm* UFCallMap::find( VarTerm* vt )
     }
     delete sym;
 
-    return ( (UFCallTerm*)(it->second).clone() );
+    UFCallTerm* result = new UFCallTerm(it->second) ;
+    return result;
 }
 
 // prints the content of the map into a string, and returns it
