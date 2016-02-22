@@ -3958,7 +3958,7 @@ TEST_F(SetRelationTest, reverseAffineSubstitution) {
     //! Getting the superAffineSet
     Set* su_s1 = s1->superAffineSet(ufcmap);
 
-    //! Getting the subNonAffineSet
+    //! Getting the reverseAffineSubstitution
     Set* sub_s1 = su_s1->reverseAffineSubstitution(ufcmap);
 //    std::cout<<std::endl<<sub_s1->toString()<<std::endl;
 
@@ -3976,7 +3976,7 @@ TEST_F(SetRelationTest, reverseAffineSubstitution) {
     //! Getting the superAffineSet
     Set* su_s2 = s2->superAffineSet(ufcmap);
 
-     //! Getting the subNonAffineSet
+     //! Getting the reverseAffineSubstitution
     Set* sub_s2 = su_s2->reverseAffineSubstitution(ufcmap);
 //    std::cout<<std::endl<<sub_s2->toString()<<std::endl;
 
@@ -3997,7 +3997,7 @@ TEST_F(SetRelationTest, reverseAffineSubstitution) {
     ufcmap = r1->mapUFCtoSym();
     Relation* su_r1 = r1->superAffineRelation(ufcmap);
 
-    //! Getting the subNonAffineSet
+    //! Getting the reverseAffineSubstitution
     Relation* sub_r1 = su_r1->reverseAffineSubstitution(ufcmap);
 //    std::cout<<std::endl<<sub_r1->toString()<<std::endl;
 
