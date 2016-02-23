@@ -22,8 +22,8 @@ namespace iegenlib{
 //! Assignment operator.
 UFCallMap& UFCallMap::operator=( const UFCallMap& other) {
 
-    mUFC2Str = other.mUFC2Str;
-    mStr2UFC = other.mStr2UFC;
+    mUFC2VarParam = other.mUFC2VarParam;
+    mVarParam2UFC = other.mVarParam2UFC;
 
     return *this;
 }
@@ -62,52 +62,81 @@ string UFCallMap::symUFC( std::string &ufcName )
     return (ss.str());
 }
 
-//! Inserts a UFC term to both of themaps.
-//  The function creates an string representing the UFC as symbolic constant,
-//  then,  adds (ufc,str) to mUFC2Str & adds (ufc,str) to mStr2UFC
-//  It does not add repetitive UFCs
-void UFCallMap::insert( UFCallTerm *ufcterm )
+/*! Use this to insert a UFCallTerm to map.
+**  The function creates an VarTerm representing the UFC then,
+**  adds (ufc,vt) to mUFC2VarParam & adds (vt,str) to mVarParam2UFC
+**  The class does not own the object pointed by ufcterm,
+**  and it is left unchanged.
+**
+**  NOTE: The function ignores coefficient of the UFCallTerm.
+**        So, -2*row(i)  is considered as just row(i)
+*/
+void UFCallMap::insert( UFCallTerm *ufc )
 {
-    if( find(ufcterm) != string("") ){
+    UFCallTerm* ufcterm = new UFCallTerm (*ufc);
+    ufcterm->setCoefficient(1);
+    if( find(ufcterm) ){
         return;
     }
 
     std::string symCons = ufcterm->toString();
-    
     symCons = symUFC(symCons);
-    
-    mUFC2Str.insert ( std::pair<UFCallTerm,std::string>(*ufcterm,symCons) );
-    mStr2UFC.insert ( std::pair<std::string,UFCallTerm>(symCons,*ufcterm) );
+    VarTerm vt( 1 , symCons );
+
+    mUFC2VarParam.insert ( std::pair<UFCallTerm,VarTerm>(*ufcterm,vt) );
+    mVarParam2UFC.insert ( std::pair<VarTerm,UFCallTerm>(vt,*ufcterm) );
+
+    delete ufcterm;
 }
 
-//! Searches for ufcterm in mUFC2Str. If it exists in the map, returns
-// the equ. symbol, otherwise returns an empty string.
-string UFCallMap::find( UFCallTerm *ufcterm )
+/*! Searches for ufcterm in the map. If ufcterm exists, it returns
+**  a pointer to equ. VarTerm, otherwise returns NULL.
+**  The class does not own the object pointed by ufcterm,
+**  and it is left unchanged.
+**
+**  NOTE: The function ignores coefficient of the UFCallTerm.
+**        So, -2*row(i)  is considered as just row(i)
+*/
+VarTerm* UFCallMap::find( UFCallTerm* ufc )
 {
-    std::string symCons("");
-    std::map<UFCallTerm,std::string>::iterator it;
+    UFCallTerm* ufcterm = new UFCallTerm(*ufc);
+    ufcterm->setCoefficient(1);
+
+    std::map<UFCallTerm,VarTerm>::iterator it;
     
-    it = mUFC2Str.find(*ufcterm);
-    if (it != mUFC2Str.end()){
-        symCons = it->second;
+    it = mUFC2VarParam.find(*ufcterm);
+
+    delete ufcterm;
+    if (it == mUFC2VarParam.end()){
+        return NULL;
     }
-    
-    return symCons;
+
+    VarTerm* result = new VarTerm(it->second);
+    return result;
 }
 
-//! Searches for a symbol in mStr2UFC. If it exists in the map, returns the
-//  equ. UFC, otherwise returns foo() (representing empty UFC)
-UFCallTerm UFCallMap::find( string &symbol )
+/*! Searches for a VarTerm in the map. If VarTerm exists in the map,
+**  it returns the pointer to equ. UFC, otherwise returns NULL. 
+**  The class does not own the object pointed by symbol,
+**  and it is left unchanged.
+**
+**  NOTE: The function ignores coefficient of the VarTerm.
+**        So, -2*row_i_  is considered as just row_i_
+*/
+UFCallTerm* UFCallMap::find( VarTerm* vt )
 {
-    std::map<std::string,UFCallTerm>::iterator it;
-    UFCallTerm ufcall("foo", 0);
+    VarTerm* sym = new VarTerm(*vt);
+    sym->setCoefficient(1);
+    std::map<VarTerm,UFCallTerm>::iterator it;
 
-    it = mStr2UFC.find(symbol);
-    if (it != mStr2UFC.end()){
-        ufcall = it->second;
+    it = mVarParam2UFC.find(*sym);
+    if (it == mVarParam2UFC.end()){
+        return NULL;
     }
-    
-    return ufcall;
+    delete sym;
+
+    UFCallTerm* result = new UFCallTerm(it->second) ;
+    return result;
 }
 
 // prints the content of the map into a string, and returns it
@@ -115,10 +144,10 @@ std::string UFCallMap::toString()
 {
     std::stringstream ss;
     ss << "UFCallMap:" << std::endl;
-    std::map<UFCallTerm,std::string>::iterator it;
-    for (it=mUFC2Str.begin(); it!=mUFC2Str.end(); it++) {
+    std::map<UFCallTerm,VarTerm>::iterator it;
+    for (it=mUFC2VarParam.begin(); it!=mUFC2VarParam.end(); it++) {
         ss << "\tUFC = " << it->first.toString() 
-           << "  ,  sym = " << it->second << std::endl;
+           << "  ,  sym = " << it->second.toString() << std::endl;
     }
     return ss.str();
 }

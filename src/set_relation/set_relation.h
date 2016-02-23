@@ -533,16 +533,24 @@ public:
     //! Visitor design pattern, see Visitor.h for usage
     void acceptVisitor(Visitor *v);    
 
-    //! Adds constraints due to domain and range of all UFCalls in UFCallmap
-    //  Users own the returned Set object.
+    /*! Adds constraints due to domain and range of all UFCalls in UFCallmap
+    **  Users own the returned Set object.
+    */
     Set* boundDomainRange();
 
-    //! Creates a super affine set from a non-affine set.
-    //  To do this:
-    //    (1) We add constraints due to all UFCalls' domain and range
-    //    (2) We replace all UFCalls with symbolic constants found in the ufc map.
-    //  The function does not own the ufcmap.
+    /*! Creates a super affine set from a non-affine set.
+    **  To do this:
+    **    (1) We add constraints due to all UFCalls' domain and range
+    **    (2) We replace all UFCalls with symbolic constants found in the ufc map.
+    **  The function does not own the ufcmap.
+    */
     Set* superAffineSet(UFCallMap* ufcmap);
+
+    /*! Creates a sub non-affine set from an affine set.
+    **  By replacing symbolic constants that are representative of UFCalls
+    **  with their respective UFCalls. The function does not own the ufcmap.
+    */
+    Set* reverseAffineSubstitution(UFCallMap* ufcmap);
 
     //  Projects out tuple varrable No. tvar
     Set* projectOut(int tvar);
@@ -684,16 +692,25 @@ public:
     //! Visitor design pattern, see Visitor.h for usage
     void acceptVisitor(Visitor *v);
 
-    //! Adds constraints due to domain and range of all UFCalls in UFCallmap
-    //  Users own the returned Relation object.
+    /*! Adds constraints due to domain and range of all UFCalls in UFCallmap
+    **  Users own the returned Relation object.
+    */
     Relation* boundDomainRange();
 
-    //! Creates a super affine Relation from a non-affine Relation.
-    //  To do this:
-    //    (1) We add constraints due to all UFCalls' domain and range
-    //    (2) We replace all UFCalls with symbolic constants found in the ufc map.
-    //  The function does not own the ufcmap.
+    /*! Creates a super affine Relation from a non-affine Relation.
+    **  To do this:
+    **    (1) We add constraints due to all UFCalls' domain and range
+    **    (2) We replace all UFCalls with symbolic constants found in the ufc map.
+    **  The function does not own the ufcmap.
+    */
     Relation* superAffineRelation(UFCallMap* ufcmap);
+
+    /*! Creates a sub non-affine set from an affine Relation.
+    **  By replacing symbolic constants that are representative of UFCalls
+    **  with their respective UFCalls.
+    **  The function does not own the ufcmap.
+    */
+    Relation* reverseAffineSubstitution(UFCallMap* ufcmap);
 
     // Projects out tuple varrable No. tvar
     Relation* projectOut(int tvar);
