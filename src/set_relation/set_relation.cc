@@ -2658,7 +2658,7 @@ void Relation::acceptVisitor(Visitor *v) {
 
 
 /******************************************************************************/
-#pragma mark -
+#pragma mark addUFConstraints
 /****************** addUFConstraints ******************************************/
 
 class VisitorFindUFCallTerms : public Visitor {
@@ -2798,7 +2798,7 @@ Relation* Relation::addUFConstraints(std::string uf1str,
 }
 
 /******************************************************************************/
-#pragma mark -
+#pragma mark addConstraintsDueToMonotonicity
 /*************** addConstraintsDueToMonotonicity ******************************/
 /*! This visitor will collect all of the terms except for constants
     from the constraints and will indicate which of the terms are
@@ -3114,12 +3114,6 @@ void SparseConstraints::addConstraintsDueToMonotonicityHelper() {
                 }   
             }
         }
-
-        // Cleanup all those UFCallTerm copies.  FIXME: yuck!
-        //for (i = ufCallTerms.begin(); i!=ufCallTerms.end(); i++) {
-        //    UFCallTerm* ufCall1 = (*i);
-        //    delete ufCall1;
-        //}
 
     } // loop over Conjuncts
 }
