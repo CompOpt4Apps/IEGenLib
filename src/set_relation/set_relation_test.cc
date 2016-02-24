@@ -3546,35 +3546,28 @@ TEST_F(SetRelationTest, addConstraintsDueToMonotonicity){
     delete expected;
     }
 
+    iegenlib::appendCurrEnv("g",
+        new Set("{[i]:0<=i &&i<G}"), new Set("{[i]:0<=i &&i<G}"), false,
+        iegenlib::Monotonic_Increasing);
+
+    {
+    Set* s = new Set("{[i,j] : g(i)<g(j) && 0<=g(i) && 0<=g(j)}");
+    Set* result = s->addConstraintsDueToMonotonicity();
+    Set* expected = new Set("{[i,j] : g(i) >= 0 && g(j) >= 0 && "
+                            "g(i)<G && g(j)<G && "
+                            "0<=i && i<G && 0<=j && j<G &&"
+                            "g(i)<g(j) && i<j}");
+                            
+    EXPECT_EQ(expected->prettyPrintString(), result->prettyPrintString());
+    
+    delete s;
+    delete result;
+    delete expected;
+    }
+
+
   }
-/*
-  {
-    Relation* r = new Relation("{[i,j]->[k] : index(i) <= j && "
-        "j < index(i+1) && diagptr(v+1)<k && k<indexptr(i)}");
-    
-    Relation* result1 = r->addUFConstraints("index",">", "diagptr");
-    
-    EXPECT_EQ("{ [i, j] -> [k] : j - index(i) >= 0 && -j + index(i + 1) "
-              "- 1 >= 0 && -k + indexptr(i) - 1 >= 0 && k - diagptr(v + "
-              "1) - 1 >= 0 && -diagptr(i) + index(i) + 1 >= 0 && -diagpt"
-              "r(i + 1) + index(i + 1) + 1 >= 0 && -diagptr(v + 1) + ind"
-              "ex(v + 1) + 1 >= 0 }",
-              result1->prettyPrintString());
 
-    Relation* result2 = r->addUFConstraints("index","=", "diagptr");
-
-    EXPECT_EQ("{ [i, j] -> [k] : diagptr(i) - index(i) = 0 && diagptr(i + "
-              "1) - index(i + 1) = 0 && diagptr(v + 1) - index(v + 1) = 0 "
-              "&& j - index(i) >= 0 && -j + index(i + 1) - 1 >= 0 && -k + "
-              "indexptr(i) - 1 >= 0 && k - diagptr(v + 1) - 1 >= 0 }",
-              result2->prettyPrintString());
-
-    
-    delete r;
-    delete result1;
-    delete result2;
-  }
-*/ 
 }
 
 

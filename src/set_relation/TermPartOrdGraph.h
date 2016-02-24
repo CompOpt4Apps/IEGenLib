@@ -125,12 +125,15 @@ public:
     bool isEqual( Term* term1, Term* term2 );
 
     //! Returns a set of all unique UFCallTerms that have been inserted.
-    //! Caller will own returned terms.
-    std::set<UFCallTerm*> getUniqueUFCallTerms() const;
+    //! Caller does NOT own returned terms.
+    std::set<UFCallTerm*> getUniqueUFCallTerms();
 
     //! Returns a set of all unique terms that have been inserted.
-    //! Caller will own returned terms.
-    std::set<Term*> getAllUniqueTerms() const;
+    //! Caller will own returned terms.  FIXME: can we return owned ptrs or something?
+//    std::set<Term*> getAllUniqueTerms() const;
+// Don't think we need this and having it causes a cleanup pain.  Although
+// just realized I could keep a set of the copies in here and then clean them up
+// upon destruction.
     
     //! Returns a string representation of the class instance for debugging.
     std::string toString() const;        
@@ -143,6 +146,9 @@ private:
     std::map<VarTerm,int>       mVarTerm2IntMap;
     
     std::set<Term*>             mNonNegativeTerms;
+    
+    // kept so can own and clean up
+    std::set<UFCallTerm*>       mUniqueUFCallTerms; 
     
     PartOrdGraph*               mGraphPtr;
     

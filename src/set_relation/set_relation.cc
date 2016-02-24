@@ -2699,9 +2699,11 @@ void SparseConstraints::addUFConstraintsHelper(std::string uf1str,
     VisitorFindUFCallTerms * v1 = new VisitorFindUFCallTerms(uf1str);
     this->acceptVisitor(v1);
     std::set<UFCallTerm> uf1Terms = v1->returnResult();
+    delete v1;
     VisitorFindUFCallTerms * v2 = new VisitorFindUFCallTerms(uf2str);
     this->acceptVisitor(v2);
     std::set<UFCallTerm> uf2Terms = v2->returnResult();
+    delete v2;
     
     // Rename all of the uf2Terms functions to uf1 and
     // insert into uf1Terms set so don't get repetition of same
@@ -3081,8 +3083,10 @@ void SparseConstraints::addConstraintsDueToMonotonicityHelper() {
                 if (ufCall1->name()==ufCall2->name()
                         && ufCall1->numArgs()==1
                         && ufCall2->numArgs()==1
-                        && Monotonic_Nondecreasing
-                           ==queryMonoTypeEnv(ufCall1->name()) ) {
+                        && ((Monotonic_Nondecreasing
+                             ==queryMonoTypeEnv(ufCall1->name()))
+                            || (Monotonic_Increasing
+                             ==queryMonoTypeEnv(ufCall1->name())) ) ) {
                 
                     // if ufCall1(e1) == ufCall2(e2) then useful??
 
@@ -3110,7 +3114,14 @@ void SparseConstraints::addConstraintsDueToMonotonicityHelper() {
                 }   
             }
         }
-    }
+
+        // Cleanup all those UFCallTerm copies.  FIXME: yuck!
+        //for (i = ufCallTerms.begin(); i!=ufCallTerms.end(); i++) {
+        //    UFCallTerm* ufCall1 = (*i);
+        //    delete ufCall1;
+        //}
+
+    } // loop over Conjuncts
 }
 
 
