@@ -3119,13 +3119,10 @@ Set* Set::addConstraintsDueToMonotonicity() const {
     // Add in constraints due to domain and range.
     // We always want to do this hear because otherwise we don't get
     // any of the uninterpreted functions as non-negative.
-    Set* retval = new Set(*this);
+    Set* retval = this->boundDomainRange();
     
-    // FIXME: not happy about how this works now.  Mahdi is fixing.
-//    UFCallMapAndBounds ufcallmap(getTupleDecl());
-//    retval->ufCallsToTempVars(ufcallmap);
-//std::cout << "After ufCallsToTempVars, retval = " << retval->toString() << std::endl;
-    
+    // FIXME: inconsistency as to whether these methods update current
+    // or return a new.    
     retval->addConstraintsDueToMonotonicityHelper();
     return retval;
 }
@@ -3551,7 +3548,7 @@ void VisitorBoundDomainRange::postVisitConjunction(Conjunction * c)
 
 //! Adds constraints due to domain and range of all UFCalls in UFCallmap
 //  Users own the returned Set object.
-Set* Set::boundDomainRange()
+Set* Set::boundDomainRange() const
 {
     Set* s = new Set(*this);
     VisitorBoundDomainRange *v = new VisitorBoundDomainRange();
@@ -3565,7 +3562,7 @@ Set* Set::boundDomainRange()
 
 //! Adds constraints due to domain and range of all UFCalls in UFCallmap
 //  Users own the returned Relation object.
-Relation* Relation::boundDomainRange()
+Relation* Relation::boundDomainRange() const
 {
     Relation* r = new Relation(*this);
     VisitorBoundDomainRange *v = new VisitorBoundDomainRange();

@@ -535,7 +535,7 @@ public:
 
     //! Adds constraints due to domain and range of all UFCalls in UFCallmap
     //  Users own the returned Set object.
-    Set* boundDomainRange();
+    Set* boundDomainRange() const;
 
     //! Creates a super affine set from a non-affine set.
     //  To do this:
@@ -686,7 +686,7 @@ public:
 
     //! Adds constraints due to domain and range of all UFCalls in UFCallmap
     //  Users own the returned Relation object.
-    Relation* boundDomainRange();
+    Relation* boundDomainRange() const;
 
     //! Creates a super affine Relation from a non-affine Relation.
     //  To do this:

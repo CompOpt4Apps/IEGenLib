@@ -243,8 +243,6 @@ TEST(TermPartOrdGraphTest, TermPartOrdGraphPartOrd) {
     g.insertLTE(uf_call1,uf_call2);
     g.insertLT(uf_call3,uf_call1);
     
-    std::cout << g.toString();
-
     EXPECT_EQ(true, g.isLT(v,uf_call2));
     EXPECT_EQ(false, g.isLT(uf_call2,v));
     EXPECT_EQ(true, g.isLT(uf_call3,uf_call2));
