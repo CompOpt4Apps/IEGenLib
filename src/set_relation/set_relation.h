@@ -533,10 +533,9 @@ public:
     //! Visitor design pattern, see Visitor.h for usage
     void acceptVisitor(Visitor *v);    
 
-    /*! Adds constraints due to domain and range of all UFCalls in UFCallmap
-    **  Users own the returned Set object.
-    */
-    Set* boundDomainRange();
+    //! Adds constraints due to domain and range of all UFCalls in UFCallmap
+    //  Users own the returned Set object.
+    Set* boundDomainRange() const;
 
     /*! Creates a super affine set from a non-affine set.
     **  To do this:
@@ -692,10 +691,9 @@ public:
     //! Visitor design pattern, see Visitor.h for usage
     void acceptVisitor(Visitor *v);
 
-    /*! Adds constraints due to domain and range of all UFCalls in UFCallmap
-    **  Users own the returned Relation object.
-    */
-    Relation* boundDomainRange();
+    //! Adds constraints due to domain and range of all UFCalls in UFCallmap
+    //  Users own the returned Relation object.
+    Relation* boundDomainRange() const;
 
     /*! Creates a super affine Relation from a non-affine Relation.
     **  To do this:

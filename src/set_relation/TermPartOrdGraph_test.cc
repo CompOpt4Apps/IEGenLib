@@ -108,8 +108,6 @@ TEST(TermPartOrdGraphTest, TermPartOrdGraphUniqueTerms) {
     // Check the size of the unique sets.
     std::set<UFCallTerm*> ufCallTermSet = g.getUniqueUFCallTerms();
     EXPECT_EQ(0,ufCallTermSet.size());
-    std::set<Term*> termSet = g.getAllUniqueTerms();
-    EXPECT_EQ(1,termSet.size());
     }
     
     // term = tau(i,j)
@@ -128,8 +126,6 @@ TEST(TermPartOrdGraphTest, TermPartOrdGraphUniqueTerms) {
     // Check the size of the unique sets.
     std::set<UFCallTerm*> ufCallTermSet = g.getUniqueUFCallTerms();
     EXPECT_EQ(1,ufCallTermSet.size());
-    std::set<Term*> termSet = g.getAllUniqueTerms();
-    EXPECT_EQ(2,termSet.size());
     }
         
     // Inserting same thing twice on purpose.
@@ -149,8 +145,6 @@ TEST(TermPartOrdGraphTest, TermPartOrdGraphUniqueTerms) {
     // Check the size of the unique sets.
     std::set<UFCallTerm*> ufCallTermSet = g.getUniqueUFCallTerms();
     EXPECT_EQ(1,ufCallTermSet.size());
-    std::set<Term*> termSet = g.getAllUniqueTerms();
-    EXPECT_EQ(2,termSet.size());
     }
 
     // term = g(3 __tv3)
@@ -166,8 +160,6 @@ TEST(TermPartOrdGraphTest, TermPartOrdGraphUniqueTerms) {
     // Check the size of the unique sets.
     std::set<UFCallTerm*> ufCallTermSet = g.getUniqueUFCallTerms();
     EXPECT_EQ(2,ufCallTermSet.size());
-    std::set<Term*> termSet = g.getAllUniqueTerms();
-    EXPECT_EQ(3,termSet.size());
     }
 
     // term = g(2 __tv3)
@@ -183,8 +175,6 @@ TEST(TermPartOrdGraphTest, TermPartOrdGraphUniqueTerms) {
     // Check the size of the unique sets.
     std::set<UFCallTerm*> ufCallTermSet = g.getUniqueUFCallTerms();
     EXPECT_EQ(3,ufCallTermSet.size());
-    std::set<Term*> termSet = g.getAllUniqueTerms();
-    EXPECT_EQ(4,termSet.size());
     }
 
     // Have to clean up all terms that were put into part ord,
@@ -243,8 +233,6 @@ TEST(TermPartOrdGraphTest, TermPartOrdGraphPartOrd) {
     g.insertLTE(uf_call1,uf_call2);
     g.insertLT(uf_call3,uf_call1);
     
-    std::cout << g.toString();
-
     EXPECT_EQ(true, g.isLT(v,uf_call2));
     EXPECT_EQ(false, g.isLT(uf_call2,v));
     EXPECT_EQ(true, g.isLT(uf_call3,uf_call2));

@@ -139,7 +139,7 @@ bool TermPartOrdGraph::isNonNegative( const Term* term ) const {
     Term* temp = term->clone();
     temp->setCoefficient(1);
     bool retval = false;
-std::cout << "TermPartOrdGraph::isNonNegative: temp = " << temp->toString() << std::endl;
+
     // Search through the Set of non-negative terms and see
     // if it is in there.
     std::set<Term*>::const_iterator iter;
@@ -248,21 +248,21 @@ void termMapCopyTerms( const std::map<TermType,int>& termMap,
 
 //! Returns a set of all unique UFCallTerms that have been inserted.
 //! Caller owns all of the return Terms.
-std::set<UFCallTerm*> TermPartOrdGraph::getUniqueUFCallTerms() const {
-    std::set<UFCallTerm*> uniqueUFCallTerms;
+std::set<UFCallTerm*> TermPartOrdGraph::getUniqueUFCallTerms() {
+    mUniqueUFCallTerms.clear();
     termMapCopyTerms<UFCallTerm*,UFCallTerm>(mUFCallTerm2IntMap,
-                                             uniqueUFCallTerms);
-    return uniqueUFCallTerms;
+                                             mUniqueUFCallTerms);
+    return mUniqueUFCallTerms;
 }
 
 //! Returns a set of all unique terms that have been inserted.
-std::set<Term*> TermPartOrdGraph::getAllUniqueTerms() const {
+/*std::set<Term*> TermPartOrdGraph::getAllUniqueTerms() const {
     std::set<Term*> uniqueTerms;
     termMapCopyTerms<Term*,UFCallTerm>(mUFCallTerm2IntMap, uniqueTerms);
     termMapCopyTerms<Term*,TupleVarTerm>(mTupleVarTerm2IntMap, uniqueTerms);
     termMapCopyTerms<Term*,VarTerm>(mVarTerm2IntMap, uniqueTerms);
     return uniqueTerms;
-}
+}*/
 
 //! Templated helper routine to avoid repetitive code that
 //! loops over the type specific term maps to generate a

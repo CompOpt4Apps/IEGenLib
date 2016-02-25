@@ -16,6 +16,8 @@
 #include "set_relation.h"
 #include "Visitor.h"
 #include "TermPartOrdGraph.h"
+#include <stack>
+#include <map>
 #include <assert.h>
 
 namespace iegenlib{
@@ -2656,7 +2658,7 @@ void Relation::acceptVisitor(Visitor *v) {
 
 
 /******************************************************************************/
-#pragma mark -
+#pragma mark addUFConstraints
 /****************** addUFConstraints ******************************************/
 
 class VisitorFindUFCallTerms : public Visitor {
@@ -2697,9 +2699,11 @@ void SparseConstraints::addUFConstraintsHelper(std::string uf1str,
     VisitorFindUFCallTerms * v1 = new VisitorFindUFCallTerms(uf1str);
     this->acceptVisitor(v1);
     std::set<UFCallTerm> uf1Terms = v1->returnResult();
+    delete v1;
     VisitorFindUFCallTerms * v2 = new VisitorFindUFCallTerms(uf2str);
     this->acceptVisitor(v2);
     std::set<UFCallTerm> uf2Terms = v2->returnResult();
+    delete v2;
     
     // Rename all of the uf2Terms functions to uf1 and
     // insert into uf1Terms set so don't get repetition of same
@@ -2794,7 +2798,7 @@ Relation* Relation::addUFConstraints(std::string uf1str,
 }
 
 /******************************************************************************/
-#pragma mark -
+#pragma mark addConstraintsDueToMonotonicity
 /*************** addConstraintsDueToMonotonicity ******************************/
 /*! This visitor will collect all of the terms except for constants
     from the constraints and will indicate which of the terms are
@@ -2807,10 +2811,16 @@ Relation* Relation::addUFConstraints(std::string uf1str,
 class VisitorCollectTerms : public Visitor {
   private:
     TermPartOrdGraph        mPartOrd;
-    Term*                   mNonConstTerm; // will be NULL if none or >1
-    int                     mNumNonConstTerms;
-    int                     mConstTermVal;
-    bool                    mInUFArg;
+    
+    // FIXME: Don't need maps here.  No nesting of equality and inequality
+    // expressions in each other.
+    std::map<Exp*,Term*>    mNonConstTerm; // will be NULL if none or >1
+    std::map<Exp*,int>      mNumNonConstTerms;
+    std::map<Exp*,int>      mConstTermVal;
+    
+    // Do need a stack of expressions.  Within inequality and equality
+    // expressions there can be nested uninterpreted function param exps.
+    std::stack<Exp*>        mCurrExpStack;
     
   public:
     VisitorCollectTerms() {}
@@ -2819,14 +2829,11 @@ class VisitorCollectTerms : public Visitor {
     TermPartOrdGraph returnPartOrd() { return mPartOrd; }
 
     void postVisitTerm(iegenlib::Term * t) {
-        mConstTermVal = t->coefficient();
+        mConstTermVal[mCurrExpStack.top()] = t->coefficient();
     }
     void postVisitUFCallTerm(iegenlib::UFCallTerm * t) {
         mPartOrd.insertTerm(t);
         nonConstTerm(t);
-        //iegenlib::queryInverseCurrEnv("f")
-        // Don't I have a routine that puts in all the
-        // constraints due to domain and range?
     }
     void postVisitTupleVarTerm(iegenlib::TupleVarTerm * t) {
         mPartOrd.insertTerm(t);
@@ -2843,33 +2850,33 @@ class VisitorCollectTerms : public Visitor {
     }
 */    
     void preVisitExp(iegenlib::Exp * e) {
-        mNonConstTerm = NULL;
-        mNumNonConstTerms = 0;
-        mConstTermVal = 0;
-        // Can only determine non-negative property for terms in
-        // equality and inequality constraints.  See nonConstTerm().
-        if (!e->isEquality() && !e->isInequality()) {
-            mInUFArg = true;
-        } else {
-            mInUFArg = false;
-        }
+        mCurrExpStack.push(e);
+        mNonConstTerm[e] = NULL;
+        mNumNonConstTerms[e] = 0;
+        mConstTermVal[e] = 0;
     }
     void postVisitExp(iegenlib::Exp * e) {
         if ((e->isEquality() || e->isInequality())
-                && mNonConstTerm!=NULL && mConstTermVal>=0) {
-            mPartOrd.termNonNegative( mNonConstTerm );
+                && mNonConstTerm[e]!=NULL && mConstTermVal[e]>=0) {
+            mPartOrd.termNonNegative( mNonConstTerm[e] );
         }
+        mCurrExpStack.pop();
     }
 
 private:
     // Called when visiting each non-const term.  If only
     // end up with 1 non-const term, then the postVisitExp will determine
     // if that non constant term is non-negative.
-    void nonConstTerm(const iegenlib::Term* t) {
-        if (!mInUFArg) {
-            mNumNonConstTerms++;
-            if (mNumNonConstTerms>0) {
-                mNonConstTerm = NULL;
+    // Method does not take on ownership of t.
+    void nonConstTerm(iegenlib::Term* t) {
+        Exp* e = mCurrExpStack.top();
+        if (e->isEquality() || e->isInequality()) {
+            mNumNonConstTerms[e]++;
+            // we are current candidate for only term
+            mNonConstTerm[e] = t;
+            // unless there are others
+            if (mNumNonConstTerms[e]>1) {
+                mNonConstTerm[e] = NULL;
             }
         }
     }
@@ -2913,39 +2920,40 @@ class VisitorCollectPartOrd : public Visitor {
   private:
     bool                    mFoundNonNeg;
     TermPartOrdGraph        mPartOrd;
-    Exp*                    mCurrExp;
+    
+    // Do need a stack of expressions.  Within inequality and equality
+    // expressions there can be nested uninterpreted function param exps.
+    std::stack<Exp*>        mCurrExpStack;
     
   public:
     VisitorCollectPartOrd(TermPartOrdGraph partOrd) :
-        mFoundNonNeg(false), mPartOrd(partOrd), mCurrExp(NULL) {}
+        mFoundNonNeg(false), mPartOrd(partOrd) {}
     ~VisitorCollectPartOrd() {}
   
     bool hasConverged() { return !mFoundNonNeg; }
     TermPartOrdGraph returnPartOrd() { return mPartOrd; }
 
     void preVisitExp(iegenlib::Exp * e) {
-        if (e->isEquality() || e->isInequality()) {
-            mCurrExp = e;
-            mFoundNonNeg = false;
-        }
+        mCurrExpStack.push(e);
     }
     void postVisitExp(iegenlib::Exp * e) {
-        if (e->isEquality() || e->isInequality()) {
-            mCurrExp = NULL;
-        }
+        mCurrExpStack.pop();
+    }
+    void preVisitConjunction(iegenlib::Conjunction * conjunct) {
+        mFoundNonNeg = false; // reinitialize at beginning of each conjunct
     }
 
     // See class header for logic.
     void deriveInfo(iegenlib::Term * t) {
+        Exp* e = mCurrExpStack.top();
+        
         // solve for factor treats the constraint like exp=0
         Term * t_with_coeff_1 = t->clone();
         t_with_coeff_1->setCoefficient(1);
-        Exp *solution = mCurrExp->solveForFactor(t_with_coeff_1);
+        Exp *solution = e->solveForFactor(t_with_coeff_1);
 
         // No info to derive if can't solve for term.
         if (solution==NULL) return;
-
-std::cout << "deriveInfo, t = " << t->toString() << ", mCurrExp = " << mCurrExp->toString() << ", solution = " << solution->toString() << std::endl;
 
         // Whether we have equality or inequality with t having a positive
         // coefficient (t + ... >=0), if all the terms in
@@ -2956,10 +2964,9 @@ std::cout << "deriveInfo, t = " << t->toString() << ", mCurrExp = " << mCurrExp-
             mPartOrd.termNonNegative(t);
             mFoundNonNeg = true;
         }
-std::cout << "deriveInfo, mFoundNonNeg = " << mFoundNonNeg << std::endl;
 
         // If the constraint is an equality
-        if (mCurrExp->isEquality()) {   
+        if (e->isEquality()) {   
             // and there is only one other term in the solution with coeff 1,
             // then this term is equal to the solution term.
             Term* singleTerm = solution->getTerm();
@@ -2971,25 +2978,16 @@ std::cout << "deriveInfo, mFoundNonNeg = " << mFoundNonNeg << std::endl;
         }
 
         // If the constraint is an inequality (exp>=0)
-        if (mCurrExp->isInequality()) {
+        if (e->isInequality()) {
         
-            // Was this term's coefficient positive or negative originally?
-//            bool posCoeffForTerm = (t->coefficient()>0);
-            
              // Get the constant in the solution.
             Term* constTerm = solution->getConstTerm();
             int c = (constTerm ? constTerm->coefficient() : 0);  
-
-
-/* DON't want this.  Can't do part ord when coeff in solution are neg.           
-            // How many non constant terms are in the solution?
-            // If constant is zero, then won't have an explicit
-            // constant terms (ASSUMPTION)
-            int non_const_terms=(c==0?termList->size():termList->size()-1);
-*/
      
             // We want to iterate over the solution terms if
             // the solution has all non negative terms.
+            // Can't determine a partial ordering when any coeffs
+            // in the solution are negative.
             if (termsNonNeg(solution,mPartOrd)) {
             
                 // Iterate over the list of terms in the solution.
@@ -3004,30 +3002,24 @@ std::cout << "deriveInfo, mFoundNonNeg = " << mFoundNonNeg << std::endl;
                     // t >= solution_term + (other noneg terms) + c, c>=1
                     if (c>=1 && t->coefficient()>0) {
                         mPartOrd.insertLT(solution_term, t);
-//std::cout << "deriveInfo, mPartOrd.insertLT(solution_term, t);" << std::endl;
 
                     // t <= solution_term + (other noneg terms) + c, c>=1
                     } else if (c>=1 && t->coefficient()<0) {
                         mPartOrd.insertLT(t, solution_term);
-//std::cout << "deriveInfo, mPartOrd.insertLT(t,solution_term);" << std::endl;
 
                     // t >= solution_term + (other noneg terms) + c, c==0
                     } else if (c==0 && t->coefficient()>0) {
                         mPartOrd.insertLTE(solution_term, t);
-//std::cout << "deriveInfo, mPartOrd.insertLTE(solution_term, t);" << std::endl;
 
                    // t <= solution_term + (other noneg terms) + c, c==0
                     } else if (c==0 && t->coefficient()<0) {
                         mPartOrd.insertLTE(t, solution_term);
-//std::cout << "deriveInfo, mPartOrd.insertLTE(t,solution_term);" << std::endl;
                     }
                 }
             } // endif termsNonNeg(solution,mPartOrd)
             
-        } // endif mCurrExp->isInequality()
+        } // endif e->isInequality()
 
-std::cout << "deriveInfo, end of method, mPartOrd = " << mPartOrd.toString() << std::endl;
-        
     }
 
     void postVisitTerm(iegenlib::Term * t) {
@@ -3054,6 +3046,7 @@ void SparseConstraints::addConstraintsDueToMonotonicityHelper() {
     // can be added to the specific conjunction.
     // Has be be by conjunction because might use information about what
     // terms are non-zero in a conjunction.
+    // FIXME: can the visitor visit each conjunction instead of us looping?
     for (std::list<Conjunction*>::iterator iter=mConjunctions.begin();
             iter != mConjunctions.end(); iter++) {
 
@@ -3063,7 +3056,6 @@ void SparseConstraints::addConstraintsDueToMonotonicityHelper() {
         VisitorCollectTerms v1;
         conjunct->acceptVisitor(&v1);
         TermPartOrdGraph partOrd = v1.returnPartOrd();
-std::cout << "after VisitorCollectTerms, partOrd = " << partOrd.toString() << std::endl;
 
         // Indicate we are done adding terms into the partial ordering.
         partOrd.doneInsertingTerms();
@@ -3073,7 +3065,6 @@ std::cout << "after VisitorCollectTerms, partOrd = " << partOrd.toString() << st
         // which impacts partial orderings, has converged.
         VisitorCollectPartOrd v2(partOrd);
         do {
-std::cout << "in do while loop" << std::endl;
             conjunct->acceptVisitor(&v2);
         } while (!(v2.hasConverged()));
         partOrd = v2.returnPartOrd();
@@ -3088,12 +3079,14 @@ std::cout << "in do while loop" << std::endl;
             for (j = ufCallTerms.begin(); j!=ufCallTerms.end(); j++) {
                 UFCallTerm* ufCall1 = (*i);
                 UFCallTerm* ufCall2 = (*j);
-std::cout << "ufCall1 = " << ufCall1->toString() << ", ufCall2 = " << ufCall2->toString() << std:: endl;
+
                 if (ufCall1->name()==ufCall2->name()
                         && ufCall1->numArgs()==1
                         && ufCall2->numArgs()==1
-                        && Monotonic_Nondecreasing
-                           ==queryMonoTypeEnv(ufCall1->name()) ) {
+                        && ((Monotonic_Nondecreasing
+                             ==queryMonoTypeEnv(ufCall1->name()))
+                            || (Monotonic_Increasing
+                             ==queryMonoTypeEnv(ufCall1->name())) ) ) {
                 
                     // if ufCall1(e1) == ufCall2(e2) then useful??
 
@@ -3114,25 +3107,27 @@ std::cout << "ufCall1 = " << ufCall1->toString() << ", ufCall2 = " << ufCall2->t
                     } else if (partOrd.isLTE(ufCall1,ufCall2)) {
                         // largerTerm - smallerTerm >= 0
                         conjunct->addInequality(new_constraint);
+                        
                     } else {
                         delete new_constraint;
                     }
                 }   
             }
         }
-    }
+
+    } // loop over Conjuncts
 }
 
 
 Set* Set::addConstraintsDueToMonotonicity() const {
-    Set* retval = new Set(*this);
     
     // Add in constraints due to domain and range.
-    // FIXME: not happy about how this works now.
-//    UFCallMapAndBounds ufcallmap(getTupleDecl());
-//    retval->ufCallsToTempVars(ufcallmap);
-//std::cout << "After ufCallsToTempVars, retval = " << retval->toString() << std::endl;
+    // We always want to do this hear because otherwise we don't get
+    // any of the uninterpreted functions as non-negative.
+    Set* retval = this->boundDomainRange();
     
+    // FIXME: inconsistency as to whether these methods update current
+    // or return a new.    
     retval->addConstraintsDueToMonotonicityHelper();
     return retval;
 }
@@ -3553,7 +3548,7 @@ void VisitorBoundDomainRange::preVisitUFCallTerm(UFCallTerm * t){
 
 //! Adds constraints due to domain and range of all UFCalls in UFCallmap
 //  Users own the returned Set object.
-Set* Set::boundDomainRange()
+Set* Set::boundDomainRange() const
 {
     Set* s = new Set(*this);
     VisitorBoundDomainRange *v = new VisitorBoundDomainRange();
@@ -3567,7 +3562,7 @@ Set* Set::boundDomainRange()
 
 //! Adds constraints due to domain and range of all UFCalls in UFCallmap
 //  Users own the returned Relation object.
-Relation* Relation::boundDomainRange()
+Relation* Relation::boundDomainRange() const
 {
     Relation* r = new Relation(*this);
     VisitorBoundDomainRange *v = new VisitorBoundDomainRange();
