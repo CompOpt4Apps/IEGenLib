@@ -55,17 +55,36 @@ TEST(UFCallMapTest, UFCallMap) {
 
 //////// Checking: UFC -> Symbolic Cnstant    ---LOOK UP
    ///   Finding a UFC in the map, and getting its "symbolic constant" form.
-    std::string symCons = map.find(ufcall);
+    VarTerm* symCons = map.find(ufcall);
 
-    EXPECT_EQ( "row___tv0P1__tv2Mn_" , symCons );
+    EXPECT_EQ( "row___tv0P1__tv2Mn_" , symCons->toString() );
 
 //////// Checking: Symbolic Constant -> UFC    ---LOOK UP
-   ///   Finding a "symbolic constant" in the map, and getting its equ. UFCall.
-    UFCallTerm r_ufcall("foo", 0);
-    r_ufcall = map.find(symCons);
+   ///   Finding a "symbolic constant" in the map, and getting its equ. UFC.
+    UFCallTerm* r_ufcall = map.find(symCons);
 
-    EXPECT_EQ( *ufcall , r_ufcall );
+    EXPECT_EQ( ufcall->toString() , r_ufcall->toString() );
+
+
+//////// Checking: The UFC is not in the map! So, we get NULL.
+    UFCallTerm *ufcallFoo = new UFCallTerm("Foo", 0);
+    
+    VarTerm* symConsFoo = map.find(ufcallFoo);
+    
+    if(symConsFoo){
+        delete symConsFoo;
+        symConsFoo = new VarTerm( 1,std::string("Found") );
+    }
+    else{
+        symConsFoo = new VarTerm( 1,std::string("notFound") );
+    }
+
+    EXPECT_EQ( "notFound" , symConsFoo->toString() ); 
 
 //    std::cout<<std::endl<<map.toString()<<std::endl;
     delete ufcall;
+    delete ufcallFoo;
+    delete r_ufcall;
+    delete symCons;
+    delete symConsFoo;
 }

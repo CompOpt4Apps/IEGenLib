@@ -26,16 +26,19 @@ class Set;
 
 /*!
  * \class UFCallMap
- * This class can store UFcalls and their equ. symbolic constants. 
+ * This class can store UFcalls and their equ. VarTerm. 
  * We need this in functionality of creating affine sets out of
  * non-affine sets, where UFcalls get replaced with symbolic constants.
+ * UFCallTerms and VarTerms are stored with coefficient = 1, however there is no
+ * need to set coefficient when inserting a UFCallTerm or searching for
+ * UFCallTerm or VarTerm in the map using find functions.
  */
 class UFCallMap {
 public:
     UFCallMap(){}
     ~UFCallMap(){
-               mUFC2Str.clear();
-               mStr2UFC.clear();
+               mUFC2VarParam.clear();
+               mVarParam2UFC.clear();
     }
 
     //! Copy constructor.
@@ -47,29 +50,43 @@ public:
     //! returns a string representing ufcterm as a symbolic constant
     string symUFC( std::string &ufcName );
 
-    //! Use this to insert a UFC term to maps.
-    //  The function creates an string representing the UFC then,
-    //  adds (ufc,str) to mUFC2Str & adds (ufc,str) to mStr2UFC
-    //  The class does not own the object pointed by *ufcterm,
-    //  so users are responsible for freeing the memory.
-    void insert( UFCallTerm *ufcterm );
+    /*! Use this to insert a UFCallTerm to map.
+    **  The function creates an VarTerm representing the UFC then,
+    **  adds (ufc,vt) to mUFC2VarParam & adds (vt,str) to mVarParam2UFC
+    **  The class does not own the object pointed by ufcterm,
+    **  and it is left unchanged.
+    **
+    **  NOTE: The function ignores coefficient of the UFCallTerm.
+    **        So, -2*row(i)  is considered as just row(i)
+    */
+    void insert( UFCallTerm *ufc);
 
-    //! Searches for ufcterm in mUFC2Str. If it exists in the map, returns
-    // the equ. symbol, otherwise returns an empty string.
-    //  The class does not own the object pointed by *ufcterm,
-    //  so users are responsible for freeing the memory.
-    string find( UFCallTerm *ufcterm );
+    /*! Searches for ufcterm in the map. If ufcterm exists, it returns
+    **  a pointer to equ. VarTerm, otherwise returns NULL.
+    **  The class does not own the object pointed by ufcterm,
+    **  and it is left unchanged.
+    **
+    **  NOTE: The function ignores coefficient of the UFCallTerm.
+    **        So, -2*row(i)  is considered as just row(i)
+    */
+    VarTerm* find( UFCallTerm* ufc );
 
-    //! Searches for a symbol in mStr2UFC. If it exists in the map, returns the
-    //  equ. UFC, otherwise returns foo() (representing empty UFC)
-    UFCallTerm find( string &symbol );
+    /*! Searches for a VarTerm in the map. If VarTerm exists in the map,
+    **  it returns the pointer to equ. UFC, otherwise returns NULL. 
+    **  The class does not own the object pointed by symbol,
+    **  and it is left unchanged.
+    **
+    **  NOTE: The function ignores coefficient of the VarTerm.
+    **        So, -2*row_i_  is considered as just row_i_
+    */
+    UFCallTerm* find( VarTerm* symbol );
 
-    // prints the content of the map into a string, and returns it
+    //! prints the content of the map into a string, and returns it
     std::string toString();
 
 private:
-    std::map<UFCallTerm,string> mUFC2Str;
-    std::map<string,UFCallTerm> mStr2UFC;
+    std::map<UFCallTerm,VarTerm> mUFC2VarParam;
+    std::map<VarTerm,UFCallTerm> mVarParam2UFC;
 };
 
 }
