@@ -7,13 +7,11 @@
  * related Conjunction class, for normal form to facilitate equality testing.
  *
  * \date Started: 6/24/13
- * # $Revision:: 685                $: last committed revision
- * # $Date:: 2013-06-20 15:42:27 -0#$: date of last committed revision
- * # $Author::               $: author of last committed revision
  *
  * \authors Barbara Kreaseck and Michelle Strout
  *
- * Copyright (c) 201r32, Colorado State University <br>
+ * Copyright (c) 2016, University of Arizona <br>
+ * Copyright (c) 2012, Colorado State University <br>
  * All rights reserved. <br>
  * See ../../COPYING for details. <br>
  */
@@ -49,87 +47,6 @@ using iegenlib::Environment;
 using iegenlib::UninterpFunc;
 using iegenlib::TupleExpTerm;
 
-// helper function to eventually be located elsewhere
-// runs the Relation through ISL and returns the resulting string
-
-string getRelationStringFromISL(string rstr) {
-
-    // Sending r thru ISL and returning resulting string
-    
-    // Get an isl context
-    isl_ctx *ctx;
-    ctx = isl_ctx_alloc();
-    
-    // Get an isl printer and associate to an isl context
-    isl_printer * ip = NULL;
-    ip = isl_printer_to_str(ctx);
-    
-    // load Relation r into ISL map
-    isl_map* imap = NULL;
-    imap = isl_map_read_from_str(ctx, rstr.c_str());
-    
-    // get string back from ISL map
-    char * cstr;
-    isl_printer_set_output_format(ip , ISL_FORMAT_ISL);
-    isl_printer_print_map(ip ,imap);
-    cstr=isl_printer_get_str(ip);
-    string stringFromISL = cstr;
-    
-    // clean-up
-    isl_printer_flush(ip);
-    isl_printer_free(ip);
-    free(cstr);
-    isl_map_free(imap);
-    imap= NULL;
-    isl_ctx_free(ctx);  
-
-	return stringFromISL;
-}
-
-// helper function to eventually be located elsewhere
-// runs the Relation through ISL using isl_basic_map 
-// and returns the resulting string
-
-string getRelationStringFromBasicISL(string rstr) {
-
-    // Sending r thru ISL and returning resulting string
-    
-    // Get an isl context
-    isl_ctx *ctx;
-    ctx = isl_ctx_alloc();
-    
-    // Get an isl printer and associate to an isl context
-    isl_printer * ip = NULL;
-    ip = isl_printer_to_str(ctx);
-    
-    // load Relation r into ISL map
-    isl_basic_map* imap = NULL;
-    imap = isl_basic_map_read_from_str(ctx, rstr.c_str());
-    
-    // get string back from ISL map
-    char * cstr;
-    isl_printer_set_output_format(ip , ISL_FORMAT_ISL);
-    isl_printer_print_basic_map(ip ,imap);
-    cstr=isl_printer_get_str(ip);
-    string stringFromISL = cstr;
-    
-    // clean-up
-    isl_printer_flush(ip);
-    isl_printer_free(ip);
-    free(cstr);
-    isl_basic_map_free(imap);
-    imap= NULL;
-    isl_ctx_free(ctx);  
-
-	return stringFromISL;
-}
-
-
-// first try at creating a normalized string form of a relation with UFCalls
-// ... might be too specialized, but have to start somewhere ...
-// string normalize(Relation *r) {
-//
-// }
 
 // This is just a test setup class that is used in the other tests in this
 // file.  We could create a data structure that many of the tests use.
