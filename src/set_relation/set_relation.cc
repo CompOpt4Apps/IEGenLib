@@ -1685,6 +1685,7 @@ Set* Conjunction::normalize() const {
     return retval2;  
 }
 
+/* MMS, 2/27/16, don't think this is being used
 Set* Conjunction::normalizeR() const
 {
     /////////////////////
@@ -1802,6 +1803,7 @@ Set* Conjunction::normalizeR() const
     return retval2;  
 
 }
+*/
 
 /******************************************************************************/
 #pragma mark -
