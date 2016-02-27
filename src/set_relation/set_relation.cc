@@ -199,17 +199,15 @@ bool Conjunction::operator<( const Conjunction& other) const {
 
 }
 
-/*
 //! Given inarity parameter is adopted.
 //! If inarity parameter is outside of feasible range for the existing
 //! existing TupleDecl then throws exception.
 void Conjunction::setInArity(int inarity) {
- 	if (inarity < 0 || inarity > (mTupleDecl.size()-1) ) {
+ 	if (inarity < 0 || inarity > int(mTupleDecl.size()-1) ) {
         throw assert_exception("Conjunction::setInArity: impossible arity match");
 	}
 	mInArity = inarity;
 }
-*/
 
 //! If there are some constants that don't agree then throws exception.
 //! If replacing a constant with a variable ignores the substitution
@@ -3195,205 +3193,6 @@ bool SparseConstraints::isUFCallParam(int tupleID) {
 
 /*****************************************************************************/
 #pragma mark -
-/*************** VisitorProjectOut *****************************/
-// Vistor Class used in projection process
-class VisitorProjectOut : public Visitor {
-  private:
-    int tvar;
-    int in_ar;
-
-  public:
-    VisitorProjectOut(int tvarI){ tvar = tvarI; in_ar = 0; }
-    virtual ~VisitorProjectOut(){ }
-    void preVisitConjunction(iegenlib::Conjunction * c);
-    void preVisitRelation(iegenlib::Relation * r);
-
-};
-
-//   Projects out tuple varrable No. tvar from Conjunction
-void VisitorProjectOut::preVisitConjunction(iegenlib::Conjunction * c)
-{
-    Conjunction* selfcopy = new Conjunction(*c);
-    TupleDecl origTupleDecl = selfcopy->getTupleDecl(); // for (step 3)
- 
-    /////////////////////
-    // (step 1) Replace all uninterpreted function calls with temp
-    // variables and create a new affine conjunction that is a superset
-    // of the current conjunction.  UFCallMapAndBounds object will
-    // maintain the mapping of temporary variables to UF calls.
-    UFCallMapAndBounds ufcallmap(origTupleDecl);
-    selfcopy->ufCallsToTempVars( ufcallmap );
-
-    Set* constraints = ufcallmap.cloneConstraints();
-
-    // update the tuple declaration in selfcopy to match what is
-    // in the constraints
-    selfcopy->setTupleDecl( constraints->getTupleDecl() );
-    
-    // Also need to include all the constraints in selfcopy where UF calls
-    // were replaced by temporaries.
-    Set* selfcopyset = new Set(selfcopy->getTupleDecl());
-    selfcopyset->addConjunction(selfcopy);
-
-    Set* retval1 = constraints->Intersect(selfcopyset);
-    
-    //////////////////////
-    // (step 2) Send the result of step 1 to ISL and back.
-
-    // (a) get string from result of step 1
-    std::string fromStep1 = retval1->toISLString();
- 
-    // (b) send through ISL to project out desired tuple variable
-    string fromISL = islProjectOut(fromStep1, tvar);
-
-    // (c) convert back to a Set
-    Set* retval2 = new Set(fromISL);
-
-    delete retval1;
-
-    /////////////////////
-    // (step 3) In (step 3) we will need to use substitute to replace
-    // extra tuple vars with UF calls by making queries to ufcallmap. Will
-    // need to call setTupleDecl on retval to remove those extra tuple vars
-    // that acted as temporaries to replace uf calls. Then return retval Set.
-    
-    // Determine starting index of extra tuple vars
-    int numTempVars = ufcallmap.numTempVars();
-    int expandedArity = (retval2->mConjunctions.front())->arity();
-    int indexStart = expandedArity - numTempVars;
-
-    SubMap affineSubstMap;
-    // Taking into account projection effect on tuple variable order:
-    // tv_n -> tv_n-1;  tv_n-1 -> tv_n-2; ... tv_tvar+1 -> tv_tvar
-    for (int i = tvar; i < expandedArity; i++) {
-
-    	TupleVarTerm* tvTerm = new TupleVarTerm(i+1);
-    	TupleVarTerm* tvTermJ = new TupleVarTerm(i);
-        Exp * tvExp = new Exp();
-        tvExp->addTerm(tvTermJ);
-
-        // Add this equivalence to affineSubstMap
-        affineSubstMap.insertPair(tvTerm,tvExp);
-    } 
-    	    
-    // Build up a map of non-affine information, we substituted them back in. 
-    SubMap nonAffineSubstMap;
-
-    for (int i = indexStart; i < expandedArity; i++) {
-
-      // considering projected out variable
-      int j;
-      if (i >= tvar){
-        j = i+1;
-      }
-      else {
-        j = i;
-      }
-
-      TupleVarTerm* tvTerm = new TupleVarTerm(i);
-      UFCallTerm* origUFCall = ufcallmap.cloneUFCall(j);
-      Exp* tvExp = new Exp();
-      tvExp->addTerm(origUFCall);
-
-      // substitute affine results into original UFCall
-      tvExp->substitute(affineSubstMap);
-		
-      // substitute non-affine results into original UFCall
-      tvExp->substitute(nonAffineSubstMap);
-
-      nonAffineSubstMap.insertPair(tvTerm, tvExp);
-    }
-
-    // SubstituteInConstraints using non-affine SubMap
-    retval2->substituteInConstraints(nonAffineSubstMap);
-    
-   // Remove extra tuple vars (since they have been "substituted", and 
-   // we have removed one tuple variable
-   TupleDecl redTupleDecl(origTupleDecl.size()-1);
-   for (int i = 0; i < int(redTupleDecl.size()) ; i++) {
-      // considering projected out variable
-      int j;
-      if (i >= tvar){
-        j = i+1;
-      }
-      else {
-        j = i;
-      }
-     redTupleDecl.setTupleElem(i , origTupleDecl.elemVarString(j));
-   }
-
-//std::cout<<std::endl<<"tuple shrink = "<<redTupleDecl.toString()<<std::endl;
-    retval2->setTupleDecl(redTupleDecl);
-//std::cout<<"After tuple shrink = "<<retval2->prettyPrintString()<<std::endl;
-
-    *c = *(retval2->mConjunctions.front());
-    c->setinarity( in_ar );
-
-    delete constraints;
-    delete selfcopy;
-    delete retval2;
-}
-
-// This function sets the in/out arity of the relation to
-// new values of after project out 
-void VisitorProjectOut::preVisitRelation(iegenlib::Relation * r)
-{
-    int ia = r->inArity();
-    int oa = r->outArity();
-    if (tvar < ia){
-      ia--;
-    }
-    else {
-      oa--;
-    }
-    r->SetinArity(ia);
-    r->SetoutArity(oa);
-
-    in_ar = ia;
-}
-
-//   Projects out tuple varrable No. tvar starting from 0
-Set* Set::projectOut(int tvar)
-{
-    if (isUFCallParam(tvar)){
-      return NULL;
-    }
-
-    Set *s = new Set(*this);
-    VisitorProjectOut * v = new VisitorProjectOut(tvar);
-    s->acceptVisitor(v);
-
-    Set *result = new Set(*s);
-    delete s;
-    delete v;
-
-    return result;
-}
-
-/*   Projects out tuple varrable No. tvar
-     tvar is calculated based on total ariety (in+out) starting from 0.
-     Consequently, to project out jp from R: tvar = 5
-     R = {[i,j,k] -> [ip,jp,kp] : ...}
-*/
-Relation* Relation::projectOut(int tvar)
-{
-    if (isUFCallParam(tvar)){
-      return NULL;
-    }
-
-    Relation *r = new Relation(*this);
-    VisitorProjectOut * v = new VisitorProjectOut(tvar);
-    r->acceptVisitor(v);
-
-    Relation *result = new Relation(*r);
-    delete r;
-    delete v;
-
-    return result;
-}
-
-/*****************************************************************************/
-#pragma mark -
 /*************** VisitorUFCtoParamVar *****************************/
 // Vistor Class used in traversing conjunctions for finding UFCalls
 class VisitorUFCtoParamVar : public Visitor {
@@ -3449,7 +3248,7 @@ class VisitorBoundDomainRange : public Visitor {
          void postVisitConjunction(iegenlib::Conjunction * c){
              Conjunction *ct = c->Intersect( addedConstSet->mConjunctions.front() );
              *c = *ct;
-             c->setinarity( in_ar );
+             c->setInArity( in_ar );
              delete addedConstSet;
              delete ct;
          }
@@ -3655,7 +3454,7 @@ class VisitorSuperAffineSet : public Visitor {
          //! Initializes an affineConj
          void preVisitConjunction(iegenlib::Conjunction * c){
              affineConj = new Conjunction( c->getTupleDecl() );
-             affineConj->setinarity( c->inarity() );
+             affineConj->setInArity( c->inarity() );
          }
          //! adds the current affineConj to maffineConj
          void postVisitConjunction(iegenlib::Conjunction * c){
@@ -3808,7 +3607,7 @@ class VisitorReverseAffineSubstitution : public Visitor {
          //! Initializes an nonAffineConj
          void preVisitConjunction(iegenlib::Conjunction * c){
              nonAffineConj = new Conjunction( c->getTupleDecl() );
-             nonAffineConj->setinarity( c->inarity() );
+             nonAffineConj->setInArity( c->inarity() );
          }
          //! adds the current nonAffineConj to nonMAffineConj
          void postVisitConjunction(iegenlib::Conjunction * c){
@@ -3875,6 +3674,250 @@ Relation* Relation::reverseAffineSubstitution(UFCallMap* ufcmap)
     delete copyRelation;
     delete v;
 
+    return result;
+}
+
+/*****************************************************************************/
+#pragma mark -
+/*************** VisitorProjectOut *****************************/
+//! Vistor Classes used in projection process
+/*! This class is used in adjusting tuple variable indices for those
+**  constraints that we are not going to change, they do not have tvar in them.
+*/
+class VisitorProjectOutOtherCleanUp : public Visitor {
+  private:
+    int tvar;
+
+  public:
+    VisitorProjectOutOtherCleanUp(int itvar){ tvar = itvar; }
+    void preVisitTupleVarTerm(iegenlib::TupleVarTerm * t){
+        if( t->tvloc() > tvar){
+            t->setTvloc( t->tvloc()-1 );
+        }
+    }
+};
+/*! This class is used in adjusting tuple variable indices for those
+**  constraints that involve UFCallTerms, after projection.
+*/
+class VisitorProjectOutCleanUp : public Visitor {
+  private:
+    int tvar;
+    int nc_ufc;     // nested UFCallTerm count
+
+  public:
+    VisitorProjectOutCleanUp(int itvar){ tvar = itvar;  nc_ufc = 0;}
+    void preVisitUFCallTerm(iegenlib::UFCallTerm * t){
+        nc_ufc++;
+    }
+    void postVisitUFCallTerm(iegenlib::UFCallTerm * t){
+        nc_ufc--;
+    }
+    void preVisitTupleVarTerm(iegenlib::TupleVarTerm * t){
+        if( nc_ufc && t->tvloc() > tvar){
+            t->setTvloc( t->tvloc()-1 );
+        }
+    }
+};
+/*! The main class for projecting out tuple variables from affine Set/Relation
+**
+**  We divide the constraint set into two groups:
+**    (1) targetConst: Those constraints that have tvar in them. Therefore, 
+**                      we need to project out tvar from these constraints.
+**    (2) otherConst:  Those constraints that do not have tvar in them.
+**                     Therefore, we are going to leave unchanged.
+**
+**  For each conjunction, we first find these two groups, and  put them
+**  into separate conjunction. Then, we use ISL library to project out tvar from 
+**  "targetConst". Finally, we intersect the new conjunction with "otherConst"
+**  to get the final result.
+*/
+class VisitorProjectOut : public Visitor {
+  private:
+    int tvar;
+    int inArity;
+    bool sTVar;
+    Set* newSet;
+    Relation* newRelation;
+    Conjunction* targetConst;
+    Conjunction* otherConst;
+    std::list<Conjunction*> mNewConj;
+  public:
+    VisitorProjectOut(int itvar, int ia=0){
+        tvar = itvar;
+        // Adjust inArity for after projection
+        if( tvar < ia && ia != 0 ){
+            ia--;
+        } 
+        inArity = ia;
+    }
+    // Used for separating "targetConst" and "otherConst"
+    void preVisitTupleVarTerm(iegenlib::TupleVarTerm * t){
+        if( t->tvloc() == tvar){
+            sTVar = true;
+        }
+    }
+    // Used for separating "targetConst" and "otherConst"
+    void preVisitExp(iegenlib::Exp * e){ sTVar = false; } 
+    // Separating "targetConst" and "otherConst"
+    void postVisitExp(iegenlib::Exp * e){
+        if( sTVar ){
+            if( e->isEquality() ){
+                targetConst->addEquality(e->clone());
+            } else {
+                targetConst->addInequality(e->clone());
+            }
+        } else {
+            if( e->isEquality() ){
+                otherConst->addEquality(e->clone());
+            } else {
+                otherConst->addInequality(e->clone());
+            }
+        }
+    }
+    // Initializing "targetConst" and "otherConst" conjunction
+    void preVisitConjunction(iegenlib::Conjunction* c){
+        targetConst = new Conjunction( c->getTupleDecl() );
+        otherConst = new Conjunction( c->getTupleDecl() ); 
+    }
+    // Projects out tuple varrable No. tvar from Conjunction
+    // And adds it to mNewConj
+    void postVisitConjunction(iegenlib::Conjunction* c){
+        targetConst->setInArity(0);
+        Set * cs = new Set(targetConst->arity() );
+        cs->addConjunction(targetConst);
+
+        // Use ISL to project out tuple variable.
+        // (a) get string from targetConst
+        std::string conjString = cs->toISLString();
+
+        // (b) send through ISL to project out desired tuple variable
+        string fromISL = islProjectOut(conjString, tvar);
+
+        // (c) convert back to a Set
+        Set* islSet = new Set(fromISL);
+
+        // Adjusting indices in those constraints that we don't change
+        VisitorProjectOutOtherCleanUp* vv = new
+                    VisitorProjectOutOtherCleanUp(tvar);
+        otherConst->acceptVisitor(vv);
+
+        Conjunction* crc = (islSet->mConjunctions.front());
+        otherConst->setTupleDecl( crc->getTupleDecl() );
+        Conjunction* cic = otherConst->Intersect(crc);
+
+        cic->setInArity( inArity );
+
+        // Storing the result so we could add it to new Set or Relation later.
+        mNewConj.push_back( cic );
+
+        delete islSet; 
+        delete cs;
+        delete otherConst;
+    }
+    //! Add Conjunctions in mnewConj to newSet
+    void postVisitSet(iegenlib::Set * s){
+        newSet = new Set( (s->arity()-1) );
+
+        for(std::list<Conjunction*>::const_iterator i=mNewConj.begin();
+                      i != mNewConj.end(); i++) {
+            newSet->addConjunction((*i));
+        }
+    }
+    //! Add Conjunctions in mnewConj to newRelation
+    void postVisitRelation(iegenlib::Relation * r){
+        int ia = r->inArity(), oa = r->outArity();
+        if( tvar < ia ){
+            ia--;
+        } else {
+            oa--;
+        }
+        newRelation = new Relation( ia , oa );
+
+        for(std::list<Conjunction*>::const_iterator i=mNewConj.begin();
+                     i != mNewConj.end(); i++) {
+            newRelation->addConjunction((*i));
+        }
+    }
+
+    Set* getSet(){ return newSet; }
+    Relation* getRelation(){ return newRelation; }
+};
+
+//! Projects out tuple varrable No. tvar starting from 0
+Set* Set::projectOut(int tvar)
+{
+    if (isUFCallParam(tvar)){
+      return NULL;
+    }
+    
+    // Geting a map of UFCalls 
+    iegenlib::UFCallMap *ufcmap;
+    ufcmap = this->mapUFCtoSym();
+    // Getting the super affine set of constraints with no UFCallTerms
+    Set* sup_s = this->superAffineSet(ufcmap);
+
+    // Projecting out tvar using ISL library
+    VisitorProjectOut* pv = new VisitorProjectOut(tvar, 0);
+    sup_s->acceptVisitor(pv);
+    delete sup_s;
+    sup_s = pv->getSet();
+
+    // Getting the reverseAffineSubstitution
+    Set* mresult = sup_s->reverseAffineSubstitution(ufcmap);
+
+    // Adjusting changes in UFCTerms due to projection: _tvN -> _tvN-1
+    VisitorProjectOutCleanUp* cv = new VisitorProjectOutCleanUp(tvar);
+    mresult->acceptVisitor(cv);
+
+    // Adding Domain and Range constraints that were deleted by ISL library
+    Set* result = mresult->boundDomainRange();
+
+    delete sup_s;
+    delete mresult;
+    delete cv;
+    delete pv;
+   
+    return result;
+}
+
+/*! Projects out tuple varrable No. tvar
+**  tvar is calculated based on total ariety (in+out) starting from 0.
+**  Consequently, to project out jp from R: tvar = 5
+**     R = {[i,j,k] -> [ip,jp,kp] : ...}
+*/
+Relation* Relation::projectOut(int tvar)
+{
+    if (isUFCallParam(tvar)){
+      return NULL;
+    }
+    
+    // Geting a map of UFCalls 
+    iegenlib::UFCallMap *ufcmap;
+    ufcmap = this->mapUFCtoSym();
+    // Getting the super affine set of constraints with no UFCallTerms
+    Relation* sup_r = this->superAffineRelation(ufcmap);
+
+    // Projecting out tvar using ISL library
+    VisitorProjectOut* pv = new VisitorProjectOut(tvar, sup_r->inArity());
+    sup_r->acceptVisitor(pv);
+    delete sup_r;
+    sup_r = pv->getRelation();
+
+    // Getting the reverseAffineSubstitution
+    Relation* mresult = sup_r->reverseAffineSubstitution(ufcmap);
+
+    // Adjusting changes in UFCTerms due to projection: _tvN -> _tvN-1
+    VisitorProjectOutCleanUp* cv = new VisitorProjectOutCleanUp(tvar);
+    mresult->acceptVisitor(cv);
+
+    // Adding Domain and Range constraints that were deleted by ISL library
+    Relation* result = mresult->boundDomainRange();
+
+    delete sup_r;
+    delete mresult;
+    delete cv;
+    delete pv;
+   
     return result;
 }
 

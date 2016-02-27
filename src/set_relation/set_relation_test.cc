@@ -3635,137 +3635,6 @@ TEST_F(SetRelationTest, isUFCallParam) {
    delete r2;
 }
 
-//*****************************************************************************
-// Testing project_out: project out tuple variable # tvar
-
-TEST_F(SetRelationTest, PROJECT_OUT) {
-
-    iegenlib::setCurrEnv();
-    iegenlib::appendCurrEnv("col",
-        new Set("{[i]:0<=i &&i<n}"), 
-        new Set("{[j]:0<=j &&j<n}"), true, iegenlib::Monotonic_NONE);
-    iegenlib::appendCurrEnv("idx",
-        new Set("{[i]:0<=i &&i<n}"), 
-        new Set("{[j]:0<=j &&j<n}"), true, iegenlib::Monotonic_NONE);
-    iegenlib::appendCurrEnv("row",
-        new Set("{[i]:0<=i &&i<n}"), 
-        new Set("{[j]:0<=j &&j<n}"), true, iegenlib::Monotonic_NONE);
-    iegenlib::appendCurrEnv("diag",
-        new Set("{[i]:0<=i &&i<n}"), 
-        new Set("{[j]:0<=j &&j<n}"), true, iegenlib::Monotonic_NONE);
-
-    Relation *r1 = new Relation("[n] -> { [i,k,j1,j2] -> [ip,kp,jp1,jp2] :"
-    " i < ip and j1 = jp2 and 0 <= i and i < n and 0 <= ip and ip < n and "
-     "k+1 <= j1 and j1 < row(i+1) and kp+1 <= jp1 and jp1 < row(ip+1) and "
-       "diag(col(k))+1 <= j2 and j2 < row(col(k)+1) and diag(col(kp))+1 <="
-           " jp2 and jp2 < row(col(kp)+1) and row(i) <= k and k < diag(i) "
-           "and row(ip) <= kp and kp < diag(ip) }");
-
-
-    Set *s1 = new Set("[n] -> { [i,j,ip,jp] : i = col(jp) "
-       "and i < ip and 0 <= i and i < n and idx(i) <= j and j < idx(i+1) "
-         "and 0 <= ip and ip < n and idx(ip) <= jp and jp < idx(ip+1) }");
-
-
-    Relation *ex_r1 = new Relation("[ n ] -> { [i, k] -> [ip, kp] : i >= 0"
-         " && col(k) >= 0 && col(kp) >= 0 && diag(i) >= 0 && diag(ip) >= 0"
-      " && diag(col(k)) >= 0 && diag(col(kp)) >= 0 && row(i) >= 0 && row(i"
-   " + 1) >= 0 && row(ip) >= 0 && row(ip + 1) >= 0 && row(col(k) + 1) >= 0"
-     " && row(col(kp) + 1) >= 0 && k - row(i) >= 0 && kp - row(ip) >= 0 &&"
-   " -i + ip - 1 >= 0 && -k + diag(i) - 1 >= 0 && -k + row(i + 1) - 2 >= 0"
-          " && -k + row(col(kp) + 1) - 2 >= 0 && -ip + n - 2 >= 0 && -kp +"
-       " diag(ip) - 1 >= 0 && -kp + row(ip + 1) - 2 >= 0 && n - col(k) - 2"
-      " >= 0 && n - col(k) - 1 >= 0 && n - col(kp) - 2 >= 0 && n - col(kp)"
-        " - 1 >= 0 && n - diag(i) - 1 >= 0 && n - diag(ip) - 1 >= 0 && n -"
-       " diag(col(k)) - 1 >= 0 && n - diag(col(kp)) - 1 >= 0 && n - row(i)"
-      " - 1 >= 0 && n - row(i + 1) - 1 >= 0 && n - row(ip) - 1 >= 0 && n -"
-             " row(ip + 1) - 1 >= 0 && n - row(col(k) + 1) - 1 >= 0 && n -"
-     " row(col(kp) + 1) - 1 >= 0 && -diag(col(k)) + row(col(k) + 1) - 2 >="
-             " 0 && -diag(col(kp)) + row(i + 1) - 2 >= 0 && -diag(col(kp))"
-                                           " + row(col(kp) + 1) - 2 >= 0 }");
-
-    Set *ex_s1 = new Set("[ n ] -> { [i, ip, jp] : i - col(jp) = 0 && i >= 0"
-                    " && idx(i) >= 0 && idx(ip) >= 0 && jp - idx(ip) >= 0"
-  " && -i + ip - 1 >= 0 && -ip + n - 2 >= 0 && -jp + idx(ip + 1) - 1 >= 0"
-                 " && n - idx(i + 1) - 1 >= 0 && n - idx(ip + 1) - 1 >= 0"
-                                     " && -idx(i) + idx(i + 1) - 1 >= 0 }");
-
-
-   // Here, we are going to project out all tuple variables of r1
-   // except for i,ip, and those of them that are argument to 
-   // Uninterpreted Function Symbols (UFS's).
-   // Note that, current project_out function first checks to see
-   // whether the tuple variable that is going to be projected out
-   // is argument to any UFS, if it is, it terminates, and returns NULL.
-   // However, if the tuple variable is not argument to any UFS,
-   // it will project it out, and return new Relation/Set.
-
-   // Temprory relation
-   Relation *r2;
-
-   // (1) Projecting out 'jp2' from r1: notice that we store the immediate
-   // return value of project out in a temporary relation, namely r2, since 
-   // it can be NULL upon failure. Also, project out will not change
-   // the calling object.
-   
-   r2 = r1->projectOut(7);    // 7 == index of 'jp2'
-   if ( r2 ){
-     delete r1;               // removing old r1
-     r1 = r2;
-   }
-
-   // (2) Projecting out 'jp1' from r1
-   
-   r2 = r1->projectOut(6);    // 6 == index of 'jp1'
-   if ( r2 ){
-     delete r1;               // removing old r1
-     r1 = r2;
-   }
-
-   // Note that k and kp are arguments to UFS's and connot be projected out.
-
-   // (3) Projecting out 'j2' from r1
-   
-   r2 = r1->projectOut(3);    // 3 == index of 'j2'
-   if ( r2 ){
-     delete r1;               // removing old r1
-     r1 = r2;
-   }
-
-   // (4) Projecting out 'j1' from r1
-   
-   r2 = r1->projectOut(2);    // 2 == index of 'j1'
-   if ( r2 ){
-     delete r1;               // removing old r1
-     r1 = r2;
-   }
-
-
-   Set *s2;
-   // projectOut has the same behaivor for both Relation and Set
-
-  // Projecting out 'j' from s1
-  s2 = s1->projectOut(1);     // 1 == index of 'j'
-
-  if ( s2 ){
-     delete s1;               // removing old r1    
-     s1 = s2;
-  }
-
-//   std::cout << std::endl << "r2.pr = " << r2->toISLString() << std::endl;
-//   std::cout << std::endl << "s1.pr = " << s1->toISLString() << std::endl;
-
-   EXPECT_EQ( r1->toISLString() , ex_r1->toISLString() );
-   EXPECT_EQ( s1->toISLString() , ex_s1->toISLString() );
-
-   delete r1;
-//   delete r2;      // r1 == r2
-   delete s1;
-//   delete s2;      // s1 == r2
-   delete ex_r1;
-   delete ex_s1;
-}
-
 #pragma mark mapUFCtoSym
 //Testing mapUFCtoSym: get a map of all UFCalls to equ. symbolic constant
 TEST_F(SetRelationTest, mapUFCtoSym) {
@@ -4025,5 +3894,102 @@ TEST_F(SetRelationTest, reverseAffineSubstitution) {
     delete su_s2;
     delete r1;
     delete su_r1;
+}
 
+#pragma mark projectOut
+// Testing projectOut: project out tuple variable # tvar
+TEST_F(SetRelationTest, projectOut) {
+
+    iegenlib::setCurrEnv();
+    iegenlib::appendCurrEnv("col",
+        new Set("{[i]:0<=i &&i<n}"), 
+        new Set("{[j]:0<=j &&j<n}"), true, iegenlib::Monotonic_NONE);
+    iegenlib::appendCurrEnv("idx",
+        new Set("{[i]:0<=i &&i<n}"), 
+        new Set("{[j]:0<=j &&j<n}"), true, iegenlib::Monotonic_NONE);
+    iegenlib::appendCurrEnv("row",
+        new Set("{[i]:0<=i &&i<n}"), 
+        new Set("{[j]:0<=j &&j<n}"), true, iegenlib::Monotonic_NONE);
+    iegenlib::appendCurrEnv("diag",
+        new Set("{[i]:0<=i &&i<n}"), 
+        new Set("{[j]:0<=j &&j<n}"), true, iegenlib::Monotonic_NONE);
+
+   // Note that, current project_out function first checks to see
+   // whether the tuple variable that is going to be projected out
+   // is argument to any UFS, if it is, it terminates, and returns NULL.
+   // However, if the tuple variable is not argument to any UFS,
+   // it will project it out, and return new Relation/Set.
+   // Additionally, the function adds constraints that are due to domain
+   //  and range info of all UFCall terms in the Set/Relation, for instance:
+   //  if we have: col( x ) + y > 5    then  
+   //                             ldb <= x <= udb and lrb <= col(x) <= urb
+   //              will be added to constraints.
+   //              * ldb = lower domain bound, urb = upper range bound
+
+    Relation *r1 = new Relation("{ [i,k] -> [ip,kp] :"
+       " i < ip and k = ip and diag(col(i))+1 <= k }"
+                         " union { [i,k] -> [ip,kp] :"
+       " i > ip and i = kp and kp < diag(i) }");
+
+    Relation *ex_r1 = new Relation("{ [i] -> [ip] : i >= 0 && diag(i) >= 0"
+                " && i < n && i < diag(i) && i > ip && diag(i) < n } union "
+             "{ [i] -> [ip] : i >= 0 && col(i) >= 0 && diag(col(i)) >= 0 &&"
+ " i < ip && i < n && diag(col(i)) < ip && col(i) < n && diag(col(i)) < n }");
+
+    Relation *r2;
+   
+    r2 = r1->projectOut(3);    // 5 == index of 'kp'
+    if ( r2 ){                 // Did we project out 'jp': YES!
+        delete r1;             // removing old r1
+        r1 = r2;
+    }
+
+    r2 = r1->projectOut(0);    // 1 == index of 'i'
+    if ( r2 ){                 // Did we project out 'k': NO!
+        delete r1;             // The reason is that k is argumnet to col().
+        r1 = r2;               // We don't project out variables
+    }                          // that are argument to an UFCall.
+
+    r2 = r1->projectOut(1);    // 2 == index of 'k'
+    if ( r2 ){                 // did we project out 'j': YES!
+        delete r1;             // removing old r1
+        r1 = r2;
+    }
+//   std::cout << std::endl << "r1 = " << r1->toISLString() << std::endl;
+
+   EXPECT_EQ( ex_r1->toISLString() , r1->toISLString() );
+
+    Set *s1 = new Set("{ [i,j,ip,jp] : i = col(jp)+1 and 0 <= i and i < n"
+                                     " and idx(i) <= j and j < idx(i+1) }");
+
+    Set *ex_s1 = new Set("{ [i, jp] : i = col(jp)+1 and i >= 0 and i+1 >= 0"
+           " and jp >= 0 and idx(i) >= 0 and idx(i+1) >= 0 and col(jp) >= 0"
+          " and i < n and i < n-1 and jp < n and col(jp) < n and idx(i) < n"
+                               " and idx(i+1) < n and idx(i) < idx(i + 1) }");
+
+   Set *s2;
+   // projectOut has the same behaivor for both Relation and Set
+
+  // Projecting out 'j' from s1
+  s2 = s1->projectOut(1);     // 1 == index of 'j'
+
+  if ( s2 ){
+     delete s1;               // removing old s1    
+     s1 = s2;
+  }
+  // Projecting out 'ip' from s1
+  s2 = s1->projectOut(1);     // 1 == index of 'ip' (in new results)
+
+  if ( s2 ){
+     delete s1;               // removing old s1    
+     s1 = s2;
+  }
+//   std::cout << std::endl << "s1 = " << s1->toISLString() << std::endl;
+
+   EXPECT_EQ( ex_s1->toISLString() , s1->toISLString() );
+
+   delete r1;
+   delete s1;
+   delete ex_r1;
+   delete ex_s1;
 }

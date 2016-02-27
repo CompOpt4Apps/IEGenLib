@@ -351,6 +351,8 @@ public:
     // Returns location of TV 
     int tvloc(){return mLocation;}
 
+    void setTvloc(int nl){ mLocation = nl;}
+
     //--------------------- methods for the use in expression
 
     //! Returns true if this term has the same factor (i.e. everything

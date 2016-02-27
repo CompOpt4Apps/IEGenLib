@@ -85,12 +85,10 @@ public:
     //! Comparison operator -- lexicographic order
     bool operator<(const Conjunction& other) const;
 
-/*
-	//! Given inarity parameter is adopted.
-	//! If inarity parameter is outside of feasible range for the existing
-	//! existing TupleDecl then throws exception.
+    //! Given inarity parameter is adopted.
+    //! If inarity parameter is outside of feasible range for the existing
+    //! existing TupleDecl then throws exception.
     void setInArity(int inarity);
-*/
     
     //! Given tuple declaration parameter is adopted.
     //! If there are some constants that don't agree then throws exception.
@@ -163,7 +161,6 @@ public:
     int arity() const { return mTupleDecl.size(); }
     //! Get/Set inarity, for use with relations
     int inarity() const { return mInArity; }
-    void setinarity(int in) { mInArity = in; }
     
     //! Returns true if the conjunction has at least one equality or inequality
     //! constraints.  If it contains none then this Conjunction is just
