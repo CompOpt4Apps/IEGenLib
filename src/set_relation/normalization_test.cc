@@ -70,54 +70,29 @@ void NormalizationTest::SetUp() {
 // Test the simple equalities
 TEST_F(NormalizationTest, SimpleEqualities) {
 
-    // conjunction {[a,b,c] -> [d] : a=d && b=d && c=d }
-    Exp a_minus_d;
-    a_minus_d.addTerm(new VarTerm("a"));
-    a_minus_d.addTerm(new VarTerm(-1,"d"));
-   
-    Exp b_minus_d;
-    b_minus_d.addTerm(new VarTerm("b"));
-    b_minus_d.addTerm(new VarTerm(-1,"d"));
-
-    Exp c_minus_d;
-    c_minus_d.addTerm(new VarTerm("c"));
-    c_minus_d.addTerm(new VarTerm(-1,"d"));
-    
-    TupleDecl tdecl1(4);
-    tdecl1.setTupleElem(0,"a");
-    tdecl1.setTupleElem(1,"b");
-    tdecl1.setTupleElem(2,"c");
-    tdecl1.setTupleElem(3,"d");
-    
-    Conjunction *conj1r;
-    conj1r = new Conjunction(4,3);
-    conj1r->setTupleDecl(tdecl1);            // tdecl1 adopted
-    conj1r->addEquality(a_minus_d.clone());
-    conj1r->addEquality(b_minus_d.clone());
-    conj1r->addEquality(c_minus_d.clone());
-    conj1r->substituteTupleDecl();
-    
-    EXPECT_EQ("{ [a, b, c] -> [d] : __tv0 - __tv3 = 0 && __tv1 - __tv3 = 0 && "
-              "__tv2 - __tv3 = 0 }", conj1r->toString());
+    // {[a,b,c] -> [d] : a=d && b=d && c=d }
+    // should normalize to
+    // {[a,b,c] -> [d] : a=b && a=c && a=d }
+    Relation *r = new Relation("{[a,b,c] -> [d] : a=d && b=d && c=d }");
     
     EXPECT_EQ("{ [a, b, c] -> [d] : a - d = 0 && b - d = 0 && c - d = 0 }", 
-              conj1r->prettyPrintString());
+              r->prettyPrintString());
 
-	Relation* expected  = new Relation("{ [a, b, c] -> [d] : a - d = 0 && "
-	                         "b - d = 0 && c - d = 0 }");
-	conj1r->normalize();
+	Relation* expected  = new Relation("{ [a, b, c] -> [d] : a - b = 0 && "
+	                         "a - c = 0 && a - d = 0 }");
+	r->normalize();
 
-	EXPECT_EQ(expected->toString(), conj1r->toString());
-	EXPECT_EQ(expected->prettyPrintString(), conj1r->prettyPrintString());
+	EXPECT_EQ(expected->toString(), r->toString());
+	EXPECT_EQ(expected->prettyPrintString(), r->prettyPrintString());
 
-	delete conj1r;
+	delete r;
 	delete expected;
 }
 
 #pragma mark SimpleEqOutOfOrder
 TEST_F(NormalizationTest, SimpleEqOutOfOrder) {
 
-    // conjunction {[a,b,c] -> [d] : d=a && d=b && d=c }
+    // {[a,b,c] -> [d] : d=a && d=b && d=c }
     Exp d_minus_a;
     d_minus_a.addTerm(new VarTerm("d"));
     d_minus_a.addTerm(new VarTerm(-1,"a"));
@@ -144,6 +119,8 @@ TEST_F(NormalizationTest, SimpleEqOutOfOrder) {
     conj1r->addEquality(d_minus_c.clone());
     conj1r->substituteTupleDecl();
     
+    // FIXME: why is conjunction normalization different than relations?
+    // Below is not what I expect from the normalization.
     EXPECT_EQ("{ [a, b, c] -> [d] : __tv0 - __tv3 = 0 && __tv1 - __tv3 = 0 && "
               "__tv2 - __tv3 = 0 }", conj1r->toString()); // fails
 	
@@ -156,6 +133,7 @@ TEST_F(NormalizationTest, SimpleEqOutOfOrder) {
 	EXPECT_EQ(expected->toString(), conj1r->toString());
 	EXPECT_EQ(expected->prettyPrintString(), conj1r->prettyPrintString());
 
+    delete expected;
 	delete conj1r;
 }
 
@@ -233,7 +211,7 @@ TEST_F(NormalizationTest, SimpleEqOutOfOrderRelation) {
               r5->prettyPrintString());
     
     
-    //OR
+    // ALSO
 
 	ASSERT_TRUE ((*r1) == (*r2));
 	ASSERT_TRUE ((*r1) == (*r3));
@@ -278,10 +256,8 @@ TEST_F(NormalizationTest, EqUFParamRelation) {
                    r2->toString());
 
     r1->normalize();
-//std::cout << "r1 = " << r1->toString() << std::endl;
 
     r2->normalize();
-//std::cout << "r2 = " << r2->toString() << std::endl;
 
 	ASSERT_TRUE((*r1) == (*r2));  // works!
 	
@@ -306,11 +282,8 @@ TEST_F(NormalizationTest, EqUFParamRelation2) {
                    "tstep = s0 && i = i1 && t = theta(0,i1) && x = 0 }");
 
     r1->normalize();
-//std::cout << "r1 = " << r1->toString() << std::endl;
 
     r2->normalize();
-//std::cout << "r2 = " << r2->toString() << std::endl;
-
 
 	ASSERT_TRUE((*r1) == (*r2));  // works!
 	
@@ -322,7 +295,6 @@ TEST_F(NormalizationTest, EqUFParamRelation2) {
 // differently-named equal variables sent as parameters to differently 
 // named UFCall same as EqUFParamRelation2, but with differently-named UFCalls
 TEST_F(NormalizationTest, EqUFSignatureRelation) {
-
 
     iegenlib::setCurrEnv();
     iegenlib::appendCurrEnv("theta",
@@ -339,10 +311,8 @@ TEST_F(NormalizationTest, EqUFSignatureRelation) {
                    "tstep = s0 && i = i1 && t = sigma(0,i1) && x = 0 }");
 
     r1->normalize();
-//std::cout << "r1 = " << r1->toString() << std::endl;
 
     r2->normalize();
-//std::cout << "r2 = " << r2->toString() << std::endl;
 
 	ASSERT_FALSE((*r1) == (*r2));  // works!
 
@@ -382,10 +352,8 @@ TEST_F(NormalizationTest, NestedUFCalls1D1D1D) {
 	ASSERT_TRUE((*r1) == (*r2));  
 
     r1->normalize();
-//std::cout << "r1 = " << r1->toString() << std::endl;
 
     r2->normalize();
-//std::cout << "r2 = " << r2->toString() << std::endl;
 
 	EXPECT_TRUE((*r1) == (*r2));  // works!
 	
@@ -397,33 +365,6 @@ TEST_F(NormalizationTest, NestedUFCalls1D1D1D) {
 #pragma mark NestedUFCalls1D2D1D
 // nested UFCalls with 1D -> 2D ->1D
 TEST_F(NormalizationTest, NestedUFCalls1D2D1D) {
-
-    /* // ------------------------------------------------------------
-    // OLD CODE ... keeping for the string routines ... 
-    // don't have to look them up again
-    
-    // 1) i1 = u1           ... add this one back in as a constraint
-    fromISL1.erase(fromISL1.length()-1,1); // remove last character ... '}'
-    fromISL1 += string("and i1 = u1 ");
-    fromISL1 += string("}");
-    
-    // 2) u1 = sigma(u0)    ... replace all "u1" with "sigma(u0)" 
-    int pos;
-    std::string target = "u1";
-    std::string replacement = "sigma(u0)";
-    while ((pos = fromISL1.find(target)) != std::string::npos) {
-        fromISL1.replace(pos, target.length(), replacement);
-    }
-
-    // 3) u0 = left(e)      ... replace all "u0" with "left(e)"   
-    Set* r1mod = new Set(fromISL1.c_str());
-	target = "u0";
-	replacement = "left(e)";
-    while ((pos = fromISL1.find(target)) != std::string::npos) {
-        fromISL1.replace(pos, target.length(), replacement);
-    }
-    
-    */ // -----------------------------------------------------------
     
     iegenlib::setCurrEnv();
     
@@ -454,7 +395,6 @@ TEST_F(NormalizationTest, NestedUFCalls1D2D1D) {
 
 
     r1->normalize();
-//std::cout << "r1 = " << r1->toString() << std::endl;
 	EXPECT_EQ("{ [s, i1, s2, e] : __tv0 - __tv2 = 0 && "
 	          "__tv1 - sigma(left(__tv3)[0], left(__tv3)[1]) = 0 "
 	          "&& __tv1 >= 0 && "
@@ -464,7 +404,6 @@ TEST_F(NormalizationTest, NestedUFCalls1D2D1D) {
 	          r1->toString());
 
     r2->normalize();
-//std::cout << "r2 = " << r2->toString() << std::endl;
 	EXPECT_EQ("{ [s, i1, s, f] : __tv0 - __tv2 = 0 && "
 	          "__tv1 - sigma(left(__tv3)[0], left(__tv3)[1]) = 0 "
 	          "&& __tv1 >= 0 && "
@@ -477,7 +416,6 @@ TEST_F(NormalizationTest, NestedUFCalls1D2D1D) {
 	
 	delete r1;
 	delete r2;
-
 }
 
 #pragma mark NestedUFCallsEqUFCalls
@@ -514,10 +452,8 @@ TEST_F(NormalizationTest, NestedUFCallsEqUFCalls) {
     EXPECT_FALSE((*r1) == (*r2));
              
     r1->normalize();
-//std::cout << "r1 = " << r1->toString() << std::endl;
 
     r2->normalize();
-//std::cout << "r2 = " << r2->toString() << std::endl;
 
     // after normalization all constraints are equivalent
 	EXPECT_TRUE((*r1) == (*r2));
@@ -539,38 +475,36 @@ TEST_F(NormalizationTest, EqUFSignatureEqParams) {
         new Set("{[i]:0<=i &&i<M}"), true, iegenlib::Monotonic_NONE);
 
     Set *r1 = new Set("{[tstep,i,s0,t,i1,x] : "
-                   "tstep = s0 && i = i1 && t = theta(0,i1) && x = 0 "
-                   "&& 1 <= theta(0,i1) && theta(0,i1) <= M && 1 <= i1 && i1 <= N}");
+            "tstep = s0 && i = i1 && t = theta(0,i1) && x = 0 "
+            "&& 1 <= theta(0,i1) && theta(0,i1) <= M && 1 <= i1 && i1 <= N}");
 
     Set *r2 = new Set("{[tstep,i,s0,t,i1,x] : "
-                   "tstep = s0 && i = i1 && t = theta(0,i) && x = 0 "
-                   "&& 1 <= theta(0,i) && theta(0,i) <= M && 1 <= i && i <= N}");
+            "tstep = s0 && i = i1 && t = theta(0,i) && x = 0 "
+            "&& 1 <= theta(0,i) && theta(0,i) <= M && 1 <= i && i <= N}");
 
     EXPECT_EQ("{ [tstep, i, s0, t, i1, x] : __tv5 = 0 && __tv0 - __tv2 = 0 && "
               "__tv1 - __tv4 = 0 && __tv3 - theta(0, __tv4) = 0 "
-              "&& -__tv4 + N >= 0 && "
-              "__tv4 - 1 >= 0 && M - theta(0, __tv4) >= 0 && theta(0, __tv4) - 1 >= 0 }",
+              "&& -__tv4 + N >= 0 && __tv4 - 1 >= 0 && "
+              "M - theta(0, __tv4) >= 0 && theta(0, __tv4) - 1 >= 0 }",
               r1->toString());
  
     EXPECT_EQ("{ [tstep, i, s0, t, i1, x] : __tv5 = 0 && __tv0 - __tv2 = 0 && "
               "__tv1 - __tv4 = 0 && __tv3 - theta(0, __tv1) = 0 "
-              "&& -__tv1 + N >= 0 && "
-              "__tv1 - 1 >= 0 && M - theta(0, __tv1) >= 0 && theta(0, __tv1) - 1 >= 0 }",
+              "&& -__tv1 + N >= 0 && __tv1 - 1 >= 0 && "
+              "M - theta(0, __tv1) >= 0 && theta(0, __tv1) - 1 >= 0 }",
               r2->toString());
 
     // before normalization constraints are different
     EXPECT_FALSE((*r1) == (*r2));
                           
     r1->normalize();
-//std::cout << "r1 = " << r1->toString() << std::endl;
 
     r2->normalize();
-//std::cout << "r2 = " << r2->toString() << std::endl;
 
-	ASSERT_TRUE((*r1) == (*r2));  // works!
-	
-	delete r1;
-	delete r2;
+    ASSERT_TRUE((*r1) == (*r2));  // works!
+
+    delete r1;
+    delete r2;
 
 }
 
