@@ -24,7 +24,7 @@ namespace iegenlib{
 
 /************************ ISL helper routines ****************************/
 
-// This function takes a Set/Relation string and returns equivalent isl_set*
+//! This function takes a Set string and returns equivalent isl_set*
 isl_set* islStringToSet( std::string relstr , isl_ctx *ctx )
 {
   // load Relation r into ISL map
@@ -33,8 +33,9 @@ isl_set* islStringToSet( std::string relstr , isl_ctx *ctx )
   return iset;
 }
 
-// This function takes an isl_set* and returns equivalent Set/Relation string
-// The function takes ownership of input arhument 'iset'
+/*! This function takes an isl_set* and returns equivalent Set string
+** The function takes ownership of input argument 'iset'
+*/
 std::string islSetToString ( isl_set* iset , isl_ctx *ctx )
 {
   // Get an isl printer and associate to an isl context
@@ -56,8 +57,41 @@ std::string islSetToString ( isl_set* iset , isl_ctx *ctx )
   return stringFromISL;
 }
 
-// runs the Set/Relation through ISL and returns the resulting string
-string getStringFromISL(string rstr) {
+//! This function takes a Relation string and returns equivalent isl_map*
+isl_map* islStringToMap( std::string relstr , isl_ctx *ctx )
+{
+  // load Relation r into ISL map
+  isl_map* imap = isl_map_read_from_str(ctx, relstr.c_str());
+
+  return imap;
+}
+
+/*! This function takes an isl_map* and returns equivalent Relation string
+** The function takes ownership of input argument 'iset'
+*/
+std::string islMapToString ( isl_map* imap , isl_ctx *ctx )
+{
+  // Get an isl printer and associate to an isl context
+  isl_printer * ip = isl_printer_to_str(ctx);
+
+  // get string back from ISL map
+  isl_printer_set_output_format(ip , ISL_FORMAT_ISL);
+  isl_printer_print_map(ip ,imap);
+  char *i_str = isl_printer_get_str(ip);
+  std::string stringFromISL (i_str); 
+  
+  // clean-up
+  isl_printer_flush(ip);
+  isl_printer_free(ip);
+  isl_map_free(imap);
+  imap= NULL;
+  free(i_str);
+
+  return stringFromISL;
+}
+
+//! runs the Set through ISL and returns the resulting string
+string passSetThruISL(string rstr) {
 
   isl_ctx *ctx = isl_ctx_alloc();
 
@@ -68,9 +102,21 @@ string getStringFromISL(string rstr) {
   return result;
 }
 
+//! runs the Relatioin through ISL and returns the resulting string
+string passRelationThruISL(string rstr) {
+
+  isl_ctx *ctx = isl_ctx_alloc();
+
+  string result =  islMapToString ( islStringToMap(rstr,ctx), ctx );
+
+  isl_ctx_free(ctx);
+
+  return result;
+}
+
 // This function can be used for Projecting out a tuple variable
-// from an affine relation/set string using isl library
-string islProjectOut(string rstr, unsigned pos) {
+// from an affine set string using isl library
+string islSetProjectOut(string rstr, unsigned pos) {
 
   isl_ctx *ctx = isl_ctx_alloc();
 
@@ -1469,7 +1515,7 @@ Set* Conjunction::normalize() const {
 //std::cout << "Conjunction::normalize: fromISl = " << fromISL << std::endl;
     
     // (a & b) could do this as one statement (below), but broken apart (above) for testing
-    string fromISL = getStringFromISL(retval1->toISLString());
+    string fromISL = passSetThruISL(retval1->toISLString());
 
 //std::cout << "Conjunction::normalize: fromISl = " << fromISL << std::endl;
 
@@ -1692,7 +1738,7 @@ Set* Conjunction::normalizeR() const
 //std::cout << "Conjunction::normalize: fromISl = " << fromISL << std::endl;
     
     // (a & b) could do this as one statement (below), but broken apart (above) for testing
-    string fromISL = getStringFromISL(retval1->toISLString());
+    string fromISL = passSetThruISL(retval1->toISLString());
     
     //string fromISL = "[N, P] -> { [tstep, i, tstep, t, i, 0, t] : i >= 0 and t <= 0 and i <= -1 + N and t >= 1 - P }";
 
@@ -3244,7 +3290,7 @@ void VisitorProjectOut::preVisitConjunction(iegenlib::Conjunction * c)
     std::string fromStep1 = retval1->toISLString();
  
     // (b) send through ISL to project out desired tuple variable
-    string fromISL = islProjectOut(fromStep1, tvar);
+    string fromISL = islSetProjectOut(fromStep1, tvar);
 
     // (c) convert back to a Set
     Set* retval2 = new Set(fromISL);
