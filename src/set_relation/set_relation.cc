@@ -36,14 +36,13 @@ isl_set* islStringToSet( std::string relstr , isl_ctx *ctx )
 /*! This function takes an isl_set* and returns equivalent Set string
 ** The function takes ownership of input argument 'iset'
 */
-std::string islSetToString ( isl_set* iset , isl_ctx *ctx )
-{
+std::string islSetToString ( isl_set* iset , isl_ctx *ctx ) {
   // Get an isl printer and associate to an isl context
   isl_printer * ip = isl_printer_to_str(ctx);
 
   // get string back from ISL map
-  isl_printer_set_output_format(ip , ISL_FORMAT_ISL);
-  isl_printer_print_set(ip ,iset);
+  isl_printer_set_output_format(ip, ISL_FORMAT_ISL);
+  isl_printer_print_set(ip, iset);
   char *i_str = isl_printer_get_str(ip);
   std::string stringFromISL (i_str); 
   
@@ -1329,7 +1328,7 @@ void Conjunction::cleanUp() {
 }
 
 /*!
-** (step 0) Group together all equality expressions that 
+** Group together all equality expressions that 
 ** are parts of the same UFCallTerm, IOW i=f(k)[0] and 
 ** j=f(k)[1] should become (i,j) = f(k).
 */
@@ -2517,6 +2516,40 @@ void Relation::addConjunction(Conjunction *adoptedConjunction) {
 // Then call cleanup to resort things?
 void Relation::normalize() {
 
+    // FIXME: all the below can happen in SparseConstraints.  Same for Set
+    // and Relation.
+
+    // Create variable names for UF calls.
+    UFCallMap* uf_call_map = mapUFCtoSym();
+    
+    // Replace uf calls with the variables to create an affine superset.
+    Relation* superset_copy = superAffineRelation(uf_call_map);
+    
+    // Send affine super set to ISL and let it normalize it.
+    // FIXME: NEED MAHDI's help here.  Not quite using it right I think.
+    std::string isl_string = toISLString();
+    isl_ctx *ctx = isl_ctx_alloc();
+    std::string isl_result = islSetToString(islStringToSet(isl_string,ctx),ctx);
+    isl_ctx_free(ctx);
+    
+    Relation* superset_normalized = new Relation(isl_result);
+    
+    // FIXME: how will this approach handle equivalent tuple vars passed
+    // to UF Calls?
+    
+    // Reverse the substitution of vars for uf calls.
+    Relation* normalized_copy 
+        = superset_normalized->reverseAffineSubstitution(uf_call_map);
+    
+    // Replace self with the normalized copy.
+    *this = *normalized_copy;
+    
+    // FIXME: how do I cleanup?
+    delete superset_copy;
+    delete superset_normalized;
+    // delete normalized_copy?
+
+/* OLD implementation of normalize
     // FIXME: ?? essentially the same as SparseConstraints::normalize(), but 
     // forces call to Relation::operator=(Set) at the statement:   *this = *result;
 
@@ -2533,6 +2566,7 @@ void Relation::normalize() {
     delete result;
     
     // FIXME: will need more ... See SparseConstraints::normalize()
+*/
 }
 
             
