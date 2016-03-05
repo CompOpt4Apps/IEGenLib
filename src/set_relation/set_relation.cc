@@ -1461,7 +1461,7 @@ void Conjunction::ufCallsToTempVars(UFCallMapAndBounds & ufcallmap) {
 **  and inequalities.  See SparseConstraints::normalize() for 
 **  algorithm overview.
 */
-Set* Conjunction::normalize() const {
+/*Set* Conjunction::normalize() const {
 
     /////////////////////
     // (step 0) Group together all equality expressions that 
@@ -1556,11 +1556,11 @@ Set* Conjunction::normalize() const {
         Exp * tvExp = conj->findFunction(i,0,i-1);
     	
     	if (not tvExp) {
-    		/*
-            throw assert_exception("Conjunction::normalize: "
-                "no expression for " + tvTerm->toString() + 
-                " in Conjunction fromISL");
-        	*/
+    		//
+            //throw assert_exception("Conjunction::normalize: "
+            //    "no expression for " + tvTerm->toString() + 
+            //    " in Conjunction fromISL");
+        	//
         	continue;
         }
         
@@ -1683,7 +1683,7 @@ Set* Conjunction::normalize() const {
     delete selfcopy;
     return retval2;  
 }
-
+*/
 
 /******************************************************************************/
 #pragma mark -
@@ -1993,7 +1993,7 @@ void SparseConstraints::cleanUp(){
 
 // Iterate over all conjunctions and normalize each conjunction.
 // Then call cleanup to resort things?
-void SparseConstraints::normalize() {
+/*void SparseConstraints::normalize() {
     //Set* normalized_set = new Set(arity());
 
     // FIXME: just assuming one conjunction right now.
@@ -2005,6 +2005,7 @@ void SparseConstraints::normalize() {
     Set* result = conj->normalize();
     *this =  *result;
     delete result;
+*/
 /*  FIXME: not ready to do this yet.  Need to get all parts
     of normalization working.   
     // normalize each conjunction and union together returned sets
@@ -2025,7 +2026,7 @@ std::cout << "result_set = " << result_set->prettyPrintString() << std::endl;
     
     // FIXME: might need to re-sort Conjunctions here and determine
     // if any are equivalent.
-}
+//}
 
 /*! Find any TupleVarTerms in this expression (and subexpressions)
 **  and remap the locations according to the oldToNewLocs vector,
@@ -2202,6 +2203,13 @@ Set* Set::boundTupleExp(const TupleExpTerm& tuple_exp) const {
     return result;
 }
 
+void Set::normalize() {
+
+    Set* normalized_copy = new Set(passSetThruISL(prettyPrintString()));
+    
+    // Replace self with the normalized copy.
+    *this = *normalized_copy;
+}
 
 /******************************************************************************/
 #pragma mark -
@@ -2233,7 +2241,8 @@ Relation& Relation::operator=(const Relation& other) {
 Relation& Relation::operator=(const Set& other) {
 
 	if (mInArity >= other.arity()) {
-        throw assert_exception("Relation::operator=(Set): impossible arity match");
+        throw assert_exception("Relation::operator=(Set): "
+                               "impossible arity match");
 	}
 	mOutArity = other.arity() - mInArity;
 	
@@ -2518,7 +2527,7 @@ void Relation::normalize() {
 
     // FIXME: all the below can happen in SparseConstraints.  Same for Set
     // and Relation.
-
+/*
     // Create variable names for UF calls.
     UFCallMap* uf_call_map = mapUFCtoSym();
     
@@ -2540,13 +2549,14 @@ void Relation::normalize() {
     // Reverse the substitution of vars for uf calls.
     Relation* normalized_copy 
         = superset_normalized->reverseAffineSubstitution(uf_call_map);
+*/
+    Relation* normalized_copy 
+        = new Relation(passRelationThruISL(prettyPrintString()));
     
     // Replace self with the normalized copy.
     *this = *normalized_copy;
     
     // FIXME: how do I cleanup?
-    delete superset_copy;
-    delete superset_normalized;
     // delete normalized_copy?
 
 /* OLD implementation of normalize

@@ -271,8 +271,8 @@ public:
     **  It has to be a set because bounds on parameters and UF calls
     **  can introduce disjunctions.
     **  See SparseConstraints::normalize() for algorithm overview.
-    */
-    Set* normalize() const;
+    *///FIXME
+    //Set* normalize() const;
 
     // Want to use these in Relation::isFunction and other so must be public.
     bool isFunction(int inArity) const;
@@ -394,7 +394,7 @@ public:
     **  back in for the temporary variables.  
     **  See normalize_test.cc for examples.
     */
-    virtual void normalize();
+    //virtual void normalize();
 
     /*! Find any TupleVarTerms in this expression (and subexpressions)
     **  and remap the locations according to the oldToNewLocs vector,
@@ -527,7 +527,8 @@ public:
     Set* addConstraintsDueToMonotonicity() const;
 
     
-    //void normalize();
+    //! Send through ISL to achieve a canonical form.
+    void normalize();
     
     //! Visitor design pattern, see Visitor.h for usage
     void acceptVisitor(Visitor *v);    
@@ -681,10 +682,7 @@ public:
     */
     Relation* addConstraintsDueToMonotonicity() const;    
 
-    // Iterate over all conjunctions and normalize each conjunction.
-    // Then call cleanup to resort things?
-    // BK: testing this out as a possible solution
-    //     Not ready for primetime yet
+    //! Send through ISL to achieve a canonical form.
     void normalize();
 
     //! Visitor design pattern, see Visitor.h for usage
