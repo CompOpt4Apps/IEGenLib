@@ -3739,11 +3739,9 @@ class VisitorSuperAffineSet : public Visitor {
 */
 Set* Set::superAffineSet(UFCallMap* ufcmap)
 {
-    Set* copySet = new Set( this->toISLString() );
-    VisitorSuperAffineSet* v = new VisitorSuperAffineSet(ufcmap);
-    
-    copySet = copySet->boundDomainRange();
+    Set* copySet = this->boundDomainRange();
 
+    VisitorSuperAffineSet* v = new VisitorSuperAffineSet(ufcmap);
     copySet->acceptVisitor( v );
     
     Set* result = (v->getSet());
@@ -3757,11 +3755,9 @@ Set* Set::superAffineSet(UFCallMap* ufcmap)
 //! Same as Set
 Relation* Relation::superAffineRelation(UFCallMap* ufcmap)
 {
-    Relation* copyRelation = new Relation( inArity(), outArity());
-    VisitorSuperAffineSet* v = new VisitorSuperAffineSet(ufcmap);
-    
-    copyRelation = this->boundDomainRange();
+    Relation* copyRelation = this->boundDomainRange();
 
+    VisitorSuperAffineSet* v = new VisitorSuperAffineSet(ufcmap);
     copyRelation->acceptVisitor( v );
 
     Relation* result = (v->getRelation());
@@ -3890,17 +3886,11 @@ class VisitorReverseAffineSubstitution : public Visitor {
 */
 Set* Set::reverseAffineSubstitution(UFCallMap* ufcmap)
 {
-    Set* copySet = new Set( this->toISLString() );
     VisitorReverseAffineSubstitution* v = 
                   new VisitorReverseAffineSubstitution(ufcmap);
-    
-    copySet = copySet->boundDomainRange();
-
-    copySet->acceptVisitor( v );
+    this->acceptVisitor( v );
     
     Set* result = (v->getSet());
-    
-    delete copySet;
     delete v;
 
     return result;
@@ -3909,16 +3899,11 @@ Set* Set::reverseAffineSubstitution(UFCallMap* ufcmap)
 //! Same as Set
 Relation* Relation::reverseAffineSubstitution(UFCallMap* ufcmap)
 {
-    Relation* copyRelation = new Relation( inArity(), outArity());
-    VisitorReverseAffineSubstitution* v = new VisitorReverseAffineSubstitution(ufcmap);
-    
-    copyRelation = this->boundDomainRange();
-
-    copyRelation->acceptVisitor( v );
+    VisitorReverseAffineSubstitution* v = 
+                  new VisitorReverseAffineSubstitution(ufcmap);
+    this->acceptVisitor( v );
 
     Relation* result = (v->getRelation());
-
-    delete copyRelation;
     delete v;
 
     return result;
