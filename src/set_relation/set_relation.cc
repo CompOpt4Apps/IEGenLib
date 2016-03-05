@@ -57,7 +57,7 @@ std::string islSetToString ( isl_set* iset , isl_ctx *ctx )
   return stringFromISL;
 }
 
-//! This function takes a Relation string and returns equivalent isl_map*
+//! This function takes a Relation string and returns pointer to equ. isl_map
 isl_map* islStringToMap( std::string relstr , isl_ctx *ctx )
 {
   // load Relation r into ISL map
@@ -66,8 +66,8 @@ isl_map* islStringToMap( std::string relstr , isl_ctx *ctx )
   return imap;
 }
 
-/*! This function takes an isl_map* and returns equivalent Relation string
-** The function takes ownership of input argument 'iset'
+/*! This function takes an isl_map* and returns pointer to equ. Relation string
+** The function takes ownership of input argument 'imap'
 */
 std::string islMapToString ( isl_map* imap , isl_ctx *ctx )
 {
@@ -102,7 +102,7 @@ string passSetThruISL(string rstr) {
   return result;
 }
 
-//! runs the Relatioin through ISL and returns the resulting string
+//! Runs a Relation string through ISL and returns the resulting string
 string passRelationThruISL(string rstr) {
 
   isl_ctx *ctx = isl_ctx_alloc();
