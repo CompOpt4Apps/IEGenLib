@@ -66,6 +66,7 @@ void NormalizationTest::SetUp() {
 
 }
 
+
 #pragma mark SimpleEqualities
 // Test the simple equalities
 TEST_F(NormalizationTest, SimpleEqualities) {
@@ -78,15 +79,15 @@ TEST_F(NormalizationTest, SimpleEqualities) {
     EXPECT_EQ("{ [a, b, c] -> [d] : a - d = 0 && b - d = 0 && c - d = 0 }", 
               r->prettyPrintString());
 
-	Relation* expected  = new Relation("{ [a, b, c] -> [d] : a - b = 0 && "
-	                         "a - c = 0 && a - d = 0 }");
-	r->normalize();
+    Relation* expected  = new Relation("{ [a, b, c] -> [d] : a - b = 0 && "
+                             "a - c = 0 && a - d = 0 }");
+    r->normalize();
 
-	EXPECT_EQ(expected->toString(), r->toString());
-	EXPECT_EQ(expected->prettyPrintString(), r->prettyPrintString());
+    EXPECT_EQ(expected->toString(), r->toString());
+    EXPECT_EQ(expected->prettyPrintString(), r->prettyPrintString());
 
-	delete r;
-	delete expected;
+    delete r;
+    delete expected;
 }
 
 #pragma mark SimpleEqOutOfOrder
@@ -123,18 +124,18 @@ TEST_F(NormalizationTest, SimpleEqOutOfOrder) {
     // Below is not what I expect from the normalization.
     EXPECT_EQ("{ [a, b, c] -> [d] : __tv0 - __tv3 = 0 && __tv1 - __tv3 = 0 && "
               "__tv2 - __tv3 = 0 }", conj1r->toString()); // fails
-	
+    
     EXPECT_EQ("{ [a, b, c] -> [d] : a - d = 0 && b - d = 0 && c - d = 0 }", 
             conj1r->prettyPrintString()); // passes
 
-	Relation* expected  = new Relation("{ [a, b, c] -> [d] : a - d = 0 && "
-	                         "b - d = 0 && c - d = 0 }");
-	conj1r->normalize();
-	EXPECT_EQ(expected->toString(), conj1r->toString());
-	EXPECT_EQ(expected->prettyPrintString(), conj1r->prettyPrintString());
+    Relation* expected  = new Relation("{ [a, b, c] -> [d] : a - d = 0 && "
+                             "b - d = 0 && c - d = 0 }");
+    conj1r->normalize();
+    EXPECT_EQ(expected->toString(), conj1r->toString());
+    EXPECT_EQ(expected->prettyPrintString(), conj1r->prettyPrintString());
 
     delete expected;
-	delete conj1r;
+    delete conj1r;
 }
 
 #pragma mark SimpleEqOutOfOrderRelation
@@ -177,11 +178,11 @@ TEST_F(NormalizationTest, SimpleEqOutOfOrderRelation) {
               r5->prettyPrintString());
 
 
-	r1->normalize();
-	r2->normalize();
-	r3->normalize();
-	r4->normalize();
-	r5->normalize();
+    r1->normalize();
+    r2->normalize();
+    r3->normalize();
+    r4->normalize();
+    r5->normalize();
 
     EXPECT_EQ("{ [a, b, c] -> [d] : "
               "__tv0 - __tv1 = 0 && __tv0 - __tv2 = 0 && __tv0 - __tv3 = 0 }", 
@@ -213,19 +214,19 @@ TEST_F(NormalizationTest, SimpleEqOutOfOrderRelation) {
     
     // ALSO
 
-	ASSERT_TRUE ((*r1) == (*r2));
-	ASSERT_TRUE ((*r1) == (*r3));
-	ASSERT_TRUE ((*r1) == (*r4));
-	ASSERT_TRUE ((*r1) == (*r5));
-	
+    ASSERT_TRUE ((*r1) == (*r2));
+    ASSERT_TRUE ((*r1) == (*r3));
+    ASSERT_TRUE ((*r1) == (*r4));
+    ASSERT_TRUE ((*r1) == (*r5));
+    
 
 
-	delete r1;
-	delete r2;
-	delete r3;
-	delete r4;
-	delete r5;
-	
+    delete r1;
+    delete r2;
+    delete r3;
+    delete r4;
+    delete r5;
+    
 }
 
 #pragma mark EqUFParamRelation
@@ -259,10 +260,10 @@ TEST_F(NormalizationTest, EqUFParamRelation) {
 
     r2->normalize();
 
-	ASSERT_TRUE((*r1) == (*r2));  // works!
-	
-	delete r1;
-	delete r2;
+    ASSERT_TRUE((*r1) == (*r2));  // works!
+    
+    delete r1;
+    delete r2;
 }
 
 #pragma mark EqUFParamRelation2
@@ -285,10 +286,10 @@ TEST_F(NormalizationTest, EqUFParamRelation2) {
 
     r2->normalize();
 
-	ASSERT_TRUE((*r1) == (*r2));  // works!
-	
-	delete r1;
-	delete r2;
+    ASSERT_TRUE((*r1) == (*r2));  // works!
+    
+    delete r1;
+    delete r2;
 }
 
 #pragma mark EqUFSignatureRelation
@@ -314,10 +315,10 @@ TEST_F(NormalizationTest, EqUFSignatureRelation) {
 
     r2->normalize();
 
-	ASSERT_FALSE((*r1) == (*r2));  // works!
+    ASSERT_FALSE((*r1) == (*r2));  // works!
 
-	delete r1;
-	delete r2;
+    delete r1;
+    delete r2;
 }
 
 #pragma mark NestedUFCalls1D1D1D
@@ -333,7 +334,7 @@ TEST_F(NormalizationTest, NestedUFCalls1D1D1D) {
     iegenlib::appendCurrEnv("sigma",
         new Set("{[i]:0<=i &&i<M}"),
         new Set("{[i]:0<=i &&i<N}"), true, iegenlib::Monotonic_NONE);
-	
+    
     Set *r1 = new Set("{[s,i1,s2,e] : "
                    "s = s2 && i1 = sigma(left(e)) }");
 
@@ -349,16 +350,16 @@ TEST_F(NormalizationTest, NestedUFCalls1D1D1D) {
               r2->toString());
              
     // passes because the e and f are in same tuple location
-	ASSERT_TRUE((*r1) == (*r2));  
+    ASSERT_TRUE((*r1) == (*r2));  
 
     r1->normalize();
 
     r2->normalize();
 
-	EXPECT_TRUE((*r1) == (*r2));  // works!
-	
-	delete r1;
-	delete r2;
+    EXPECT_TRUE((*r1) == (*r2));  // works!
+    
+    delete r1;
+    delete r2;
 
 }
 
@@ -391,31 +392,31 @@ TEST_F(NormalizationTest, NestedUFCalls1D2D1D) {
               r2->toString());
              
     // passes because the e and f are in same tuple location
-	ASSERT_TRUE((*r1) == (*r2));  
+    ASSERT_TRUE((*r1) == (*r2));  
 
 
     r1->normalize();
-	EXPECT_EQ("{ [s, i1, s2, e] : __tv0 - __tv2 = 0 && "
-	          "__tv1 - sigma(left(__tv3)[0], left(__tv3)[1]) = 0 "
-	          "&& __tv1 >= 0 && "
-	          "__tv3 >= 0 && left(__tv3)[0] >= 0 && left(__tv3)[1] >= 0 && "
-	          "-__tv1 + N - 1 >= 0 && -__tv3 + K - 1 >= 0 && "
-	          "M - left(__tv3)[0] - 1 >= 0 && P - left(__tv3)[1] - 1 >= 0 }",
-	          r1->toString());
+    EXPECT_EQ("{ [s, i1, s2, e] : __tv0 - __tv2 = 0 && "
+              "__tv1 - sigma(left(__tv3)[0], left(__tv3)[1]) = 0 "
+              "&& __tv1 >= 0 && "
+              "__tv3 >= 0 && left(__tv3)[0] >= 0 && left(__tv3)[1] >= 0 && "
+              "-__tv1 + N - 1 >= 0 && -__tv3 + K - 1 >= 0 && "
+              "M - left(__tv3)[0] - 1 >= 0 && P - left(__tv3)[1] - 1 >= 0 }",
+              r1->toString());
 
     r2->normalize();
-	EXPECT_EQ("{ [s, i1, s, f] : __tv0 - __tv2 = 0 && "
-	          "__tv1 - sigma(left(__tv3)[0], left(__tv3)[1]) = 0 "
-	          "&& __tv1 >= 0 && "
-	          "__tv3 >= 0 && left(__tv3)[0] >= 0 && left(__tv3)[1] >= 0 && "
-	          "-__tv1 + N - 1 >= 0 && -__tv3 + K - 1 >= 0 && "
-	          "M - left(__tv3)[0] - 1 >= 0 && P - left(__tv3)[1] - 1 >= 0 }",
-	          r2->toString());
+    EXPECT_EQ("{ [s, i1, s, f] : __tv0 - __tv2 = 0 && "
+              "__tv1 - sigma(left(__tv3)[0], left(__tv3)[1]) = 0 "
+              "&& __tv1 >= 0 && "
+              "__tv3 >= 0 && left(__tv3)[0] >= 0 && left(__tv3)[1] >= 0 && "
+              "-__tv1 + N - 1 >= 0 && -__tv3 + K - 1 >= 0 && "
+              "M - left(__tv3)[0] - 1 >= 0 && P - left(__tv3)[1] - 1 >= 0 }",
+              r2->toString());
 
-	EXPECT_TRUE((*r1) == (*r2));
-	
-	delete r1;
-	delete r2;
+    EXPECT_TRUE((*r1) == (*r2));
+    
+    delete r1;
+    delete r2;
 }
 
 #pragma mark NestedUFCallsEqUFCalls
@@ -456,10 +457,10 @@ TEST_F(NormalizationTest, NestedUFCallsEqUFCalls) {
     r2->normalize();
 
     // after normalization all constraints are equivalent
-	EXPECT_TRUE((*r1) == (*r2));
-	
-	delete r1;
-	delete r2;
+    EXPECT_TRUE((*r1) == (*r2));
+    
+    delete r1;
+    delete r2;
 
 }
 
@@ -523,19 +524,18 @@ TEST_F(NormalizationTest, AffineExpWithUFCall) {
     EXPECT_EQ("{ [x, d] : __tv1 - f(__tv0) = 0 }",
               r1->toString()); 
 
-	// for r1:   Since IEGenLib already is able to recognize that f(x)+x=f(x)+x
-	//           is redundant, leaving only d=f(x) as a constraint, no need
-	//           to normalize() it, but still sending it through to show
-	//           that normalize() brings in function range and domain
-	//           constraints
-		
-	r1->normalize();
-//std::cout << "r1 = " << r1->toString() << std::endl;
+    // for r1:   Since IEGenLib already is able to recognize that f(x)+x=f(x)+x
+    //           is redundant, leaving only d=f(x) as a constraint, no need
+    //           to normalize() it, but still sending it through to show
+    //           that normalize() brings in function range and domain
+    //           constraints
+        
+    r1->normalize();
 
     EXPECT_EQ("{ [x, d] : __tv1 - f(__tv0) = 0 && __tv0 >= 0 && __tv1 >= 0 && "
               "-__tv0 + P - 1 >= 0 && -__tv1 + M - 1 >= 0 }",
               r1->toString());
-	
+    
     delete r1;
   }
   
@@ -552,7 +552,6 @@ TEST_F(NormalizationTest, AffineExpWithUFCall) {
               r2->toString());
              
     r2->normalize();
-//std::cout << "r2 = " << r2->toString() << std::endl;
 
     EXPECT_EQ("{ [3] : f(3) - f(__tv0) = 0 && f(3) >= 0 && "
                  "P - 4 >= 0 && M - f(3) - 1 >= 0 }",
@@ -562,8 +561,8 @@ TEST_F(NormalizationTest, AffineExpWithUFCall) {
     // constants.  One thing we should do is when we have all constants in
     // the tuple, then all the other constraints should go away.
     // Made this IEGRTWO-107.
-    	
-	delete r2;
+        
+    delete r2;
   }
 }
 
@@ -593,20 +592,20 @@ TEST_F(NormalizationTest, EqAffineExpParamForUFCalls) {
     
 /*
     Conjunction::ufCallsToTempVars: e     = __tv2 - f(__tv1 - 1)
-	Exp::ufCallsToTempVars callTerm = -f(__tv1 - 1)
-	UFCallTerm::ufCallsToTempVars: init  mod_ufcall = f(__tv1 - 1)
-	tempvars for  UFCallTerm::ufCallsToTempVars= ( __tv3 )
-	retval for  UFCallTerm::ufCallsToTempVars= -__tv3
-	Exp::ufCallsToTempVars mod_call = -__tv3
-	Conjunction::ufCallsToTempVars: mod_e = __tv2 - f(__tv1 - 1)
-	Conjunction::ufCallsToTempVars: e     = __tv0 - __tv1 + 2
-	Conjunction::ufCallsToTempVars: mod_e = __tv0 - __tv1 + 2
-	Conjunction::normalize: fromStep1 = [ M, P ] -> { [i, j, x, tv3] : x - tv3 = 0 && i - j + 2 = 0 && tv3 >= 0 && -j + P >= 0 && j - 1 >= 0 && -tv3 + M - 1 >= 0 }
-	Conjunction::normalize: fromISl = [M, P] -> { [i, 2 + i, x, x] : x >= 0 and i <= -2 + P and i >= -1 and x <= -1 + M }
-	unknown file: Failure
-	C++ exception with description 
-		"syntax error, unexpected PLUS, expecting RBRACKET or COMMA at '+', line 1
-		" thrown in the test body.
+    Exp::ufCallsToTempVars callTerm = -f(__tv1 - 1)
+    UFCallTerm::ufCallsToTempVars: init  mod_ufcall = f(__tv1 - 1)
+    tempvars for  UFCallTerm::ufCallsToTempVars= ( __tv3 )
+    retval for  UFCallTerm::ufCallsToTempVars= -__tv3
+    Exp::ufCallsToTempVars mod_call = -__tv3
+    Conjunction::ufCallsToTempVars: mod_e = __tv2 - f(__tv1 - 1)
+    Conjunction::ufCallsToTempVars: e     = __tv0 - __tv1 + 2
+    Conjunction::ufCallsToTempVars: mod_e = __tv0 - __tv1 + 2
+    Conjunction::normalize: fromStep1 = [ M, P ] -> { [i, j, x, tv3] : x - tv3 = 0 && i - j + 2 = 0 && tv3 >= 0 && -j + P >= 0 && j - 1 >= 0 && -tv3 + M - 1 >= 0 }
+    Conjunction::normalize: fromISl = [M, P] -> { [i, 2 + i, x, x] : x >= 0 and i <= -2 + P and i >= -1 and x <= -1 + M }
+    unknown file: Failure
+    C++ exception with description 
+        "syntax error, unexpected PLUS, expecting RBRACKET or COMMA at '+', line 1
+        " thrown in the test body.
 */
              
 //    r1->normalize();
@@ -616,13 +615,14 @@ TEST_F(NormalizationTest, EqAffineExpParamForUFCalls) {
 //std::cout << "r2 = " << r2->toString() << std::endl;
 
     
-//	  ASSERT_TRUE((*r1) == (*r2));  // works!
+//      ASSERT_TRUE((*r1) == (*r2));  // works!
 
-	
-	delete r1;
-	delete r2;
+    
+    delete r1;
+    delete r2;
 
 }
+
 
 
 #pragma mark boundTupleExpRange
