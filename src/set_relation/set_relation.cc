@@ -5,10 +5,10 @@
  *
  * \date Started: 3/28/12
  *
- * \authors Michelle Strout and Joe Strout
+ * \authors Michelle Strout, Joe Strout, and Mahdi Soltan Mohammadi 
  *
  * Copyright (c) 2012, Colorado State University <br>
- * Copyright (c) 2015, University of Arizona <br>
+ * Copyright (c) 2015-2016, University of Arizona <br>
  * All rights reserved. <br>
  * See ../../COPYING for details. <br>
  */
@@ -2525,39 +2525,29 @@ void Relation::addConjunction(Conjunction *adoptedConjunction) {
 // Then call cleanup to resort things?
 void Relation::normalize() {
 
-    // FIXME: all the below can happen in SparseConstraints.  Same for Set
-    // and Relation.
-/*
+
     // Create variable names for UF calls.
     UFCallMap* uf_call_map = mapUFCtoSym();
     
     // Replace uf calls with the variables to create an affine superset.
     Relation* superset_copy = superAffineRelation(uf_call_map);
-    
+
     // Send affine super set to ISL and let it normalize it.
-    // FIXME: NEED MAHDI's help here.  Not quite using it right I think.
-    std::string isl_string = toISLString();
-    isl_ctx *ctx = isl_ctx_alloc();
-    std::string isl_result = islSetToString(islStringToSet(isl_string,ctx),ctx);
-    isl_ctx_free(ctx);
-    
-    Relation* superset_normalized = new Relation(isl_result);
-    
-    // FIXME: how will this approach handle equivalent tuple vars passed
-    // to UF Calls?
-    
-    // Reverse the substitution of vars for uf calls.
+    Relation* superset_normalized 
+        = new Relation(passRelationThruISL(superset_copy->toISLString()));
+ 
+     // Reverse the substitution of vars for uf calls.
     Relation* normalized_copy 
         = superset_normalized->reverseAffineSubstitution(uf_call_map);
-*/
-    Relation* normalized_copy 
-        = new Relation(passRelationThruISL(prettyPrintString()));
-    
+   
     // Replace self with the normalized copy.
     *this = *normalized_copy;
-    
-    // FIXME: how do I cleanup?
-    // delete normalized_copy?
+        
+    // Cleanup
+    delete normalized_copy;
+    delete uf_call_map;
+    delete superset_copy;
+    delete superset_normalized;
 
 /* OLD implementation of normalize
     // FIXME: ?? essentially the same as SparseConstraints::normalize(), but 

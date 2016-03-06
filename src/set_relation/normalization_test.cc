@@ -241,11 +241,10 @@ TEST_F(NormalizationTest, EqUFParamRelation) {
         new Set("{[j]:0<=j &&j<P}"), true, iegenlib::Monotonic_NONE);
 
     Relation *r1 = new Relation("{[tstep,i] -> [s0,t,i1,x] : "
-                   "tstep = s0 && i = i1 && t=i && x = 0 }");
-//                   "tstep = s0 && i = i1 && t = theta(i) && x = 0 }");
+                   "tstep = s0 && i = i1 && t = theta(i) && x = 0 }");
 
-//    Relation *r2 = new Relation("{[tstep,i] -> [tstep,t,i1,x1] : "
-//                   "i = i1 && t = theta(i1) && x1 = 0 }");
+    Relation *r2 = new Relation("{[tstep,i] -> [tstep,t,i1,x1] : "
+                   "i = i1 && t = theta(i1) && x1 = 0 }");
 
     // checking toString() results
     EXPECT_EQ("{ [tstep, i] -> [s0, t, i1, x] : __tv5 = 0 && "
@@ -253,19 +252,19 @@ TEST_F(NormalizationTest, EqUFParamRelation) {
                    "__tv1 - __tv4 = 0 && __tv3 - theta(__tv1) = 0 }",
                    r1->toString());
 
-//    EXPECT_EQ("{ [tstep, i] -> [tstep, t, i1, x1] : __tv5 = 0 && "
-//                   "__tv0 - __tv2 = 0 && "
-//                   "__tv1 - __tv4 = 0 && __tv3 - theta(__tv4) = 0 }",
-//                   r2->toString());
+    EXPECT_EQ("{ [tstep, i] -> [tstep, t, i1, x1] : __tv5 = 0 && "
+                   "__tv0 - __tv2 = 0 && "
+                   "__tv1 - __tv4 = 0 && __tv3 - theta(__tv4) = 0 }",
+                   r2->toString());
 
     r1->normalize();
 
-//    r2->normalize();
+    r2->normalize();
 
-//    ASSERT_TRUE((*r1) == (*r2));  // works!
+    ASSERT_TRUE((*r1) == (*r2));  // works!
     
     delete r1;
-//    delete r2;
+    delete r2;
 }
 
 #pragma mark EqUFParamRelation2
@@ -316,8 +315,10 @@ TEST_F(NormalizationTest, EqUFSignatureRelation) {
     r1->normalize();
 
     r2->normalize();
+std::cout << "r1 = " << r1->prettyPrintString() << std::endl;
+std::cout << "r2 = " << r2->prettyPrintString() << std::endl;
 
-    ASSERT_FALSE((*r1) == (*r2));  // works!
+    ASSERT_FALSE((*r1) == (*r2));
 
     delete r1;
     delete r2;
