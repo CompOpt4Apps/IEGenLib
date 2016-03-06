@@ -2203,12 +2203,31 @@ Set* Set::boundTupleExp(const TupleExpTerm& tuple_exp) const {
     return result;
 }
 
+// Replace UFs with vars, pass to ISL, and then reverse substitution.
 void Set::normalize() {
 
-    Set* normalized_copy = new Set(passSetThruISL(prettyPrintString()));
+    // Create variable names for UF calls.
+    UFCallMap* uf_call_map = mapUFCtoSym();
     
+    // Replace uf calls with the variables to create an affine superset.
+    Set* superset_copy = superAffineSet(uf_call_map);
+
+    // Send affine super set to ISL and let it normalize it.
+    Set* superset_normalized 
+        = new Set(passSetThruISL(superset_copy->toISLString()));
+ 
+     // Reverse the substitution of vars for uf calls.
+    Set* normalized_copy 
+        = superset_normalized->reverseAffineSubstitution(uf_call_map);
+   
     // Replace self with the normalized copy.
     *this = *normalized_copy;
+        
+    // Cleanup
+    delete normalized_copy;
+    delete uf_call_map;
+    delete superset_copy;
+    delete superset_normalized;
 }
 
 /******************************************************************************/
@@ -2521,10 +2540,8 @@ void Relation::addConjunction(Conjunction *adoptedConjunction) {
     SparseConstraints::addConjunction(adoptedConjunction);
 }
 
-// Iterate over all conjunctions and normalize each conjunction.
-// Then call cleanup to resort things?
+// Replace UFs with vars, pass to ISL, and then reverse substitution.
 void Relation::normalize() {
-
 
     // Create variable names for UF calls.
     UFCallMap* uf_call_map = mapUFCtoSym();
@@ -2548,25 +2565,6 @@ void Relation::normalize() {
     delete uf_call_map;
     delete superset_copy;
     delete superset_normalized;
-
-/* OLD implementation of normalize
-    // FIXME: ?? essentially the same as SparseConstraints::normalize(), but 
-    // forces call to Relation::operator=(Set) at the statement:   *this = *result;
-
-    // FIXME: just assuming one conjunction right now.
-    if (mConjunctions.size()!=1) {
-        throw assert_exception("Relation::normalize: "
-            "currently only handle one Conjunction Sets/Relations");
-    }
-
-    Conjunction* conj = mConjunctions.front();
-    Set* result = conj->normalize();
-    //Set* result = conj->normalizeR();
-    *this =  *result;
-    delete result;
-    
-    // FIXME: will need more ... See SparseConstraints::normalize()
-*/
 }
 
             
