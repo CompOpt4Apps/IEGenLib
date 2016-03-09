@@ -267,13 +267,6 @@ public:
     //Set* createAffineSuperSet(UFCallMapAndBounds & ufcallmap);
     void ufCallsToTempVars(UFCallMapAndBounds & ufcallmap);
     
-    /*! Returns a normalized Set that represents this Conjunct.
-    **  It has to be a set because bounds on parameters and UF calls
-    **  can introduce disjunctions.
-    **  See SparseConstraints::normalize() for algorithm overview.
-    *///FIXME
-    //Set* normalize() const;
-
     // Want to use these in Relation::isFunction and other so must be public.
     bool isFunction(int inArity) const;
     bool isFunctionInverse(int inArity) const;
@@ -386,15 +379,6 @@ public:
     //! Remove duplicate constraints and trivial constraints
     void cleanUp();
     
-    /*! Barbara's algorithm: bottom up convert all UF calls to 
-    **  affine constraints on the argument expressions and expressions
-    **  equivalent to the output.  Send these constraints to ISL
-    **  for normalization with row reduction form for equalities and hopefully
-    **  a convergent form for inequalities.  Then substitute the UF calls
-    **  back in for the temporary variables.  
-    **  See normalize_test.cc for examples.
-    */
-    //virtual void normalize();
 
     /*! Find any TupleVarTerms in this expression (and subexpressions)
     **  and remap the locations according to the oldToNewLocs vector,
@@ -526,7 +510,6 @@ public:
     */
     Set* addConstraintsDueToMonotonicity() const;
 
-    
     //! Send through ISL to achieve a canonical form.
     void normalize();
     
@@ -540,7 +523,7 @@ public:
     /*! Creates a super affine set from a non-affine set.
     **  To do this:
     **    (1) We add constraints due to all UFCalls' domain and range
-    **    (2) We replace all UFCalls with symbolic constants found in the ufc map.
+    **    (2) We replace all UFCalls with symbolic constants in the ufc map.
     **  The function does not own the ufcmap.
     */
     Set* superAffineSet(UFCallMap* ufcmap);

@@ -315,8 +315,8 @@ TEST_F(NormalizationTest, EqUFSignatureRelation) {
     r1->normalize();
 
     r2->normalize();
-std::cout << "r1 = " << r1->prettyPrintString() << std::endl;
-std::cout << "r2 = " << r2->prettyPrintString() << std::endl;
+std::cout << "r1 normalized = " << r1->prettyPrintString() << std::endl;
+std::cout << "r2 normalized = " << r2->prettyPrintString() << std::endl;
 
     ASSERT_FALSE((*r1) == (*r2));
 
