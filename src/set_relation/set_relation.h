@@ -250,7 +250,7 @@ public:
     void cleanUp();
     
     /*!
-    ** (step 0) Group together all equality expressions that 
+    ** Group together all equality expressions that 
     ** are parts of the same UFCallTerm, IOW i=f(k)[0] and 
     ** j=f(k)[1] should become (i,j) = f(k).
     */
@@ -267,14 +267,6 @@ public:
     //Set* createAffineSuperSet(UFCallMapAndBounds & ufcallmap);
     void ufCallsToTempVars(UFCallMapAndBounds & ufcallmap);
     
-    /*! Returns a normalized Set that represents this Conjunct.
-    **  It has to be a set because bounds on parameters and UF calls
-    **  can introduce disjunctions.
-    **  See SparseConstraints::normalize() for algorithm overview.
-    */
-    Set* normalize() const;
-    Set* normalizeR() const;  // BK:  was trying this out ... may not stay
-
     // Want to use these in Relation::isFunction and other so must be public.
     bool isFunction(int inArity) const;
     bool isFunctionInverse(int inArity) const;
@@ -387,15 +379,6 @@ public:
     //! Remove duplicate constraints and trivial constraints
     void cleanUp();
     
-    /*! Barbara's algorithm: bottom up convert all UF calls to 
-    **  affine constraints on the argument expressions and expressions
-    **  equivalent to the output.  Send these constraints to ISL
-    **  for normalization with row reduction form for equalities and hopefully
-    **  a convergent form for inequalities.  Then substitute the UF calls
-    **  back in for the temporary variables.  
-    **  See normalize_test.cc for examples.
-    */
-    virtual void normalize();
 
     /*! Find any TupleVarTerms in this expression (and subexpressions)
     **  and remap the locations according to the oldToNewLocs vector,
@@ -410,13 +393,13 @@ public:
     //! Visitor design pattern, see Visitor.h for usage
     void acceptVisitor(Visitor *v);
 
-    // Is tuple variable tupleID argument to an UFS?
+    //! Is tuple variable tupleID argument to an UFS?
     bool isUFCallParam(int tupleID);
 
-    // The function traverses all conjunctions to find UFcalls.
-    // For every distinct UGCall, it creates a equ. symbolic constant (string)
-    // and stores the (UFC, Sym) pair in a UFCallMap. The function returns
-    // a pointer to final UFCallMap that the user is responsible for deleting.
+    //! The function traverses all conjunctions to find UFcalls.
+    //! For every distinct UGCall, it creates a equ. symbolic constant (string)
+    //! and stores the (UFC, Sym) pair in a UFCallMap. The function returns
+    //! a pointer to final UFCallMap that the user is responsible for deleting.
     UFCallMap* mapUFCtoSym();
 
 
@@ -527,8 +510,8 @@ public:
     */
     Set* addConstraintsDueToMonotonicity() const;
 
-    
-    //void normalize();
+    //! Send through ISL to achieve a canonical form.
+    void normalize();
     
     //! Visitor design pattern, see Visitor.h for usage
     void acceptVisitor(Visitor *v);    
@@ -540,7 +523,7 @@ public:
     /*! Creates a super affine set from a non-affine set.
     **  To do this:
     **    (1) We add constraints due to all UFCalls' domain and range
-    **    (2) We replace all UFCalls with symbolic constants found in the ufc map.
+    **    (2) We replace all UFCalls with symbolic constants in the ufc map.
     **  The function does not own the ufcmap.
     */
     Set* superAffineSet(UFCallMap* ufcmap);
@@ -682,10 +665,7 @@ public:
     */
     Relation* addConstraintsDueToMonotonicity() const;    
 
-    // Iterate over all conjunctions and normalize each conjunction.
-    // Then call cleanup to resort things?
-    // BK: testing this out as a possible solution
-    //     Not ready for primetime yet
+    //! Send through ISL to achieve a canonical form.
     void normalize();
 
     //! Visitor design pattern, see Visitor.h for usage
@@ -697,24 +677,26 @@ public:
 
     /*! Creates a super affine Relation from a non-affine Relation.
     **  To do this:
-    **    (1) We add constraints due to all UFCalls' domain and range
-    **    (2) We replace all UFCalls with symbolic constants found in the ufc map.
-    **  The function does not own the ufcmap.
+    **   (1) We add constraints due to all UFCalls' domain and range
+    **   (2) Replace all UFCalls with symbolic constants found in the ufc map.
+    **  The function does not own the ufcmap.  Caller must cleanup returned
+    **  Relation.
     */
     Relation* superAffineRelation(UFCallMap* ufcmap);
 
     /*! Creates a sub non-affine set from an affine Relation.
     **  By replacing symbolic constants that are representative of UFCalls
     **  with their respective UFCalls.
-    **  The function does not own the ufcmap.
+    **  The function does not own the ufcmap.  Caller must cleanup returned
+    **  Relation.
     */
     Relation* reverseAffineSubstitution(UFCallMap* ufcmap);
 
-    // Projects out tuple varrable No. tvar
+    //! Projects out tuple varrable No. tvar.
+    //  FIXME: if legal to do so right?  MMS 2/27/16 
     Relation* projectOut(int tvar);
 
 private:
-
     int mInArity;
     int mOutArity;
 };

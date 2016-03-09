@@ -462,3 +462,12 @@ TEST(Parser, UFsThatReturnTuples) {
              r1->toString());
    delete r1;
 }
+
+#pragma mark ExpressionsFromISL
+// Can we parse expressions from ISL.
+TEST(Parser, ExpressionsFromISL) {
+
+    Set* s = new Set(" [M, P] -> { [i, 2 + i, x, x] : x >= 0 and i <= -2 + P "
+                     "and i >= -1 and x <= -1 + M }");
+    EXPECT_EQ("", s->toString());
+}

@@ -720,6 +720,7 @@ bool VarTerm::operator<(const Term& other) const {
     if (1 == termComparison) { return false; }
 
     // Next, by symbol name.
+//std::cout << "mSymbol = " << mSymbol << ", other.mSymbol = " << ((VarTerm&)other).mSymbol << std::endl;
     if (mSymbol < ((VarTerm&)other).mSymbol) { return true; }
     if (mSymbol > ((VarTerm&)other).mSymbol) { return false; }
 

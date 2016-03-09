@@ -5,10 +5,10 @@
  *
  * \date Started: 3/28/12
  *
- * \authors Michelle Strout and Joe Strout
+ * \authors Michelle Strout, Joe Strout, and Mahdi Soltan Mohammadi 
  *
  * Copyright (c) 2012, Colorado State University <br>
- * Copyright (c) 2015, University of Arizona <br>
+ * Copyright (c) 2015-2016, University of Arizona <br>
  * All rights reserved. <br>
  * See ../../COPYING for details. <br>
  */
@@ -36,14 +36,13 @@ isl_set* islStringToSet( std::string relstr , isl_ctx *ctx )
 /*! This function takes an isl_set* and returns equivalent Set string
 ** The function takes ownership of input argument 'iset'
 */
-std::string islSetToString ( isl_set* iset , isl_ctx *ctx )
-{
+std::string islSetToString ( isl_set* iset , isl_ctx *ctx ) {
   // Get an isl printer and associate to an isl context
   isl_printer * ip = isl_printer_to_str(ctx);
 
   // get string back from ISL map
-  isl_printer_set_output_format(ip , ISL_FORMAT_ISL);
-  isl_printer_print_set(ip ,iset);
+  isl_printer_set_output_format(ip, ISL_FORMAT_ISL);
+  isl_printer_print_set(ip, iset);
   char *i_str = isl_printer_get_str(ip);
   std::string stringFromISL (i_str); 
   
@@ -1329,7 +1328,7 @@ void Conjunction::cleanUp() {
 }
 
 /*!
-** (step 0) Group together all equality expressions that 
+** Group together all equality expressions that 
 ** are parts of the same UFCallTerm, IOW i=f(k)[0] and 
 ** j=f(k)[1] should become (i,j) = f(k).
 */
@@ -1458,350 +1457,6 @@ void Conjunction::ufCallsToTempVars(UFCallMapAndBounds & ufcallmap) {
     *this = modified;
 }
 
-/*! Replace "this" Conjunct with normalized set of equalities
-**  and inequalities.  See SparseConstraints::normalize() for 
-**  algorithm overview.
-*/
-Set* Conjunction::normalize() const {
-
-    /////////////////////
-    // (step 0) Group together all equality expressions that 
-    // are parts of the same UFCallTerm, IOW i=f(k)[0] and 
-    // j=f(k)[1] should become (i,j) = f(k).
-    // FIXME: what about inequalities?
-//std::cout << "Conjunction::normalize: original       = " << toString() << std::endl;
-    Conjunction* selfcopy = new Conjunction(*this);
-	TupleDecl origTupleDecl = selfcopy->getTupleDecl(); // for (step 3)
-//std::cout << "Conjunction::normalize: selfcopy-bfour = " << selfcopy->toString() << std::endl;
-    selfcopy->groupIndexedUFCalls();
-//std::cout << "Conjunction::normalize: selfcopy-after = " << selfcopy->toString() << std::endl;
- 
-    /////////////////////
-    // (step 1)
-    // Replace all uninterpreted function calls with variables
-    // and create a new affine conjunction that is a superset of the
-    // current conjunction.  UFCallMapAndBounds object will
-    // maintain the mapping of temporary variables to UF calls.
-    UFCallMapAndBounds ufcallmap(getTupleDecl());
-    selfcopy->ufCallsToTempVars( ufcallmap );
-//std::cout << "Conjunction::normalize: selfcopy = " << selfcopy->toString() << std::endl;    
-    // To test step 1, we return Set of constraints that have been
-    // gathered in UFCallMapAndBounds.
-    Set* constraints = ufcallmap.cloneConstraints();
-//std::cout << "Conjunction::normalize: constraints = " << constraints->toString() << std::endl;    
-//std::cout << "Conjunction::normalize: ufcallmap = " << ufcallmap.toString() << std::endl;
-    // update the tuple declaration in selfcopy to match what is
-    // in the constraints
-    selfcopy->setTupleDecl( constraints->getTupleDecl() );
-    
-    // Also need to include all the constraints in selfcopy were UF calls
-    // were replaced by temporaries.
-    Set* selfcopyset = new Set(selfcopy->getTupleDecl());
-    selfcopyset->addConjunction(selfcopy);
-//std::cout << "Conjunction::normalize: selfcopyset = " << selfcopyset->toString() << std::endl;
-    Set* retval1 = constraints->Intersect(selfcopyset);
-//std::cout << "Conjunction::normalize: after intersect = , retval = " << retval1->toString() << std::endl;
-    //return retval1;
-    
-    //////////////////////
-    // (step 2) 
-    // Send the result of step 1 to ISL and back.
-    
-    // (a) get string from result of step 1
-    std::string fromStep1 = retval1->toISLString();
-//std::cout << "Conjunction::normalize: fromStep1 = " << fromStep1 << std::endl;
- 
-    // (b) send through ISL
-//std::cout << "Conjunction::normalize: fromISl = " << fromISL << std::endl;
-    
-    // (a & b) could do this as one statement (below), but broken apart (above) for testing
-    string fromISL = passSetThruISL(retval1->toISLString());
-
-//std::cout << "Conjunction::normalize: fromISl = " << fromISL << std::endl;
-
-    // (c) convert back to a Set
-    //Set* retval2 = iegenlib::parser::parse_set(fromISL);
-    Set* retval2 = new Set(fromISL);
-//std::cout << "Conjunction::normalize: retval2 = " << retval2->toString() << std::endl;
-
-    delete retval1;
-    
-    // Then in (step 3) we will need to use substitute to replace extra
-    // tuple vars with UF calls by making queries to ufcallmap.  Will need
-    // to call setTupleDecl on retval to remove those extra tuple vars that
-    // acted as temporaries to replace uf calls.  Then return retval Set.
-    
-    /////////////////////
-    // (step 3)
-    //
-    // (a-1) create map of affine information that we can glean from retval2 ... from ISL.
-    
-    SubMap affineSubstMap;
-    
-    // FIXME: just assuming one conjunction right now.
-    if (retval2->mConjunctions.size()!=1) {
-        throw assert_exception("Conjunction::normalize: "
-            "currently only handle one Conjunction fromISL");
-    }
-    Conjunction* conj = retval2->mConjunctions.front();
-    
-    // Determine starting index of extra tuple vars
-    int numTempVars = ufcallmap.numTempVars();
-    int expandedArity = constraints->arity();
-    int indexStart = expandedArity - numTempVars;
-
-	// walk backward through additional temp vars 
-    for (int i = expandedArity-1; i >= indexStart; i--) {
-    	// (1) find an expression for temp var i in terms of vars 0 - (i-1)
-    	TupleVarTerm* tvTerm = new TupleVarTerm(i);
-        Exp * tvExp = conj->findFunction(i,0,i-1);
-    	
-    	if (not tvExp) {
-    		/*
-            throw assert_exception("Conjunction::normalize: "
-                "no expression for " + tvTerm->toString() + 
-                " in Conjunction fromISL");
-        	*/
-        	continue;
-        }
-        
-//std::cout << "Conjunction::normalize: __tv" << i << " = " << tvExp->toString() << std::endl;
-
-        // (2) substitute this equivalence (tvTerm = e) into affineSubstMap
-        
-      
-        affineSubstMap.startIter();
-        while (affineSubstMap.hasNext()) {
-            Term* mapTerm = affineSubstMap.next();
-            Exp* mapExp = affineSubstMap.subExp(mapTerm);
-            if (not mapExp) {
-            	throw assert_exception("Conjunction::normalize: "
-               	 "no mapExp for mapTerm in affineSubstMap");
-        	}
-        	// Barbara, you don't get to use this old substitute.
-        	// Sub be setting up a substitute map.  But wait you
-        	// already have one.  I am confused.  Going to replace this
-        	// code with something that will work, but we need
-        	// to do a code review so I understand what is going on.
-        	//mapExp->substitute(tvExp->clone(),*tvTerm);
-        	SubMap tmpMap;
-        	tmpMap.insertPair(tvTerm->clone(), tvExp->clone());
-        	mapExp->substitute(tmpMap);
-        }
-
-        // (3) add this equivalence to affineSubstMap
-        affineSubstMap.insertPair(tvTerm,tvExp); // takes ownership of tvTerm and tvExp
-    }
-    
-    // walk backward through original tuple vars
-    TupleDecl retval2TupleDecl = conj->getTupleDecl(); 
-    for (unsigned int i = indexStart-1; i > 0; i--) {
-    	// check: if ISL tuple var is different from original tuple var
-    	if (retval2TupleDecl.elemToString(i) == origTupleDecl.elemToString(i)) {
-    	   continue;
-    	}
-    	
-    	// if different, find expression for var i in terms of vars 0 - (i-1)
-   		TupleVarTerm* tvTerm = new TupleVarTerm(i);
-        Exp * tvExp = conj->findFunction(i,0,i-1);
-    	
-    	if (tvExp == NULL) {
-            throw assert_exception("Conjunction::normalize: "
-                "no expression for " + tvTerm->toString() + 
-                " in Conjunction fromISL");
-        }
-//std::cout << "Conjunction::normalize: __tv" << i << " = " << tvExp->toString() << std::endl;
-        
-        // (2) substitute this equivalence (tvTerm = e) into affineSubstMap
-        
-        affineSubstMap.startIter();
-        while (affineSubstMap.hasNext()) {
-            Term* mapTerm = affineSubstMap.next();
-            Exp* mapExp = affineSubstMap.subExp(mapTerm);
-            if (not mapExp) {
-            	throw assert_exception("Conjunction::normalize: "
-               	 "no mapExp for mapTerm in affineSubstMap");
-        	}
-        	//mapExp->substitute(tvExp->clone(),*tvTerm);
-        	SubMap tmpMap;
-        	tmpMap.insertPair(tvTerm->clone(), tvExp->clone());
-        	mapExp->substitute(tmpMap);
-        }
-        
-        // (3) add this equivalence to affineSubstMap
-        affineSubstMap.insertPair(tvTerm,tvExp); // takes ownership of tvTerm and tvExp
-    }
-    	
-
-//std::cout << "Conjunction::normalize: affineSubstMap = " << affineSubstMap.toString() << std::endl;
-                
-        
-    	    
-    // (a-2) build up a map of non-affine information
-    //       -- from the affine SubMap, and 
-    //       -- from the ufcallmap (holding ufcalls/tempvars that
-    //           we substituted back in (step 1)
-    //
-    SubMap nonAffineSubstMap;
-
-    
-    for (int i = indexStart; i < expandedArity; i++) {
-    	TupleVarTerm* tvTerm = new TupleVarTerm(i);
-    	UFCallTerm* origUFCall = ufcallmap.cloneUFCall(i);
-		Exp* tvExp = new Exp();
-		tvExp->addTerm(origUFCall);
-		 
-		// substitute affine results into original UFCall
-		tvExp->substitute(affineSubstMap);
-		
-		// substitute non-affine results into original UFCall
-		tvExp->substitute(nonAffineSubstMap);
-
-		nonAffineSubstMap.insertPair(tvTerm, tvExp);
-	}
-	
-	// (b) substituteInConstraints using non-affine SubMap
-
-//std::cout << "Conjunction::normalize: nonAffineSubstMap = " << nonAffineSubstMap.toString() << std::endl;
-//std::cout << "Conjunction::normalize: before subtitution = " << retval2->toString() << std::endl;	    	
-    retval2->substituteInConstraints(nonAffineSubstMap);
-//std::cout << "Conjunction::normalize: after  subtitution = " << retval2->toString() << std::endl;
-//std::cout << "Conjunction::normalize: after  subtitution = " << retval2->prettyPrintString() << std::endl;
-    
-    // (c) remove extra tuple vars (since they have been "substituted"
-    
-    retval2->setTupleDecl(origTupleDecl);
-    
-//std::cout << "Conjunction::normalize: after tuple shrink = " << retval2->prettyPrintString() << std::endl;
-    
-    
-    
-    // Later Set::normalize will have to
-    // union all of the returned Sets.
-
-    
-    delete constraints;
-    delete selfcopy;
-    return retval2;  
-}
-
-Set* Conjunction::normalizeR() const
-{
-    /////////////////////
-    // (step 0) Group together all equality expressions that 
-    // are parts of the same UFCallTerm, IOW i=f(k)[0] and 
-    // j=f(k)[1] should become (i,j) = f(k).
-    // FIXME: what about inequalities?
-//std::cout << "Conjunction::normalizeR: original       = " << toString() << std::endl;
-    Conjunction* selfcopy = new Conjunction(*this);
-	TupleDecl origTupleDecl = selfcopy->getTupleDecl(); // for (step 3)
-//std::cout << "Conjunction::normalizeR: selfcopy-bfour = " << selfcopy->toString() << std::endl;
-    selfcopy->groupIndexedUFCalls();
-//std::cout << "Conjunction::normalizeR: selfcopy-after = " << selfcopy->toString() << std::endl;
- 
-    /////////////////////
-    // (step 1)
-    // Replace all uninterpreted function calls with variables
-    // and create a new affine conjunction that is a superset of the
-    // current conjunction.  UFCallMapAndBounds object will
-    // maintain the mapping of temporary variables to UF calls.
-    UFCallMapAndBounds ufcallmap(getTupleDecl());
-    selfcopy->ufCallsToTempVars( ufcallmap );
-//std::cout << "Conjunction::normalize: selfcopy = " << selfcopy->toString() << std::endl;    
-    // To test step 1, we return Set of constraints that have been
-    // gathered in UFCallMapAndBounds.
-    Set* constraints = ufcallmap.cloneConstraints();
-//std::cout << "Conjunction::normalize: constraints = " << constraints->toString() << std::endl;    
-//std::cout << "Conjunction::normalize: ufcallmap = " << ufcallmap.toString() << std::endl;
-    // update the tuple declaration in selfcopy to match what is
-    // in the constraints
-    selfcopy->setTupleDecl( constraints->getTupleDecl() );
-    
-    // Also need to include all the constraints in selfcopy were UF calls
-    // were replaced by temporaries.
-    Set* selfcopyset = new Set(selfcopy->getTupleDecl());
-    selfcopyset->addConjunction(selfcopy);
-//std::cout << "Conjunction::normalize: selfcopyset = " << selfcopyset->toString() << std::endl;
-    Set* retval1 = constraints->Intersect(selfcopyset);
-//std::cout << "Conjunction::normalize: after intersect = , retval = " << retval1->toString() << std::endl;
-    //return retval1;
-    
-    //////////////////////
-    // (step 2) 
-    // Send the result of step 1 to ISL and back.
-    
-    // (a) get string from result of step 1
-    //std::string fromStep1 = retval->toISLString();
-//std::cout << "Conjunction::normalize: fromStep1 = " << fromStep1 << std::endl;
- 
-    // (b) send through ISL
-//std::cout << "Conjunction::normalize: fromISl = " << fromISL << std::endl;
-    
-    // (a & b) could do this as one statement (below), but broken apart (above) for testing
-    string fromISL = passSetThruISL(retval1->toISLString());
-    
-    //string fromISL = "[N, P] -> { [tstep, i, tstep, t, i, 0, t] : i >= 0 and t <= 0 and i <= -1 + N and t >= 1 - P }";
-
-//std::cout << "Conjunction::normalize: fromISl = " << fromISL << std::endl;
-
-    // (c) convert back to a Set
-    Set* retval2 = iegenlib::parser::parse_set(fromISL);
-    //Relation* retval2 = new Relation(fromISL);
-//std::cout << "Conjunction::normalize: retval2 = " << retval2->toString() << std::endl;
-
-    delete retval1;
-    
-    // Then in (step 3) we will need to use substitute to replace extra
-    // tuple vars with UF calls by making queries to ufcallmap.  Will need
-    // to call setTupleDecl on retval to remove those extra tuple vars that
-    // acted as temporaries to replace uf calls.  Then return retval Set.
-    
-    /////////////////////
-    // (step 3)
-    // (a) create map of extra tuple vars to UF calls to send to substituteInConstrains
-    
-    SubMap substMap;
-    
-    // Determine starting index of extra tuple vars
-    int numTempVars = ufcallmap.numTempVars();
-    int expandedArity = constraints->arity();
-    int indexStart = expandedArity - numTempVars;
-    
-    for (int i = indexStart; i < expandedArity; i++) {
-    	TupleVarTerm* tvTerm = new TupleVarTerm(i);
-    	UFCallTerm* origUFCall = ufcallmap.cloneUFCall(i);
-		Exp* tvExp = new Exp();
-		tvExp->addTerm(origUFCall);
-		
-		substMap.insertPair(tvTerm, tvExp);
-	}
-	
-	// (b) substituteInConstraints
-
-//std::cout << "Conjunction::normalize: substMap = " << substMap.toString() << std::endl;
-//std::cout << "Conjunction::normalize: before subtitution = " << retval2->toString() << std::endl;	    	
-    retval2->substituteInConstraints(substMap);
-//std::cout << "Conjunction::normalize: after  subtitution = " << retval2->toString() << std::endl;
-//std::cout << "Conjunction::normalize: after  subtitution = " << retval2->prettyPrintString() << std::endl;
-    
-    // (c) remove extra tuple vars (since they have been "substituted"
-    
-    retval2->setTupleDecl(origTupleDecl);
-    
-//std::cout << "Conjunction::normalize: after tuple shrink = " << retval2->prettyPrintString() << std::endl;
-    
-    
-    
-    // Later Set::normalize will have to
-    // union all of the returned Sets.
-
-
-    
-    delete constraints;
-    delete selfcopy;
-    return retval2;  
-
-}
 
 /******************************************************************************/
 #pragma mark -
@@ -2109,42 +1764,6 @@ void SparseConstraints::cleanUp(){
 
 }
 
-// Iterate over all conjunctions and normalize each conjunction.
-// Then call cleanup to resort things?
-void SparseConstraints::normalize() {
-    //Set* normalized_set = new Set(arity());
-
-    // FIXME: just assuming one conjunction right now.
-    if (mConjunctions.size()!=1) {
-        throw assert_exception("SparseConstraints::normalize: "
-            "currently only handle one Conjunction Sets/Relations");
-    }
-    Conjunction* conj = mConjunctions.front();
-    Set* result = conj->normalize();
-    *this =  *result;
-    delete result;
-/*  FIXME: not ready to do this yet.  Need to get all parts
-    of normalization working.   
-    // normalize each conjunction and union together returned sets
-    for (std::list<Conjunction*>::iterator i=mConjunctions.begin();
-                i != mConjunctions.end(); i++) {
-std::cout << "normalized_set = " << normalized_set->toString() << std::endl;
-        Set* result_set = (*i)->normalize();
-std::cout << "result_set = " << result_set->prettyPrintString() << std::endl;
-        Set* union_result = normalized_set->Union(result_set);
-        delete result_set;
-        delete normalized_set;
-        normalized_set = union_result;
-    }
-*/
-    // replace self with this normalized set
-    // What if we are a relation?
-    //*this = *normalized_set;
-    
-    // FIXME: might need to re-sort Conjunctions here and determine
-    // if any are equivalent.
-}
-
 /*! Find any TupleVarTerms in this expression (and subexpressions)
 **  and remap the locations according to the oldToNewLocs vector,
 **  where oldToNewLocs[i] = j means that old location i becomes new
@@ -2320,6 +1939,32 @@ Set* Set::boundTupleExp(const TupleExpTerm& tuple_exp) const {
     return result;
 }
 
+// Replace UFs with vars, pass to ISL, and then reverse substitution.
+void Set::normalize() {
+
+    // Create variable names for UF calls.
+    UFCallMap* uf_call_map = mapUFCtoSym();
+    
+    // Replace uf calls with the variables to create an affine superset.
+    Set* superset_copy = superAffineSet(uf_call_map);
+
+    // Send affine super set to ISL and let it normalize it.
+    Set* superset_normalized 
+        = new Set(passSetThruISL(superset_copy->toISLString()));
+ 
+     // Reverse the substitution of vars for uf calls.
+    Set* normalized_copy 
+        = superset_normalized->reverseAffineSubstitution(uf_call_map);
+   
+    // Replace self with the normalized copy.
+    *this = *normalized_copy;
+        
+    // Cleanup
+    delete normalized_copy;
+    delete uf_call_map;
+    delete superset_copy;
+    delete superset_normalized;
+}
 
 /******************************************************************************/
 #pragma mark -
@@ -2351,7 +1996,8 @@ Relation& Relation::operator=(const Relation& other) {
 Relation& Relation::operator=(const Set& other) {
 
 	if (mInArity >= other.arity()) {
-        throw assert_exception("Relation::operator=(Set): impossible arity match");
+        throw assert_exception("Relation::operator=(Set): "
+                               "impossible arity match");
 	}
 	mOutArity = other.arity() - mInArity;
 	
@@ -2630,26 +2276,32 @@ void Relation::addConjunction(Conjunction *adoptedConjunction) {
     SparseConstraints::addConjunction(adoptedConjunction);
 }
 
-// Iterate over all conjunctions and normalize each conjunction.
-// Then call cleanup to resort things?
+// Replace UFs with vars, pass to ISL, and then reverse substitution.
 void Relation::normalize() {
 
-    // FIXME: ?? essentially the same as SparseConstraints::normalize(), but 
-    // forces call to Relation::operator=(Set) at the statement:   *this = *result;
-
-    // FIXME: just assuming one conjunction right now.
-    if (mConjunctions.size()!=1) {
-        throw assert_exception("Relation::normalize: "
-            "currently only handle one Conjunction Sets/Relations");
-    }
-
-    Conjunction* conj = mConjunctions.front();
-    Set* result = conj->normalize();
-    //Set* result = conj->normalizeR();
-    *this =  *result;
-    delete result;
+    // Create variable names for UF calls.
+    UFCallMap* uf_call_map = mapUFCtoSym();
     
-    // FIXME: will need more ... See SparseConstraints::normalize()
+    // Replace uf calls with the variables to create an affine superset.
+    Relation* superset_copy = superAffineRelation(uf_call_map);
+
+    // Send affine super set to ISL and let it normalize it.
+    Relation* superset_normalized 
+        = new Relation(passRelationThruISL(superset_copy->toISLString()));
+ std::cout << "superset_normalized = " << superset_normalized->toString() << std::endl;
+     // Reverse the substitution of vars for uf calls.
+    Relation* normalized_copy 
+        = superset_normalized->reverseAffineSubstitution(uf_call_map);
+ std::cout << "normalized_copy = " << normalized_copy->toString() << std::endl;
+   
+    // Replace self with the normalized copy.
+    *this = *normalized_copy;
+        
+    // Cleanup
+    delete normalized_copy;
+    delete uf_call_map;
+    delete superset_copy;
+    delete superset_normalized;
 }
 
             
