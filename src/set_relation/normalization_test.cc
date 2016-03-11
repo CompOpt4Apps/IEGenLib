@@ -844,36 +844,3 @@ TEST_F(NormalizationTest, buildingNormalize) {
     }
    
 }
-
-#pragma mark ufCallsToTempVars
-// MMS 11/6/15, What does this method do?
-TEST_F(NormalizationTest, ufCallsToTempVars) {
-    Set *r1 = new Set("{[i,j,x] : j = i + 2 && f(j-1) = x }");
-    EXPECT_EQ("{ [i, j, x] : x - f(j - 1) = 0 && i - j + 2 = 0 }",
-              r1->prettyPrintString());
-    EXPECT_EQ("{ [i, j, x] : __tv2 - f(__tv1 - 1) = 0 && __tv0 - "
-              "__tv1 + 2 = 0 }",
-              r1->toString());
-
-    // Initialize an environment for the function f.    
-    iegenlib::appendCurrEnv("f",
-        new Set("{[i]:0<=i &&i<G}"), new Set("{[i]:0<=i &&i<G}"), true,
-        iegenlib::Monotonic_NONE);
-    
-    // Iterate over all the conjunctions in our relation to determine
-    // what the ufCallsToTempVars is doing.
-    iegenlib::UFCallMapAndBounds ufcallmap(r1->getTupleDecl());
-    for (std::list<Conjunction*>::iterator i=r1->mConjunctions.begin();
-            i != r1->mConjunctions.end(); i++) {
-         (*i)->ufCallsToTempVars(ufcallmap);
-    }
-    EXPECT_EQ("{ [i, j, x] : __tv2 - __tv3 = 0 && __tv0 - "
-              "__tv1 + 2 = 0 }",
-              r1->toString());
-    
-    // FIXME: the below segfaults because those routines add in new tuple
-    // variables and then pretty print can't find their actual names.
-    //EXPECT_EQ("",r1->prettyPrintString());
-    
-    delete r1;
-}

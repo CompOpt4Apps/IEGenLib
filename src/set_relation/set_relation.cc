@@ -1413,48 +1413,6 @@ void Conjunction::groupIndexedUFCalls() {
     
 }
 
-/*! Create a conjunction that represents an affine
-**  superset of the "this" Conjunction.  Will be replacing
-**  uf calls with temporary variables recursively bottom up and 
-**  will be bounding parameter expressions and expressions equivalent
-**  to UF call return values based on the domain and range
-**  declarations for the UF call.
-**  The returned conjunction will need to be deleted by caller.
-*/
-void Conjunction::ufCallsToTempVars(UFCallMapAndBounds & ufcallmap) {
-    Conjunction modified(getTupleDecl());
-    
-    // Iterate over the equality expressions.
-    for (std::list<Exp*>::iterator i=mEqualities.begin();
-                i != mEqualities.end(); i++) {
-        Exp* e = (*i);
-//std::cout << "Conjunction::ufCallsToTempVars: e     = " << e->toString() << std::endl;
-        Exp* modified_e = e->ufCallsToTempVars(ufcallmap);
-//std::cout << "Conjunction::ufCallsToTempVars: mod_e = " << e->toString() << std::endl;
-        // Check if the modified expression is just one tuple exp
-        // term.  If so break it into separate equalities.
-        TupleExpTerm* tup_exp;
-        if ((tup_exp=dynamic_cast<TupleExpTerm*>(modified_e->getTerm()))) {
-            for (unsigned int i=0; i<tup_exp->size(); i++) {
-                modified.addEquality(tup_exp->cloneExp(i));
-            }
-            delete modified_e;
-        } else {
-            modified.addEquality(modified_e);
-        }
-    }
- 
-     // Iterate over the inequality expressions.
-    for (std::list<Exp*>::iterator i=mInequalities.begin();
-                i != mInequalities.end(); i++) {
-        Exp* e = (*i);
-        Exp* modified_e = e->ufCallsToTempVars(ufcallmap);
-        modified.addInequality(modified_e);
-    }
-    
-    *this = modified;
-}
-
 
 /******************************************************************************/
 #pragma mark -

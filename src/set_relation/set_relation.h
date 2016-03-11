@@ -24,7 +24,6 @@
 
 #include <util/util.h>
 #include "expression.h"
-#include "UFCallMapAndBounds.h"
 #include "SubMap.h"
 #include "UFCallMap.h"
 class Visitor;
@@ -252,17 +251,6 @@ public:
     ** j=f(k)[1] should become (i,j) = f(k).
     */
     void groupIndexedUFCalls();
-
-    /*! Create a conjunction that represents an affine
-    **  superset of the "this" Conjunction.  Will be replacing
-    **  uf calls with temporary variables recursively bottom up and 
-    **  will be bounding parameter expressions and expressions equivalent
-    **  to UF call return values based on the domain and range
-    **  declarations for the UF call.
-    **  The returned conjunction will need to be deleted by caller.
-    */
-    //Set* createAffineSuperSet(UFCallMapAndBounds & ufcallmap);
-    void ufCallsToTempVars(UFCallMapAndBounds & ufcallmap);
     
     // Want to use these in Relation::isFunction and other so must be public.
     bool isFunction(int inArity) const;

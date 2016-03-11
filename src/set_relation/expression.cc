@@ -13,7 +13,6 @@
 
 #include "expression.h"
 #include "TupleDecl.h"
-#include "UFCallMapAndBounds.h"
 #include "set_relation.h"
 #include "Visitor.h"
 
@@ -511,92 +510,6 @@ Exp* UFCallTerm::collapseNestedInvertibleFunctions() const {
         } 
         retval->addTerm( uf_call );
     }
-    
-    return retval;
-}
-
-/*! First calls ufcallsToTempVars on all of its parameter
-** expressions to create a new version of itself where 
-** all of the UF calls in its parameters have been replaced 
-** with temporary variables. The UFCallTerm will then call 
-** boundByDomain for its modified parameters and boundByRange 
-** for its return value(s). The UFCallTerm will return the 
-** Term with its temporary variable replacements.
-*/
-Term* UFCallTerm::ufCallsToTempVars(UFCallMapAndBounds & ufcallmap) const {
-    // Retval is mostly a copy of self but with no parameter expressions
-    // set to anything yet.  Have holes for modified parameter expressions.
-//std::cout << "UFCallTerm::ufCallsToTempVars: self = " << toString() << std::endl;
-
-    // going to let boundByRange set temp var to modified UF call
-    // with a coefficient of 1.  See bottom of this method for when
-    // coefficient is added back in.
-    UFCallTerm* mod_ufcall = new UFCallTerm(1,name(),numArgs(),mTupleIndex);
-    // Loop through our parameter expressions and replace them with modified
-    // expressions where uf calls are replaced with temporary variables.
-    unsigned int count = 0;
-    for (std::vector<Exp*>::const_iterator i=mArgs.begin(); 
-            i != mArgs.end(); ++i, count++) {
-        Exp* arg = *i;
-        Exp* modified_arg = arg->ufCallsToTempVars(ufcallmap);
-        // check if the modified argument is a tuple expression
-        Term* t = modified_arg->getTerm();
-        if ( (t!=NULL) && t->isTupleExp() ) {
-            TupleExpTerm* tup_exp_term = dynamic_cast<TupleExpTerm*>(t);
-            
-            // check that this term has enough elements to be all params to mod_ufcall
-            
-            // FIXME:  What if count is not 0 when t-isTupleExp() ???
-            
-    		//Set* domain = iegenlib::queryDomainCurrEnv(mod_ufcall->name());
-    		//unsigned int numDomainArgs = (unsigned)domain->arity();
-    		unsigned int numDomainArgs = 
-    		    (unsigned)(iegenlib::queryDomainCurrEnv(mod_ufcall->name()))->arity();
-    		
-    		if (! mod_ufcall->isIndexed() 
-            	&& (numDomainArgs != tup_exp_term->size()) ) {
-        			throw assert_exception("UFCallTerm::ufCallsToTempVars: "
-                    "not enough elements in tuple expression or later param");
-            }
-            // Then set all the parameters
-            
-            // if the uninterpreted function call has a different number of arguments
-            // than numArgs(), then re-allocate it with the number of arguments in the
-            // environment (which matches the number of elements in tup_exp_term)
-            if (numArgs() != numDomainArgs) {
-            	UFCallTerm* old_mod_ufcall = mod_ufcall;
-            	mod_ufcall = new UFCallTerm(1,name(),numDomainArgs,mTupleIndex);
-            	delete old_mod_ufcall;
-            }
-            for (count=0; count<numDomainArgs; count++) {
-                mod_ufcall->setParamExp(count,
-                    tup_exp_term->cloneExp(count));
-            }
-            break; // break out of for loop over parameters in UF Call
-        } else {
-            mod_ufcall->setParamExp(count, modified_arg);
-        }
-    }
-//std::cout << "UFCallTerm::ufCallsToTempVars: init  mod_ufcall = " <<  mod_ufcall->toString() << std::endl;        
-    // bound our modified parameters by domain of the uf call
-    ufcallmap.boundByDomain(  mod_ufcall );
-    // when we bound by our domain we should get a temporary variable
-    // or tuple expression term of temporary variables to replace ourselves
-    TupleExpTerm* tempvars = ufcallmap.boundByRange( mod_ufcall );
-//std::cout << "tempvars for  UFCallTerm::ufCallsToTempVars= " <<  tempvars->toString() << std::endl;
-    
-    Term* retval;
-    if (tempvars->size()==1) {
-        retval = tempvars->getExpElem(0)->getTerm()->clone();
-        delete tempvars;
-    } else {
-        retval = tempvars;
-    }
-
-    // put in original coefficient for UF call
-    retval->multiplyBy( coefficient() );
-
-//std::cout << "retval for  UFCallTerm::ufCallsToTempVars= " <<  retval->toString() << std::endl;
     
     return retval;
 }
@@ -1416,38 +1329,6 @@ Exp* Exp::collapseNestedInvertibleFunctions() const {
                 i != mTerms.end(); i++) {
         retval->addExp( (*i)->collapseNestedInvertibleFunctions() );
     }   
-    return retval;
-}
-
-/*! Maps any UF calls in this expression to temporary variables
-**  and maintains that map in UFCallMapAndBounds and 
-**  any bounds on parameter and return expressions are in UFCallMapAndBounds
-**  as well.
-**  At the expression level, if this is an equality expression then
-**  calls UFCallMapAndBounds::boundByRange on return expressions for
-**  a UF call.  In (a,b) = f(c,d), a and b are return expressions.
-**  This method has the UFCallTerms handle calling boundByDomain.
-*/
-Exp* Exp::ufCallsToTempVars(UFCallMapAndBounds & ufcallmap) const {
-    Exp* retval = new Exp();
-    
-    // Loop through each term and add it to retval unless the
-    // term is a UFCallTerm and then get a replacement term.
-    for (std::list<Term*>::const_iterator i=mTerms.begin();
-                i != mTerms.end(); i++) {
-        Term* t = (*i);
-        if (t->isUFCall()) {
-            UFCallTerm* callTerm = dynamic_cast<UFCallTerm*>((*i));
-//std::cout << "Exp::ufCallsToTempVars callTerm = " << callTerm->toString() << std::endl;            
-            Term* mod_call = callTerm->ufCallsToTempVars(ufcallmap);
-//std::cout << "Exp::ufCallsToTempVars mod_call = " << mod_call->toString() << std::endl;
-            retval->addTerm( mod_call );
-        } else {
-//std::cout << "Exp::ufCallsToTempVars t = " << t->toString() << std::endl;
-            retval->addTerm( t->clone() );
-        }
-//std::cout << "Exp::ufCallsToTempVars retval = " << retval->toString() << std::endl;
-    }
     return retval;
 }
 
