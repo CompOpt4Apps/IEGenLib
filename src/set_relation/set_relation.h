@@ -85,12 +85,10 @@ public:
     //! Comparison operator -- lexicographic order
     bool operator<(const Conjunction& other) const;
 
-/*
-	//! Given inarity parameter is adopted.
-	//! If inarity parameter is outside of feasible range for the existing
-	//! existing TupleDecl then throws exception.
+    //! Given inarity parameter is adopted.
+    //! If inarity parameter is outside of feasible range for the existing
+    //! existing TupleDecl then throws exception.
     void setInArity(int inarity);
-*/
     
     //! Given tuple declaration parameter is adopted.
     //! If there are some constants that don't agree then throws exception.
@@ -163,7 +161,6 @@ public:
     int arity() const { return mTupleDecl.size(); }
     //! Get/Set inarity, for use with relations
     int inarity() const { return mInArity; }
-    void setinarity(int in) { mInArity = in; }
     
     //! Returns true if the conjunction has at least one equality or inequality
     //! constraints.  If it contains none then this Conjunction is just
@@ -534,7 +531,8 @@ public:
     */
     Set* reverseAffineSubstitution(UFCallMap* ufcmap);
 
-    //  Projects out tuple varrable No. tvar
+    //! Projects out tuple var No. tvar, if it is not an argument to a UFCall.
+    //! If tvar is an argument to some UFCall, then returns NULL.
     Set* projectOut(int tvar);
 
 private:
@@ -692,8 +690,8 @@ public:
     */
     Relation* reverseAffineSubstitution(UFCallMap* ufcmap);
 
-    //! Projects out tuple varrable No. tvar.
-    //  FIXME: if legal to do so right?  MMS 2/27/16 
+    //! Projects out tuple var No. tvar, if it is not an argument to a UFCall.
+    //! If tvar is an argument to some UFCall, then returns NULL.
     Relation* projectOut(int tvar);
 
 private:
