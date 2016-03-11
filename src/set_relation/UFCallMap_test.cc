@@ -21,7 +21,6 @@
 #include <iostream>
 #include <fstream>
 
-using iegenlib::UFCallMapAndBounds;
 using iegenlib::Exp;
 using iegenlib::TupleVarTerm;
 using iegenlib::Term;

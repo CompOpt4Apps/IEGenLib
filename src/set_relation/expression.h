@@ -36,7 +36,6 @@ class Visitor;
 namespace iegenlib{
 
 class Exp;
-class UFCallMapAndBounds;
 
 /*!
  *  \class Term
@@ -269,21 +268,6 @@ public:
     //! Return a new Exp with all nested functions such as
     //! f ( f_inv ( i ) ) changed to i.
     Exp* collapseNestedInvertibleFunctions() const;
-
-    //! Maps any UF calls in this expression to temporary variables
-    //! and maintains that map in UFCallMapAndBounds and 
-    //! any bounds on parameter and return expressions are in UFCallMapAndBounds
-    //! as well.
-//    void Exp::createAffineSuperSet(UFCallMapAndBounds & ufcallmap) const {
-    /*! First calls ufcallsToTempVars on all of its parameter
-    **  expressions to create a new version of itself where 
-    ** all of the UF calls in its parameters have been replaced 
-    ** with temporary variables. The UFCallTerm will then call 
-    ** boundByDomain for its modified parameters and boundByRange 
-    ** for its return value(s). The UFCallTerm will return the 
-    ** Term with its temporary variable replacements.
-    */
-    Term* ufCallsToTempVars(UFCallMapAndBounds & ufcallmap) const;
 
     //--------------------- methods for the use in expression
 
@@ -616,13 +600,6 @@ public:
     //! f ( f_inv ( i ) ) changed to i.
     Exp* collapseNestedInvertibleFunctions() const;
 
-    /*! Return an equivalent expression except all of the uf call
-    **  terms have been replaced with new tuple variables.
-    **  \param ufcallmap is a data structure that maintains
-    **         introduced bounds and tuple var to uf call mappings.
-    */
-    Exp* ufCallsToTempVars(UFCallMapAndBounds & ufcallmap) const;
-    
     /*! Search for the given factor anywhere in this expression
     **  (including within UFCallTerm arguments, recursively).
     */
