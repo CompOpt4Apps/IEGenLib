@@ -3927,24 +3927,21 @@ TEST_F(SetRelationTest, projectOut) {
    //              will be added to constraints.
    //              * ldb = lower domain bound, urb = upper range bound
 
-    Relation *r1 = new Relation("{ [i,k] -> [ip,kp] :"
-       " i < ip and diag(col(i))+1 <= k }"
-                         " union { [i,k] -> [ip,kp] :"
-       " i > ip and i = kp and kp < diag(i) }");
+    Relation *r1 = new Relation("{ [i,k] -> [ip,kp] :  i = kp and col(i) < n"
+                                     " and i < ip and diag(col(i))+1 <= k }");
 
-    Relation *ex_r1 = new Relation("{ [i] -> [ip] : i >= 0 && diag(i) >= 0"
-                " && i < n && i < diag(i) && i > ip && diag(i) < n } union "
-             "{ [i] -> [ip] : i >= 0 && col(i) >= 0 && diag(col(i)) >= 0 &&"
- " i < ip && i < n && col(i) < n && diag(col(i)) < n }");
+    Relation *ex_r1 = new Relation("{ [i] -> [ip] : i < ip  and "
+     "0 <= i and i < n and col(i) >= 0 and diag(col(i)) >= 0 and"
+                             " col(i) < n and diag(col(i)) < n }");
 
     Relation *r2; 
-    r2 = r1->projectOut(3);    // 5 == index of 'kp'
+    r2 = r1->projectOut(3);    // 3 == index of 'kp'
     if ( r2 ){                 // Did we project out 'jp': YES!
         delete r1;             // removing old r1
         r1 = r2;
     }
 
-    r2 = r1->projectOut(0);    // 1 == index of 'i'
+    r2 = r1->projectOut(0);    // 0 == index of 'i'
     if ( r2 ){                 // Did we project out 'k': NO!
         delete r1;             // The reason is that k is argumnet to col().
         r1 = r2;               // We don't project out variables
@@ -3955,19 +3952,18 @@ TEST_F(SetRelationTest, projectOut) {
         delete r1;             // removing old r1
         r1 = r2;
     }
-
-
 //   std::cout << std::endl << "r1 = " << r1->toISLString() << std::endl;
 
    EXPECT_EQ( ex_r1->toISLString() , r1->toISLString() );
 
+
+
     Set *s1 = new Set("{ [i,j,ip,jp] : i = col(jp)+1 and 0 <= i and i < n"
                                      " and idx(i) <= j and j < idx(i+1) }");
 
-    Set *ex_s1 = new Set("{ [i, jp] : i = col(jp)+1 and i >= 0 and i+1 >= 0"
-           " and jp >= 0 and idx(i) >= 0 and idx(i+1) >= 0 and col(jp) >= 0"
-          " and i < n and i < n-1 and jp < n and col(jp) < n and idx(i) < n"
-                               " and idx(i+1) < n and idx(i) < idx(i + 1) }");
+    Set *ex_s1 = new Set("{ [i, jp] : i = col(jp)+1 and jp >= 0 and "
+          "idx(i) >= 0 and idx(i+1) >= 0 and col(jp) >= 0 and jp < n and"
+  " col(jp)+2 < n and idx(i) < n and idx(i+1) < n and idx(i) < idx(i + 1) }");
 
    Set *s2;
    // projectOut has the same behaivor for both Relation and Set

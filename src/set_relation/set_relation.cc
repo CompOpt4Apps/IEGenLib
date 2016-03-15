@@ -20,111 +20,66 @@
 #include <map>
 #include <assert.h>
 
+//#include "isl_str_manipulation.h"
+
 namespace iegenlib{
 
 /************************ ISL helper routines ****************************/
 
-//! This function takes a Set string and returns equivalent isl_set*
-isl_set* islStringToSet( std::string relstr , isl_ctx *ctx )
-{
-  // load Relation r into ISL map
-  isl_set* iset = isl_set_read_from_str(ctx, relstr.c_str());
+//! Runs an Affine Set through ISL and returns the resulting normalized set
+Set* passSetThruISL(Set* s){
 
-  return iset;
-}
-
-/*! This function takes an isl_set* and returns equivalent Set string
-** The function takes ownership of input argument 'iset'
-*/
-std::string islSetToString ( isl_set* iset , isl_ctx *ctx ) {
-  // Get an isl printer and associate to an isl context
-  isl_printer * ip = isl_printer_to_str(ctx);
-
-  // get string back from ISL map
-  isl_printer_set_output_format(ip, ISL_FORMAT_ISL);
-  isl_printer_print_set(ip, iset);
-  char *i_str = isl_printer_get_str(ip);
-  std::string stringFromISL (i_str); 
-  
-  // clean-up
-  isl_printer_flush(ip);
-  isl_printer_free(ip);
-  isl_set_free(iset);
-  iset= NULL;
-  free(i_str);
-
-  return stringFromISL;
-}
-
-//! This function takes a Relation string and returns pointer to equ. isl_map
-isl_map* islStringToMap( std::string relstr , isl_ctx *ctx )
-{
-  // load Relation r into ISL map
-  isl_map* imap = isl_map_read_from_str(ctx, relstr.c_str());
-
-  return imap;
-}
-
-/*! This function takes an isl_map* and returns pointer to equ. Relation string
-** The function takes ownership of input argument 'imap'
-*/
-std::string islMapToString ( isl_map* imap , isl_ctx *ctx )
-{
-  // Get an isl printer and associate to an isl context
-  isl_printer * ip = isl_printer_to_str(ctx);
-
-  // get string back from ISL map
-  isl_printer_set_output_format(ip , ISL_FORMAT_ISL);
-  isl_printer_print_map(ip ,imap);
-  char *i_str = isl_printer_get_str(ip);
-  std::string stringFromISL (i_str); 
-  
-  // clean-up
-  isl_printer_flush(ip);
-  isl_printer_free(ip);
-  isl_map_free(imap);
-  imap= NULL;
-  free(i_str);
-
-  return stringFromISL;
-}
-
-//! runs the Set through ISL and returns the resulting string
-string passSetThruISL(string rstr) {
+  string sstr = s->toISLString();
 
   isl_ctx *ctx = isl_ctx_alloc();
-
-  string result =  islSetToString ( islStringToSet(rstr,ctx), ctx );
-
+  string islStr =  islSetToString ( islStringToSet(sstr,ctx), ctx );
   isl_ctx_free(ctx);
+
+  // We need to revert changes that isl applies to Tuple Declaration
+  int inArity = s->arity(), outArity = 0;
+  string corrected = revertISLTupDeclToOrig( sstr, islStr, inArity, outArity);
+  Set* result = new Set(corrected);
 
   return result;
 }
 
-//! Runs a Relation string through ISL and returns the resulting string
-string passRelationThruISL(string rstr) {
+//! Runs an Affine Relation through ISL and returns the normalized result
+Relation* passRelationThruISL(Relation* r){
+
+  string rstr = r->toISLString();
 
   isl_ctx *ctx = isl_ctx_alloc();
-
-  string result =  islMapToString ( islStringToMap(rstr,ctx), ctx );
-
+  string islStr =  islMapToString ( islStringToMap(rstr,ctx), ctx );
   isl_ctx_free(ctx);
+
+  // We need to revert changes that isl applies to Tuple Declaration
+  int inArity = r->inArity(), outArity = r->outArity();
+  string corrected = revertISLTupDeclToOrig( rstr, islStr, inArity, outArity);
+  Relation* result = new Relation( corrected);
+
+//    std::cout<<std::endl<<"r = "<<rstr<<std::endl<<"i = "<<islStr<<std::endl<<std::endl;
+//    std::cout<<std::endl<<"c = "<<corrected<<std::endl<<std::endl;
 
   return result;
 }
 
 // This function can be used for Projecting out a tuple variable
 // from an affine set string using isl library
-string islSetProjectOut(string rstr, unsigned pos) {
+Set* islSetProjectOut(Set* s, unsigned pos) {
+
+  string sstr = s->toISLString();
 
   isl_ctx *ctx = isl_ctx_alloc();
-
-  string result = islSetToString ( 
-               isl_set_project_out(islStringToSet(rstr,ctx), 
+  string islStr = islSetToString ( 
+               isl_set_project_out(islStringToSet(sstr,ctx), 
                                    isl_dim_out, pos, 1), ctx 
                );
-
   isl_ctx_free(ctx);
+
+  // We need to revert the changes that isl applies to Tuple Declaration
+  string projected = projectOutStrCorrection(sstr, pos, s->arity(), 0);
+  string corrected = revertISLTupDeclToOrig( projected, islStr, s->arity(), 0);
+  Set* result = new Set( corrected);
 
   return result;
 }
@@ -132,8 +87,7 @@ string islSetProjectOut(string rstr, unsigned pos) {
 #pragma mark -
 /****************************** Conjunction *********************************/
 
-Conjunction::Conjunction(int arity) : mTupleDecl(arity), mInArity(0)
-{
+Conjunction::Conjunction(int arity) : mTupleDecl(arity), mInArity(0){
 }
 
 Conjunction::Conjunction(TupleDecl tdecl) : mTupleDecl(tdecl), mInArity(0) {
@@ -1905,8 +1859,7 @@ void Set::normalize() {
     Set* superset_copy = superAffineSet(uf_call_map);
 
     // Send affine super set to ISL and let it normalize it.
-    Set* superset_normalized 
-        = new Set(passSetThruISL(superset_copy->toISLString()));
+    Set* superset_normalized = passSetThruISL(superset_copy);
  
      // Reverse the substitution of vars for uf calls.
     Set* normalized_copy 
@@ -2242,8 +2195,7 @@ void Relation::normalize() {
     Relation* superset_copy = superAffineRelation(uf_call_map);
 
     // Send affine super set to ISL and let it normalize it.
-    Relation* superset_normalized 
-        = new Relation(passRelationThruISL(superset_copy->toISLString()));
+    Relation* superset_normalized = passRelationThruISL(superset_copy);
  std::cout << "superset_normalized = " << superset_normalized->toString() << std::endl;
      // Reverse the substitution of vars for uf calls.
     Relation* normalized_copy 
@@ -3352,16 +3304,16 @@ class VisitorProjectOut : public Visitor {
         targetConst->setInArity(0);
         Set * cs = new Set(targetConst->arity() );
         cs->addConjunction(targetConst);
-
+/*
         // Use ISL to project out tuple variable.
         // (a) get string from conjunction
         std::string conjString = cs->toISLString();
-
+*/
         // (b) send through ISL to project out desired tuple variable
-        string fromISL = islSetProjectOut(conjString, tvar);
+//        string fromISL = islSetProjectOut(conjString, tvar);
 
         // (c) convert back to a Conjunction
-        Set* islSet = new Set(fromISL);
+        Set* islSet = islSetProjectOut(cs, tvar);// new Set(fromISL);
         Conjunction* crc = new Conjunction ( *(islSet->mConjunctions.front()) );
         crc->setInArity( inArity );
 

@@ -36,6 +36,8 @@ class Visitor;
 #include <iostream>
 #include <map>
 
+#include "isl_str_manipulation.h"
+
 #include <isl/set.h>   // ISL Sets
 #include <isl/map.h>   // ISL Relations
 
