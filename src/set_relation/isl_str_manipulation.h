@@ -17,6 +17,11 @@
 
 #include<iostream>
 #include<string>
+#include <queue>
+#include <algorithm> 
+#include <functional> 
+#include <cctype>
+#include <locale>
 
 #include <isl/set.h>   // ISL Sets
 #include <isl/map.h>   // ISL Relations
@@ -26,6 +31,10 @@ namespace iegenlib{
 
 //****** ISL tuple correction functions
 
+/*! trim function trims spacing from left and right of a string
+*/
+std::string trim(std::string s);
+
 /*! This function extracts tuple variables from a Tuple Declaration string.
 **  Tuple Declaration can be either of Relation or Set form
 **  Input:  "[i1,col_tv3_] -> [i3,i4]" or
@@ -33,13 +42,7 @@ namespace iegenlib{
 **  Output: (pointer to)
 **          {"i1", "col_tv3_", "i3", "i4"}
 */
-std::string* tupVarsExtract(std::string tupDecl, int inArity, int outArity);
-
-/*! This function checks to see whether two Tuple Variables are equal
-**  regardless of spacing before and after their names:
-**  "  ip " == "ip"
-*/
-bool tvEqCheck(std::string tv1, std::string tv2);
+std::queue<std::string> tupVarsExtract(std::string tupDecl, int inArity, int outArity);
 
 /*! This function constructs equality constraints between Tuple Varialbes
 **  that are replaced eachother by ISL. To do this, it takes in two
@@ -47,7 +50,7 @@ bool tvEqCheck(std::string tv1, std::string tv2);
 **  equalities for those that are replaced:
 **      origTupDecl: [i1, i2] -> [1, i4]
 **      islTupDecl : [col_tv1_, i2] -> [1, i2]
-**      output:      (i1) - (col_tv1_) = 0 and (i4) - (i2) = 0
+**      output:      i1 = col_tv1_ and i4 = i2
 **  Note: noFirstAnd determines whether we should put "and" at the beginning of
 **  the output string, which depends on original constraints being empty or not. 
 */
@@ -74,15 +77,19 @@ typedef struct srParts{
 /*! This function takes in a Set or Relation string and returns different 
 **  parts of it in a srParts structure.
 */
-srParts* getPartsFromStr(std::string str);
+srParts getPartsFromStr(std::string str);
 
-/*! The main function that restores uninted changes ISL library apply to
+/*! The main function that restores changes that ISL library applies to
 **  Tuple Declaration because of the equality constraints. ISL library replaces
 **  tuple variables with their equal expression if one exists in the constraints:
-**    input to isl   : [n] -> { [i] : i = n and i < 10 }
-**    output from isl: { [n] : n < 10 }
+**    input to isl    (origStr): "[n] -> { [i] : i = n and i <= 10 }"
+**    output from isl (islStr) : "[n] -> { [n] : n <= 10 }"
 **  This function replaces Tuple Declaration from ISL string with original one,
 **  and creates missing equalities and puts them back into constraints.
+**  Ex:
+**  Inputs:  origStr & islStr
+    Output:
+             correctedStr = "[n] -> { [i] : n <= 10 and i = n }"
 */
 std::string revertISLTupDeclToOrig(std::string origStr, std::string islStr,
                               int inArity, int outArity);

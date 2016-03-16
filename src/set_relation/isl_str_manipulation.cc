@@ -19,6 +19,17 @@ namespace iegenlib{
 
 //****** ISL tuple correction functions
 
+/*! trim function trims spacing from left and right of a string
+*/
+std::string trim(std::string s) {
+    // trim left
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(),
+            std::not1(std::ptr_fun<int, int>(std::isspace))));
+    // trim right
+    s.erase(std::find_if(s.rbegin(), s.rend(),
+            std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
+    return s;
+}
 /*! This function extracts tuple variables from a Tuple Declaration string.
 **  Tuple Declaration can be either of Relation or Set form
 **  Input:  "[i1,col_tv3_] -> [i3,i4]" or
@@ -26,12 +37,12 @@ namespace iegenlib{
 **  Output: (pointer to)
 **          {"i1", "col_tv3_", "i3", "i4"}
 */
-std::string* tupVarsExtract(std::string tupDecl, int inArity, int outArity){
+std::queue<std::string> tupVarsExtract(std::string tupDecl, int inArity, int outArity){
 
-    int st=0, end=0, idxSt = 0;
+    int st=0, end=0;
     int nparts=1;
     int arity = inArity + outArity;
-    std::string* tupVars = new std::string[arity];
+    std::queue<std::string> tupVars;
 
     if( outArity != 0 ){
       nparts = 2;
@@ -46,47 +57,24 @@ std::string* tupVarsExtract(std::string tupDecl, int inArity, int outArity){
         for(int i = 0 ; i < arity ; i++ ){
 
             tend = str.find_first_of(',', tst);
-            tupVars[idxSt + i] = str.substr(tst,tend-tst);
+            tupVars.push( trim( str.substr(tst,tend-tst) ) ); 
             tst = tend + 1;
         }
 
         arity = outArity;
-        idxSt = inArity;
         st = end + 1;
     }
 
     return tupVars;
 }
-/*! This function checks to see whether two Tuple Variables are equal
-**  regardless of spacing before and after their names:
-**  "  ip " == "ip"
-*/
-#define unsigned int uint
-bool tvEqCheck(std::string tv1, std::string tv2){
-    int nonSpSt = 0, nonSpFi = tv1.length()-1;
-    for( uint i = 0; tv1[nonSpSt] == ' ' && i < tv1.length(); i++, nonSpSt++ );
-    for( uint i = 0; tv1[nonSpFi] == ' ' && i < tv1.length(); i++, nonSpFi-- );
-    tv1 = tv1.substr(nonSpSt,nonSpFi-nonSpSt+1);
 
-    nonSpSt = 0;
-    nonSpFi = tv2.length()-1;
-    for( uint i = 0; tv2[nonSpSt] == ' ' && i < tv2.length(); i++, nonSpSt++ );
-    for( uint i = 0; tv2[nonSpFi] == ' ' && i < tv2.length(); i++, nonSpFi-- );
-    tv2 = tv2.substr(nonSpSt,nonSpFi-nonSpSt+1);
-
-    if ( tv1 == tv2 ){
-        return true;
-    }
-
-    return false;
-}
 /*! This function constructs equality constraints between Tuple Varialbes
 **  that are replaced eachother by ISL. To do this, it takes in two
 **  Tuple declaration, extracts their Tuple Variables, then creates
 **  equalities for those that are replaced:
 **      origTupDecl: [i1, i2] -> [1, i4]
 **      islTupDecl : [col_tv1_, i2] -> [1, i2]
-**      output:      (i1) - (col_tv1_) = 0 and (i4) - (i2) = 0
+**      output:      i1 = col_tv1_ and i4 = i2
 **  Note: noFirstAnd determines whether we should put "and" at the beginning of
 **  the output string, which depends on original constraints being empty or not. 
 */
@@ -96,84 +84,96 @@ std::string missingEqs(std::string origTupDecl, std::string islTupDecl,
     int arity = inArity + outArity;
     bool firstEq = true;
  
-    std::string* origTupVars = tupVarsExtract(origTupDecl, inArity, outArity);
-    std::string* islTupVars = tupVarsExtract(islTupDecl, inArity, outArity);
+    std::queue<std::string> origTupVars = tupVarsExtract(origTupDecl, inArity, outArity);
+    std::queue<std::string> islTupVars = tupVarsExtract(islTupDecl, inArity, outArity);
 
     for(int i = 0 ; i < arity ; i++){
-        if( ! tvEqCheck(origTupVars[i] , islTupVars[i]) ){
+        std::string orig = origTupVars.front();
+        origTupVars.pop();
+        std::string isl = islTupVars.front();
+        islTupVars.pop();
+        if( orig != isl ){
             if(noFirstAnd && firstEq){
-                eqs +=  " (" + origTupVars[i] +
-                        ") - (" + islTupVars[i] + ") = 0";
+                eqs +=  " " + orig +
+                        " = " + isl;
                 firstEq = false;
             } else {
-                eqs +=  " and (" + origTupVars[i] +
-                        ") - (" + islTupVars[i] + ") = 0";
+                eqs +=  " and " + orig +
+                        " = " + isl;
             }
         
         }
     }
 
-    delete[] origTupVars;
-    delete[] islTupVars;
-
     return eqs;
 }
 /*! This function takes in a Set or Relation string and returns different 
 **  parts of it in a srParts structure.
+**  Ex:   set = "[n,m] -> { [i,j] : i < n and j > m }"
+**
+**  OUTPUT: parts    WHICH IS:
+**           parts.symVars     = "[n,m] -> "          // Symbolic constants 
+**           parts.sC          = '{'                  // Starting character
+**           parts.tupDecl     = " [i,j] "            // Tuplel declaration 
+**           parts.sepC        = ':'                  // Separating character
+**           parts.constraints = " i < n and j > m "  // Constraints
+**           parts.eC          = '}'                  // Ending character
 */
-srParts* getPartsFromStr(std::string str){
-    srParts* parts = new srParts();
+srParts getPartsFromStr(std::string str){
+    srParts parts;
     int l1,l2,l3;
 
     l1 = str.find_first_of('{', 0);
     l2 = str.find_first_of(':', l1);
     if( l2 < 0 ){
-        parts->symVars =     str.substr( 0 , l1-0 );
+        parts.symVars =     str.substr( 0 , l1-0 );
         l3 = str.find_first_of('}', l1);
-        parts->tupDecl =     str.substr( l1+1 , l3-(l1+1)-1 );
-        parts->constraints = "";
+        parts.tupDecl =     str.substr( l1+1 , l3-(l1+1)-1 );
+        parts.constraints = "";
         return parts;
     }
     l3 = str.find_first_of('}', l2);
 
-    parts->symVars =     str.substr( 0 , l1-0 );
-    parts->tupDecl =     str.substr( l1+1 , l2-(l1+1) );
-    parts->constraints = str.substr( l2+1 , l3-(l2+1) );
+    parts.symVars =     str.substr( 0 , l1-0 );
+    parts.tupDecl =     str.substr( l1+1 , l2-(l1+1) );
+    parts.constraints = str.substr( l2+1 , l3-(l2+1) );
 
     return parts;
 }
-/*! The main function that restores uninted changes ISL library apply to
+/*! The main function that restores changes that ISL library applies to
 **  Tuple Declaration because of the equality constraints. ISL library replaces
 **  tuple variables with their equal expression if one exists in the constraints:
-**    input to isl   : [n] -> { [i] : i = n and i < 10 }
-**    output from isl: { [n] : n < 10 }
+**    input to isl    (origStr): "[n] -> { [i] : i = n and i <= 10 }"
+**    output from isl (islStr) : "[n] -> { [n] : n <= 10 }"
 **  This function replaces Tuple Declaration from ISL string with original one,
 **  and creates missing equalities and puts them back into constraints.
+**  Ex:
+**  Inputs:  origStr & islStr
+    Output:
+             correctedStr = "[n] -> { [i] : n <= 10 and i = n }"
 */
 std::string revertISLTupDeclToOrig(std::string origStr, std::string islStr,
                               int inArity, int outArity){
     std::string correctedStr, eqsStr;
     bool noFirstAnd = false;
     
-    srParts* origParts = getPartsFromStr(origStr);
-    srParts* islParts = getPartsFromStr(islStr);
+    srParts origParts = getPartsFromStr(origStr);
+    srParts islParts = getPartsFromStr(islStr);
 
-    if( islParts->constraints.length() == 0 ){
+    if( islParts.constraints.length() == 0 ){
         noFirstAnd = true;
     }
-    eqsStr = missingEqs( origParts->tupDecl , islParts->tupDecl ,
+    eqsStr = missingEqs( origParts.tupDecl , islParts.tupDecl ,
                                 inArity, outArity, noFirstAnd );
     
-    if( islParts->constraints.length() == 0 && eqsStr.length() == 0){
-        correctedStr = islParts->symVars + islParts->sC +
-                       origParts->tupDecl + islParts->eC;
+    if( islParts.constraints.length() == 0 && eqsStr.length() == 0){
+        correctedStr = islParts.symVars + islParts.sC +
+                       origParts.tupDecl + islParts.eC;
     } else {
-        correctedStr = islParts->symVars + islParts->sC +
-                       origParts->tupDecl + islParts->sepC + 
-                       islParts->constraints + eqsStr +islParts->eC;
+        correctedStr = islParts.symVars + islParts.sC +
+                       origParts.tupDecl + islParts.sepC + 
+                       islParts.constraints + eqsStr +islParts.eC;
     }
-    delete origParts;
-    delete islParts;
 
     return correctedStr;
 }
@@ -188,17 +188,19 @@ std::string projectOutStrCorrection(std::string str, int poTv,
     std::string correctedStr, newTupDecl;
     int arity = inArity + outArity;
     
-    srParts* parts = getPartsFromStr(str);
+    srParts parts = getPartsFromStr(str);
     
-    std::string* origTupVars = tupVarsExtract(parts->tupDecl,
+    std::queue<std::string> origTupVars = tupVarsExtract(parts.tupDecl,
                                               inArity, outArity);
     newTupDecl = "[";
     for (int i = 0 ; i < arity ; i++){
+        std::string orig = origTupVars.front();
+        origTupVars.pop();
         if( i == inArity && outArity != 0){
             newTupDecl += "] -> [";
         }
         if( i != poTv ){
-            newTupDecl += origTupVars[i];
+            newTupDecl += orig;
             if( i != arity-1 && i != inArity-1 && 
                 !( ((i == arity-2)&&(poTv == arity-1)) ||
                    ((i == inArity-2)&&(poTv == inArity-1)) )
@@ -209,15 +211,12 @@ std::string projectOutStrCorrection(std::string str, int poTv,
     }
     newTupDecl += "] ";
   
-    if (parts->constraints.length() == 0 ){
-        correctedStr = parts->symVars + parts->sC + newTupDecl + parts->eC; 
+    if (parts.constraints.length() == 0 ){
+        correctedStr = parts.symVars + parts.sC + newTupDecl + parts.eC; 
     } else{
-        correctedStr = parts->symVars + parts->sC + newTupDecl +
-                       parts->sepC + parts->constraints + parts->eC;
+        correctedStr = parts.symVars + parts.sC + newTupDecl +
+                       parts.sepC + parts.constraints + parts.eC;
     }
-
-    delete parts;
-    delete[] origTupVars;
 
     return correctedStr;
 }

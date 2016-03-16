@@ -35,7 +35,13 @@ Set* passSetThruISL(Set* s){
   string islStr =  islSetToString ( islStringToSet(sstr,ctx), ctx );
   isl_ctx_free(ctx);
 
-  // We need to revert changes that isl applies to Tuple Declaration
+  // We need to revert changes that isl applies to Tuple Declaration because of 
+  // equality constrains. We do this purely using string manipulation.
+  // Ex:
+  //     sstr      = { [i1, i2, i3] : i1 = col_i_ and ...}  ** dots (...) can
+  //     islStr    = { [col_i_, i2, i3] : ...}              ** be different 
+  //     corrected = { [i1, i2, i3] : i1 = col_i_ and ...}  ** constraints
+  // For more detail refer to revertISLTupDeclToOrig function's comments. 
   int inArity = s->arity(), outArity = 0;
   string corrected = revertISLTupDeclToOrig( sstr, islStr, inArity, outArity);
   Set* result = new Set(corrected);
@@ -52,13 +58,10 @@ Relation* passRelationThruISL(Relation* r){
   string islStr =  islMapToString ( islStringToMap(rstr,ctx), ctx );
   isl_ctx_free(ctx);
 
-  // We need to revert changes that isl applies to Tuple Declaration
+  // Same as passSetThruISL
   int inArity = r->inArity(), outArity = r->outArity();
   string corrected = revertISLTupDeclToOrig( rstr, islStr, inArity, outArity);
   Relation* result = new Relation( corrected);
-
-//    std::cout<<std::endl<<"r = "<<rstr<<std::endl<<"i = "<<islStr<<std::endl<<std::endl;
-//    std::cout<<std::endl<<"c = "<<corrected<<std::endl<<std::endl;
 
   return result;
 }
@@ -67,19 +70,29 @@ Relation* passRelationThruISL(Relation* r){
 // from an affine set string using isl library
 Set* islSetProjectOut(Set* s, unsigned pos) {
 
-  string sstr = s->toISLString();
+    string sstr = s->toISLString();
 
-  isl_ctx *ctx = isl_ctx_alloc();
-  string islStr = islSetToString ( 
-               isl_set_project_out(islStringToSet(sstr,ctx), 
-                                   isl_dim_out, pos, 1), ctx 
-               );
-  isl_ctx_free(ctx);
+    // Using isl to project out tuple variable #pos
+    isl_ctx *ctx = isl_ctx_alloc();
+    string islStr = islSetToString ( 
+                 isl_set_project_out(islStringToSet(sstr,ctx), 
+                                     isl_dim_out, pos, 1), ctx 
+                 );
+    isl_ctx_free(ctx);
 
-  // We need to revert the changes that isl applies to Tuple Declaration
-  string projected = projectOutStrCorrection(sstr, pos, s->arity(), 0);
-  string corrected = revertISLTupDeclToOrig( projected, islStr, s->arity(), 0);
-  Set* result = new Set( corrected);
+    // We need to revert changes that isl applies to Tuple Declaration similar
+    // to passSetThruISL. However, this is different from passSetThruISL.
+    // Before using revertISLTupDeclToOrig, we need to change the tuple
+    // declaration in the original Set's string.
+    // So, it would match projected out declaration.
+    // Ex:
+    // sstr      = { [i1,i2,i3] : ...}  ,  pos = 1 (we project out i2)
+    // projected = { [i1,i3] : ...}
+    // For more detail refer to projectOutStrCorrection function's comments.
+    // After getting projected string the process becomes like passSetThruISL.
+    string projected = projectOutStrCorrection(sstr, pos, s->arity(), 0);
+    string corrected = revertISLTupDeclToOrig( projected, islStr, s->arity(), 0);
+    Set* result = new Set( corrected);
 
   return result;
 }
@@ -3299,24 +3312,17 @@ class VisitorProjectOut : public Visitor {
     // Projects out tuple varrable No. tvar from current conjunction
     // And adds it to mNewConj
     void postVisitConjunction(iegenlib::Conjunction* c){
-        Conjunction* targetConst = new Conjunction( *c );
+        Conjunction* cc = new Conjunction( *c );
         
-        targetConst->setInArity(0);
-        Set * cs = new Set(targetConst->arity() );
-        cs->addConjunction(targetConst);
-/*
-        // Use ISL to project out tuple variable.
-        // (a) get string from conjunction
-        std::string conjString = cs->toISLString();
-*/
-        // (b) send through ISL to project out desired tuple variable
-//        string fromISL = islSetProjectOut(conjString, tvar);
+        cc->setInArity(0);
+        Set * cs = new Set(cc->arity() );
+        cs->addConjunction(cc);
 
-        // (c) convert back to a Conjunction
-        Set* islSet = islSetProjectOut(cs, tvar);// new Set(fromISL);
+        // Send through ISL to project out desired tuple variable
+        Set* islSet = islSetProjectOut(cs, tvar);
+
         Conjunction* crc = new Conjunction ( *(islSet->mConjunctions.front()) );
         crc->setInArity( inArity );
-
         // Storing the result so we could add it to new Set or Relation later.
         mNewConj.push_back( crc );
 

@@ -3952,11 +3952,10 @@ TEST_F(SetRelationTest, projectOut) {
         delete r1;             // removing old r1
         r1 = r2;
     }
+
 //   std::cout << std::endl << "r1 = " << r1->toISLString() << std::endl;
 
    EXPECT_EQ( ex_r1->toISLString() , r1->toISLString() );
-
-
 
     Set *s1 = new Set("{ [i,j,ip,jp] : i = col(jp)+1 and 0 <= i and i < n"
                                      " and idx(i) <= j and j < idx(i+1) }");
