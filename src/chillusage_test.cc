@@ -34,36 +34,6 @@ class ChillUsageTest : public::testing::Test {
     virtual void TearDown() {}
 };
 
-
-/*! Seeing if we can do dependence simplification for GS.
-*/
-TEST_F(ChillUsageTest, GSDepSimplification)
-{
-    // From CHILL, Anand creates the full dependence relation
-    // for the loop.
-    Relation* full_dep = new Relation("{ [i,j] -> [i',j'] : "
-                            "i<i' && i=col(j') and 0<=i and i<N and "
-                            "0<=i' and i'<N "
-                            "and idx(i) <= j and j<idx(i+1) "
-                            "and idx(i’) <= j' and j' < idx(i’+1) }");
-
-    EXPECT_EQ("{ [i, j] -> [i', j'] : i - col(j') = 0 && i >= 0 && i' >= 0 "
-              "&& j - idx(i) >= 0 && j' - idx(i) >= 0 && -i + i' - 1 >= 0 && "
-              "-i + N - 1 >= 0 && -j + idx(i + 1) - 1 >= 0 && -i' + N - 1 >= "
-              "0 && -j' + idx(i + 1) - 1 >= 0 }", 
-              full_dep->prettyPrintString() );
-   
-   /* MMS, 10/21/15, this doesn't work yet
-    // project out j
-    Relation* rel_2to1 = new Relation("{[x,y]->[x]}");
-    //Relation* rel_1to2 = new Relation("{[x]->[x,y]}");
-    EXPECT_EQ( "",
-               rel_2to1->Compose(full_dep)->prettyPrintString());
-*/
-
-    delete full_dep;
-}
-
 /*! Tests modifying the access relations for loop coalescing.
 */
 TEST_F(ChillUsageTest, LoopCoalescing)
@@ -231,3 +201,305 @@ TEST_F(ChillUsageTest, AddUFConstraints)
     delete r1add;
     delete expect1;
 }
+
+/*! Seeing if we can do dependence simplification for GS.
+*/
+TEST_F(ChillUsageTest, GS_CSR_DepSimplification)
+{
+    iegenlib::setCurrEnv();
+    iegenlib::appendCurrEnv("colidx",
+        new Set("{[i]:0<=i &&i<nnz}"), 
+        new Set("{[j]:0<=j &&j<m}"), true, iegenlib::Monotonic_Increasing);
+    iegenlib::appendCurrEnv("rowptr",
+        new Set("{[i]:0<=i &&i<m}"), 
+        new Set("{[j]:0<=j &&j<nnz}"), true, iegenlib::Monotonic_Increasing);
+
+    // From CHILL, Anand creates the full dependence relation
+    // for the loop.
+    Set* flow = new Set("{ [i,ip,j,jp] : i<ip && i=colidx(jp) "
+                     "&& 0 <= i && i < m && 0 <= ip && ip < m "
+                        "&& rowptr(i) <= j && j < rowptr(i+1) "
+                   "&& rowptr(ip) <= jp && jp < rowptr(ip+1) }");
+
+    Set* anti = new Set("{ [i,ip,j,jp] : ip<i && i=colidx(jp) "
+                     "&& 0 <= i && i < m && 0 <= ip && ip < m "
+                        "&& rowptr(i) <= j && j < rowptr(i+1) "
+                   "&& rowptr(ip) <= jp && jp < rowptr(ip+1) }");
+
+
+    // Expected outputs 
+    Set* ex_flow = new Set("{ [i,ip,jp] : i=colidx(jp) "
+                              "&& colidx(jp) < ip && ip < m-1 "
+                                  "&& rowptr(i) < rowptr(i+1) "
+                    "&& rowptr(ip) <= jp && jp < rowptr(ip+1) "
+     "&& colidx(jp) >= 0 && rowptr(i) >= 0 && rowptr(ip) >= 0 "
+                  "&& rowptr(i+1) < nnz && rowptr(ip+1) < nnz}");
+
+    Set* ex_anti = new Set("{ [i,ip,jp] : i=colidx(jp) "
+                               "&& 0 <= ip && ip < colidx(jp) "
+                                  "&& rowptr(i) < rowptr(i+1) "
+                    "&& rowptr(ip) <= jp && jp < rowptr(ip+1) "
+     "&& colidx(jp) < m-1 && rowptr(i) >= 0 && rowptr(ip) >= 0 "
+                  "&& rowptr(i+1) < nnz && rowptr(ip+1) < nnz}");
+
+
+    // Simplifying Flow dependence by projecting out j
+    Set *ts;
+    ts = flow->projectOut(2);    // 2 == index of 'j'
+    if ( ts ){                   // Did we project out 'j': YES!
+        delete flow;               // removing old cs
+        flow = ts;
+    }
+
+// Print results
+//   std::cout<<std::endl<< "Simp. Dep. = "<<flow->toISLString()<<std::endl;
+    EXPECT_EQ( ex_flow->toISLString() , flow->toISLString() );
+
+
+
+    // Simplifying Anti dependence by projecting out j
+    ts = anti->projectOut(2);    // 2 == index of 'j'
+    if ( ts ){                   // Did we project out 'j': YES!
+        delete anti;             // removing old cs
+        anti = ts;
+    }
+
+// Print results
+//   std::cout<<std::endl<<"Simp. Dep. = "<<anti->toISLString()<<std::endl;
+    EXPECT_EQ( ex_anti->toISLString() , anti->toISLString() );
+
+
+    delete ex_flow;
+    delete ex_anti;
+    delete flow;
+    delete anti;
+}
+
+
+/*! Test cases CSR ILU code's data access dependencies
+*/
+TEST_F(ChillUsageTest, ILU_CSR_DepSimplification)
+{
+    iegenlib::setCurrEnv();
+    iegenlib::appendCurrEnv("colidx",
+        new Set("{[i]:0<=i &&i<nnz}"), 
+        new Set("{[j]:0<=j &&j<m}"), true, iegenlib::Monotonic_Increasing);
+    iegenlib::appendCurrEnv("rowptr",
+        new Set("{[i]:0<=i &&i<m}"), 
+        new Set("{[j]:0<=j &&j<nnz}"), true, iegenlib::Monotonic_Increasing);
+    iegenlib::appendCurrEnv("diagptr",
+        new Set("{[i]:0<=i &&i<m}"), 
+        new Set("{[j]:0<=j &&j<nnz}"), true, iegenlib::Monotonic_Increasing);
+
+
+    Set *F1 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: ip < i &&"
+                " k < j1 && j1 < rowptr(1+i) && j2 < rowptr(1+colidx(k)) &&"
+          " diagptr(colidx(k)) < j2 && 0 <= i && i < m && rowptr(i) <= k &&"
+  " k < diagptr(i) && rowptr(i) <= diagptr(i) && rowptr(i) < rowptr(1+i) &&"
+               " diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp)) &&"
+           " j1p < rowptr(1+ip) && kp < diagptr(ip) && 0 <= ip && ip < m &&"
+                         " rowptr(ip) <= kp && rowptr(ip) <= diagptr(ip) &&"
+                                     " rowptr(ip) < rowptr(1+ip) && k = kp}");
+
+    Set *A1 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: i < ip &&"
+                " k < j1 && j1 < rowptr(1+i) && j2 < rowptr(1+colidx(k)) &&"
+          " diagptr(colidx(k)) < j2 && 0 <= i && i < m && rowptr(i) <= k &&"
+  " k < diagptr(i) && rowptr(i) <= diagptr(i) && rowptr(i) < rowptr(1+i) &&"
+               " diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp)) &&"
+           " j1p < rowptr(1+ip) && kp < diagptr(ip) && 0 <= ip && ip < m &&"
+                         " rowptr(ip) <= kp && rowptr(ip) <= diagptr(ip) &&"
+                                     " rowptr(ip) < rowptr(1+ip) && k = kp}");
+
+
+    Set *F2 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: ip < i &&"
+                " k < j1 && j1 < rowptr(1+i) && j2 < rowptr(1+colidx(k)) &&"
+          " diagptr(colidx(k)) < j2 && 0 <= i && i < m && rowptr(i) <= k &&"
+  " k < diagptr(i) && rowptr(i) <= diagptr(i) && rowptr(i) < rowptr(1+i) &&"
+               " diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp)) &&"
+           " j1p < rowptr(1+ip) && kp < diagptr(ip) && 0 <= ip && ip < m &&"
+                         " rowptr(ip) <= kp && rowptr(ip) <= diagptr(ip) &&"
+                    " rowptr(ip) < rowptr(1+ip) && k = diagptr(colidx(kp))}");
+
+    Set *A2 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: i < ip &&"
+                " k < j1 && j1 < rowptr(1+i) && j2 < rowptr(1+colidx(k)) &&"
+          " diagptr(colidx(k)) < j2 && 0 <= i && i < m && rowptr(i) <= k &&"
+  " k < diagptr(i) && rowptr(i) <= diagptr(i) && rowptr(i) < rowptr(1+i) &&"
+               " diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp)) &&"
+           " j1p < rowptr(1+ip) && kp < diagptr(ip) && 0 <= ip && ip < m &&"
+                         " rowptr(ip) <= kp && rowptr(ip) <= diagptr(ip) &&"
+                    " rowptr(ip) < rowptr(1+ip) && k = diagptr(colidx(kp))}");
+
+
+
+    Set *F3 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: ip < i &&"
+                " k < j1 && j1 < rowptr(1+i) && j2 < rowptr(1+colidx(k)) &&"
+          " diagptr(colidx(k)) < j2 && 0 <= i && i < m && rowptr(i) <= k &&"
+  " k < diagptr(i) && rowptr(i) <= diagptr(i) && rowptr(i) < rowptr(1+i) &&"
+               " diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp)) &&"
+           " j1p < rowptr(1+ip) && kp < diagptr(ip) && 0 <= ip && ip < m &&"
+                         " rowptr(ip) <= kp && rowptr(ip) <= diagptr(ip) &&"
+                                    " rowptr(ip) < rowptr(1+ip) && k = j1p}");
+
+    Set *A3 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: i < ip &&"
+                " k < j1 && j1 < rowptr(1+i) && j2 < rowptr(1+colidx(k)) &&"
+          " diagptr(colidx(k)) < j2 && 0 <= i && i < m && rowptr(i) <= k &&"
+  " k < diagptr(i) && rowptr(i) <= diagptr(i) && rowptr(i) < rowptr(1+i) &&"
+               " diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp)) &&"
+           " j1p < rowptr(1+ip) && kp < diagptr(ip) && 0 <= ip && ip < m &&"
+                         " rowptr(ip) <= kp && rowptr(ip) <= diagptr(ip) &&"
+                                    " rowptr(ip) < rowptr(1+ip) && k = j1p}");
+
+
+    Set *F4 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: ip < i &&"
+                " k < j1 && j1 < rowptr(1+i) && j2 < rowptr(1+colidx(k)) &&"
+          " diagptr(colidx(k)) < j2 && 0 <= i && i < m && rowptr(i) <= k &&"
+  " k < diagptr(i) && rowptr(i) <= diagptr(i) && rowptr(i) < rowptr(1+i) &&"
+               " diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp)) &&"
+           " j1p < rowptr(1+ip) && kp < diagptr(ip) && 0 <= ip && ip < m &&"
+                         " rowptr(ip) <= kp && rowptr(ip) <= diagptr(ip) &&"
+                                    " rowptr(ip) < rowptr(1+ip) && k = j2p}");
+
+    Set *A4 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: i < ip &&"
+                " k < j1 && j1 < rowptr(1+i) && j2 < rowptr(1+colidx(k)) &&"
+          " diagptr(colidx(k)) < j2 && 0 <= i && i < m && rowptr(i) <= k &&"
+  " k < diagptr(i) && rowptr(i) <= diagptr(i) && rowptr(i) < rowptr(1+i) &&"
+               " diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp)) &&"
+           " j1p < rowptr(1+ip) && kp < diagptr(ip) && 0 <= ip && ip < m &&"
+                         " rowptr(ip) <= kp && rowptr(ip) <= diagptr(ip) &&"
+                                    " rowptr(ip) < rowptr(1+ip) && k = j2p}");
+
+
+    Set *F5 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: ip < i &&"
+                " k < j1 && j1 < rowptr(1+i) && j2 < rowptr(1+colidx(k)) &&"
+          " diagptr(colidx(k)) < j2 && 0 <= i && i < m && rowptr(i) <= k &&"
+  " k < diagptr(i) && rowptr(i) <= diagptr(i) && rowptr(i) < rowptr(1+i) &&"
+               " diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp)) &&"
+           " j1p < rowptr(1+ip) && kp < diagptr(ip) && 0 <= ip && ip < m &&"
+                         " rowptr(ip) <= kp && rowptr(ip) <= diagptr(ip) &&"
+                   " rowptr(ip) < rowptr(1+ip) && diagptr(colidx(k)) = j1p}");
+
+    Set *A5 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: i < ip &&"
+                " k < j1 && j1 < rowptr(1+i) && j2 < rowptr(1+colidx(k)) &&"
+          " diagptr(colidx(k)) < j2 && 0 <= i && i < m && rowptr(i) <= k &&"
+  " k < diagptr(i) && rowptr(i) <= diagptr(i) && rowptr(i) < rowptr(1+i) &&"
+               " diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp)) &&"
+           " j1p < rowptr(1+ip) && kp < diagptr(ip) && 0 <= ip && ip < m &&"
+                         " rowptr(ip) <= kp && rowptr(ip) <= diagptr(ip) &&"
+                   " rowptr(ip) < rowptr(1+ip) && diagptr(colidx(k)) = j1p}");
+
+
+
+    Set *F6 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: ip < i &&"
+                " k < j1 && j1 < rowptr(1+i) && j2 < rowptr(1+colidx(k)) &&"
+          " diagptr(colidx(k)) < j2 && 0 <= i && i < m && rowptr(i) <= k &&"
+  " k < diagptr(i) && rowptr(i) <= diagptr(i) && rowptr(i) < rowptr(1+i) &&"
+               " diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp)) &&"
+           " j1p < rowptr(1+ip) && kp < diagptr(ip) && 0 <= ip && ip < m &&"
+                         " rowptr(ip) <= kp && rowptr(ip) <= diagptr(ip) &&"
+                                   " rowptr(ip) < rowptr(1+ip) && j1 = j1p}");
+
+    Set *A6 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: i < ip &&"
+                " k < j1 && j1 < rowptr(1+i) && j2 < rowptr(1+colidx(k)) &&"
+          " diagptr(colidx(k)) < j2 && 0 <= i && i < m && rowptr(i) <= k &&"
+  " k < diagptr(i) && rowptr(i) <= diagptr(i) && rowptr(i) < rowptr(1+i) &&"
+               " diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp)) &&"
+           " j1p < rowptr(1+ip) && kp < diagptr(ip) && 0 <= ip && ip < m &&"
+                         " rowptr(ip) <= kp && rowptr(ip) <= diagptr(ip) &&"
+                                   " rowptr(ip) < rowptr(1+ip) && j1 = j1p}");
+
+
+
+    Set *F7 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: ip < i &&"
+                " k < j1 && j1 < rowptr(1+i) && j2 < rowptr(1+colidx(k)) &&"
+          " diagptr(colidx(k)) < j2 && 0 <= i && i < m && rowptr(i) <= k &&"
+  " k < diagptr(i) && rowptr(i) <= diagptr(i) && rowptr(i) < rowptr(1+i) &&"
+               " diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp)) &&"
+           " j1p < rowptr(1+ip) && kp < diagptr(ip) && 0 <= ip && ip < m &&"
+                         " rowptr(ip) <= kp && rowptr(ip) <= diagptr(ip) &&"
+                                    " rowptr(ip) < rowptr(1+ip) && j1 = kp}");
+
+    Set *A7 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: i < ip &&"
+                " k < j1 && j1 < rowptr(1+i) && j2 < rowptr(1+colidx(k)) &&"
+          " diagptr(colidx(k)) < j2 && 0 <= i && i < m && rowptr(i) <= k &&"
+  " k < diagptr(i) && rowptr(i) <= diagptr(i) && rowptr(i) < rowptr(1+i) &&"
+               " diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp)) &&"
+           " j1p < rowptr(1+ip) && kp < diagptr(ip) && 0 <= ip && ip < m &&"
+                         " rowptr(ip) <= kp && rowptr(ip) <= diagptr(ip) &&"
+                                    " rowptr(ip) < rowptr(1+ip) && j1 = kp}");
+
+
+
+   Set *F8 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: ip < i &&"
+                " k < j1 && j1 < rowptr(1+i) && j2 < rowptr(1+colidx(k)) &&"
+          " diagptr(colidx(k)) < j2 && 0 <= i && i < m && rowptr(i) <= k &&"
+  " k < diagptr(i) && rowptr(i) <= diagptr(i) && rowptr(i) < rowptr(1+i) &&"
+               " diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp)) &&"
+           " j1p < rowptr(1+ip) && kp < diagptr(ip) && 0 <= ip && ip < m &&"
+                         " rowptr(ip) <= kp && rowptr(ip) <= diagptr(ip) &&"
+                                   " rowptr(ip) < rowptr(1+ip) && j1 = j2p}");
+
+    Set *A8 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: i < ip &&"
+                " k < j1 && j1 < rowptr(1+i) && j2 < rowptr(1+colidx(k)) &&"
+          " diagptr(colidx(k)) < j2 && 0 <= i && i < m && rowptr(i) <= k &&"
+  " k < diagptr(i) && rowptr(i) <= diagptr(i) && rowptr(i) < rowptr(1+i) &&"
+               " diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp)) &&"
+           " j1p < rowptr(1+ip) && kp < diagptr(ip) && 0 <= ip && ip < m &&"
+                         " rowptr(ip) <= kp && rowptr(ip) <= diagptr(ip) &&"
+                                   " rowptr(ip) < rowptr(1+ip) && j1 = j2p}");
+
+
+    Set *cs = new Set(*A1);
+    Set *ts;
+    ts = cs->projectOut(7);    // 7 == index of 'j2p'
+    if ( ts ){                 // Did we project out 'j2p': YES!
+        delete cs;             // removing old cs
+        cs = ts;
+    }
+
+    ts = cs->projectOut(6);    // 7 == index of 'j2'
+    if ( ts ){                 // Did we project out 'j2': YES!
+        delete cs;             // removing old cs
+        cs = ts;
+    }
+
+    ts = cs->projectOut(5);    // 7 == index of 'j1p'
+    if ( ts ){                 // Did we project out 'j1p': YES!
+        delete cs;             // removing old cs
+        cs = ts;
+    }
+
+    ts = cs->projectOut(4);    // 7 == index of 'j1'
+    if ( ts ){                 // Did we project out 'j1': YES!
+        delete cs;             // removing old cs
+        cs = ts;
+    }
+
+// Print results
+//   std::cout << std::endl << "Simp. Dep. = " << cs->toISLString() << std::endl;
+
+//    EXPECT_EQ( ex_cs->toISLString() , cs->toISLString() );
+
+
+
+    delete cs;
+//    delete ex_cs;
+
+    delete F1;
+    delete A1;
+    delete F2;
+    delete A2;
+    delete F3;
+    delete A3;
+    delete F4;
+    delete A4;
+    delete F5;
+    delete A5;
+    delete F6;
+    delete A6;
+    delete F7;
+    delete A7;
+    delete F8;
+    delete A8;
+}
+
+
