@@ -206,6 +206,10 @@ TEST_F(ChillUsageTest, AddUFConstraints)
 */
 TEST_F(ChillUsageTest, GS_CSR_DepSimplification)
 {
+
+    // CHILL creates the full dependence relation for the loop. And, Ananad
+    // indicates monotinicity.
+
     iegenlib::setCurrEnv();
     iegenlib::appendCurrEnv("colidx",
         new Set("{[i]:0<=i &&i<nnz}"), 
@@ -214,8 +218,6 @@ TEST_F(ChillUsageTest, GS_CSR_DepSimplification)
         new Set("{[i]:0<=i &&i<m}"), 
         new Set("{[j]:0<=j &&j<nnz}"), true, iegenlib::Monotonic_Increasing);
 
-    // From CHILL, Anand creates the full dependence relation
-    // for the loop.
     Set* flow = new Set("{ [i,ip,j,jp] : i<ip && i=colidx(jp) "
                      "&& 0 <= i && i < m && 0 <= ip && ip < m "
                         "&& rowptr(i) <= j && j < rowptr(i+1) "
@@ -243,36 +245,29 @@ TEST_F(ChillUsageTest, GS_CSR_DepSimplification)
                   "&& rowptr(i+1) < nnz && rowptr(ip+1) < nnz}");
 
 
-    // Simplifying Flow dependence by projecting out j
-    Set *ts;
-    ts = flow->projectOut(2);    // 2 == index of 'j'
-    if ( ts ){                   // Did we project out 'j': YES!
-        delete flow;               // removing old cs
-        flow = ts;
-    }
 
+    //*** Simplifying flow dependence
+
+    Set* flow_sim = flow->simplifyNeedsName();
 // Print results
-//   std::cout<<std::endl<< "Simp. Dep. = "<<flow->toISLString()<<std::endl;
-    EXPECT_EQ( ex_flow->toISLString() , flow->toISLString() );
+//   std::cout<<std::endl<< "Simp. Dep. = "<<flow_sim->toISLString()<<std::endl;
+    EXPECT_EQ( ex_flow->toISLString() , flow_sim->toISLString() );
 
 
+    //*** Simplifying Anti dependence
 
-    // Simplifying Anti dependence by projecting out j
-    ts = anti->projectOut(2);    // 2 == index of 'j'
-    if ( ts ){                   // Did we project out 'j': YES!
-        delete anti;             // removing old cs
-        anti = ts;
-    }
-
+    Set* anti_sim = anti->simplifyNeedsName();
 // Print results
-//   std::cout<<std::endl<<"Simp. Dep. = "<<anti->toISLString()<<std::endl;
-    EXPECT_EQ( ex_anti->toISLString() , anti->toISLString() );
+//   std::cout<<std::endl<<"Simp. Dep. = "<<anti_sim->toISLString()<<std::endl;
+    EXPECT_EQ( ex_anti->toISLString() , anti_sim->toISLString() );
 
 
     delete ex_flow;
     delete ex_anti;
     delete flow;
     delete anti;
+    delete flow_sim;
+    delete anti_sim;
 }
 
 
@@ -280,10 +275,20 @@ TEST_F(ChillUsageTest, GS_CSR_DepSimplification)
 */
 TEST_F(ChillUsageTest, ILU_CSR_DepSimplification)
 {
+
+    // CHILL creates the full dependence relation for the loop. And, Ananad
+    // indicates monotinicity, and adds constraints like:
+    //                                  forall e row(e) < diag(e)
+
+    // Introduce the UFCalls to enviroment, and indicate their domain, range
+    // whether they are bijective, or monotonic.
     iegenlib::setCurrEnv();
     iegenlib::appendCurrEnv("colidx",
-        new Set("{[i]:0<=i &&i<nnz}"), 
-        new Set("{[j]:0<=j &&j<m}"), true, iegenlib::Monotonic_Increasing);
+            new Set("{[i]:0<=i &&i<nnz}"),         // Domain 
+            new Set("{[j]:0<=j &&j<m}"),           // Range
+            true,                                  // Bijective?!
+            iegenlib::Monotonic_Increasing         // monotonicity
+            );
     iegenlib::appendCurrEnv("rowptr",
         new Set("{[i]:0<=i &&i<m}"), 
         new Set("{[j]:0<=j &&j<nnz}"), true, iegenlib::Monotonic_Increasing);
@@ -310,6 +315,14 @@ TEST_F(ChillUsageTest, ILU_CSR_DepSimplification)
                          " rowptr(ip) <= kp && rowptr(ip) <= diagptr(ip) &&"
                                      " rowptr(ip) < rowptr(1+ip) && k = kp}");
 
+/*
+    //*** Simplifying flow dependence
+
+    Set* F1_sim = F1->simplifyNeedsName();
+// Print results
+//   std::cout<<std::endl<< "F1 Simp. Dep. = "<<F1_sim->toISLString()<<std::endl;
+//    EXPECT_EQ( ex_flow->toISLString() , flow_sim->toISLString() );
+*/
 
     Set *F2 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: ip < i &&"
                 " k < j1 && j1 < rowptr(1+i) && j2 < rowptr(1+colidx(k)) &&"
@@ -318,7 +331,7 @@ TEST_F(ChillUsageTest, ILU_CSR_DepSimplification)
                " diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp)) &&"
            " j1p < rowptr(1+ip) && kp < diagptr(ip) && 0 <= ip && ip < m &&"
                          " rowptr(ip) <= kp && rowptr(ip) <= diagptr(ip) &&"
-                    " rowptr(ip) < rowptr(1+ip) && k = diagptr(colidx(kp))}");
+                    " rowptr(ip) < rowptr(1+ip) && k = diagptr(colidx(kp)) }");
 
     Set *A2 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: i < ip &&"
                 " k < j1 && j1 < rowptr(1+i) && j2 < rowptr(1+colidx(k)) &&"
@@ -329,6 +342,14 @@ TEST_F(ChillUsageTest, ILU_CSR_DepSimplification)
                          " rowptr(ip) <= kp && rowptr(ip) <= diagptr(ip) &&"
                     " rowptr(ip) < rowptr(1+ip) && k = diagptr(colidx(kp))}");
 
+/*
+    //*** Simplifying flow dependence
+
+    Set* F2_sim = F2->simplifyNeedsName();
+// Print results
+   std::cout<<std::endl<< "F2 Simp. Dep. = "<<F2_sim->toISLString()<<std::endl;
+//    EXPECT_EQ( ex_flow->toISLString() , flow_sim->toISLString() );
+*/
 
 
     Set *F3 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: ip < i &&"
@@ -429,6 +450,10 @@ TEST_F(ChillUsageTest, ILU_CSR_DepSimplification)
 
 
 
+
+
+
+
    Set *F8 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: ip < i &&"
                 " k < j1 && j1 < rowptr(1+i) && j2 < rowptr(1+colidx(k)) &&"
           " diagptr(colidx(k)) < j2 && 0 <= i && i < m && rowptr(i) <= k &&"
@@ -448,41 +473,22 @@ TEST_F(ChillUsageTest, ILU_CSR_DepSimplification)
                                    " rowptr(ip) < rowptr(1+ip) && j1 = j2p}");
 
 
-    Set *cs = new Set(*A1);
-    Set *ts;
-    ts = cs->projectOut(7);    // 7 == index of 'j2p'
-    if ( ts ){                 // Did we project out 'j2p': YES!
-        delete cs;             // removing old cs
-        cs = ts;
-    }
+    //*** Simplifying flow dependence
 
-    ts = cs->projectOut(6);    // 7 == index of 'j2'
-    if ( ts ){                 // Did we project out 'j2': YES!
-        delete cs;             // removing old cs
-        cs = ts;
-    }
+    Set* F8_sim;
+    // First add in user defined constraints
+    Set* temp = F8->addUFConstraints("rowptr","<=", "diagptr");
 
-    ts = cs->projectOut(5);    // 7 == index of 'j1p'
-    if ( ts ){                 // Did we project out 'j1p': YES!
-        delete cs;             // removing old cs
-        cs = ts;
-    }
-
-    ts = cs->projectOut(4);    // 7 == index of 'j1'
-    if ( ts ){                 // Did we project out 'j1': YES!
-        delete cs;             // removing old cs
-        cs = ts;
-    }
+    F8_sim = F8->simplifyNeedsName();
 
 // Print results
-//   std::cout << std::endl << "Simp. Dep. = " << cs->toISLString() << std::endl;
-
-//    EXPECT_EQ( ex_cs->toISLString() , cs->toISLString() );
-
+   std::cout<<"\n\n"<< "F8 Simp. Dep. = "<<F8_sim->toISLString()<<"\n\n\n";
+//    EXPECT_EQ( ex_flow->toISLString() , flow_sim->toISLString() );
 
 
-    delete cs;
-//    delete ex_cs;
+
+
+
 
     delete F1;
     delete A1;

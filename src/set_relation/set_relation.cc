@@ -3467,4 +3467,70 @@ Relation* Relation::projectOut(int tvar)
 }
 
 
+/*! This function simplifies constraints sets of non-affine sets that
+**  are targeted for level set parallelism. These sets are representative
+**  of data access dependency relations. For level set parallelism,
+**  we need to create an optimized inspector code that checks 
+**  data dependency based these constraints in run time. This function is
+**  implementation of Simplification Algorithm that simplifies dependency
+**  relations, so we can generate optimized inspector code from constraint sets.
+*/
+Set* Set::simplifyNeedsName()
+{
+
+    Set *result,*temp;
+    int lastTV = this->arity()-1;
+
+    // Adding constraints dut to Monotonicity of UFCs (if any exists)
+    result = this->addConstraintsDueToMonotonicity();
+
+    
+    // Projecting out any tuple variable that are not argument to a UFCall 
+    // starting from inner most loops. We also do not project out first 2 loops
+    // that are outer most loops, since they are going to be parallelized.
+    // [i1,i1p,i2, i2p, ...] :  we keep i1 and i1p
+    for (int i = lastTV ; i >= 2 ; i-- ) {
+
+        // Project out if it is not an UFCall argument
+        temp = result->projectOut(i); 
+
+        if ( temp ){
+            delete result;  
+            result = temp;
+        }
+    }
+
+    return result;    
+}
+
+/*! Same as Set.
+*/
+Relation* Relation::simplifyNeedsName()
+{
+
+    Relation *result,*temp;
+    int lastTV = this->arity()-1;
+
+    // Adding constraints dut to Monotonicity of UFCs (if any exists)
+    result = this->addConstraintsDueToMonotonicity();
+
+    
+    // Projecting out any tuple variable that are not argument to a UFCall 
+    // starting from inner most loops. We also do not project out first 2 loops
+    // that are outer most loops, since they are going to be parallelized.
+    // [i1,i1p,i2, i2p, ...] :  we keep i1 and i1p
+    for (int i = lastTV ; i >= 2 ; i-- ) {
+
+        // Project out if it is not an UFCall argument
+        temp = result->projectOut(i); 
+
+        if ( temp ){
+            delete result;        
+            result = temp;
+        }
+    }
+
+    return result;    
+}
+
 }//end namespace iegenlib

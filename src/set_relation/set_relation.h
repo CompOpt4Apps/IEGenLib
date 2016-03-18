@@ -525,6 +525,16 @@ public:
     //! If tvar is an argument to some UFCall, then returns NULL.
     Set* projectOut(int tvar);
 
+    /*! This function simplifies constraints sets of non-affine sets that
+        are targeted for level set parallelism. These sets are representative
+        of data access dependency relations. For level set parallelism,
+        we need to create an optimized inspector code that checks 
+        data dependency based these constraints in run time. This function is
+        implementation of Simplification Algorithm that simplifies dependency
+        relations, so we can generate optimized inspector code from constraint sets.
+    */
+    Set* simplifyNeedsName();
+
 private:
     int mArity;
 };
@@ -683,6 +693,16 @@ public:
     //! Projects out tuple var No. tvar, if it is not an argument to a UFCall.
     //! If tvar is an argument to some UFCall, then returns NULL.
     Relation* projectOut(int tvar);
+
+    /*! This function simplifies constraints sets of non-affine sets that
+        are targeted for level set parallelism. These sets are representative
+        of data access dependency relations. For level set parallelism,
+        we need to create an optimized inspector code that checks 
+        data dependency based these constraints in run time. This function is
+        implementation of Simplification Algorithm that simplifies dependency
+        relations, so we can generate optimized inspector code from constraint sets.
+    */
+    Relation* simplifyNeedsName();
 
 private:
     int mInArity;
