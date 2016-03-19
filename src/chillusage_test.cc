@@ -212,11 +212,15 @@ TEST_F(ChillUsageTest, GS_CSR_DepSimplification)
 
     iegenlib::setCurrEnv();
     iegenlib::appendCurrEnv("colidx",
-        new Set("{[i]:0<=i &&i<nnz}"), 
-        new Set("{[j]:0<=j &&j<m}"), true, iegenlib::Monotonic_Increasing);
+            new Set("{[i]:0<=i &&i<nnz}"),      // Domain 
+            new Set("{[j]:0<=j &&j<m}"),        // Range
+            false,                              // Bijective?!
+            iegenlib::Monotonic_NONE            // monotonicity
+            );
     iegenlib::appendCurrEnv("rowptr",
         new Set("{[i]:0<=i &&i<m}"), 
-        new Set("{[j]:0<=j &&j<nnz}"), true, iegenlib::Monotonic_Increasing);
+        new Set("{[j]:0<=j &&j<nnz}"), false, iegenlib::Monotonic_NONE);
+
 
     Set* flow = new Set("{ [i,ip,j,jp] : i<ip && i=colidx(jp) "
                      "&& 0 <= i && i < m && 0 <= ip && ip < m "
@@ -284,17 +288,17 @@ TEST_F(ChillUsageTest, ILU_CSR_DepSimplification)
     // whether they are bijective, or monotonic.
     iegenlib::setCurrEnv();
     iegenlib::appendCurrEnv("colidx",
-            new Set("{[i]:0<=i &&i<nnz}"),         // Domain 
-            new Set("{[j]:0<=j &&j<m}"),           // Range
-            true,                                  // Bijective?!
-            iegenlib::Monotonic_Increasing         // monotonicity
+            new Set("{[i]:0<=i &&i<nnz}"),      // Domain 
+            new Set("{[j]:0<=j &&j<m}"),        // Range
+            false,                              // Bijective?!
+            iegenlib::Monotonic_NONE            // monotonicity
             );
     iegenlib::appendCurrEnv("rowptr",
         new Set("{[i]:0<=i &&i<m}"), 
-        new Set("{[j]:0<=j &&j<nnz}"), true, iegenlib::Monotonic_Increasing);
+        new Set("{[j]:0<=j &&j<nnz}"), false, iegenlib::Monotonic_Increasing);
     iegenlib::appendCurrEnv("diagptr",
         new Set("{[i]:0<=i &&i<m}"), 
-        new Set("{[j]:0<=j &&j<nnz}"), true, iegenlib::Monotonic_Increasing);
+        new Set("{[j]:0<=j &&j<nnz}"), false, iegenlib::Monotonic_Increasing);
 
 
     Set *F1 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: ip < i &&"
@@ -479,14 +483,11 @@ TEST_F(ChillUsageTest, ILU_CSR_DepSimplification)
     // First add in user defined constraints
     Set* temp = F8->addUFConstraints("rowptr","<=", "diagptr");
 
-    F8_sim = F8->simplifyNeedsName();
+    F8_sim = temp->simplifyNeedsName();
 
 // Print results
-   std::cout<<"\n\n"<< "F8 Simp. Dep. = "<<F8_sim->toISLString()<<"\n\n\n";
-//    EXPECT_EQ( ex_flow->toISLString() , flow_sim->toISLString() );
-
-
-
+//   std::cout<<"\n\n"<< "F8 Simp. Dep. = "<<F8_sim->toISLString()<<"\n\n\n";
+//    EXPECT_EQ( ex_F8->toISLString() , F8_sim->toISLString() );
 
 
 

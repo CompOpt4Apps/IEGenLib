@@ -709,6 +709,10 @@ private:
     int mOutArity;
 };
 
+
+Set* passSetThruISL(Set* s);
+Relation* passRelationThruISL(Relation* r);
+
 }//end namespace iegenlib
 
 #endif /* SET_RELATION_H_ */
