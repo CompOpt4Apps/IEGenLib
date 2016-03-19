@@ -3998,8 +3998,8 @@ TEST_F(SetRelationTest, debugingForILU){
     iegenlib::appendCurrEnv("colidx",
             new Set("{[i]:0<=i &&i<nnz}"),         // Domain 
             new Set("{[j]:0<=j &&j<m}"),           // Range
-            false,                                  // Bijective?!
-            iegenlib::Monotonic_NONE         // monotonicity
+            false,                                 // Not bijective.
+            iegenlib::Monotonic_NONE               // no monotonicity
             );
     iegenlib::appendCurrEnv("rowptr",
         new Set("{[i]:0<=i &&i<m}"), 
@@ -4011,18 +4011,15 @@ TEST_F(SetRelationTest, debugingForILU){
    Set *islEqSet = new Set("{[i,ip,k,kp]: "
                                   "i < 1+colidx(kp) && colidx(kp) < i+1}");
 
-   Set *ex_islEqSet = new Set("{[i,ip,k,kp]:  i = colidx(kp)"
-                                " && i < 1+colidx(kp) && colidx(kp) < i+1}"); 
+   // ISL should find that i=colidx(kp).
+   // Also normalization adds in the domain and range bounds for UF.
+   Set *ex_islEqSet = new Set("{[i,ip,k,kp]:  i = colidx(kp) "
+                                "&& 0<=kp && kp<nnz "
+                                "&& 0<=colidx(kp) && colidx(kp)<m}"); 
 
-   // Ckeck and see if ISL library adds equality when we pass a set through it
+   // Check and see if ISL library adds equality when we pass a set through it
    // with a < b+1 and b < a+1 constraints. Results should have a = b.   
-
-//   std::cout <<"\n\nislEqSet = " << islEqSet->toISLString() << "\n\n\n";
-
    islEqSet->normalize();
-
-//   std::cout <<"\n\nislEqSetNorm = " << islEqSet->toISLString() << "\n\n\n";
-
    EXPECT_EQ( ex_islEqSet->toISLString() , islEqSet->toISLString() );
 
    // Check partial ordering
