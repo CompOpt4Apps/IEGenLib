@@ -4022,43 +4022,45 @@ TEST_F(SetRelationTest, debugingForILU){
    islEqSet->normalize();
    EXPECT_EQ( ex_islEqSet->toISLString() , islEqSet->toISLString() );
 
-   // Check partial ordering
+   // Check addConstraintsDueToMonotonicity when partial ordering is
+   // given explicitly.  From Figure 5 in paper draft.
    Set *partOrd = new Set("{[i,ip,k,kp,j1,j1p,j2,j2p]: "
-                                  "rowptr(i) <= k && k < j1 && "
-                                  "j1 < rowptr(i+1) && j1 = j2p && "
-   " rowptr(colidx(kp)) <= diagptr(colidx(kp)) && diagptr(colidx(kp)) < j2p"
-              "&& j2p < rowptr(colidx(kp)+1) "
-                      "}");
+                          "rowptr(i) <= k && k < j1 && "
+                          "j1 < rowptr(i+1) && j1 = j2p && "
+                          "rowptr(colidx(kp)) <= diagptr(colidx(kp)) && "
+                          "diagptr(colidx(kp)) < j2p && "
+                          "j2p < rowptr(colidx(kp)+1) }");
 
-
+   // The constraints i<1+colidx(kp) and colidx(kp)<i+1 should be added.
+   // Also will have domain and range bounds.
    Set *ex_partOrd = new Set("{[i,ip,k,kp,j1,j1p,j2,j2p]: "
-                                  "rowptr(i) <= k && k < j1 && "
-                                  "j1 < rowptr(i+1) && j1 = j2p && "
-   " rowptr(colidx(kp)) <= diagptr(colidx(kp)) && diagptr(colidx(kp)) < j2p "
-      "&& i >= 0 && kp >= 0 && colidx(kp) >= 0 && diagptr(colidx(kp)) >= 0 "
-   "&& rowptr(colidx(kp)) >= 0 && rowptr(colidx(kp) + 1) >= 0 && i + 1 >= 0 "
-  "&& rowptr(i) >= 0 && rowptr(i + 1) >= 0 && i+1 < m && i < m && kp < nnz "
-  "&& diagptr(colidx(kp)) >= rowptr(colidx(kp)) && colidx(kp)+1 < m "
-            "&& diagptr(colidx(kp)) < nnz && rowptr(i) < nnz "
-        " && rowptr(i + 1) < nnz && rowptr(colidx(kp)) < nnz "
-    "&& i < 1+colidx(kp) && colidx(kp) < i+1 "  // NEW constraints from partOrd
-              "&& j2p < rowptr(colidx(kp)+1) "
-                      "}");
-
-//   std::cout <<"\n\npartOrd = " << partOrd->toISLString() << "\n\n\n";
+                             "rowptr(i) <= k && k < j1 && "
+                             "j1 < rowptr(i+1) && j1 = j2p && "
+                             "rowptr(colidx(kp)) <= diagptr(colidx(kp)) && "
+                             "diagptr(colidx(kp)) < j2p && "
+                             "j2p < rowptr(colidx(kp)+1) && "
+                             "i<1+colidx(kp) && colidx(kp)<i+1 && "
+                             "0<=kp && kp<nnz && "
+                             "0<=colidx(kp) && colidx(kp)<m && "
+                             "0<=i && i<m && "
+                             "0<=colidx(kp) && colidx(kp)<m && "
+                             "0<=colidx(kp)+1 && colidx(kp)+1<m &&"
+                             "0<=rowptr(i) && rowptr(i)<nnz && "
+                             "0<=rowptr(colidx(kp)) && "
+                             "rowptr(colidx(kp))<nnz && "
+                             "0<=rowptr(i+1) && rowptr(i+1)<nnz && "
+                             "0<=i+1 && i+1<m && "
+                             "0<=diagptr(colidx(kp)) && "
+                             "diagptr(colidx(kp))<nnz && "
+                             "0<=rowptr(colidx(kp)+1) && "
+                             "rowptr(colidx(kp)+1)<nnz }");
 
 
    // Adding constraints due to monotonicity. This also considers constraints
    // that should be added based on partial ordering.
    Set* partOrdMont = partOrd->addConstraintsDueToMonotonicity();
 
-//   std::cout <<"\n\npartOrd + monotonicity = " << partOrdMont->toISLString() << "\n\n\n";
-
    EXPECT_EQ( ex_partOrd->toISLString() , partOrdMont->toISLString() );
-
-//   partOrdMont->normalize();
-//   std::cout <<"\n\npartOrd + monotonicity + norm = "
-//             << partOrdMont->toISLString() << "\n\n\n";
 
    delete islEqSet;
    delete partOrd;

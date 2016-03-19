@@ -2590,7 +2590,7 @@ class VisitorCollectPartOrd : public Visitor {
             // then this term is equal to the solution term.
             Term* singleTerm = solution->getTerm();
             if (singleTerm != NULL
-                    && singleTerm->isConst()
+                    && !(singleTerm->isConst())
                     && singleTerm->coefficient()==1) {
                 mPartOrd.insertEqual(singleTerm,t);
             }
