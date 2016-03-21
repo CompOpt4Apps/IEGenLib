@@ -248,11 +248,15 @@ TEST_F(ChillUsageTest, GS_CSR_DepSimplification)
      "&& colidx(jp) < m-1 && rowptr(i) >= 0 && rowptr(ip) >= 0 "
                   "&& rowptr(i+1) < nnz && rowptr(ip+1) < nnz}");
 
-
+    // Specify loops that are going to be parallelized, so we are not going to
+    // project them out.
+    std::set<int> parallelTvs;
+    parallelTvs.insert(0);
+    parallelTvs.insert(1);
 
     //*** Simplifying flow dependence
 
-    Set* flow_sim = flow->simplifyNeedsName();
+    Set* flow_sim = flow->simplifyForPartialParallel(parallelTvs);
 // Print results
 //   std::cout<<std::endl<< "Simp. Dep. = "<<flow_sim->toISLString()<<std::endl;
     EXPECT_EQ( ex_flow->toISLString() , flow_sim->toISLString() );
@@ -260,7 +264,7 @@ TEST_F(ChillUsageTest, GS_CSR_DepSimplification)
 
     //*** Simplifying Anti dependence
 
-    Set* anti_sim = anti->simplifyNeedsName();
+    Set* anti_sim = anti->simplifyForPartialParallel(parallelTvs);
 // Print results
 //   std::cout<<std::endl<<"Simp. Dep. = "<<anti_sim->toISLString()<<std::endl;
     EXPECT_EQ( ex_anti->toISLString() , anti_sim->toISLString() );
@@ -284,6 +288,11 @@ TEST_F(ChillUsageTest, ILU_CSR_DepSimplification)
     // indicates monotinicity, and adds constraints like:
     //                                  forall e row(e) < diag(e)
 
+    // Note: expected valuse that are empty strings, like ex_A3_str("")
+    //       are satisfiable. Their values looks like other satisfiable 
+    //       results, we have just skipped them for the sake of simplicity.
+
+
     // Introduce the UFCalls to enviroment, and indicate their domain, range
     // whether they are bijective, or monotonic.
     iegenlib::setCurrEnv();
@@ -300,6 +309,12 @@ TEST_F(ChillUsageTest, ILU_CSR_DepSimplification)
         new Set("{[i]:0<=i &&i<m}"), 
         new Set("{[j]:0<=j &&j<nnz}"), false, iegenlib::Monotonic_Increasing);
 
+    // Specify loops that are going to be parallelized, so we are not going to
+    // project them out.
+    std::set<int> parallelTvs;
+    parallelTvs.insert(0);
+    parallelTvs.insert(1);
+
 
     Set *F1 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: ip < i &&"
                 " k < j1 && j1 < rowptr(1+i) && j2 < rowptr(1+colidx(k)) &&"
@@ -310,6 +325,31 @@ TEST_F(ChillUsageTest, ILU_CSR_DepSimplification)
                          " rowptr(ip) <= kp && rowptr(ip) <= diagptr(ip) &&"
                                      " rowptr(ip) < rowptr(1+ip) && k = kp}");
 
+    string ex_F1_str("[ m, nnz ] -> { [i, ip, k, kp] : k - kp = 0"
+" && ip >= 0 && colidx(k) >= 0 && colidx(kp) >= 0 && rowptr(i) >= 0 &&"
+" rowptr(ip) >= 0 && rowptr(colidx(k)) >= 0 && rowptr(colidx(kp)) >= 0 &&"
+" k - rowptr(i) >= 0 && k - rowptr(ip) >= 0 &&"
+" nnz - diagptr(colidx(k) + 1) >= 0 && nnz - diagptr(colidx(kp) + 1) >= 0 &&"
+" nnz - rowptr(colidx(k) + 1) >= 0 && nnz - rowptr(colidx(kp) + 1) >= 0 &&"
+" diagptr(i + 1) - rowptr(i + 1) >= 0 &&"
+" diagptr(ip + 1) - rowptr(ip + 1) >= 0 &&"
+" diagptr(colidx(k)) - rowptr(colidx(k)) >= 0 &&"
+" diagptr(colidx(k) + 1) + 1 >= 0 &&"
+" diagptr(colidx(kp)) - rowptr(colidx(kp)) >= 0 &&"
+" diagptr(colidx(kp) + 1) + 1 >= 0 && rowptr(colidx(k) + 1) + 1 >= 0 &&"
+" rowptr(colidx(kp) + 1) + 1 >= 0 && -i + m - 2 >= 0 && i - ip - 1 >= 0 &&"
+" -k + diagptr(i) - 1 >= 0 && -k + diagptr(ip) - 1 >= 0 &&"
+" -k + rowptr(i + 1) - 2 >= 0 && m - colidx(k) - 2 >= 0 &&"
+" m - colidx(kp) - 2 >= 0 && nnz - diagptr(i) - 1 >= 0 &&"
+" nnz - diagptr(i + 1) - 1 >= 0 && nnz - diagptr(ip) - 1 >= 0 &&"
+" nnz - diagptr(ip + 1) - 1 >= 0 && nnz - diagptr(colidx(k)) - 1 >= 0 &&"
+" nnz - diagptr(colidx(kp)) - 1 >= 0 &&"
+" -diagptr(colidx(k)) + rowptr(colidx(k) + 1) + 2 >= 0 &&"
+" diagptr(colidx(k) + 1) - rowptr(colidx(k) + 1) + 8 >= 0 &&"
+" -diagptr(colidx(kp)) + rowptr(colidx(kp) + 1) + 2 >= 0 &&"
+" diagptr(colidx(kp) + 1) - rowptr(colidx(kp) + 1) + 8 >= 0 &&"
+                                  " -rowptr(ip) + rowptr(ip + 1) - 1 >= 0 }");
+    
     Set *A1 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: i < ip &&"
                 " k < j1 && j1 < rowptr(1+i) && j2 < rowptr(1+colidx(k)) &&"
           " diagptr(colidx(k)) < j2 && 0 <= i && i < m && rowptr(i) <= k &&"
@@ -319,14 +359,45 @@ TEST_F(ChillUsageTest, ILU_CSR_DepSimplification)
                          " rowptr(ip) <= kp && rowptr(ip) <= diagptr(ip) &&"
                                      " rowptr(ip) < rowptr(1+ip) && k = kp}");
 
-/*
-    //*** Simplifying flow dependence
+    string ex_A1_str("Not Satisfiable");
 
-    Set* F1_sim = F1->simplifyNeedsName();
-// Print results
-//   std::cout<<std::endl<< "F1 Simp. Dep. = "<<F1_sim->toISLString()<<std::endl;
-//    EXPECT_EQ( ex_flow->toISLString() , flow_sim->toISLString() );
-*/
+
+    //--- Simplifying flow dependence
+    // Adding user defined constraint
+    Set* F1_extend = F1->addUFConstraints("rowptr","<=", "diagptr");
+
+    // Simplifyng the constraints set
+    Set* F1_sim = F1_extend->simplifyForPartialParallel(parallelTvs);
+
+    string F1_sim_str("Not Satisfiable");
+    if( F1_sim ){
+        F1_sim_str = F1_sim->toISLString();
+    }
+    EXPECT_EQ( ex_F1_str , F1_sim_str );
+
+
+    //--- Simplifying Anti dependence
+    // Adding user defined constraint
+    Set* A1_extend = A1->addUFConstraints("rowptr","<=", "diagptr");
+
+    // Simplifyng the constraints set
+    Set* A1_sim = A1_extend->simplifyForPartialParallel(parallelTvs);
+
+    string A1_sim_str("Not Satisfiable");
+    if( A1_sim ){
+        A1_sim_str = A1_sim->toISLString();
+    }
+
+    EXPECT_EQ( ex_A1_str , A1_sim_str );
+
+    delete F1;
+    delete A1;
+    delete F1_extend;
+    delete F1_sim;
+    delete A1_extend;
+    delete A1_sim;
+
+    // ----------------------------
 
     Set *F2 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: ip < i &&"
                 " k < j1 && j1 < rowptr(1+i) && j2 < rowptr(1+colidx(k)) &&"
@@ -337,6 +408,8 @@ TEST_F(ChillUsageTest, ILU_CSR_DepSimplification)
                          " rowptr(ip) <= kp && rowptr(ip) <= diagptr(ip) &&"
                     " rowptr(ip) < rowptr(1+ip) && k = diagptr(colidx(kp)) }");
 
+    string ex_F2_str("Not Satisfiable");
+
     Set *A2 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: i < ip &&"
                 " k < j1 && j1 < rowptr(1+i) && j2 < rowptr(1+colidx(k)) &&"
           " diagptr(colidx(k)) < j2 && 0 <= i && i < m && rowptr(i) <= k &&"
@@ -346,15 +419,43 @@ TEST_F(ChillUsageTest, ILU_CSR_DepSimplification)
                          " rowptr(ip) <= kp && rowptr(ip) <= diagptr(ip) &&"
                     " rowptr(ip) < rowptr(1+ip) && k = diagptr(colidx(kp))}");
 
-/*
-    //*** Simplifying flow dependence
+    string ex_A2_str("Not Satisfiable");
 
-    Set* F2_sim = F2->simplifyNeedsName();
-// Print results
-   std::cout<<std::endl<< "F2 Simp. Dep. = "<<F2_sim->toISLString()<<std::endl;
-//    EXPECT_EQ( ex_flow->toISLString() , flow_sim->toISLString() );
-*/
+    //--- Simplifying flow dependence
+    // Adding user defined constraint
+    Set* F2_extend = F2->addUFConstraints("rowptr","<=", "diagptr");
 
+    // Simplifyng the constraints set
+    Set* F2_sim = F2_extend->simplifyForPartialParallel(parallelTvs);
+
+    string F2_sim_str("Not Satisfiable");
+    if( F2_sim ){
+        F2_sim_str = F2_sim->toISLString();
+    }
+
+    EXPECT_EQ( ex_F2_str , F2_sim_str );
+
+    //--- Simplifying Anti dependence
+    // Adding user defined constraint
+    Set* A2_extend = A2->addUFConstraints("rowptr","<=", "diagptr");
+
+    // Simplifyng the constraints set
+    Set* A2_sim = A2_extend->simplifyForPartialParallel(parallelTvs);
+
+    string A2_sim_str("Not Satisfiable");
+    if( A2_sim ){
+        A2_sim_str = A2_sim->toISLString();
+    }
+    EXPECT_EQ( ex_A2_str , A2_sim_str );
+
+    delete F2;
+    delete A2;
+    delete F2_extend;
+    delete F2_sim;
+    delete A2_extend;
+    delete A2_sim;
+
+    // ----------------------------
 
     Set *F3 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: ip < i &&"
                 " k < j1 && j1 < rowptr(1+i) && j2 < rowptr(1+colidx(k)) &&"
@@ -365,6 +466,31 @@ TEST_F(ChillUsageTest, ILU_CSR_DepSimplification)
                          " rowptr(ip) <= kp && rowptr(ip) <= diagptr(ip) &&"
                                     " rowptr(ip) < rowptr(1+ip) && k = j1p}");
 
+    string ex_F3_str("[ m, nnz ] -> { [i, ip, k, kp] :"
+" ip >= 0 && colidx(k) >= 0 && colidx(kp) >= 0 && rowptr(i) >= 0 &&"
+" rowptr(ip) >= 0 && rowptr(colidx(k)) >= 0 && rowptr(colidx(kp)) >= 0 &&"
+" k - rowptr(i) >= 0 && kp - rowptr(ip) >= 0 &&"
+" nnz - diagptr(colidx(k) + 1) >= 0 && nnz - diagptr(colidx(kp) + 1) >= 0 &&"
+" nnz - rowptr(colidx(k) + 1) >= 0 && nnz - rowptr(colidx(kp) + 1) >= 0 &&"
+" diagptr(i + 1) - rowptr(i + 1) >= 0 &&"
+" diagptr(ip + 1) - rowptr(ip + 1) >= 0 &&"
+" diagptr(colidx(k)) - rowptr(colidx(k)) >= 0 &&"
+" diagptr(colidx(k) + 1) + 1 >= 0 &&"
+" diagptr(colidx(kp)) - rowptr(colidx(kp)) >= 0 &&"
+" diagptr(colidx(kp) + 1) + 1 >= 0 && rowptr(colidx(k) + 1) + 1 >= 0 &&"
+" rowptr(colidx(kp) + 1) + 1 >= 0 && -i + m - 2 >= 0 && i - ip - 1 >= 0 &&"
+" -k + diagptr(i) - 1 >= 0 && -k + rowptr(i + 1) - 2 >= 0 &&"
+" -k + rowptr(ip + 1) - 1 >= 0 && -kp + diagptr(ip) - 1 >= 0 &&"
+" m - colidx(k) - 2 >= 0 && m - colidx(kp) - 2 >= 0 &&"
+" nnz - diagptr(i) - 1 >= 0 && nnz - diagptr(i + 1) - 1 >= 0 &&"
+" nnz - diagptr(ip) - 1 >= 0 && nnz - diagptr(ip + 1) - 1 >= 0 &&"
+" nnz - diagptr(colidx(k)) - 1 >= 0 && nnz - diagptr(colidx(kp)) - 1 >= 0 &&"
+" -diagptr(colidx(k)) + rowptr(colidx(k) + 1) + 2 >= 0 &&"
+" diagptr(colidx(k) + 1) - rowptr(colidx(k) + 1) + 8 >= 0 &&"
+" -diagptr(colidx(kp)) + rowptr(colidx(kp) + 1) + 2 >= 0 &&"
+" diagptr(colidx(kp) + 1) - rowptr(colidx(kp) + 1) + 8 >= 0 &&"
+                                   " -rowptr(ip) + rowptr(ip + 1) - 1 >= 0 }");
+
     Set *A3 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: i < ip &&"
                 " k < j1 && j1 < rowptr(1+i) && j2 < rowptr(1+colidx(k)) &&"
           " diagptr(colidx(k)) < j2 && 0 <= i && i < m && rowptr(i) <= k &&"
@@ -374,6 +500,45 @@ TEST_F(ChillUsageTest, ILU_CSR_DepSimplification)
                          " rowptr(ip) <= kp && rowptr(ip) <= diagptr(ip) &&"
                                     " rowptr(ip) < rowptr(1+ip) && k = j1p}");
 
+    string ex_A3_str("");
+
+
+    //--- Simplifying flow dependence
+    // Adding user defined constraint
+    Set* F3_extend = F3->addUFConstraints("rowptr","<=", "diagptr");
+
+    // Simplifyng the constraints set
+    Set* F3_sim = F3_extend->simplifyForPartialParallel(parallelTvs);
+
+    string F3_sim_str("Not Satisfiable");
+    if( F3_sim ){
+        F3_sim_str = F3_sim->toISLString();
+    }
+    EXPECT_EQ( ex_F3_str , F3_sim_str );
+
+
+    //--- Simplifying Anti dependence
+    // Adding user defined constraint
+    Set* A3_extend = A3->addUFConstraints("rowptr","<=", "diagptr");
+
+    // Simplifyng the constraints set
+    Set* A3_sim = A3_extend->simplifyForPartialParallel(parallelTvs);
+
+    string A3_sim_str("Not Satisfiable");
+    if( A3_sim ){
+        A3_sim_str = A3_sim->toISLString();
+    }
+
+//    EXPECT_EQ( ex_A3_str , A3_sim_str );
+
+    delete F3;
+    delete A3;
+    delete F3_extend;
+    delete F3_sim;
+    delete A3_extend;
+    delete A3_sim;
+
+    // ----------------------------
 
     Set *F4 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: ip < i &&"
                 " k < j1 && j1 < rowptr(1+i) && j2 < rowptr(1+colidx(k)) &&"
@@ -384,6 +549,8 @@ TEST_F(ChillUsageTest, ILU_CSR_DepSimplification)
                          " rowptr(ip) <= kp && rowptr(ip) <= diagptr(ip) &&"
                                     " rowptr(ip) < rowptr(1+ip) && k = j2p}");
 
+    string ex_F4_str("Not Satisfiable");
+
     Set *A4 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: i < ip &&"
                 " k < j1 && j1 < rowptr(1+i) && j2 < rowptr(1+colidx(k)) &&"
           " diagptr(colidx(k)) < j2 && 0 <= i && i < m && rowptr(i) <= k &&"
@@ -393,6 +560,44 @@ TEST_F(ChillUsageTest, ILU_CSR_DepSimplification)
                          " rowptr(ip) <= kp && rowptr(ip) <= diagptr(ip) &&"
                                     " rowptr(ip) < rowptr(1+ip) && k = j2p}");
 
+    string ex_A4_str("Not Satisfiable");
+
+    //--- Simplifying flow dependence
+    // Adding user defined constraint
+    Set* F4_extend = F4->addUFConstraints("rowptr","<=", "diagptr");
+
+    // Simplifyng the constraints set
+    Set* F4_sim = F4_extend->simplifyForPartialParallel(parallelTvs);
+
+    string F4_sim_str("Not Satisfiable");
+    if( F4_sim ){
+        F4_sim_str = F4_sim->toISLString();
+    }
+    EXPECT_EQ( ex_F4_str , F4_sim_str );
+
+
+    //--- Simplifying Anti dependence
+    // Adding user defined constraint
+    Set* A4_extend = A4->addUFConstraints("rowptr","<=", "diagptr");
+
+    // Simplifyng the constraints set
+    Set* A4_sim = A4_extend->simplifyForPartialParallel(parallelTvs);
+
+    string A4_sim_str("Not Satisfiable");
+    if( A4_sim ){
+        A4_sim_str = A4_sim->toISLString();
+    }
+    EXPECT_EQ( ex_A4_str , A4_sim_str );
+
+    delete F4;
+    delete A4;
+    delete F4_extend;
+    delete F4_sim;
+    delete A4_extend;
+    delete A4_sim;
+
+    // ----------------------------
+
 
     Set *F5 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: ip < i &&"
                 " k < j1 && j1 < rowptr(1+i) && j2 < rowptr(1+colidx(k)) &&"
@@ -401,7 +606,40 @@ TEST_F(ChillUsageTest, ILU_CSR_DepSimplification)
                " diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp)) &&"
            " j1p < rowptr(1+ip) && kp < diagptr(ip) && 0 <= ip && ip < m &&"
                          " rowptr(ip) <= kp && rowptr(ip) <= diagptr(ip) &&"
-                   " rowptr(ip) < rowptr(1+ip) && diagptr(colidx(k)) = j1p}");
+                   " rowptr(ip) < rowptr(1+ip) && j1 = diagptr(colidx(kp)) }");
+
+    string ex_F5_str("[ m, nnz ] -> { [i, ip, k, kp] : i - colidx(kp) = 0"
+" && ip >= 0 && k >= 0 && kp >= 0 && colidx(k) >= 0 && colidx(kp) >= 0 &&"
+" diagptr(i) >= 0 && diagptr(i + 1) >= 0 && diagptr(ip) >= 0 &&"
+" diagptr(ip + 1) >= 0 && diagptr(colidx(k)) >= 0 && diagptr(colidx(kp)) >= 0"
+" && rowptr(i) >= 0 && rowptr(i + 1) >= 0 && rowptr(ip) >= 0 &&"
+" rowptr(ip + 1) >= 0 && rowptr(colidx(k)) >= 0 && rowptr(colidx(kp)) >= 0 &&"
+" k - rowptr(i) >= 0 && kp - rowptr(ip) >= 0 &&"
+" nnz - diagptr(colidx(k) + 1) >= 0 && nnz - diagptr(colidx(kp) + 1) >= 0 &&"
+" nnz - rowptr(colidx(k) + 1) >= 0 && nnz - rowptr(colidx(kp) + 1) >= 0 &&"
+" diagptr(i + 1) - rowptr(i + 1) >= 0 &&"
+" diagptr(ip + 1) - rowptr(ip + 1) >= 0 &&"
+" diagptr(colidx(k)) - rowptr(colidx(k)) >= 0 &&"
+" diagptr(colidx(k) + 1) + 1 >= 0 &&"
+" diagptr(colidx(kp)) - rowptr(colidx(kp)) >= 0 &&"
+" diagptr(colidx(kp) + 1) + 1 >= 0 && rowptr(colidx(k) + 1) + 1 >= 0 &&"
+" rowptr(colidx(kp) + 1) + 1 >= 0 && -ip + m - 2 >= 0 &&"
+" -ip + colidx(kp) - 1 >= 0 && -k + nnz - 1 >= 0 && -k + diagptr(i) - 1 >= 0 &&"
+" -k + diagptr(colidx(kp)) - 1 >= 0 && -kp + nnz - 1 >= 0 &&"
+" -kp + diagptr(ip) - 1 >= 0 && m - colidx(k) - 2 >= 0 &&"
+" m - colidx(kp) - 2 >= 0 && nnz - diagptr(i) - 1 >= 0 &&"
+" nnz - diagptr(i + 1) - 1 >= 0 && nnz - diagptr(ip) - 1 >= 0 &&"
+" nnz - diagptr(ip + 1) - 1 >= 0 && nnz - diagptr(colidx(k)) - 1 >= 0 &&"
+" nnz - diagptr(colidx(kp)) - 1 >= 0 && nnz - rowptr(i) - 1 >= 0 &&"
+" nnz - rowptr(i + 1) - 1 >= 0 && nnz - rowptr(ip) - 1 >= 0 &&"
+" nnz - rowptr(ip + 1) - 1 >= 0 && nnz - rowptr(colidx(k)) - 1 >= 0 &&"
+" nnz - rowptr(colidx(kp)) - 1 >= 0 &&"
+" -diagptr(colidx(k)) + rowptr(colidx(k) + 1) + 2 >= 0 &&"
+" diagptr(colidx(k) + 1) - rowptr(colidx(k) + 1) + 8 >= 0 &&"
+" -diagptr(colidx(kp)) + rowptr(i + 1) - 1 >= 0 &&"
+" -diagptr(colidx(kp)) + rowptr(colidx(kp) + 1) + 2 >= 0 &&"
+" diagptr(colidx(kp) + 1) - rowptr(colidx(kp) + 1) + 8 >= 0 &&"
+                             " -rowptr(ip) + rowptr(ip + 1) - 1 >= 0 }");
 
     Set *A5 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: i < ip &&"
                 " k < j1 && j1 < rowptr(1+i) && j2 < rowptr(1+colidx(k)) &&"
@@ -410,8 +648,46 @@ TEST_F(ChillUsageTest, ILU_CSR_DepSimplification)
                " diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp)) &&"
            " j1p < rowptr(1+ip) && kp < diagptr(ip) && 0 <= ip && ip < m &&"
                          " rowptr(ip) <= kp && rowptr(ip) <= diagptr(ip) &&"
-                   " rowptr(ip) < rowptr(1+ip) && diagptr(colidx(k)) = j1p}");
+                   " rowptr(ip) < rowptr(1+ip) &&  j1 = diagptr(colidx(k))}");
 
+    string ex_A5_str("");
+
+    //--- Simplifying flow dependence
+    // Adding user defined constraint
+    Set* F5_extend = F5->addUFConstraints("rowptr","<=", "diagptr");
+
+    // Simplifyng the constraints set
+    Set* F5_sim = F5_extend->simplifyForPartialParallel(parallelTvs);
+
+    string F5_sim_str("Not Satisfiable");
+    if( F5_sim ){
+        F5_sim_str = F5_sim->toISLString();
+    }
+    EXPECT_EQ( ex_F5_str , F5_sim_str );
+
+
+    //--- Simplifying Anti dependence
+    // Adding user defined constraint
+    Set* A5_extend = A5->addUFConstraints("rowptr","<=", "diagptr");
+
+    // Simplifyng the constraints set
+    Set* A5_sim = A5_extend->simplifyForPartialParallel(parallelTvs);
+
+    string A5_sim_str("Not Satisfiable");
+    if( A5_sim ){
+        A5_sim_str = A5_sim->toISLString();
+    }
+
+//    EXPECT_EQ( ex_A5_str , A5_sim_str );
+
+    delete F5;
+    delete A5;
+    delete F5_extend;
+    delete F5_sim;
+    delete A5_extend;
+    delete A5_sim;
+
+    // ----------------------------
 
 
     Set *F6 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: ip < i &&"
@@ -423,6 +699,9 @@ TEST_F(ChillUsageTest, ILU_CSR_DepSimplification)
                          " rowptr(ip) <= kp && rowptr(ip) <= diagptr(ip) &&"
                                    " rowptr(ip) < rowptr(1+ip) && j1 = j1p}");
 
+
+    string ex_F6_str("");
+
     Set *A6 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: i < ip &&"
                 " k < j1 && j1 < rowptr(1+i) && j2 < rowptr(1+colidx(k)) &&"
           " diagptr(colidx(k)) < j2 && 0 <= i && i < m && rowptr(i) <= k &&"
@@ -432,6 +711,47 @@ TEST_F(ChillUsageTest, ILU_CSR_DepSimplification)
                          " rowptr(ip) <= kp && rowptr(ip) <= diagptr(ip) &&"
                                    " rowptr(ip) < rowptr(1+ip) && j1 = j1p}");
 
+    string ex_A6_str("");
+
+
+    //--- Simplifying flow dependence
+    // Adding user defined constraint
+    Set* F6_extend = F6->addUFConstraints("rowptr","<=", "diagptr");
+
+    // Simplifyng the constraints set
+    Set* F6_sim = F6_extend->simplifyForPartialParallel(parallelTvs);
+
+    string F6_sim_str("Not Satisfiable");
+    if( F6_sim ){
+        F6_sim_str = F6_sim->toISLString();
+    }
+
+//    EXPECT_EQ( ex_F6_str , F6_sim_str );
+
+
+    //--- Simplifying Anti dependence
+    // Adding user defined constraint
+    Set* A6_extend = A6->addUFConstraints("rowptr","<=", "diagptr");
+
+    // Simplifyng the constraints set
+    Set* A6_sim = A6_extend->simplifyForPartialParallel(parallelTvs);
+
+    string A6_sim_str("Not Satisfiable");
+    if( A6_sim ){
+        A6_sim_str = A6_sim->toISLString();
+    }
+
+//    EXPECT_EQ( ex_A6_str , A6_sim_str );
+
+
+    delete F6;
+    delete A6;
+    delete F6_extend;
+    delete F6_sim;
+    delete A6_extend;
+    delete A6_sim;
+
+    // ----------------------------
 
 
     Set *F7 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: ip < i &&"
@@ -443,6 +763,8 @@ TEST_F(ChillUsageTest, ILU_CSR_DepSimplification)
                          " rowptr(ip) <= kp && rowptr(ip) <= diagptr(ip) &&"
                                     " rowptr(ip) < rowptr(1+ip) && j1 = kp}");
 
+    string ex_F7("");
+
     Set *A7 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: i < ip &&"
                 " k < j1 && j1 < rowptr(1+i) && j2 < rowptr(1+colidx(k)) &&"
           " diagptr(colidx(k)) < j2 && 0 <= i && i < m && rowptr(i) <= k &&"
@@ -452,13 +774,48 @@ TEST_F(ChillUsageTest, ILU_CSR_DepSimplification)
                          " rowptr(ip) <= kp && rowptr(ip) <= diagptr(ip) &&"
                                     " rowptr(ip) < rowptr(1+ip) && j1 = kp}");
 
+    string ex_A7_str("Not Satisfiable");
+
+    //--- Simplifying flow dependence
+    // Adding user defined constraint
+    Set* F7_extend = F7->addUFConstraints("rowptr","<=", "diagptr");
+
+    // Simplifyng the constraints set
+    Set* F7_sim = F7_extend->simplifyForPartialParallel(parallelTvs);
+
+    string F7_sim_str("Not Satisfiable");
+    if( F7_sim ){
+        F7_sim_str = F7_sim->toISLString();
+    }
+
+//    EXPECT_EQ( ex_F7_str , F7_sim_str );
 
 
+    //--- Simplifying Anti dependence
+    // Adding user defined constraint
+    Set* A7_extend = A7->addUFConstraints("rowptr","<=", "diagptr");
+
+    // Simplifyng the constraints set
+    Set* A7_sim = A7_extend->simplifyForPartialParallel(parallelTvs);
+
+    string A7_sim_str("Not Satisfiable");
+    if( A7_sim ){
+        A7_sim_str = A7_sim->toISLString();
+    }
+
+    EXPECT_EQ( ex_A7_str , A7_sim_str );
+
+    delete F7;
+    delete A7;
+    delete F7_extend;
+    delete F7_sim;
+    delete A7_extend;
+    delete A7_sim;
+
+    // ----------------------------
 
 
-
-
-   Set *F8 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: ip < i &&"
+    Set *F8 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: ip < i &&"
                 " k < j1 && j1 < rowptr(1+i) && j2 < rowptr(1+colidx(k)) &&"
           " diagptr(colidx(k)) < j2 && 0 <= i && i < m && rowptr(i) <= k &&"
   " k < diagptr(i) && rowptr(i) <= diagptr(i) && rowptr(i) < rowptr(1+i) &&"
@@ -466,6 +823,31 @@ TEST_F(ChillUsageTest, ILU_CSR_DepSimplification)
            " j1p < rowptr(1+ip) && kp < diagptr(ip) && 0 <= ip && ip < m &&"
                          " rowptr(ip) <= kp && rowptr(ip) <= diagptr(ip) &&"
                                    " rowptr(ip) < rowptr(1+ip) && j1 = j2p}");
+
+    string ex_F8_str("[ m, nnz ] -> { [i, ip, k, kp] : i - colidx(kp) = 0"
+" && ip >= 0 && colidx(k) >= 0 && rowptr(i) >= 0 && rowptr(ip) >= 0 &&"
+" rowptr(colidx(k)) >= 0 && rowptr(colidx(kp)) >= 0 && k - rowptr(i) >= 0 &&"
+" kp - rowptr(ip) >= 0 && nnz - diagptr(colidx(k) + 1) >= 0 &&"
+" nnz - diagptr(colidx(kp) + 1) >= 0 && nnz - rowptr(colidx(k) + 1) >= 0 &&"
+" nnz - rowptr(colidx(kp) + 1) >= 0 && diagptr(i + 1) - rowptr(i + 1) >= 0 &&"
+" diagptr(ip + 1) - rowptr(ip + 1) >= 0 &&"
+" diagptr(colidx(k)) - rowptr(colidx(k)) >= 0 &&"
+" diagptr(colidx(k) + 1) + 1 >= 0 &&"
+" diagptr(colidx(kp)) - rowptr(colidx(kp)) >= 0 &&"
+" diagptr(colidx(kp) + 1) + 1 >= 0 && rowptr(colidx(k) + 1) + 1 >= 0 &&"
+" rowptr(colidx(kp) + 1) + 1 >= 0 && -ip + colidx(kp) - 1 >= 0 &&"
+" -k + diagptr(i) - 1 >= 0 && -k + rowptr(i + 1) - 2 >= 0 &&"
+" -k + rowptr(colidx(kp) + 1) + 2 >= 0 && -kp + diagptr(ip) - 1 >= 0 &&"
+" m - colidx(k) - 2 >= 0 && m - colidx(kp) - 2 >= 0 &&"
+" nnz - diagptr(i) - 1 >= 0 && nnz - diagptr(i + 1) - 1 >= 0 &&"
+" nnz - diagptr(ip) - 1 >= 0 && nnz - diagptr(ip + 1) - 1 >= 0 &&"
+" nnz - diagptr(colidx(k)) - 1 >= 0 &&"
+" -diagptr(colidx(k)) + rowptr(colidx(k) + 1) + 2 >= 0 &&"
+" diagptr(colidx(k) + 1) - rowptr(colidx(k) + 1) + 8 >= 0 &&"
+" -diagptr(colidx(kp)) + rowptr(i + 1) - 2 >= 0 &&"
+" -diagptr(colidx(kp)) + rowptr(colidx(kp) + 1) + 2 >= 0 &&"
+" diagptr(colidx(kp) + 1) - rowptr(colidx(kp) + 1) + 8 >= 0 &&"
+                               " -rowptr(ip) + rowptr(ip + 1) - 1 >= 0 }");
 
     Set *A8 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: i < ip &&"
                 " k < j1 && j1 < rowptr(1+i) && j2 < rowptr(1+colidx(k)) &&"
@@ -476,37 +858,45 @@ TEST_F(ChillUsageTest, ILU_CSR_DepSimplification)
                          " rowptr(ip) <= kp && rowptr(ip) <= diagptr(ip) &&"
                                    " rowptr(ip) < rowptr(1+ip) && j1 = j2p}");
 
-
-    //*** Simplifying flow dependence
-
-    Set* F8_sim;
-    // First add in user defined constraints
-    Set* temp = F8->addUFConstraints("rowptr","<=", "diagptr");
-
-    F8_sim = temp->simplifyNeedsName();
-
-// Print results
-//   std::cout<<"\n\n"<< "F8 Simp. Dep. = "<<F8_sim->toISLString()<<"\n\n\n";
-//    EXPECT_EQ( ex_F8->toISLString() , F8_sim->toISLString() );
+    string ex_A8_str("");
 
 
+    //--- Simplifying flow dependence
+    // Adding user defined constraint
+    Set* F8_extend = F8->addUFConstraints("rowptr","<=", "diagptr");
 
-    delete F1;
-    delete A1;
-    delete F2;
-    delete A2;
-    delete F3;
-    delete A3;
-    delete F4;
-    delete A4;
-    delete F5;
-    delete A5;
-    delete F6;
-    delete A6;
-    delete F7;
-    delete A7;
+    // Simplifyng the constraints set
+    Set* F8_sim = F8_extend->simplifyForPartialParallel(parallelTvs);
+
+    string F8_sim_str("Not Satisfiable");
+    if( F8_sim ){
+        F8_sim_str = F8_sim->toISLString();
+    }
+
+    EXPECT_EQ( ex_F8_str , F8_sim_str );
+
+
+    //--- Simplifying Anti dependence
+    // Adding user defined constraint
+    Set* A8_extend = A8->addUFConstraints("rowptr","<=", "diagptr");
+
+    // Simplifyng the constraints set
+    Set* A8_sim = A8_extend->simplifyForPartialParallel(parallelTvs);
+
+    string A8_sim_str("Not Satisfiable");
+    if( A8_sim ){
+        A8_sim_str = A8_sim->toISLString();
+    }
+
+//    EXPECT_EQ( ex_A8_str , A8_sim_str );
+
     delete F8;
     delete A8;
+    delete F8_extend;
+    delete F8_sim;
+    delete A8_extend;
+    delete A8_sim;
+
 }
 
 

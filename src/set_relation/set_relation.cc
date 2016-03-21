@@ -92,9 +92,10 @@ Set* islSetProjectOut(Set* s, unsigned pos) {
     // After getting projected string the process becomes like passSetThruISL.
     string projected = projectOutStrCorrection(sstr, pos, s->arity(), 0);
     string corrected = revertISLTupDeclToOrig( projected, islStr, s->arity(), 0);
+
     Set* result = new Set( corrected);
 
-  return result;
+    return result;
 }
 
 #pragma mark -
@@ -2209,12 +2210,11 @@ void Relation::normalize() {
 
     // Send affine super set to ISL and let it normalize it.
     Relation* superset_normalized = passRelationThruISL(superset_copy);
- std::cout << "superset_normalized = " << superset_normalized->toString() << std::endl;
+
      // Reverse the substitution of vars for uf calls.
     Relation* normalized_copy 
         = superset_normalized->reverseAffineSubstitution(uf_call_map);
- std::cout << "normalized_copy = " << normalized_copy->toString() << std::endl;
-   
+
     // Replace self with the normalized copy.
     *this = *normalized_copy;
         
@@ -3321,10 +3321,13 @@ class VisitorProjectOut : public Visitor {
         // Send through ISL to project out desired tuple variable
         Set* islSet = islSetProjectOut(cs, tvar);
 
-        Conjunction* crc = new Conjunction ( *(islSet->mConjunctions.front()) );
-        crc->setInArity( inArity );
-        // Storing the result so we could add it to new Set or Relation later.
-        mNewConj.push_back( crc );
+        if( !(islSet->mConjunctions.empty()) ){
+            Conjunction* crc = new Conjunction ( *(islSet->mConjunctions.front()) );
+            crc->setInArity( inArity );
+
+            // Storing the result so we could add it to new Set\Relation later
+            mNewConj.push_back( crc );
+        }
 
         delete islSet;
         delete cs;
@@ -3467,7 +3470,7 @@ Relation* Relation::projectOut(int tvar)
 }
 
 
-/*! This function simplifies constraints sets of non-affine sets that
+/*! This function simplifies constraints of non-affine sets that
 **  are targeted for level set parallelism. These sets are representative
 **  of data access dependency relations. For level set parallelism,
 **  we need to create an optimized inspector code that checks 
@@ -3475,7 +3478,7 @@ Relation* Relation::projectOut(int tvar)
 **  implementation of Simplification Algorithm that simplifies dependency
 **  relations, so we can generate optimized inspector code from constraint sets.
 */
-Set* Set::simplifyNeedsName()
+Set* Set::simplifyForPartialParallel(std::set<int> parallelTvs)
 {
 
     Set *result,*temp;
@@ -3484,19 +3487,26 @@ Set* Set::simplifyNeedsName()
     // Adding constraints dut to Monotonicity of UFCs (if any exists)
     result = this->addConstraintsDueToMonotonicity();
 
-    
     // Projecting out any tuple variable that are not argument to a UFCall 
-    // starting from inner most loops. We also do not project out first 2 loops
-    // that are outer most loops, since they are going to be parallelized.
+    // starting from inner most loops. We also do not project out indecies
+    // specified in parallelTvs, since they are going to be parallelized.
     // [i1,i1p,i2, i2p, ...] :  we keep i1 and i1p
-    for (int i = lastTV ; i >= 2 ; i-- ) {
+    for (int i = lastTV ; i >= 0 ; i-- ) {
 
+        if ( parallelTvs.find(i) != parallelTvs.end() ){
+            continue;
+        }
         // Project out if it is not an UFCall argument
         temp = result->projectOut(i); 
 
         if ( temp ){
             delete result;  
             result = temp;
+        }
+
+        if( result->isDefault() ){
+
+            return NULL;
         }
     }
 
@@ -3505,7 +3515,7 @@ Set* Set::simplifyNeedsName()
 
 /*! Same as Set.
 */
-Relation* Relation::simplifyNeedsName()
+Relation* Relation::simplifyForPartialParallel()
 {
 
     Relation *result,*temp;
@@ -3527,6 +3537,10 @@ Relation* Relation::simplifyNeedsName()
         if ( temp ){
             delete result;        
             result = temp;
+        }
+
+        if( result->isDefault() ){
+            return NULL;
         }
     }
 
