@@ -389,7 +389,6 @@ public:
     //! a pointer to final UFCallMap that the user is responsible for deleting.
     UFCallMap* mapUFCtoSym();
 
-
 // FIXME: what methods should we have to iterate over conjunctions so
 // this can go back to protected?
 //protected:
@@ -533,8 +532,18 @@ public:
         implementation of Simplification Algorithm that simplifies dependency
         relations, so we can generate optimized inspector code from constraint sets.
     */
-    Set* simplifyNeedsName();
+    Set* simplifyForPartialParallel(std::set<int> parallelTvs);
 
+
+    // See if this set is deault and uninitialized
+    bool isDefault(){
+        Set defSet( arity() );
+        if( *this == defSet ){
+            return true;
+        } else {
+            return false;
+        }
+    }
 private:
     int mArity;
 };
@@ -702,7 +711,17 @@ public:
         implementation of Simplification Algorithm that simplifies dependency
         relations, so we can generate optimized inspector code from constraint sets.
     */
-    Relation* simplifyNeedsName();
+    Relation* simplifyForPartialParallel();
+
+    // See if this set is deault and uninitialized
+    bool isDefault(){
+        Relation defRel( inArity() , outArity() );
+        if( *this == defRel ){
+            return true;
+        } else {
+            return false;
+        }
+    }
 
 private:
     int mInArity;
