@@ -414,14 +414,17 @@ TEST_F(ChillUsageTest, ILU_CSR_DepSimplification)
 
     // ----------------------------
 
-    Set *A2 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: ip < i &&"
-                " k < j1 && j1 < rowptr(1+i) && j2 < rowptr(1+colidx(k)) &&"
-          " diagptr(colidx(k)) < j2 && 0 <= i && i < m && rowptr(i) <= k &&"
-  " k < diagptr(i) && rowptr(i) <= diagptr(i) && rowptr(i) < rowptr(1+i) &&"
-               " diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp)) &&"
-           " j1p < rowptr(1+ip) && kp < diagptr(ip) && 0 <= ip && ip < m &&"
-                         " rowptr(ip) <= kp && rowptr(ip) <= diagptr(ip) &&"
-                    " rowptr(ip) < rowptr(1+ip) && k = diagptr(colidx(kp)) }");
+    Set *A2 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: ip < i"
+                                   " && 0 <= i && i < m"
+                                  " && 0 <= ip && ip < m"
+                           " && rowptr(i) <= k && k < diagptr(i)"
+                         " && rowptr(ip) <= kp && kp < diagptr(ip)"
+                                   " && k < j1 && j1 < rowptr(1+i)"
+                                 " && kp < j1p && j1p < rowptr(1+ip)"
+                  " && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k))"
+                " && diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp))"
+
+                                     " && k = diagptr(colidx(kp)) }");
 
     string ex_A2_str("Not Satisfiable");
 
