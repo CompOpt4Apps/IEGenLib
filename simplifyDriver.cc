@@ -21,7 +21,7 @@
            -I INSTALLATION_FOLDER/include/iegenlib cpp_api_example.cc
               INSTALLATION_FOLDER/lib/libiegenlib.a -lisl
    
-    IEGENLIB_HOME indicates where you have you copy of IEgenLIB.
+    IEGENLIB_HOME indicates where you have your copy of IEgenLIB.
     For example if you are compiling this file in its original location that is 
     IEGENLIB_HOME, then you can run following to compile:
 
@@ -132,18 +132,22 @@ int main(int argc, char **argv)
 
     // (5)
     // Simplifyng the constraints set
-    Set* A1_sim = A1_extend->simplifyForPartialParallel(parallelTvs);
 
-    string A1_sim_str("Not Satisfiable");
-    if( A1_sim ){
-        A1_sim_str = A1_sim->toISLString();
-    }
+    Set* A1_sim = A1_extend->simplifyForPartialParallel(parallelTvs);
 
 
     // (6)
     // Print out results
+    // If set is not satisfiable simplifyForPartialParallel is going to return
+    // NULL, we should check this before getting result's string with
+    // toISLString. 
+    string A1_sim_str("Not Satisfiable");
+    if( A1_sim ){
+        A1_sim_str = A1_sim->toISLString();
+    }
     verbose && cout<<"\n\nA1 simplified = "<<A1_sim_str<<"\n\n";    
 
+    // For testing purposes
     EXPECT_EQ( ex_A1_str , A1_sim_str );
 
 
