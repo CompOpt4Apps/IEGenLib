@@ -3487,6 +3487,8 @@ Set* Set::simplifyForPartialParallel(std::set<int> parallelTvs)
     // Adding constraints dut to Monotonicity of UFCs (if any exists)
     result = this->addConstraintsDueToMonotonicity();
 
+    result->normalize();
+
     // Projecting out any tuple variable that are not argument to a UFCall 
     // starting from inner most loops. We also do not project out indecies
     // specified in parallelTvs, since they are going to be parallelized.
