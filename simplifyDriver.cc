@@ -353,14 +353,17 @@ int main(int argc, char **argv)
 
     string ex_A4_str("Not Satisfiable");
 
-    Set *F4 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: i < ip &&"
-                " k < j1 && j1 < rowptr(1+i) && j2 < rowptr(1+colidx(k)) &&"
-          " diagptr(colidx(k)) < j2 && 0 <= i && i < m && rowptr(i) <= k &&"
-  " k < diagptr(i) && rowptr(i) <= diagptr(i) && rowptr(i) < rowptr(1+i) &&"
-               " diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp)) &&"
-           " j1p < rowptr(1+ip) && kp < diagptr(ip) && 0 <= ip && ip < m &&"
-                         " rowptr(ip) <= kp && rowptr(ip) <= diagptr(ip) &&"
-                                    " rowptr(ip) < rowptr(1+ip) && k = j2p}");
+    Set *F4 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: i < ip"
+                                   " && 0 <= i && i < m"
+                                  " && 0 <= ip && ip < m"
+                           " && rowptr(i) <= k && k < diagptr(i)"
+                         " && rowptr(ip) <= kp && kp < diagptr(ip)"
+                                   " && k < j1 && j1 < rowptr(1+i)"
+                                 " && kp < j1p && j1p < rowptr(1+ip)"
+                  " && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k))"
+                " && diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp))"
+
+                                     " && k = j2p}");
 
     string ex_F4_str("Not Satisfiable");
 
@@ -423,7 +426,36 @@ int main(int argc, char **argv)
 
                                      " && j1 = diagptr(colidx(kp)) }");
 
-    string ex_A5_str("[ m, nnz ] -> { [i, ip, k, kp] : i - colidx(kp) = 0 && ip >= 0 && k >= 0 && kp >= 0 && colidx(k) >= 0 && colidx(kp) >= 0 && diagptr(i) >= 0 && diagptr(i + 1) >= 0 && diagptr(ip) >= 0 && diagptr(ip + 1) >= 0 && diagptr(colidx(k)) >= 0 && diagptr(colidx(kp)) >= 0 && rowptr(i) >= 0 && rowptr(i + 1) >= 0 && rowptr(ip) >= 0 && rowptr(ip + 1) >= 0 && rowptr(colidx(k)) >= 0 && rowptr(colidx(kp)) >= 0 && k - rowptr(i) >= 0 && kp - rowptr(ip) >= 0 && nnz - diagptr(colidx(k) + 1) >= 0 && nnz - diagptr(colidx(kp) + 1) >= 0 && nnz - rowptr(colidx(k) + 1) >= 0 && nnz - rowptr(colidx(kp) + 1) >= 0 && diagptr(i + 1) - rowptr(i + 1) >= 0 && diagptr(ip + 1) - rowptr(ip + 1) >= 0 && diagptr(colidx(k)) - rowptr(colidx(k)) >= 0 && diagptr(colidx(k) + 1) + 1 >= 0 && diagptr(colidx(kp)) - rowptr(colidx(kp)) >= 0 && diagptr(colidx(kp) + 1) + 1 >= 0 && rowptr(colidx(k) + 1) + 1 >= 0 && rowptr(colidx(kp) + 1) + 1 >= 0 && -ip + m - 2 >= 0 && -ip + colidx(kp) - 1 >= 0 && -k + nnz - 1 >= 0 && -k + diagptr(i) - 1 >= 0 && -k + diagptr(colidx(kp)) - 1 >= 0 && -kp + nnz - 1 >= 0 && -kp + diagptr(ip) - 1 >= 0 && -kp + rowptr(ip + 1) - 2 >= 0 && m - colidx(k) - 2 >= 0 && m - colidx(kp) - 2 >= 0 && nnz - diagptr(i) - 1 >= 0 && nnz - diagptr(i + 1) - 1 >= 0 && nnz - diagptr(ip) - 1 >= 0 && nnz - diagptr(ip + 1) - 1 >= 0 && nnz - diagptr(colidx(k)) - 1 >= 0 && nnz - diagptr(colidx(kp)) - 1 >= 0 && nnz - rowptr(i) - 1 >= 0 && nnz - rowptr(i + 1) - 1 >= 0 && nnz - rowptr(ip) - 1 >= 0 && nnz - rowptr(ip + 1) - 1 >= 0 && nnz - rowptr(colidx(k)) - 1 >= 0 && nnz - rowptr(colidx(kp)) - 1 >= 0 && -diagptr(colidx(k)) + rowptr(colidx(k) + 1) + 2 >= 0 && diagptr(colidx(k) + 1) - rowptr(colidx(k) + 1) + 8 >= 0 && -diagptr(colidx(kp)) + rowptr(i + 1) - 1 >= 0 && -diagptr(colidx(kp)) + rowptr(colidx(kp) + 1) + 2 >= 0 && diagptr(colidx(kp) + 1) - rowptr(colidx(kp) + 1) + 8 >= 0 }");
+    Set *ex_A5 = new Set("[ m, nnz ] -> { [i, ip, k, kp] : i = colidx(kp) &&"
+" ip >= 0 && k >= 0 && kp >= 0 && colidx(k) >= 0 && colidx(kp) >= 0 &&"
+" diagptr(i) >= 0 && diagptr(i + 1) >= 0 && diagptr(ip) >= 0 &&"
+" diagptr(ip + 1) >= 0 && diagptr(colidx(k)) >= 0 &&"
+" diagptr(colidx(kp)) >= 0 && rowptr(i) >= 0 && rowptr(i + 1) >= 0 &&"
+" rowptr(ip) >= 0 && rowptr(ip + 1) >= 0 && rowptr(colidx(k)) >= 0 &&"
+" rowptr(colidx(kp)) >= 0 && k - rowptr(i) >= 0 && kp - rowptr(ip) >= 0 &&"
+" nnz - diagptr(colidx(k) + 1) >= 0 && nnz - diagptr(colidx(kp) + 1) >= 0 &&"
+" nnz - rowptr(colidx(k) + 1) >= 0 && nnz - rowptr(colidx(kp) + 1) >= 0 &&"
+" diagptr(i + 1) - rowptr(i + 1) >= 0 && diagptr(ip + 1) - rowptr(ip + 1) >= 0 &&"
+" diagptr(colidx(k)) - rowptr(colidx(k)) >= 0 && diagptr(colidx(k) + 1) + 1 >= 0 && diagptr(colidx(kp)) - rowptr(colidx(kp)) >= 0 && diagptr(colidx(kp) + 1) + 1 >= 0 &&"
+" rowptr(colidx(k) + 1) + 1 >= 0 && rowptr(colidx(kp) + 1) + 1 >= 0 &&"
+" -ip + m - 2 >= 0 && -ip + colidx(kp) - 1 >= 0 && -k + nnz - 1 >= 0 &&"
+" -k + diagptr(i) - 1 >= 0 && -k + diagptr(colidx(kp)) - 1 >= 0 &&"
+" -kp + nnz - 1 >= 0 && -kp + diagptr(ip) - 1 >= 0 &&"
+" -kp + rowptr(ip + 1) - 2 >= 0 && m - colidx(k) - 2 >= 0 &&"
+" m - colidx(kp) - 2 >= 0 && nnz - diagptr(i) - 1 >= 0 &&"
+" nnz - diagptr(i + 1) - 1 >= 0 && nnz - diagptr(ip) - 1 >= 0 &&"
+" nnz - diagptr(ip + 1) - 1 >= 0 && nnz - diagptr(colidx(k)) - 1 >= 0 &&"
+" nnz - diagptr(colidx(kp)) - 1 >= 0 && nnz - rowptr(i) - 1 >= 0 &&"
+" nnz - rowptr(i + 1) - 1 >= 0 && nnz - rowptr(ip) - 1 >= 0 &&"
+" nnz - rowptr(ip + 1) - 1 >= 0 && nnz - rowptr(colidx(k)) - 1 >= 0 &&"
+" nnz - rowptr(colidx(kp)) - 1 >= 0 &&"
+" -diagptr(colidx(k)) + rowptr(colidx(k) + 1) + 3 >= 0 &&"
+" diagptr(colidx(k) + 1) - rowptr(colidx(k) + 1) + 10 >= 0 &&"
+" -diagptr(colidx(kp)) + rowptr(i + 1) - 1 >= 0 &&"
+" -diagptr(colidx(kp)) + rowptr(colidx(kp) + 1) + 3 >= 0 &&"
+" diagptr(colidx(kp) + 1) - rowptr(colidx(kp) + 1) + 10 >= 0 }");
+
+    string ex_A5_str = ex_A5->toISLString();
 
     Set *F5 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: i < ip"
                                    " && 0 <= i && i < m"
@@ -437,7 +469,38 @@ int main(int argc, char **argv)
 
                                      " && j1 = diagptr(colidx(k))}");
 
-    string ex_F5_str("[ m, nnz ] -> { [i, ip, k, kp] : i - colidx(k) = 0 && ip >= 0 && k >= 0 && kp >= 0 && colidx(k) >= 0 && colidx(kp) >= 0 && diagptr(i) >= 0 && diagptr(i + 1) >= 0 && diagptr(ip) >= 0 && diagptr(ip + 1) >= 0 && diagptr(colidx(k)) >= 0 && diagptr(colidx(kp)) >= 0 && rowptr(i) >= 0 && rowptr(i + 1) >= 0 && rowptr(ip) >= 0 && rowptr(ip + 1) >= 0 && rowptr(colidx(k)) >= 0 && rowptr(colidx(kp)) >= 0 && k - rowptr(i) >= 0 && kp - rowptr(ip) >= 0 && nnz - diagptr(colidx(k) + 1) >= 0 && nnz - diagptr(colidx(kp) + 1) >= 0 && nnz - rowptr(colidx(k) + 1) >= 0 && nnz - rowptr(colidx(kp) + 1) >= 0 && diagptr(i + 1) - rowptr(i + 1) >= 0 && diagptr(ip + 1) - rowptr(ip + 1) >= 0 && diagptr(colidx(k)) - rowptr(colidx(k)) >= 0 && diagptr(colidx(k) + 1) + 1 >= 0 && diagptr(colidx(kp)) - rowptr(colidx(kp)) >= 0 && diagptr(colidx(kp) + 1) + 1 >= 0 && rowptr(colidx(k) + 1) + 1 >= 0 && rowptr(colidx(kp) + 1) + 1 >= 0 && -ip + m - 2 >= 0 && ip - colidx(k) - 1 >= 0 && -k + nnz - 1 >= 0 && -k + diagptr(i) - 1 >= 0 && -k + diagptr(colidx(k)) - 1 >= 0 && -kp + nnz - 1 >= 0 && -kp + diagptr(ip) - 1 >= 0 && -kp + rowptr(ip + 1) - 2 >= 0 && m - colidx(k) - 2 >= 0 && m - colidx(kp) - 2 >= 0 && nnz - diagptr(i) - 1 >= 0 && nnz - diagptr(i + 1) - 1 >= 0 && nnz - diagptr(ip) - 1 >= 0 && nnz - diagptr(ip + 1) - 1 >= 0 && nnz - diagptr(colidx(k)) - 1 >= 0 && nnz - diagptr(colidx(kp)) - 1 >= 0 && nnz - rowptr(i) - 1 >= 0 && nnz - rowptr(i + 1) - 1 >= 0 && nnz - rowptr(ip) - 1 >= 0 && nnz - rowptr(ip + 1) - 1 >= 0 && nnz - rowptr(colidx(k)) - 1 >= 0 && nnz - rowptr(colidx(kp)) - 1 >= 0 && -diagptr(colidx(k)) + rowptr(i + 1) - 1 >= 0 && -diagptr(colidx(k)) + rowptr(colidx(k) + 1) + 2 >= 0 && diagptr(colidx(k) + 1) - rowptr(colidx(k) + 1) + 8 >= 0 && -diagptr(colidx(kp)) + rowptr(colidx(kp) + 1) + 2 >= 0 && diagptr(colidx(kp) + 1) - rowptr(colidx(kp) + 1) + 8 >= 0 }");
+    Set *ex_F5 = new Set("[ m, nnz ] -> { [i, ip, k, kp] : i = colidx(k) &&"
+" ip >= 0 && k >= 0 && kp >= 0 && colidx(k) >= 0 && colidx(kp) >= 0 &&"
+" diagptr(i) >= 0 && diagptr(i + 1) >= 0 && diagptr(ip) >= 0 &&"
+" diagptr(ip + 1) >= 0 && diagptr(colidx(k)) >= 0 && diagptr(colidx(kp)) >= 0 &&"
+" rowptr(i) >= 0 && rowptr(i + 1) >= 0 && rowptr(ip) >= 0 &&"
+" rowptr(ip + 1) >= 0 && rowptr(colidx(k)) >= 0 && rowptr(colidx(kp)) >= 0 &&"
+" k - rowptr(i) >= 0 && kp - rowptr(ip) >= 0 &&"
+" nnz - diagptr(colidx(k) + 1) >= 0 && nnz - diagptr(colidx(kp) + 1) >= 0 &&"
+" nnz - rowptr(colidx(k) + 1) >= 0 && nnz - rowptr(colidx(kp) + 1) >= 0 &&"
+" diagptr(i + 1) >= rowptr(i + 1) && diagptr(ip + 1) >= rowptr(ip + 1) &&"
+" diagptr(colidx(k)) - rowptr(colidx(k)) >= 0 &&"
+" diagptr(colidx(k) + 1) + 1 >= 0 &&"
+" diagptr(colidx(kp)) - rowptr(colidx(kp)) >= 0 &&"
+" diagptr(colidx(kp) + 1) + 1 >= 0 && rowptr(colidx(k) + 1) + 1 >= 0 &&"
+" rowptr(colidx(kp) + 1) + 1 >= 0 && -ip + m - 2 >= 0 &&"
+" ip > colidx(k) && nnz > k && -k + diagptr(i) - 1 >= 0 &&"
+" -k + diagptr(colidx(k)) - 1 >= 0 && -kp + nnz - 1 >= 0 &&"
+" -kp + diagptr(ip) - 1 >= 0 && -kp + rowptr(ip + 1) - 2 >= 0 &&"
+" m - colidx(k) - 2 >= 0 && m - colidx(kp) - 2 >= 0 &&"
+" nnz - diagptr(i) - 1 >= 0 && nnz - diagptr(i + 1) - 1 >= 0 &&"
+" nnz - diagptr(ip) - 1 >= 0 && nnz - diagptr(ip + 1) - 1 >= 0 &&"
+" nnz - diagptr(colidx(k)) - 1 >= 0 && nnz - diagptr(colidx(kp)) - 1 >= 0 &&"
+" nnz - rowptr(i) - 1 >= 0 && nnz - rowptr(i + 1) - 1 >= 0 &&"
+" nnz - rowptr(ip) - 1 >= 0 && nnz - rowptr(ip + 1) - 1 >= 0 &&"
+" nnz - rowptr(colidx(k)) - 1 >= 0 && nnz - rowptr(colidx(kp)) - 1 >= 0 &&"
+" -diagptr(colidx(k)) + rowptr(i + 1) - 1 >= 0 &&"
+" -diagptr(colidx(k)) + rowptr(colidx(k) + 1) + 3 >= 0 &&"
+" diagptr(colidx(k) + 1) - rowptr(colidx(k) + 1) + 10 >= 0 &&"
+" -diagptr(colidx(kp)) + rowptr(colidx(kp) + 1) + 3 >= 0 &&"
+" diagptr(colidx(kp) + 1) - rowptr(colidx(kp) + 1) + 10 >= 0 }");
+
+    string ex_F5_str = ex_F5->toISLString();
 
     //--- Simplifying flow dependence
     // Adding user defined constraint
@@ -472,7 +535,7 @@ int main(int argc, char **argv)
     // Print out results
     verbose && cout<<"\n\nF5 simplified = "<<F5_sim_str<<"\n\n";
 
-//    EXPECT_EQ( ex_F5_str , F5_sim_str );
+    EXPECT_EQ( ex_F5_str , F5_sim_str );
 
     delete A5;
     delete F5;
@@ -497,7 +560,7 @@ int main(int argc, char **argv)
                                      " && j1 = j1p}");
 
 
-    string ex_A6_str("");
+    string ex_A6_str("Not Satisfiable");
 
     Set *F6 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: i < ip"
                                    " && 0 <= i && i < m"
@@ -511,7 +574,7 @@ int main(int argc, char **argv)
 
                                      " && j1 = j1p}");
 
-    string ex_F6_str("");
+    string ex_F6_str("Not Satisfiable");
 
 
     //--- Simplifying flow dependence
@@ -530,7 +593,7 @@ int main(int argc, char **argv)
     // Print out results
     verbose && cout<<"\n\nA6 simplified = "<<A6_sim_str<<"\n\n"; 
 
-//    EXPECT_EQ( ex_A6_str , A6_sim_str );
+    EXPECT_EQ( ex_A6_str , A6_sim_str );
 
 
     //--- Simplifying Anti dependence
@@ -549,7 +612,7 @@ int main(int argc, char **argv)
     // Print out results
     verbose && cout<<"\n\nF6 simplified = "<<F6_sim_str<<"\n\n";
 
-//    EXPECT_EQ( ex_F6_str , F6_sim_str );
+    EXPECT_EQ( ex_F6_str , F6_sim_str );
 
 
     delete A6;
@@ -574,7 +637,7 @@ int main(int argc, char **argv)
 
                                      " && j1 = kp}");
 
-    string ex_A7("");
+    string ex_A7_str("Not Satisfiable");
 
     Set *F7 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: i < ip"
                                    " && 0 <= i && i < m"
@@ -606,7 +669,7 @@ int main(int argc, char **argv)
     // Print out results
     verbose && cout<<"\n\nA7 simplified = "<<A7_sim_str<<"\n\n"; 
 
-//    EXPECT_EQ( ex_A7_str , A7_sim_str );
+    EXPECT_EQ( ex_A7_str , A7_sim_str );
 
 
     //--- Simplifying Anti dependence
@@ -649,7 +712,7 @@ int main(int argc, char **argv)
 
                                      " && j1 = j2p}");
 
-    string ex_A8_str("[ m, nnz ] -> { [i, ip, k, kp] : i - colidx(kp) = 0"
+    Set *ex_A8 = new Set("[ m, nnz ] -> { [i, ip, k, kp] : i - colidx(kp) = 0"
 " && ip >= 0 && colidx(k) >= 0 && rowptr(i) >= 0 && rowptr(ip) >= 0"
 " && rowptr(colidx(k)) >= 0 && rowptr(colidx(kp)) >= 0"
 " && k - rowptr(i) >= 0 && kp - rowptr(ip) >= 0"
@@ -664,16 +727,18 @@ int main(int argc, char **argv)
 " && rowptr(colidx(kp) + 1) + 1 >= 0"
 " && -ip + colidx(kp) - 1 >= 0"
 " && -k + diagptr(i) - 1 >= 0 && -k + rowptr(i + 1) - 2 >= 0"
-" && -k + rowptr(colidx(kp) + 1) + 2 >= 0 && -kp + diagptr(ip) - 1 >= 0"
+" && -k + rowptr(colidx(kp) + 1) + 3 >= 0 && -kp + diagptr(ip) - 1 >= 0"
 " && -kp + rowptr(ip + 1) - 2 >= 0 && m - colidx(k) - 2 >= 0"
 " && m - colidx(kp) - 2 >= 0 && nnz - diagptr(i) - 1 >= 0"
 " && nnz - diagptr(i + 1) - 1 >= 0 && nnz - diagptr(ip) - 1 >= 0"
 " && nnz - diagptr(ip + 1) - 1 >= 0 && nnz - diagptr(colidx(k)) - 1 >= 0"
-" && -diagptr(colidx(k)) + rowptr(colidx(k) + 1) + 2 >= 0"
-" && diagptr(colidx(k) + 1) - rowptr(colidx(k) + 1) + 8 >= 0"
+" && -diagptr(colidx(k)) + rowptr(colidx(k) + 1) + 3 >= 0"
+" && diagptr(colidx(k) + 1) - rowptr(colidx(k) + 1) + 10 >= 0"
 " && -diagptr(colidx(kp)) + rowptr(i + 1) - 2 >= 0"
-" && -diagptr(colidx(kp)) + rowptr(colidx(kp) + 1) + 2 >= 0"
-" && diagptr(colidx(kp) + 1) - rowptr(colidx(kp) + 1) + 8 >= 0 }");
+" && -diagptr(colidx(kp)) + rowptr(colidx(kp) + 1) + 3 >= 0"
+" && diagptr(colidx(kp) + 1) - rowptr(colidx(kp) + 1) + 10 >= 0 }");
+
+    string ex_A8_str = ex_A8->toISLString();
 
     Set *F8 = new Set("[m] -> {[i,ip,k,kp,j1,j1p,j2,j2p]: i < ip"
                                    " && 0 <= i && i < m"
@@ -687,8 +752,30 @@ int main(int argc, char **argv)
 
                                      " && j1 = j2p}");
 
-    string ex_F8_str("[ m, nnz ] -> { [i, ip, k, kp] : i - colidx(kp) = 0 && colidx(k) >= 0 && colidx(kp) >= 0 && rowptr(i) >= 0 && rowptr(ip) >= 0 && rowptr(colidx(k)) >= 0 && rowptr(colidx(kp)) >= 0 && k - rowptr(i) >= 0 && kp - rowptr(ip) >= 0 && nnz - diagptr(colidx(k) + 1) >= 0 && nnz - diagptr(colidx(kp) + 1) >= 0 && nnz - rowptr(colidx(k) + 1) >= 0 && nnz - rowptr(colidx(kp) + 1) >= 0 && diagptr(i + 1) - rowptr(i + 1) >= 0 && diagptr(ip + 1) - rowptr(ip + 1) >= 0 && diagptr(colidx(k)) - rowptr(colidx(k)) >= 0 && diagptr(colidx(k) + 1) + 1 >= 0 && diagptr(colidx(kp)) - rowptr(colidx(kp)) >= 0 && diagptr(colidx(kp) + 1) + 1 >= 0 && rowptr(colidx(k) + 1) + 1 >= 0 && rowptr(colidx(kp) + 1) + 1 >= 0 && -ip + m - 2 >= 0 && ip - colidx(kp) - 1 >= 0 && -k + diagptr(i) - 1 >= 0 && -k + rowptr(i + 1) - 2 >= 0 && -k + rowptr(colidx(kp) + 1) + 2 >= 0 && -kp + diagptr(ip) - 1 >= 0 && -kp + rowptr(ip + 1) - 2 >= 0 && m - colidx(k) - 2 >= 0 && nnz - diagptr(i) - 1 >= 0 && nnz - diagptr(i + 1) - 1 >= 0 && nnz - diagptr(ip) - 1 >= 0 && nnz - diagptr(ip + 1) - 1 >= 0 && nnz - diagptr(colidx(k)) - 1 >= 0 && -diagptr(colidx(k)) + rowptr(colidx(k) + 1) + 2 >= 0 && diagptr(colidx(k) + 1) - rowptr(colidx(k) + 1) + 8 >= 0 && -diagptr(colidx(kp)) + rowptr(i + 1) - 2 >= 0 && -diagptr(colidx(kp)) + rowptr(colidx(kp) + 1) + 2 >= 0 && diagptr(colidx(kp) + 1) - rowptr(colidx(kp) + 1) + 8 >= 0 }");
+    Set *ex_F8 = new Set("[ m, nnz ] -> { [i, ip, k, kp] : i = colidx(kp) &&"
+" colidx(k) >= 0 && colidx(kp) >= 0 && rowptr(i) >= 0 && rowptr(ip) >= 0 &&"
+" rowptr(colidx(k)) >= 0 && rowptr(colidx(kp)) >= 0 && k >= rowptr(i) &&"
+" kp >= rowptr(ip) && nnz >= diagptr(colidx(k) + 1) &&"
+" nnz >= diagptr(colidx(kp) + 1) && nnz >= rowptr(colidx(k) + 1) &&"
+" nnz >= rowptr(colidx(kp) + 1) && diagptr(i + 1) >= rowptr(i + 1) &&"
+" diagptr(ip + 1) >= rowptr(ip + 1) &&"
+" diagptr(colidx(k)) >= rowptr(colidx(k)) &&"
+" diagptr(colidx(k) + 1) + 1 >= 0 &&"
+" diagptr(colidx(kp)) >= rowptr(colidx(kp)) &&"
+" diagptr(colidx(kp) + 1) + 1 >= 0 && rowptr(colidx(k) + 1) + 1 >= 0 &&"
+" rowptr(colidx(kp) + 1) + 1 >= 0 &&  m >= ip + 2 && ip > colidx(kp) &&"
+" diagptr(i) > k && rowptr(i + 1) >= k + 2 &&"
+" rowptr(colidx(kp) + 1) + 3 >= k && diagptr(ip) >= kp + 1 &&"
+" rowptr(ip + 1) >= kp + 2 && m >= colidx(k) + 2 && nnz > diagptr(i) &&"
+" nnz > diagptr(i + 1) && nnz > diagptr(ip) && nnz > diagptr(ip + 1) &&"
+" nnz > diagptr(colidx(k)) &&"
+" -diagptr(colidx(k)) + rowptr(colidx(k) + 1) + 3 >= 0 &&"
+" diagptr(colidx(k) + 1) + 10 >= rowptr(colidx(k) + 1) &&"
+" rowptr(i + 1) >= diagptr(colidx(kp)) + 2 &&"
+" rowptr(colidx(kp) + 1) + 3 >= diagptr(colidx(kp)) &&"
+" diagptr(colidx(kp) + 1) + 10 >=  rowptr(colidx(kp) + 1) }");
 
+    string ex_F8_str = ex_F8->toISLString();
 
     //--- Simplifying flow dependence
     // Adding user defined constraint
