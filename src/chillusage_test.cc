@@ -300,6 +300,7 @@ TEST_F(ChillUsageTest, GS_CSR_DepSimplification)
     delete anti;
     delete flow_sim;
     delete anti_sim;
+
 }
 
 
@@ -664,7 +665,8 @@ TEST_F(ChillUsageTest, ILU_CSR_DepSimplification)
 " nnz - diagptr(colidx(k) + 1) >= 0 && nnz - diagptr(colidx(kp) + 1) >= 0 &&"
 " nnz - rowptr(colidx(k) + 1) >= 0 && nnz - rowptr(colidx(kp) + 1) >= 0 &&"
 " diagptr(i + 1) - rowptr(i + 1) >= 0 && diagptr(ip + 1) - rowptr(ip + 1) >= 0 &&"
-" diagptr(colidx(k)) - rowptr(colidx(k)) >= 0 && diagptr(colidx(k) + 1) + 1 >= 0 && diagptr(colidx(kp)) - rowptr(colidx(kp)) >= 0 && diagptr(colidx(kp) + 1) + 1 >= 0 &&"
+" diagptr(colidx(k)) - rowptr(colidx(k)) >= 0 && diagptr(colidx(k) + 1) + 1 >= 0 &&"
+" diagptr(colidx(kp)) - rowptr(colidx(kp)) >= 0 && diagptr(colidx(kp) + 1) + 1 >= 0 &&"
 " rowptr(colidx(k) + 1) + 1 >= 0 && rowptr(colidx(kp) + 1) + 1 >= 0 &&"
 " -ip + m - 2 >= 0 && -ip + colidx(kp) - 1 >= 0 && -k + nnz - 1 >= 0 &&"
 " -k + diagptr(i) - 1 >= 0 && -k + diagptr(colidx(kp)) - 1 >= 0 &&"
@@ -977,7 +979,8 @@ TEST_F(ChillUsageTest, ILU_CSR_DepSimplification)
                                  " && kp < j1p && j1p < rowptr(1+ip)"
                   " && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k))"
                 " && diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp))"
-
+                             " && colidx(j1) = colidx(j2)"
+                             " && colidx(j1p) = colidx(j2p)"
                                      " && j1 = j2p}");
 
     Set *ex_F8 = new Set("[ m, nnz ] -> { [i, ip, k, kp] : i = colidx(kp) &&"
@@ -996,7 +999,7 @@ TEST_F(ChillUsageTest, ILU_CSR_DepSimplification)
 " rowptr(colidx(kp) + 1) + 3 >= k && diagptr(ip) >= kp + 1 &&"
 " rowptr(ip + 1) >= kp + 2 && m >= colidx(k) + 2 && nnz > diagptr(i) &&"
 " nnz > diagptr(i + 1) && nnz > diagptr(ip) && nnz > diagptr(ip + 1) &&"
-" nnz > diagptr(colidx(k)) &&"
+" nnz > diagptr(colidx(k)) + 1 &&"
 " -diagptr(colidx(k)) + rowptr(colidx(k) + 1) + 3 >= 0 &&"
 " diagptr(colidx(k) + 1) + 10 >= rowptr(colidx(k) + 1) &&"
 " rowptr(i + 1) >= diagptr(colidx(kp)) + 2 &&"
@@ -1024,6 +1027,9 @@ TEST_F(ChillUsageTest, ILU_CSR_DepSimplification)
     EXPECT_EQ( ex_A8_str , A8_sim_str );
 
 
+    // Applying heuristic III.A           /////////////////////////////////////
+    F8->RemoveExpensiveConsts(parallelTvs, 2);
+
     //--- Simplifying Anti dependence
     // Adding user defined constraint
     Set* F8_extend = F8->addUFConstraints("rowptr","<=", "diagptr");
@@ -1042,10 +1048,10 @@ TEST_F(ChillUsageTest, ILU_CSR_DepSimplification)
 
     EXPECT_EQ( ex_F8_str , F8_sim_str );
 
-    delete A8;
+//    delete A8;
     delete F8;
-    delete A8_extend;
-    delete A8_sim;
+//    delete A8_extend;
+//    delete A8_sim;
     delete F8_extend;
     delete F8_sim;
 }
