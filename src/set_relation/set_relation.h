@@ -389,6 +389,25 @@ public:
     //! a pointer to final UFCallMap that the user is responsible for deleting.
     UFCallMap* mapUFCtoSym();
 
+    /*! Adds constraints due to domain and range of all UFCalls in the set.
+    **  The constraints are added inplace. The returned std::set<Exp> is
+    **  set of added constraints. User owns the returned Set object.
+    */
+    std::set<Exp> boundDomainRange();
+
+    /*! This function considers tuple variable i; and counts the number of
+    **  constraints in the set where this tuple variable is argument to an UFC.
+    **  However, it excludes constraints that are in the domainRangeConsts set.
+    **  Since, these constraints are related to domain/range of UFCs in the set.
+    */
+    int nUFCallConstsMustRemove(int i, std::set<Exp>& domainRangeConsts);
+
+    /*! This function removes any constraints where this tuple variable i
+    **  is argument to an UFC.
+    **  It also removes such constraints from domainRangeConsts set.
+    */
+    void removeUFCallConsts(int i);
+
 // FIXME: what methods should we have to iterate over conjunctions so
 // this can go back to protected?
 //protected:
@@ -500,11 +519,7 @@ public:
     void normalize();
     
     //! Visitor design pattern, see Visitor.h for usage
-    void acceptVisitor(Visitor *v);    
-
-    //! Adds constraints due to domain and range of all UFCalls in UFCallmap
-    //  Users own the returned Set object.
-    Set* boundDomainRange() const;
+    void acceptVisitor(Visitor *v);
 
     /*! Creates a super affine set from a non-affine set.
     **  To do this:
@@ -532,8 +547,7 @@ public:
         implementation of Simplification Algorithm that simplifies dependency
         relations, so we can generate optimized inspector code from constraint sets.
     */
-    Set* simplifyForPartialParallel(std::set<int> parallelTvs);
-
+    Set* simplifyForPartialParallel(std::set<int> parallelTvs, int = 0);
 
     // See if this set is deault and uninitialized
     bool isDefault(){
@@ -544,6 +558,7 @@ public:
             return false;
         }
     }
+
 private:
     int mArity;
 };
@@ -678,10 +693,6 @@ public:
     //! Visitor design pattern, see Visitor.h for usage
     void acceptVisitor(Visitor *v);
 
-    //! Adds constraints due to domain and range of all UFCalls in UFCallmap
-    //  Users own the returned Relation object.
-    Relation* boundDomainRange() const;
-
     /*! Creates a super affine Relation from a non-affine Relation.
     **  To do this:
     **   (1) We add constraints due to all UFCalls' domain and range
@@ -711,7 +722,7 @@ public:
         implementation of Simplification Algorithm that simplifies dependency
         relations, so we can generate optimized inspector code from constraint sets.
     */
-    Relation* simplifyForPartialParallel();
+    Relation* simplifyForPartialParallel(std::set<int> parallelTvs, int = 0);
 
     // See if this set is deault and uninitialized
     bool isDefault(){

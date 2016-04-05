@@ -2741,9 +2741,10 @@ void SparseConstraints::addConstraintsDueToMonotonicityHelper() {
 Set* Set::addConstraintsDueToMonotonicity() const {
     
     // Add in constraints due to domain and range.
-    // We always want to do this hear because otherwise we don't get
+    // We always want to do this here because otherwise we don't get
     // any of the uninterpreted functions as non-negative.
-    Set* retval = this->boundDomainRange();
+    Set* retval = new Set(*this); 
+//    retval->boundDomainRange();
     
     // FIXME: inconsistency as to whether these methods update current
     // or return a new.    
@@ -2855,8 +2856,9 @@ UFCallMap* SparseConstraints::mapUFCtoSym()
 */
 class VisitorBoundDomainRange : public Visitor {
   private:
-         Set* addedConstSet;
+         Set* addedConstSet;  // In one Conjunction, for internal use only
          int in_ar;
+         std::set<Exp> AddedExps; // Added constrants overall, the return value
   public:
          //! For each UFC adds Domain & Range constraints to addedConstSet
          void preVisitUFCallTerm(UFCallTerm * t);
@@ -2867,12 +2869,20 @@ class VisitorBoundDomainRange : public Visitor {
          }
          //! Adds in all of the gathered constraints in addedConstSet for c
          void postVisitConjunction(iegenlib::Conjunction * c){
-             Conjunction *ct = c->Intersect( addedConstSet->mConjunctions.front() );
+             Conjunction *ct = c->Intersect(addedConstSet->mConjunctions.front());
              *c = *ct;
              c->setInArity( in_ar );
+
+             const std::list<Exp*> cl = 
+                         (addedConstSet->mConjunctions.front())->inequalities();
+             for (std::list<Exp*>::const_iterator it=cl.begin(); it != cl.end(); ++it)
+                 AddedExps.insert( *(*it) );
+
              delete addedConstSet;
              delete ct;
          }
+         // Return added constraints
+         std::set<Exp> getAddedExps(){ return AddedExps; }
 };
 
 void VisitorBoundDomainRange::preVisitUFCallTerm(UFCallTerm * t){
@@ -2966,32 +2976,20 @@ void VisitorBoundDomainRange::preVisitUFCallTerm(UFCallTerm * t){
     delete uf_call;
 }
 
-//! Adds constraints due to domain and range of all UFCalls in UFCallmap
-//  Users own the returned Set object.
-Set* Set::boundDomainRange() const
+/*! Adds constraints due to domain and range of all UFCalls in the set.
+**  The constraints are added inplace. The returned std::set<Exp> is
+**  set of added constraints. User owns the returned Set object.
+*/
+std::set<Exp> SparseConstraints::boundDomainRange()
 {
-    Set* s = new Set(*this);
     VisitorBoundDomainRange *v = new VisitorBoundDomainRange();
     
-    s->acceptVisitor(v);
+    acceptVisitor(v);
 
+    std::set<Exp> ret = v->getAddedExps();
     delete v;
 
-    return (s);
-}
-
-//! Adds constraints due to domain and range of all UFCalls in UFCallmap
-//  Users own the returned Relation object.
-Relation* Relation::boundDomainRange() const
-{
-    Relation* r = new Relation(*this);
-    VisitorBoundDomainRange *v = new VisitorBoundDomainRange();
-    
-    r->acceptVisitor(v);
-
-    delete v;
-
-    return r;
+    return ret;
 }
 
 /*****************************************************************************/
@@ -3113,7 +3111,8 @@ class VisitorSuperAffineSet : public Visitor {
 */
 Set* Set::superAffineSet(UFCallMap* ufcmap)
 {
-    Set* copySet = this->boundDomainRange();
+    Set* copySet = new Set(*this);
+    copySet->boundDomainRange();
 
     VisitorSuperAffineSet* v = new VisitorSuperAffineSet(ufcmap);
     copySet->acceptVisitor( v );
@@ -3129,7 +3128,8 @@ Set* Set::superAffineSet(UFCallMap* ufcmap)
 //! Same as Set
 Relation* Relation::superAffineRelation(UFCallMap* ufcmap)
 {
-    Relation* copyRelation = this->boundDomainRange();
+    Relation* copyRelation = new Relation(*this);
+    copyRelation->boundDomainRange();
 
     VisitorSuperAffineSet* v = new VisitorSuperAffineSet(ufcmap);
     copyRelation->acceptVisitor( v );
@@ -3282,8 +3282,6 @@ Relation* Relation::reverseAffineSubstitution(UFCallMap* ufcmap)
 
     return result;
 }
-
-
 
 /*****************************************************************************/
 #pragma mark -
@@ -3469,6 +3467,162 @@ Relation* Relation::projectOut(int tvar)
     return result;
 }
 
+/*****************************************************************************/
+#pragma mark -
+/*************** VisitornUFCallConstsMustRemove *****************************/
+//! Vistor Class used in nUFCallConstsMustRemove
+
+/*! 
+*/
+
+class VisitornUFCallConstsMustRemove : public Visitor {
+  private:
+    int mTupleID;
+    std::set<Exp> domainRangeConsts;
+    bool seenTupleVar;
+    int UFCLevel;
+    int count;
+
+  public:
+    VisitornUFCallConstsMustRemove(int tupleID, std::set<Exp>& iDomainRangeConsts)
+                  : mTupleID(tupleID), domainRangeConsts(iDomainRangeConsts),   
+                  seenTupleVar(false), UFCLevel(0), count(0){}
+
+    virtual ~VisitornUFCallConstsMustRemove(){ }
+
+    int getCount() { return count;}
+
+    void preVisitTupleVarTerm(iegenlib::TupleVarTerm *t) {
+        if ( UFCLevel > 0 && t->tvloc()== mTupleID) {
+            seenTupleVar = true;
+        }
+    }
+    void preVisitExp(iegenlib::Exp * e) {
+        //
+        if( e->isEquality() || e->isInequality() ){
+             UFCLevel = 0;
+             seenTupleVar = false;
+        } else if( e->isExpression() ){
+             UFCLevel++;
+        }
+    }
+    void postVisitExp(iegenlib::Exp * e) {
+        // 
+        if( e->isExpression() ){
+             UFCLevel--;
+        } else if ( seenTupleVar) {
+            if( domainRangeConsts.find(*e) == domainRangeConsts.end() ){
+                count++;
+            }
+        }
+    }
+};
+
+/*! This function considers tuple variable i; and counts the number of
+**  constraints in the set where this tuple variable is argument to an UFC.
+**  However, it excludes constraints that are in the domainRangeConsts set.
+**  Since, these constraints are related to domain/range of UFCs in the set.
+*/
+int SparseConstraints::nUFCallConstsMustRemove(int i, std::set<Exp>& domainRangeConsts)
+{
+    VisitornUFCallConstsMustRemove *v = new VisitornUFCallConstsMustRemove(
+                                               i, domainRangeConsts);
+    this->acceptVisitor(v);
+
+    int count = v->getCount();
+    delete v;
+    
+    return count;
+}
+
+/*****************************************************************************/
+#pragma mark -
+/*************** VisitornRemoveUFCallConsts *****************************/
+//! Vistor Class used in removeUFCallConsts
+
+/*! 
+*/
+
+class VisitorRemoveUFCallConsts : public Visitor {
+  private:
+    int mTupleID;
+    bool seenTupleVar;
+    int UFCLevel;
+    SparseConstraints* redSparseConstraints;
+    Conjunction* redConj;
+    std::list<Conjunction*> mRedConj;
+
+  public:
+    VisitorRemoveUFCallConsts(int tupleID)
+                  : mTupleID(tupleID), seenTupleVar(false), UFCLevel(0){}
+
+    virtual ~VisitorRemoveUFCallConsts(){ }
+
+    void preVisitTupleVarTerm(iegenlib::TupleVarTerm *t) {
+        if ( UFCLevel > 0 && t->tvloc()== mTupleID) {
+            seenTupleVar = true;
+        }
+    }
+    void preVisitExp(iegenlib::Exp * e) {
+        //
+        if( e->isEquality() || e->isInequality() ){
+             UFCLevel = 0;
+             seenTupleVar = false;
+        } else if( e->isExpression() ){
+             UFCLevel++;
+        }
+    }
+    void postVisitExp(iegenlib::Exp * e) {
+        // 
+        if( e->isExpression() ){
+             UFCLevel--;
+        } else if ( !seenTupleVar ) {
+             if( e->isInequality() ){
+                 redConj->addInequality( e->clone() );
+             }else{
+                 redConj->addEquality( e->clone() );
+             }
+        }
+    }
+    //! Initializes an redConj
+    void preVisitConjunction(iegenlib::Conjunction * c){
+        redConj = new Conjunction( c->getTupleDecl() );
+        redConj->setInArity( c->inarity() );
+    }
+    //! adds the current redConj to mRedConj
+    void postVisitConjunction(iegenlib::Conjunction * c){
+         mRedConj.push_back(redConj->clone());
+         delete redConj;
+    }
+    //! Add Conjunctions in mRedConj to redSparseConstraints
+    void postVisitSparseConstraints(iegenlib::SparseConstraints * sc){
+        redSparseConstraints = new SparseConstraints( );
+
+        for(std::list<Conjunction*>::const_iterator i=mRedConj.begin();
+                             i != mRedConj.end(); i++) {
+            redSparseConstraints->addConjunction((*i));
+        }
+    }
+
+    SparseConstraints* getSparseConstraints() { return redSparseConstraints; }
+};
+
+/*! This function removes any constraints where tuple variable i
+**  is argument to an UFC. The function is inplace.
+*/
+void SparseConstraints::removeUFCallConsts(int i)
+{
+    VisitorRemoveUFCallConsts* v = new VisitorRemoveUFCallConsts(i);
+    
+    this->acceptVisitor(v);
+
+    SparseConstraints* result = v->getSparseConstraints();
+
+    *this = *result;
+
+    delete result;
+}
+
 
 /*! This function simplifies constraints of non-affine sets that
 **  are targeted for level set parallelism. These sets are representative
@@ -3478,14 +3632,21 @@ Relation* Relation::projectOut(int tvar)
 **  implementation of Simplification Algorithm that simplifies dependency
 **  relations, so we can generate optimized inspector code from constraint sets.
 */
-Set* Set::simplifyForPartialParallel(std::set<int> parallelTvs)
+Set* Set::simplifyForPartialParallel(std::set<int> parallelTvs, 
+                                     int mNumConstsToRemove  )
 {
-
     Set *result,*temp;
-    int lastTV = this->arity()-1;
+    int lastTV = this->arity()-1, nConstsToRemove = 0;
+    Set* copySet = new Set(*this);
+
+    // Add in constraints due to domain and range.
+    // We always want to do this before addConstraintsDueToMonotonicity,
+    // otherwise, we won't get any of the UFCs as non-negative.
+    std::set<Exp> domainRangeConsts = copySet->boundDomainRange();
 
     // Adding constraints dut to Monotonicity of UFCs (if any exists)
-    result = this->addConstraintsDueToMonotonicity();
+    result = copySet->addConstraintsDueToMonotonicity();
+    delete copySet;
 
     result->normalize();
 
@@ -3498,6 +3659,15 @@ Set* Set::simplifyForPartialParallel(std::set<int> parallelTvs)
         if ( parallelTvs.find(i) != parallelTvs.end() ){
             continue;
         }
+
+        nConstsToRemove = result->nUFCallConstsMustRemove(i, domainRangeConsts);
+
+        if ( nConstsToRemove > mNumConstsToRemove ){
+            continue;
+        }else if( 0 <= nConstsToRemove && nConstsToRemove <= mNumConstsToRemove ){
+            result->removeUFCallConsts( i );
+        }
+    
         // Project out if it is not an UFCall argument
         temp = result->projectOut(i); 
 
@@ -3517,31 +3687,50 @@ Set* Set::simplifyForPartialParallel(std::set<int> parallelTvs)
 
 /*! Same as Set.
 */
-Relation* Relation::simplifyForPartialParallel()
+Relation* Relation::simplifyForPartialParallel(std::set<int> parallelTvs, 
+                                     int mNumConstsToRemove )
 {
-
     Relation *result,*temp;
-    int lastTV = this->arity()-1;
+    int lastTV = this->arity()-1, nConstsToRemove = 0;
+    Relation* copyRelation = new Relation(*this);
+
+    // Add in constraints due to domain and range.
+    // We always want to do this before addConstraintsDueToMonotonicity,
+    // otherwise, we won't get any of the UFCs as non-negative.
+    std::set<Exp> domainRangeConsts = copyRelation->boundDomainRange();
 
     // Adding constraints dut to Monotonicity of UFCs (if any exists)
     result = this->addConstraintsDueToMonotonicity();
-
+    delete copyRelation;
     
     // Projecting out any tuple variable that are not argument to a UFCall 
     // starting from inner most loops. We also do not project out first 2 loops
     // that are outer most loops, since they are going to be parallelized.
     // [i1,i1p,i2, i2p, ...] :  we keep i1 and i1p
-    for (int i = lastTV ; i >= 2 ; i-- ) {
+    for (int i = lastTV ; i >= 0 ; i-- ) {
 
+        if ( parallelTvs.find(i) != parallelTvs.end() ){
+            continue;
+        }
+
+        nConstsToRemove = result->nUFCallConstsMustRemove(i, domainRangeConsts);
+
+        if ( nConstsToRemove > mNumConstsToRemove ){
+            continue;
+        }else if( 0 <= nConstsToRemove && nConstsToRemove <= mNumConstsToRemove ){
+            result->removeUFCallConsts( i );
+        }
+    
         // Project out if it is not an UFCall argument
         temp = result->projectOut(i); 
 
         if ( temp ){
-            delete result;        
+            delete result;  
             result = temp;
         }
 
         if( result->isDefault() ){
+
             return NULL;
         }
     }
