@@ -3518,6 +3518,7 @@ TEST_F(SetRelationTest, addConstraintsDueToMonotonicity){
 
     {
     Set* s = new Set("{[i,j] : f(i)<f(j) && 0<=f(i) && 0<=f(j)}");
+    s->boundDomainRange();
     Set* result = s->addConstraintsDueToMonotonicity();
     Set* expected = new Set("{[i,j] : f(i) >= 0 && f(j) >= 0 && "
                             "f(i)<G && f(j)<G && "
@@ -3533,6 +3534,7 @@ TEST_F(SetRelationTest, addConstraintsDueToMonotonicity){
     
     {
     Set* s = new Set("{[i,j] : f(i)<f(j) && 0<=f(i) && 0<=f(j)}");
+    s->boundDomainRange();
     Set* result = s->addConstraintsDueToMonotonicity();
     Set* expected = new Set("{[i,j] : f(i) >= 0 && f(j) >= 0 && "
                             "f(i)<G && f(j)<G && "
@@ -3552,6 +3554,7 @@ TEST_F(SetRelationTest, addConstraintsDueToMonotonicity){
 
     {
     Set* s = new Set("{[i,j] : g(i)<g(j) && 0<=g(i) && 0<=g(j)}");
+    s->boundDomainRange();
     Set* result = s->addConstraintsDueToMonotonicity();
     Set* expected = new Set("{[i,j] : g(i) >= 0 && g(j) >= 0 && "
                             "g(i)<G && g(j)<G && "
@@ -3711,26 +3714,24 @@ TEST_F(SetRelationTest, boundDomainRange) {
 
     //!  ----------------   Testing boundDomainRange for Set ------------
 
-    Set* ns = s->boundDomainRange();
+    s->boundDomainRange();
 //    std::cout<<std::endl<<ns->prettyPrintString()<<std::endl;
 
-    EXPECT_EQ( ex_s->prettyPrintString() , ns->prettyPrintString() );
+    EXPECT_EQ( ex_s->prettyPrintString() , s->prettyPrintString() );
 
 
     //!  ----------------   Testing boundDomainRange for Relation -------
 
-    Relation* nr = r->boundDomainRange();
+    r->boundDomainRange();
 //    std::cout<<std::endl<<nr->prettyPrintString()<<std::endl;
 
-    EXPECT_EQ( ex_r->prettyPrintString() , nr->prettyPrintString() );
+    EXPECT_EQ( ex_r->prettyPrintString() , r->prettyPrintString() );
 
 
     delete s;
     delete ex_s;
-    delete ns;
     delete r;
     delete ex_r;
-    delete nr;
 }
 
 #pragma mark superAffineSet
@@ -4058,6 +4059,8 @@ TEST_F(SetRelationTest, debugingForILU){
 
    // Adding constraints due to monotonicity. This also considers constraints
    // that should be added based on partial ordering.
+
+   partOrd->boundDomainRange();
    Set* partOrdMont = partOrd->addConstraintsDueToMonotonicity();
 
    EXPECT_EQ( ex_partOrd->toISLString() , partOrdMont->toISLString() );
@@ -4068,3 +4071,140 @@ TEST_F(SetRelationTest, debugingForILU){
 }
 
 
+#pragma mark numUFCallConstsMustRemove
+TEST_F(SetRelationTest, numUFCallConstsMustRemove){
+
+    iegenlib::setCurrEnv();
+    iegenlib::appendCurrEnv("colidx",
+            new Set("{[i]:0<=i &&i<nnz}"),         // Domain 
+            new Set("{[j]:0<=j &&j<m}"),           // Range
+            false,                                 // Not bijective.
+            iegenlib::Monotonic_NONE               // no monotonicity
+            );
+    iegenlib::appendCurrEnv("rowptr",
+        new Set("{[i]:0<=i &&i<m}"), 
+        new Set("{[j]:0<=j &&j<nnz}"), false, iegenlib::Monotonic_Increasing);
+    iegenlib::appendCurrEnv("diagptr",
+        new Set("{[i]:0<=i &&i<m}"), 
+        new Set("{[j]:0<=j &&j<nnz}"), false, iegenlib::Monotonic_Increasing);
+
+    Set *F1 = new Set("[m] -> {[i,ip,k,kp]: i < ip"
+                                   " && 0 <= i && i < m"
+                                  " && 0 <= ip && ip < m"
+                           " && rowptr(i) <= k && k < diagptr(i)"
+                         " && rowptr(ip) <= kp && kp < diagptr(ip)"
+                       " && diagptr(colidx(k)) = rowptr(1+colidx(k))"
+                       " && diagptr(colidx(k)) = rowptr(1+colidx(kp))"
+                       " && diagptr(k) = 1+colidx(kp)"
+                                     " && k = kp}");
+
+
+   // Adding constraints due to domain and range of UFCs
+
+   std::set<Exp> domainRangeConsts = F1->boundDomainRange();
+
+   int KPcount = F1->numUFCallConstsMustRemove(3, domainRangeConsts);
+
+   EXPECT_EQ( 2 , KPcount );
+
+   int Kcount = F1->numUFCallConstsMustRemove(2, domainRangeConsts);
+
+   EXPECT_EQ( 3 , Kcount );
+
+//std::cout<<"\n\nKcount = "<<Kcount<<"  KPcount = "<<KPcount<<"\n\n";
+
+   delete F1;
+}
+
+#pragma mark removeUFCallConsts
+TEST_F(SetRelationTest, removeUFCallConsts){
+
+    iegenlib::setCurrEnv();
+    iegenlib::appendCurrEnv("colidx",
+            new Set("{[i]:0<=i &&i<nnz}"),         // Domain 
+            new Set("{[j]:0<=j &&j<m}"),           // Range
+            false,                                 // Not bijective.
+            iegenlib::Monotonic_NONE               // no monotonicity
+            );
+    iegenlib::appendCurrEnv("rowptr",
+        new Set("{[i]:0<=i &&i<m}"), 
+        new Set("{[j]:0<=j &&j<nnz}"), false, iegenlib::Monotonic_Increasing);
+    iegenlib::appendCurrEnv("diagptr",
+        new Set("{[i]:0<=i &&i<m}"), 
+        new Set("{[j]:0<=j &&j<nnz}"), false, iegenlib::Monotonic_Increasing);
+
+    Set *F1 = new Set("[m] -> {[i,ip,k,kp]: i < ip"
+                                   " && 0 <= i && i < m"
+                                  " && 0 <= ip && ip < m"
+                           " && rowptr(i) <= k && k < diagptr(i)"
+                         " && rowptr(ip) <= kp && kp < diagptr(ip)"
+                       " && diagptr(colidx(k)) = rowptr(1+colidx(k))"
+                       " && diagptr(colidx(k)) = rowptr(1+colidx(kp))"
+                       " && diagptr(k) = 1+colidx(kp)"
+                                     " && k = kp}");
+
+   F1->removeUFCallConsts(3);
+
+   Set* ex1_F1 = new Set("[m] -> {[i,ip,k,kp]: i < ip"
+                                   " && 0 <= i && i < m"
+                                  " && 0 <= ip && ip < m"
+                           " && rowptr(i) <= k && k < diagptr(i)"
+                         " && rowptr(ip) <= kp && kp < diagptr(ip)"
+                       " && diagptr(colidx(k)) = rowptr(1+colidx(k))"
+                                     " && k = kp}");
+
+   EXPECT_EQ( ex1_F1->toISLString() , F1->toISLString() );
+
+
+   F1->removeUFCallConsts(2);
+
+   Set* ex2_F1 = new Set("[m] -> {[i,ip,k,kp]: i < ip"
+                                   " && 0 <= i && i < m"
+                                  " && 0 <= ip && ip < m"
+                           " && rowptr(i) <= k && k < diagptr(i)"
+                         " && rowptr(ip) <= kp && kp < diagptr(ip)"
+                                     " && k = kp}");
+
+   EXPECT_EQ( ex2_F1->toISLString() , F1->toISLString() );
+
+
+    Set *F2 = new Set("[m] -> {[i,ip,k,kp]: i < ip"
+                                   " && 0 <= i && i < m"
+                                  " && 0 <= ip && ip < m"
+                           " && rowptr(i) <= k && k < diagptr(i)"
+                       " && diagptr(colidx(k)) = rowptr(1+colidx(k))"
+                       " && diagptr(colidx(k)) = rowptr(1+colidx(kp))"
+
+                                     " && k = kp}");
+   
+   // Adding domain and range constraints before removing UFCall constraints
+   F2->boundDomainRange();
+   F2->removeUFCallConsts(2);
+
+   Set* ex_F2 = new Set("[m] -> {[i,ip,k,kp]: i < ip"
+                                   " && 0 <= i && i < m"
+                                  " && 0 <= ip && ip < m"
+                           " && rowptr(i) <= k && k < diagptr(i)"
+                                    " && k >= 0 && kp >= 0"
+                                    " && k < nnz && kp < nnz"
+                                    " && rowptr(i) >= 0"
+                                    " && diagptr(i) >= 0"
+                                    " && colidx(kp) >= 0"
+                                  " && colidx(kp) + 1 >= 0"
+                                  " && colidx(kp) + 1 >= 0"
+                              " && rowptr(1+colidx(kp)) >= 0"
+                                    " && rowptr(i) < nnz"
+                                    " && diagptr(i) < nnz"
+                                    " && colidx(kp) < m"
+                                  " && colidx(kp) < m"
+                                  " && colidx(kp) + 1 < m"
+                              " && rowptr(1+colidx(kp)) < nnz"
+
+                                     " && k = kp}");
+
+   EXPECT_EQ( ex_F2->toISLString() , F2->toISLString() );
+
+//std::cout<<"\n\nF1 = "<<F1->toISLString()<<"\n\n"; 
+
+   delete F1;
+}
