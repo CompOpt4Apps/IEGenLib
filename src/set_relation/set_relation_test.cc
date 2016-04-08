@@ -4071,8 +4071,8 @@ TEST_F(SetRelationTest, debugingForILU){
 }
 
 
-#pragma mark nUFCallConstsMustRemove
-TEST_F(SetRelationTest, nUFCallConstsMustRemove){
+#pragma mark numUFCallConstsMustRemove
+TEST_F(SetRelationTest, numUFCallConstsMustRemove){
 
     iegenlib::setCurrEnv();
     iegenlib::appendCurrEnv("colidx",
@@ -4103,11 +4103,11 @@ TEST_F(SetRelationTest, nUFCallConstsMustRemove){
 
    std::set<Exp> domainRangeConsts = F1->boundDomainRange();
 
-   int KPcount = F1->nUFCallConstsMustRemove(3, domainRangeConsts);
+   int KPcount = F1->numUFCallConstsMustRemove(3, domainRangeConsts);
 
    EXPECT_EQ( 2 , KPcount );
 
-   int Kcount = F1->nUFCallConstsMustRemove(2, domainRangeConsts);
+   int Kcount = F1->numUFCallConstsMustRemove(2, domainRangeConsts);
 
    EXPECT_EQ( 3 , Kcount );
 
