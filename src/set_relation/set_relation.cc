@@ -3469,11 +3469,11 @@ Relation* Relation::projectOut(int tvar)
 
 /*****************************************************************************/
 #pragma mark -
-/*************** VisitornUFCallConstsMustRemove *****************************/
-/*! Vistor Class used in nUFCallConstsMustRemove
+/*************** VisitorNumUFCallConstsMustRemove *****************************/
+/*! Vistor Class used in numUFCallConstsMustRemove
 ** 
 */
-class VisitornUFCallConstsMustRemove : public Visitor {
+class VisitorNumUFCallConstsMustRemove : public Visitor {
   private:
     int mTupleID;
     std::set<Exp> domainRangeConsts;
@@ -3482,11 +3482,11 @@ class VisitornUFCallConstsMustRemove : public Visitor {
     int count;
 
   public:
-    VisitornUFCallConstsMustRemove(int tupleID, std::set<Exp>& iDomainRangeConsts)
+    VisitorNumUFCallConstsMustRemove(int tupleID, std::set<Exp>& iDomainRangeConsts)
                   : mTupleID(tupleID), domainRangeConsts(iDomainRangeConsts),   
                   seenTupleVar(false), UFCLevel(0), count(0){}
 
-    virtual ~VisitornUFCallConstsMustRemove(){ }
+    virtual ~VisitorNumUFCallConstsMustRemove(){ }
 
     int getCount() { return count;}
 
@@ -3521,9 +3521,9 @@ class VisitornUFCallConstsMustRemove : public Visitor {
 **  However, it excludes constraints that are in the domainRangeConsts set.
 **  Since, these constraints are related to domain/range of UFCs in the set.
 */
-int SparseConstraints::nUFCallConstsMustRemove(int i, std::set<Exp>& domainRangeConsts)
+int SparseConstraints::numUFCallConstsMustRemove(int i, std::set<Exp>& domainRangeConsts)
 {
-    VisitornUFCallConstsMustRemove *v = new VisitornUFCallConstsMustRemove(
+    VisitorNumUFCallConstsMustRemove *v = new VisitorNumUFCallConstsMustRemove(
                                                i, domainRangeConsts);
     this->acceptVisitor(v);
 
@@ -3634,7 +3634,7 @@ void SparseConstraints::RemoveExpensiveConsts(std::set<int> parallelTvs,
             continue;
         }
 
-        nConstsToRemove = this->nUFCallConstsMustRemove(i, domainRangeConsts);
+        nConstsToRemove = this->numUFCallConstsMustRemove(i, domainRangeConsts);
 
         if ( nConstsToRemove > mNumConstsToRemove ){
             continue;

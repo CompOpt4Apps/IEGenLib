@@ -400,7 +400,7 @@ public:
     **  However, it excludes constraints that are in the domainRangeConsts set.
     **  Since, these constraints are related to domain/range of UFCs in the set.
     */
-    int nUFCallConstsMustRemove(int i, std::set<Exp>& domainRangeConsts);
+    int numUFCallConstsMustRemove(int i, std::set<Exp>& domainRangeConsts);
 
     /*! This function removes any constraints where this tuple variable i
     **  is argument to an UFC.
