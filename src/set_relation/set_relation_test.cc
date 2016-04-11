@@ -18,6 +18,7 @@
 
 #include "set_relation.h"
 #include "expression.h"
+#include "UFCallMap.h"
 #include "Visitor.h"
 
 #include <util/util.h>
