@@ -14,6 +14,7 @@
  */
 
 #include "set_relation.h"
+#include "UFCallMap.h"
 #include "Visitor.h"
 #include "TermPartOrdGraph.h"
 #include <stack>

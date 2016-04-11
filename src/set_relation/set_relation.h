@@ -25,7 +25,7 @@
 #include <util/util.h>
 #include "expression.h"
 #include "SubMap.h"
-#include "UFCallMap.h"
+//#include "UFCallMap.h"
 class Visitor;
 
 #include <set>
@@ -45,7 +45,7 @@ namespace iegenlib{
 
 class Set;
 class Relation;
-
+class UFCallMap;
 namespace parser{
 extern Set* parse_set(std::string set_string);
 extern Relation* parse_relation(std::string relation_string);
