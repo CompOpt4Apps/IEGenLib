@@ -29,7 +29,7 @@ are being added. You can get the latest source code from this git repository:
 ==== II. Quick Start ===============
 
   A. Building IEGenLib
-  B. Running the IEGenLib Calculator
+  B. Simplifying constraints set containing Uninterpreted Function Calls
   C. Using the IEGenLib Python Interface
 
 ---- A. Building IEGenLib ----------
