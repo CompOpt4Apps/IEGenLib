@@ -13,7 +13,8 @@
  * See ../../COPYING for details. <br>
  *
  *
- * HOW TO USE INTERFACAE TO SIMPLIFICATION ALGORITHM:
+ * HOW TO USE INTERFACAE TO SIMPLIFICATION ALGORITHM for
+ * simplifying constraints set containing Uninterpreted Function Calls:
  * 
  * (1) You need to define uninterpreted function calls (UFCs) that appear
  *        in constraints for iegenlib enviroment. The example in the main

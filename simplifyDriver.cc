@@ -1,9 +1,11 @@
 /*!
  * \file simplifyForPartialParallelDriver.cc
  *
- * \brief This file is a driver for using simplifyForPartialParallel function
- *        in IEgenLib. The function carries out simplification of data dependence
- *        relation in sparse matrices.
+ * This file is a driver for using simplifyForPartialParallel 
+ * and pertaining functions in IEgenLib.
+ * These functions can be used to carry out simplification of 
+ * data dependence relation in non-affine relations containing
+ * uninterpreted function calls.
  *
  * To compile, after building IEgenLib with:
 
@@ -37,12 +39,13 @@
  * See COPYING for details. <br>
  * 
  *
- * HOW TO USE INTERFACAE TO SIMPLIFICATION ALGORITHM:
+ * HOW TO USE INTERFACAE TO SIMPLIFICATION ALGORITHM for
+ * simplifying constraints set containing Uninterpreted Function Calls:
  * 
  * (1) You need to define uninterpreted function calls (UFCs) that appear
  *        in constraints for iegenlib enviroment. The example in the main
- *        function shows how to do this. Note that, you need to this only once
- *        for sets that have same UFCs during one run
+ *        function shows how to do this. Note that, you need to do this
+ *        only once for sets that have same UFCs during one run
  *
  * (2) You need to put constraints in iegenlib Set (or Relation).
  * 
