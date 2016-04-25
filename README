@@ -4,23 +4,43 @@ README for IEGenLib
 IEGenLib is a library that represents and manipulates integer sets and
 relations that have affine and uninterpreted function constraints.
 
-====  I. Unpacking the Distribution ===================
+Contents of this README:
 
-The distribution is shipped as a tar file. When you unpack the tar
-file it creates a directory that is the root of the distribution.
+I.   Getting The Source Code
+II.  Quick Start
+        A. Building IEGenLib
+        B. Simplifying constraints set containing Uninterpreted Function Calls
+        C. Using the IEGenLib Python bindings
+III. Distribution Organization
+IV.  Building IEGenLib from Source
+V.   Running Tests
+VI.  Documentation
+VII. Contact
 
-    tar xzvf iegenlib-1.0.0.tgz
+
+====  I. Getting The Source Code ===================
+
+The IEGenLib library is being actively developed, and new functionalities
+are being added. You can get the latest source code from this git repository:
+
+    git clone https://github.com/CompOpt4Apps/IEGenLib
+
 
 ==== II. Quick Start ===============
 
-  A. Building IEGenLib and the IEGenLib Calculator
-  B. Running the IEGenLib Calculator
+  A. Building IEGenLib
+  B. Simplifying constraints set containing Uninterpreted Function Calls
   C. Using the IEGenLib Python Interface
 
----- A. Building IEGenLib and the IEGenLib calculator ----------
+---- A. Building IEGenLib ----------
 
-After unpacking the distribution build and install using the standard
-sequence of commands.
+If you want to do a quick build, just run:
+    ./configure
+    make
+    make test
+ 
+If you want to do a quick build and install with python binding enabled, run:
+
     ./configure --build-python
     make
     make test
@@ -29,21 +49,26 @@ sequence of commands.
 This will install into a directory IEGenLib/iegenlib
 Set IEGEN_HOME to /full/path/to/IEGenLib/iegen
 
-Choosing an alternative installation directory is covered below.
+Please note there are requirements for python binding. These requirements and 
+choosing an alternative installation directory is covered in the section IV.
 
----- B. Running the IEGenLib calculator ----------
-WARNING: declaring function inverses in the calculator doesn't work now
 
-The iegenlib_calc binary can be executed to enter sets and relations
-and operations on them.  When run, the iegenlib_calc suggests examples. 
+---- B. Simplifying constraints set containing Uninterpreted Function Calls ---
 
-        $IEGEN_HOME/bin/iegenlib_calc
+One of the biggest functionalites currently implemented in IEGenLib is
+simplifying sets of constraints containing uninterpreted function calls.
+These sets can represent non-affine relations that result from
+data dependence analysis of sparse matrix computation. The simplified sets
+can be used for generating efficient inspectors in Inspector/Executor strategy.
 
-The program will present a prompt for an input string. You may input
-any valid string and it will return the interpreted string and a
-formatted dot file to a file called set_relation.dot. The calculator
-continues until a blank line is input or [CTRL][D] is entered.
-       
+After building IEGenLib library, this functionality can be used outside IEGenLib 
+independently or get integrated into other libraries.
+The driver file that shows how to do this, simplifyDriver.cc, is located
+in home directory of IEGenLib, just next to this README file.
+You can also have a look at the main test case for the functionality that is
+located in the chillusage_test. There are also various test cases for 
+sub-functionalities pertaining to simplification in the test cases.
+
 
 ---- C. Using the IEGenLib Python bindings ----------
 
@@ -151,7 +176,7 @@ output; graphviz is needed to visualize the dot output.
 
 ==== IV. Building IEGenLib from Source =======================
 
-    Build Command Sequence
+    Build Command Sequence without python bindings
         ./configure
         make
         make install
@@ -211,7 +236,7 @@ iegen-LINUX64/ or iegen-MacOSX/ directory as are shipped in the
 distribution.
 
 
-===== V. Running Tests =====
+==== V. Running Tests =====
 
 The iegen/bin/run_iegenlib_tests binary can be executed to run the tests of 
 the various components of IEGenLib. Additionally, from the root of the 
@@ -226,7 +251,7 @@ and introductory documentation is at:
 
     http://code.google.com/p/googletest/wiki/V1_6_Primer
 
-===== VI. Documentation =====
+==== VI. Documentation =====
 
 To create the doxygen documentation, run the following command:
 
@@ -236,7 +261,7 @@ An index.html file will be created in the distribution root directory, in
 doc/html/. A latex pdf file, called refman.pdf will also be created, in the 
 doc/latex/ directory. 
 
-===== VII. Debug and Release Builds =====
+==== VII. Debug and Release Builds =====
 
 The default build is the debug build.  It is set by cmake in the configure 
 script with -DCMAKE_BUILD_TYPE:STRING=Debug.  The compiler options for the 
@@ -249,13 +274,9 @@ To show actual build commands, you can run the verbose version of the build:
   
   make install VERBOSE=1
 
-===== Contact =====
+==== VII. Contact =====
 
-For more information about the PIES project, please visit this URL:
+For more information please contact:
 
-http://www.cs.colostate.edu/hpc/PIES/
-
-Or, please contact the PIES project director:
-
-Dr. Michelle Strout, mstrout@cs.colostate.edu
+Dr. Michelle Strout, mstrout@cs.arizona.edu
 
