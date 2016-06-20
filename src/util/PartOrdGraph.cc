@@ -157,19 +157,16 @@ void PartOrdGraph::equal(unsigned int a, unsigned int b) {
 // Implements relationships described in file header.
 void PartOrdGraph::transitiveClosure() {
     
-    // longest possible path is mN
-    for (unsigned int p=0; p<mN; p++) {
-        // iterate over all rows i
-        for (unsigned int i=0; i<mN; i++) {
-            // iterate over all columns k
-            for (unsigned int k=0; k<mN; k++) {
-                // iterate over all j
-                for (unsigned int j=0; j<mN; j++) {
-                    mAdjacencyMatrix[ getIndex(i,k) ]
-                        = update( mAdjacencyMatrix[ getIndex(i,k) ],
-                                  meet( mAdjacencyMatrix[ getIndex(i,j) ],
-                                        mAdjacencyMatrix[ getIndex(j,k) ]) );                    
-                }
+    // iterate over all rows i
+    for (unsigned int i=0; i<mN; i++) {
+        // iterate over all columns k
+        for (unsigned int k=0; k<mN; k++) {
+            // iterate over all j
+            for (unsigned int j=0; j<mN; j++) {
+                mAdjacencyMatrix[ getIndex(i,k) ]
+                    = update( mAdjacencyMatrix[ getIndex(i,k) ],
+                              meet( mAdjacencyMatrix[ getIndex(i,j) ],
+                                    mAdjacencyMatrix[ getIndex(j,k) ]) );                    
             }
         }
     }
