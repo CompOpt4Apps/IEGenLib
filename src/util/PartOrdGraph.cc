@@ -157,31 +157,23 @@ void PartOrdGraph::equal(unsigned int a, unsigned int b) {
 // Implements relationships described in file header.
 void PartOrdGraph::transitiveClosure() {
     
-    // iterate over all rows i
-    for (unsigned int i=0; i<mN; i++) {
-        // iterate over all columns k
-        for (unsigned int k=0; k<mN; k++) {
-            // iterate over all j
+    // iterate over all nodes k
+    for (unsigned int k=0; k<mN; k++) {
+        // iterate over all rows k
+        for (unsigned int i=0; i<mN; i++) {
+            // iterate over all columns j
             for (unsigned int j=0; j<mN; j++) {
-                mAdjacencyMatrix[ getIndex(i,k) ]
-                    = update( mAdjacencyMatrix[ getIndex(i,k) ],
-                              meet( mAdjacencyMatrix[ getIndex(i,j) ],
-                                    mAdjacencyMatrix[ getIndex(j,k) ]) );                    
+                mAdjacencyMatrix[ getIndex(i,j) ]
+                    = update( mAdjacencyMatrix[ getIndex(i,j) ],
+                              meet( mAdjacencyMatrix[ getIndex(i,k) ],
+                                    mAdjacencyMatrix[ getIndex(k,j) ]) );                    
+                if (isNonStrict(i,j) && isNonStrict(j,i)) {
+                    mAdjacencyMatrix[ getIndex(i,j) ] = EQUAL;        
+                    mAdjacencyMatrix[ getIndex(j,i) ] = EQUAL;   
+                }
             }
         }
     }
-    
-    // Check for equalities and denote them.               
-     // iterate over all rows i
-    for (unsigned int i=0; i<mN; i++) {
-        // iterate over all columns k
-        for (unsigned int k=0; k<i; k++) {
-            if (isNonStrict(i,k) && isNonStrict(k,i)) {
-                mAdjacencyMatrix[ getIndex(i,k) ] = EQUAL;        
-                mAdjacencyMatrix[ getIndex(k,i) ] = EQUAL;   
-            }
-        }
-    }     
 }
 
 bool PartOrdGraph::isStrict(unsigned int a, unsigned int b) {
