@@ -153,8 +153,10 @@ void PartOrdGraph::equal(unsigned int a, unsigned int b) {
     updatePair(a,b,EQUAL);
 }
 
-// Most straight-forward implementation.  Not efficient.
 // Implements relationships described in file header.
+// This implementation is an adaptation from Floyd Warshall
+// F-W calculates all pairs shortest paths in O(n^3)
+// transitive closure is an easier problem than this, the same algorithm works
 void PartOrdGraph::transitiveClosure() {
     
     // iterate over all nodes k
