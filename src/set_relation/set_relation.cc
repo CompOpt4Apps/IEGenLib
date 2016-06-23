@@ -2938,9 +2938,9 @@ void VisitorBoundDomainRange::preVisitUFCallTerm(UFCallTerm * t){
     // Determine what the output arity of this particular UF call is
     // taking into consideration that it could be indexed.
     unsigned int out_arity = range->arity();
-    if (uf_call->isIndexed()) {
-        out_arity = 1; // only one element is being accessed
-    } 
+//    if (uf_call->isIndexed()) {
+//        out_arity = 1; // only one element is being accessed
+//    } 
 
     for (unsigned int i=0; i<out_arity; i++) {    
         // Create a temporary variable and maintain correspondence 
@@ -3710,7 +3710,7 @@ Relation* Relation::simplifyForPartialParallel(std::set<int> parallelTvs)
     // starting from inner most loops. We also do not project out first 2 loops
     // that are outer most loops, since they are going to be parallelized.
     // [i1,i1p,i2, i2p, ...] :  we keep i1 and i1p
-    for (int i = lastTV ; i >= 2 ; i-- ) {
+    for (int i = lastTV ; i >= 0 ; i-- ) {
 
         if ( parallelTvs.find(i) != parallelTvs.end() ){
             continue;

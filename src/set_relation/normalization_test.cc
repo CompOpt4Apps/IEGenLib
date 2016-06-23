@@ -822,10 +822,9 @@ TEST_F(NormalizationTest, buildingNormalize) {
     EXPECT_EQ("{ [i, j, k] : __tv0 - tau(__tv2)[0] = 0 "
                 "&& __tv1 - tau(__tv2)[1] = 0 }", s->toString() );
     s->normalize();
-    Set* expected = new Set("{ [i, j, k] : i - tau(k)[0] = 0 && "
-                            "j - tau(k)[1] = 0 && i >= 0 && j >= 0 && "
-                            "k >= 0 && -i + M - 1 >= 0 && -j + P - 1 >= 0 && "
-                            "-k + N - 1 >= 0 }");
+    Set* expected = new Set("{[i,j,k] : i=tau(k)[0] && j=tau(k)[1]"
+                            " && k >= 0 && tau(k)[0] >= 0 && tau(k)[1] >= 0"
+                            " && k < N && tau(k)[0] < M && tau(k)[1] < P }");
 
     EXPECT_EQ(expected->toString(),s->toString());
 
