@@ -67,7 +67,9 @@
  * 
  * (7) Print out result (if not NULL) using toISLString() function.  
  
- *  We have demonstrated these steps with two example codes: ILU0 and Gauss-Seidel
+ *  We have demonstrated these steps in the simplify function
+ *  This function reads information from a JSON file (inputFile), and applies
+ *  the simplfication algorithm to the sets found in the file. 
  */
 
 
@@ -95,8 +97,8 @@ void EXPECT_EQ(string a, string b);
 void EXPECT_EQ(Relation *a, Relation *b);
 int str2int(string str);
 
-// Reads information from a JSON file, and applies the simplfication
-// to sets found in the file
+// Reads information from a JSON file (inputFile), and applies
+// the simplfication algorithm to the sets found in the file. 
 void simplifiy(string inputFile)
 {
 
@@ -108,8 +110,8 @@ void simplifiy(string inputFile)
   json data;
   in >> data;
 
-  for(size_t p = 0; p < data.size(); ++p){
-  for (size_t i = 0; i < data[p].size(); ++i){
+  for(size_t p = 0; p < data.size(); ++p){    // Dependence relations (DR) found in the file
+  for (size_t i = 0; i < data[p].size(); ++i){// Conjunctions found for one DR in the file
 
     // (1)
     // Introduce the uninterpreted function symbols to enviroment, and indicate
