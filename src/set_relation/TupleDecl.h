@@ -98,6 +98,7 @@ public:
     bool elemIsConst(unsigned int elem_loc) const;
     int elemConstVal(unsigned int elem_loc) const;
     std::string elemVarString(unsigned int elem_loc) const;
+    unsigned int getSize(){ return mSize; }
 
     //! Returns an appropriate term for this tuple element.
     //! If the view location is a constant then will use that

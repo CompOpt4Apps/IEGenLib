@@ -37,9 +37,9 @@
           "operator" : "<="
         }
       ],
-      "Do Not Project" :
+      "Do Not Project Out" :
       [
-        "0", "4"
+        "i", "ip"
       ],
       "Remove Constraints" : "2"
     },

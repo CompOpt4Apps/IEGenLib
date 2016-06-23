@@ -160,8 +160,16 @@ void simplifiy(string inputFile)
     if( i == 0 ){  // Read these data only once. 
                    // They are stored in the first conjunction.
 
-      for (size_t j = 0; j < data[p][0]["Do Not Project"].size(); ++j){
-        int tvN = str2int(data[p][0]["Do Not Project"][j].as<string>());
+      for (size_t j = 0; j < data[p][0]["Do Not Project Out"].size(); ++j){
+        string tvS = data[p][0]["Do Not Project Out"][j].as<string>();
+        int tvN = 0;
+        iegenlib::TupleDecl td = rel->getTupleDecl();
+        for (unsigned int c = 0 ; c < td.getSize() ; c++){
+          if( tvS == td.elemToString(c) ){
+            tvN = c;
+            break;
+          }
+        }
         parallelTvs.insert( tvN );
       }
     }

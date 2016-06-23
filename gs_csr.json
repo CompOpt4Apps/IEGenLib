@@ -26,9 +26,9 @@
       [
 
       ],
-      "Do Not Project" :
+      "Do Not Project Out" :
       [
-        "0", "2"
+        "i", "ip"
       ],
       "Remove Constraints" : "0"
     },

@@ -41,23 +41,14 @@
  * 
  * (7) Print out result (if not NULL) using toISLString() function. 
  
- *  We have demonstrated these steps in the simplify function
- *  This function reads information from a JSON file (inputFile), and applies
- *  the simplfication algorithm to the sets found in the file.
+ *  We have demonstrated these steps with two example test cases ILU and Gauss-Seidel 
  */
 
 #include <gtest/gtest.h>
 
 #include <iegenlib.h>
-#include "parser/jsoncons/json.hpp"
-
-using jsoncons::json;
 using namespace iegenlib;
 using namespace std;
-
-// Helper functions
-bool printRelation(string msg, Relation *rel);
-int str2int(string str);
 
 /*!
  * \class ChillUsageTest
@@ -242,128 +233,17 @@ TEST_F(ChillUsageTest, AddUFConstraints)
     delete expect1;
 }
 
-// Reads information from a JSON file, and applies the simplfication
-// to sets found in the file
-void simplifiy(string inputFile)
-{
 
-  iegenlib::setCurrEnv();
-  std::set<int> parallelTvs;
-  // (0)
-  // Read the data from inputFile
-  ifstream in(inputFile);
-  json data;
-  in >> data;
-
-  for(size_t p = 0; p < data.size(); ++p){    // Dependence relations (DR) found in the file
-  for (size_t i = 0; i < data[p].size(); ++i){// Conjunctions found for one DR in the file
-
-    // (1)
-    // Introduce the uninterpreted function symbols to enviroment, and indicate
-    // their domain, range, whether they are bijective, or monotonic.
-    if( i == 0 ){  // Read these data only once. 
-                   // They are stored in the first conjunction.
-      for (size_t j = 0; j < data[p][i]["UFS"].size(); ++j){
-
-        bool bijective = false;
-        if( data[p][i]["UFS"][j]["Bijective"].as<string>() == string("true") ){
-          bijective = true;
-        }
-        iegenlib::MonotonicType monotonicity = iegenlib::Monotonic_NONE;
-        if(data[p][i]["UFS"][j]["Monotonicity"].as<string>() == 
-                                     string("Monotonic_Nondecreasing")){
-          monotonicity = iegenlib::Monotonic_Nondecreasing;
-        } else if(data[p][i]["UFS"][j]["Monotonicity"].as<string>() == 
-                                        string("Monotonic_Increasing")){
-          monotonicity = iegenlib::Monotonic_Increasing;
-        }
-
-        iegenlib::appendCurrEnv(data[p][i]["UFS"][j]["Name"].as<string>(),// Name
-            new Set(data[p][i]["UFS"][j]["Domain"].as<string>()),   // Domain 
-            new Set(data[p][i]["UFS"][j]["Range"].as<string>()),    // Range
-            bijective,                                              // Bijective?
-            monotonicity                                            // Monotonicity?
-                                );
-      }
-    }
-
-    // (2)
-    // Putting constraints in an iegenlib::Relation
-    // Reading original set.
-    Relation* rel = new Relation(data[p][i]["Relation"].as<string>());
-
-    // Reading expected outputs
-    Relation *ex_rel = NULL;
-    string expected_str = data[p][i]["Expected"].as<string>();
-    if ( expected_str != string("Not Satisfiable") ){
-      ex_rel = new Relation(expected_str);
-    }
-    
-    // (3)
-    // Specify loops that are going to be parallelized, so we are not going to
-    // project them out.
-    if( i == 0 ){  // Read these data only once. 
-                   // They are stored in the first conjunction.
-
-      for (size_t j = 0; j < data[p][0]["Do Not Project"].size(); ++j){
-        int tvN = str2int(data[p][0]["Do Not Project"][j].as<string>());
-        parallelTvs.insert( tvN );
-      }
-    }
- 
-    // (4)
-    // Applying heuristic for removing expensive iterators
-    int numConstToRemove = str2int(data[p][0]["Remove Constraints"].as<string>());
-    rel->RemoveExpensiveConsts(parallelTvs, numConstToRemove );
-
-    // (5)
-    // Add user defined constraints
-    Relation *rel_extend;
-    for (size_t j = 0; j < data[p][0]["User Defined"].size(); ++j){
- 
-      rel_extend = rel->addUFConstraints(
-                    data[p][0]["User Defined"][j]["Func1"].as<string>(),
-                    data[p][0]["User Defined"][j]["operator"].as<string>(),
-                    data[p][0]["User Defined"][j]["Func2"].as<string>()
-                                            );
-      *rel = *rel_extend;
-      delete rel_extend;
-
-    }
-
-    // (6)
-    // Simplifyng the constraints relation
-    Relation* rel_sim = rel->simplifyForPartialParallel(parallelTvs);
-
-    // (7)
-    // Print out results: if not satisfiable returns NULL
-    char buffer [50];
-    sprintf (buffer, "Relation #%d.%d simplified = ", int(p)+1, int(i)+1);
-    // printRelation(string(buffer), rel_sim);
-
-    // Verify the results 
-    if( ex_rel != NULL && rel_sim != NULL) {
-      EXPECT_EQ(ex_rel->toISLString(), rel_sim->toISLString());
-    } else {
-      EXPECT_EQ(ex_rel, rel_sim);
-    }
-
-    delete rel;   
-    delete rel_sim;
-  }
-  } // End of p loop
-}
-
-/*! Dependence simplification for GS.
+/*! Test cases for CSR Gauss-Seidel code's data access dependencies.
 */
 TEST_F(ChillUsageTest, GS_CSR_DepSimplification)
 {
 
 /* Following is the Gauss-Seidel code. Dependence analysis of this code
-   would identify 1 pair of read/write data accesses (in S1) that may
-   produce data dependences. This pair produces two distinct conjunctions 
-   considering the ordering of accesses (Flow and Anti dependence). Overall, 
-   there are 2 distinct conjunctions for the complete dependence relation.
+   would identify 1 pair of read/write (inbetween S1)
+   data accesses that may be a data dependence. This pair produces two 
+   distinct conjunctions considering the ordering of accesses. Overall there 
+   are 2 distinct conjunctions for the complete dependence relation.
    
    We will apply simplififcation algorithm to these 2 conjunctions.
 
@@ -372,18 +252,120 @@ for (i=0; i < N; i++) {
 S1:     y[i] -= values[j]*y[colidx[j]];
     }
 }
-
-Source of data accesses:
-
-1) a read in S1 (y[colidx[j]]);  a write in S1 (y[i]); 
-
 */
 
-  simplifiy(string("../gs_csr.json"));
+    // (1)
+    // Introduce the UFCalls to enviroment, and indicate their domain, range
+    // whether they are bijective, or monotonic.
+    iegenlib::setCurrEnv();
+    iegenlib::appendCurrEnv("colidx",
+            new Set("{[i]:0<=i &&i<nnz}"),      // Domain 
+            new Set("{[j]:0<=j &&j<m}"),        // Range
+            false,                              // Bijective?!
+            iegenlib::Monotonic_NONE            // monotonicity
+            );
+    iegenlib::appendCurrEnv("rowptr",
+        new Set("{[i]:0<=i &&i<m}"), 
+        new Set("{[j]:0<=j &&j<nnz}"), false, iegenlib::Monotonic_NONE);
 
+
+    // (2)
+    // Putting constraints in an iegenlib::Relation
+    // Flow dependence checking for: read in S1 (y[colidx[j]]); write in S1 (y[i]);
+
+    Relation* flow = new Relation("{ [i,j] -> [ip,jp] : i<ip && i=colidx(jp) "
+                     "&& 0 <= i && i < m && 0 <= ip && ip < m "
+                        "&& rowptr(i) <= j && j < rowptr(i+1) "
+                   "&& rowptr(ip) <= jp && jp < rowptr(ip+1) }");
+
+    // Expected outputs 
+    Relation* ex_flow = new Relation("{ [i] -> [ip,jp] : i=colidx(jp) "
+                              "&& colidx(jp) < ip && ip < m-1 "
+                                  "&& rowptr(i) < rowptr(i+1) "
+                    "&& rowptr(ip) <= jp && jp < rowptr(ip+1) "
+     "&& colidx(jp) >= 0 && rowptr(i) >= 0 && rowptr(ip) >= 0 "
+                  "&& rowptr(i+1) < nnz && rowptr(ip+1) < nnz}");
+
+
+    // (3)
+    // Specify loops that are going to be parallelized, so we are not going to
+    // project them out.
+    std::set<int> parallelTvs;
+    parallelTvs.insert(0);
+    parallelTvs.insert(2);
+
+    // (4)
+    // Applying heuristic for removing expensive iterators
+    flow->RemoveExpensiveConsts(parallelTvs, 0);
+
+    // (5)
+    // Add user defined constraints
+
+    // (6)
+    // Simplifyng the constraints relation
+    Relation* flow_sim = flow->simplifyForPartialParallel(parallelTvs);
+
+    // (7)
+    // Print out results: if not satisfiable returns NULL
+
+    // Verify the results 
+    if ( ex_flow != NULL && flow_sim != NULL) {
+        EXPECT_EQ(ex_flow->toISLString(), flow_sim->toISLString());
+    } else {
+        EXPECT_EQ(ex_flow, flow_sim);
+    }
+
+
+    // (2)
+    // Putting constraints in an iegenlib::Relation
+    // Anti dependence checking for: read in S1 (y[colidx[j]]); write in S1 (y[i]);
+
+    Relation* anti = new Relation("{ [i,j] -> [ip,jp] : ip<i && i=colidx(jp) "
+                     "&& 0 <= i && i < m && 0 <= ip && ip < m "
+                        "&& rowptr(i) <= j && j < rowptr(i+1) "
+                   "&& rowptr(ip) <= jp && jp < rowptr(ip+1) }");
+
+
+    Relation* ex_anti = new Relation("{ [i] -> [ip,jp] : i=colidx(jp) "
+                               "&& 0 <= ip && ip < colidx(jp) "
+                                  "&& rowptr(i) < rowptr(i+1) "
+                    "&& rowptr(ip) <= jp && jp < rowptr(ip+1) "
+     "&& colidx(jp) < m-1 && rowptr(i) >= 0 && rowptr(ip) >= 0 "
+                  "&& rowptr(i+1) < nnz && rowptr(ip+1) < nnz}");
+
+
+    // (4)
+    // Applying heuristic for removing expensive iterators
+    flow->RemoveExpensiveConsts(parallelTvs, 0);
+
+    // (5)
+    // Add user defined constraints
+
+    // (6)
+    // Simplifyng the constraints relation
+    Relation* anti_sim = anti->simplifyForPartialParallel(parallelTvs);
+
+    // (7)
+    // Print out results: if not satisfiable returns NULL
+
+    // Verify the results 
+    if ( ex_anti != NULL && anti_sim != NULL) {
+        EXPECT_EQ(ex_anti->toISLString(), anti_sim->toISLString());
+    } else {
+        EXPECT_EQ(ex_anti, anti_sim);
+    }
+
+
+    delete ex_flow;
+    delete ex_anti;
+    delete flow;
+    delete anti;
+    delete flow_sim;
+    delete anti_sim;
 }
 
-/*! Test cases CSR ILU code's data access dependencies
+
+/*! Test cases for CSR ILU code's data access dependencies
 */
 TEST_F(ChillUsageTest, ILU_CSR_DepSimplification)
 {
@@ -416,39 +398,1072 @@ S2:     v[j1] -= tmp*v[j2];
     }
   }
 }
-
-Source of data accesses:
-
-1) a read in S1 (v[k]);  a write in S1 (v[k]); 
-2) a read in S1 (v[diag[col[k]]]);  a write in S1 (v[k]);
-3) a write in S1 (v[k]);  a write in S2 (v[j1]);
-4) a write in S1 (v[k]);  a read in S2 (v[j2]);
-5) a read in S1 (v[diag[col[k]]]);  a write in S2 (v[j1]);
-6) a write in S2 (v[j1]);  a write in S2 (v[j1]);
-7) a read in S1 (v[k]);  a write in S2 (v[j1]);
-8) a read in S2 (v[j2]);  a write in S2 (v[j1]);
-
 */
 
-  simplifiy(string("../ilu_csr.json"));
+    // (1)
+    // Introduce the UFCalls to enviroment, and indicate their domain, range
+    // whether they are bijective, or monotonic.
+    iegenlib::setCurrEnv();
+    iegenlib::appendCurrEnv("colidx",
+            new Set("{[i]:0<=i &&i<nnz}"),      // Domain 
+            new Set("{[j]:0<=j &&j<m}"),        // Range
+            false,                              // Bijective?!
+            iegenlib::Monotonic_NONE            // monotonicity
+            );
+    iegenlib::appendCurrEnv("rowptr",
+        new Set("{[i]:0<=i &&i<m}"), 
+        new Set("{[j]:0<=j &&j<nnz}"), false, iegenlib::Monotonic_Increasing);
+    iegenlib::appendCurrEnv("diagptr",
+        new Set("{[i]:0<=i &&i<m}"), 
+        new Set("{[j]:0<=j &&j<nnz}"), false, iegenlib::Monotonic_Increasing);
 
+
+/* The first pair of possible data access dependences is comming from:
+   a read in S1 (v[k]);  a write in S1 (v[k]);
+   A flow (F1) or anti (A1) dependence can exist for these access pairs.
+
+for(int i=0; i < n; i++)
+{
+  for(int k= row[i]; k < diag[i]; k++)
+  {
+S1: v[k] = v[k] / v[diag[col[k]]]; 
+    tmp = v[k];
+
+    int j1 = k + 1, j2 = diag[col[k]] + 1;
+
+    while (j1 < row[i + 1] && j2 < row[col[k] + 1])
+    {
+      if (col[j1] < col[j2]) ++j1;
+      else if (col[j2] < col[j1]) ++j2;
+      else {
+S2:     v[j1] -= tmp*v[j2]; 
+        ++j1; ++j2;
+      }
+    }
+  }
 }
+*/
 
-// Helper functions
-bool printRelation(string msg, Relation *rel){
+    // (2)
+    // Putting constraints in an iegenlib::Relation
+    // Anti dependence checking for: read in S1 (v[k]); write in S1 (v[k]);
 
-    if ( rel ) {
+    Relation *A1 = new Relation("[m] -> {[i,k,j1,j2] -> [ip,kp,j1p,j2p]: ip < i"
+                                   " && 0 <= i && i < m1"
+                                  " && 0 <= ip && ip < m"
+                           " && rowptr(i) <= k && k < diagptr(i)"
+                         " && rowptr(ip) <= kp && kp < diagptr(ip)"
+                                   " && k < j1 && j1 < rowptr(1+i)"
+                                 " && kp < j1p && j1p < rowptr(1+ip)"
+                  " && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k))"
+                " && diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp))"
+                             " && colidx(j1) = colidx(j2)"
+                             " && colidx(j1p) = colidx(j2p)"
 
-        cout<<"\n\n"<<msg<<rel->toISLString()<<"\n\n";
+                                     " && k = kp }");
+
+    // expected output  (for testing purposes)
+    Relation *ex_A1 = NULL;
+
+    // (3) 
+    // Specify loops that are going to be parallelized, so we are not going to
+    // project them out. Here "i" and "ip"
+    std::set<int> parallelTvs;
+    parallelTvs.insert(0);
+    parallelTvs.insert(4);
+
+    // (4)
+    // Applying heuristic for removing expensive iterators
+    A1->RemoveExpensiveConsts(parallelTvs, 2);
+
+    // (5)
+    // How to add user defined constraint
+    Relation *A1_extend = A1->addUFConstraints("rowptr","<=", "diagptr");
+
+
+    // (6)
+    // Simplifyng the constraints relation
+    Relation *A1_sim = A1_extend->simplifyForPartialParallel(parallelTvs);
+
+
+    // (7)
+    // Print out results: if not satisfiable returns NULL
+
+    // Verify the results 
+    if ( ex_A1 != NULL && A1_sim != NULL) {
+        EXPECT_EQ(ex_A1->toISLString(), A1_sim->toISLString());
     } else {
-
-        cout<<"\n\n"<<msg<<"Not Satisfiable"<<"\n\n";
+        EXPECT_EQ(ex_A1, A1_sim);
     }
 
-    return true;
+
+    // (2)
+    // Putting constraints in an iegenlib::Relation
+    // Flow dependence checking for: read in S1 (v[k]); write in S1 (v[k]);
+
+    Relation *F1 = new Relation("[m] -> {[i,k,j1,j2] -> [ip,kp,j1p,j2p]: i < ip"
+                                   " && 0 <= i && i < m"
+                                  " && 0 <= ip && ip < m"
+                           " && rowptr(i) <= k && k < diagptr(i)"
+                         " && rowptr(ip) <= kp && kp < diagptr(ip)"
+                                   " && k < j1 && j1 < rowptr(1+i)"
+                                 " && kp < j1p && j1p < rowptr(1+ip)"
+                  " && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k))"
+                " && diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp))"
+                             " && colidx(j1) = colidx(j2)"
+                             " && colidx(j1p) = colidx(j2p)"
+
+                                     " && k = kp}");
+
+    Relation *ex_F1 = NULL;
+
+
+    // (4)
+    // Applying heuristic for removing expensive iterators
+    F1->RemoveExpensiveConsts(parallelTvs, 2);
+
+    // (5)
+    // Adding user defined constraint
+    Relation *F1_extend = F1->addUFConstraints("rowptr","<=", "diagptr");
+
+    // (6)
+    // Simplifyng the constraints relation
+    Relation *F1_sim = F1_extend->simplifyForPartialParallel(parallelTvs);
+
+    // (7)
+    // Print out results
+
+    // Verify the results 
+    if ( ex_F1 != NULL && F1_sim != NULL) {
+        EXPECT_EQ(ex_F1->toISLString(), F1_sim->toISLString());
+    } else {
+        EXPECT_EQ(ex_F1, F1_sim);
+    }
+
+    delete A1;
+    delete F1;
+    delete A1_extend;
+    delete A1_sim;
+    delete F1_extend;
+    delete F1_sim;
+
+    // ----------------------------
+
+
+/* The second pair of possible data access dependences is comming from:
+   a read in S1 (v[diag[col[k]]]);  a write in S1 (v[k]);
+   A flow (F2) or anti (A2) dependence can exist for these access pairs.
+
+for(int i=0; i < n; i++)
+{
+  for(int k= row[i]; k < diag[i]; k++)
+  {
+S1: v[k] = v[k] / v[diag[col[k]]]; 
+    tmp = v[k];
+
+    int j1 = k + 1, j2 = diag[col[k]] + 1;
+
+    while (j1 < row[i + 1] && j2 < row[col[k] + 1])
+    {
+      if (col[j1] < col[j2]) ++j1;
+      else if (col[j2] < col[j1]) ++j2;
+      else {
+S2:     v[j1] -= tmp*v[j2]; 
+        ++j1; ++j2;
+      }
+    }
+  }
 }
-int str2int(string str){
-  int i;
-  sscanf (str.c_str(),"%d",&i);
-  return i;
+*/
+
+    Relation *A2 = new Relation("[m] -> {[i,k,j1,j2] -> [ip,kp,j1p,j2p]: ip < i"
+                                   " && 0 <= i && i < m"
+                                  " && 0 <= ip && ip < m"
+                           " && rowptr(i) <= k && k < diagptr(i)"
+                         " && rowptr(ip) <= kp && kp < diagptr(ip)"
+                                   " && k < j1 && j1 < rowptr(1+i)"
+                                 " && kp < j1p && j1p < rowptr(1+ip)"
+                  " && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k))"
+                " && diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp))"
+                             " && colidx(j1) = colidx(j2)"
+                             " && colidx(j1p) = colidx(j2p)"
+
+                                     " && k = diagptr(colidx(kp)) }");
+
+    Relation *ex_A2 = NULL;
+
+    Relation *F2 = new Relation("[m] -> {[i,k,j1,j2] -> [ip,kp,j1p,j2p]: i < ip"
+                                   " && 0 <= i && i < m"
+                                  " && 0 <= ip && ip < m"
+                           " && rowptr(i) <= k && k < diagptr(i)"
+                         " && rowptr(ip) <= kp && kp < diagptr(ip)"
+                                   " && k < j1 && j1 < rowptr(1+i)"
+                                 " && kp < j1p && j1p < rowptr(1+ip)"
+                  " && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k))"
+                " && diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp))"
+                             " && colidx(j1) = colidx(j2)"
+                             " && colidx(j1p) = colidx(j2p)"
+
+                                     " && k = diagptr(colidx(kp))}");
+
+    Relation *ex_F2 = NULL;
+
+
+    //--- Simplifying Anti dependence
+
+    // (4)
+    // Applying heuristic for removing expensive iterators
+    A2->RemoveExpensiveConsts(parallelTvs, 2);
+
+    // Adding user defined constraint
+    Relation *A2_extend = A2->addUFConstraints("rowptr","<=", "diagptr");
+
+    // Simplifyng the constraints relation
+    Relation *A2_sim = A2_extend->simplifyForPartialParallel(parallelTvs);
+
+    // (7)
+    // Print out results
+ 
+
+    // Verify the results 
+    if ( ex_A2 != NULL && A2_sim != NULL) {
+        EXPECT_EQ(ex_A2->toISLString(), A2_sim->toISLString());
+    } else {
+        EXPECT_EQ(ex_A2, A2_sim);
+    }
+
+
+    //--- Simplifying flow dependence
+
+    // (4)
+    // Applying heuristic for removing expensive iterators
+    F2->RemoveExpensiveConsts(parallelTvs, 2);
+
+    // Adding user defined constraint
+    Relation *F2_extend = F2->addUFConstraints("rowptr","<=", "diagptr");
+
+    // Simplifyng the constraints relation
+    Relation *F2_sim = F2_extend->simplifyForPartialParallel(parallelTvs);
+
+    // (7)
+    // Print out results
+
+    // Verify the results 
+    if ( ex_F2 != NULL && F2_sim != NULL) {
+        EXPECT_EQ(ex_F2->toISLString(), F2_sim->toISLString());
+    } else {
+        EXPECT_EQ(ex_F2, F2_sim);
+    }
+
+    delete A2;
+    delete F2;
+    delete A2_extend;
+    delete A2_sim;
+    delete F2_extend;
+    delete F2_sim;
+
+    // ----------------------------
+
+
+/* The third pair of possible data access dependences is comming from:
+   a write in S1 (v[k]);  a write in S2 (v[j1]);
+   One of two possible output dependences can exist: 
+       F3 (write_S1 before write_S2) or A3 (write_S2 before write_S1)
+
+for(int i=0; i < n; i++)
+{
+  for(int k= row[i]; k < diag[i]; k++)
+  {
+S1: v[k] = v[k] / v[diag[col[k]]]; 
+    tmp = v[k];
+
+    int j1 = k + 1, j2 = diag[col[k]] + 1;
+
+    while (j1 < row[i + 1] && j2 < row[col[k] + 1])
+    {
+      if (col[j1] < col[j2]) ++j1;
+      else if (col[j2] < col[j1]) ++j2;
+      else {
+S2:     v[j1] -= tmp*v[j2]; 
+        ++j1; ++j2;
+      }
+    }
+  }
 }
+*/
+
+    Relation *A3 = new Relation("[m] -> {[i,k,j1,j2] -> [ip,kp,j1p,j2p]: ip < i"
+                                   " && 0 <= i && i < m"
+                                  " && 0 <= ip && ip < m"
+                           " && rowptr(i) <= k && k < diagptr(i)"
+                         " && rowptr(ip) <= kp && kp < diagptr(ip)"
+                                   " && k < j1 && j1 < rowptr(1+i)"
+                                 " && kp < j1p && j1p < rowptr(1+ip)"
+                  " && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k))"
+                " && diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp))"
+                             " && colidx(j1) = colidx(j2)"
+                             " && colidx(j1p) = colidx(j2p)"
+
+                                     " && k = j1p}");
+
+    Relation *ex_A3 = NULL;
+
+    Relation *F3 = new Relation("[m] -> {[i,k,j1,j2] -> [ip,kp,j1p,j2p]: i < ip"
+                                   " && 0 <= i && i < m"
+                                  " && 0 <= ip && ip < m"
+                           " && rowptr(i) <= k && k < diagptr(i)"
+                         " && rowptr(ip) <= kp && kp < diagptr(ip)"
+                                   " && k < j1 && j1 < rowptr(1+i)"
+                                 " && kp < j1p && j1p < rowptr(1+ip)"
+                  " && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k))"
+                " && diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp))"
+                             " && colidx(j1) = colidx(j2)"
+                             " && colidx(j1p) = colidx(j2p)"
+
+                                     " && k = j1p}");
+
+    Relation *ex_F3 = NULL;
+
+    //--- Simplifying Anti dependence
+
+    // (4)
+    // Applying heuristic for removing expensive iterators
+    A3->RemoveExpensiveConsts(parallelTvs, 2);
+
+    // Adding user defined constraint
+    Relation *A3_extend = A3->addUFConstraints("rowptr","<=", "diagptr");
+
+    // Simplifyng the constraints relation
+    Relation *A3_sim = A3_extend->simplifyForPartialParallel(parallelTvs);
+
+    // (7)
+    // Print out results
+
+
+    // Verify the results 
+    if ( ex_A3 != NULL && A3_sim != NULL) {
+        EXPECT_EQ(ex_A3->toISLString(), A3_sim->toISLString());
+    } else {
+        EXPECT_EQ(ex_A3, A3_sim);
+    }
+
+
+    //--- Simplifying flow dependence
+
+    // (4)
+    // Applying heuristic for removing expensive iterators
+    F3->RemoveExpensiveConsts(parallelTvs, 2);
+
+    // Adding user defined constraint
+    Relation *F3_extend = F3->addUFConstraints("rowptr","<=", "diagptr");
+
+    // Simplifyng the constraints relation
+    Relation *F3_sim = F3_extend->simplifyForPartialParallel(parallelTvs);
+
+    // (7)
+    // Print out results
+
+    // Verify the results 
+    if ( ex_F3 != NULL && F3_sim != NULL) {
+        EXPECT_EQ(ex_F3->toISLString(), F3_sim->toISLString());
+    } else {
+        EXPECT_EQ(ex_F3, F3_sim);
+    }
+
+
+    delete A3;
+    delete F3;
+    delete A3_extend;
+    delete A3_sim;
+    delete F3_extend;
+    delete F3_sim;
+
+    // ----------------------------
+
+/* The fourth pair of possible data access dependences is comming from:
+   a write in S1 (v[k]);  a read in S2 (v[j2]);
+   A flow (F4) or anti (A4) dependence can exist for these access pairs.
+
+for(int i=0; i < n; i++)
+{
+  for(int k= row[i]; k < diag[i]; k++)
+  {
+S1: v[k] = v[k] / v[diag[col[k]]]; 
+    tmp = v[k];
+
+    int j1 = k + 1, j2 = diag[col[k]] + 1;
+
+    while (j1 < row[i + 1] && j2 < row[col[k] + 1])
+    {
+      if (col[j1] < col[j2]) ++j1;
+      else if (col[j2] < col[j1]) ++j2;
+      else {
+S2:     v[j1] -= tmp*v[j2]; 
+        ++j1; ++j2;
+      }
+    }
+  }
+}
+*/
+
+    Relation *A4 = new Relation("[m] -> {[i,k,j1,j2] -> [ip,kp,j1p,j2p]: ip < i"
+                                   " && 0 <= i && i < m"
+                                  " && 0 <= ip && ip < m"
+                           " && rowptr(i) <= k && k < diagptr(i)"
+                         " && rowptr(ip) <= kp && kp < diagptr(ip)"
+                                   " && k < j1 && j1 < rowptr(1+i)"
+                                 " && kp < j1p && j1p < rowptr(1+ip)"
+                  " && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k))"
+                " && diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp))"
+                             " && colidx(j1) = colidx(j2)"
+                             " && colidx(j1p) = colidx(j2p)"
+
+                                     " && k = j2p}");
+
+    Relation *ex_A4 = NULL;
+
+    Relation *F4 = new Relation("[m] -> {[i,k,j1,j2] -> [ip,kp,j1p,j2p]: i < ip"
+                                   " && 0 <= i && i < m"
+                                  " && 0 <= ip && ip < m"
+                           " && rowptr(i) <= k && k < diagptr(i)"
+                         " && rowptr(ip) <= kp && kp < diagptr(ip)"
+                                   " && k < j1 && j1 < rowptr(1+i)"
+                                 " && kp < j1p && j1p < rowptr(1+ip)"
+                  " && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k))"
+                " && diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp))"
+                             " && colidx(j1) = colidx(j2)"
+                             " && colidx(j1p) = colidx(j2p)"
+
+                                     " && k = j2p}");
+
+    Relation *ex_F4 = NULL;
+
+
+    //--- Simplifying Anit dependence
+
+    // (4)
+    // Applying heuristic for removing expensive iterators
+    A4->RemoveExpensiveConsts(parallelTvs, 2);
+
+    // Adding user defined constraint
+    Relation *A4_extend = A4->addUFConstraints("rowptr","<=", "diagptr");
+
+    // Simplifyng the constraints relation
+    Relation *A4_sim = A4_extend->simplifyForPartialParallel(parallelTvs);
+
+    // (7)
+    // Print out results
+
+    // Verify the results 
+    if ( ex_A4 != NULL && A4_sim != NULL) {
+        EXPECT_EQ(ex_A4->toISLString(), A4_sim->toISLString());
+    } else {
+        EXPECT_EQ(ex_A4, A4_sim);
+    }
+
+
+    //--- Simplifying Flow dependence
+
+    // (4)
+    // Applying heuristic for removing expensive iterators
+    F4->RemoveExpensiveConsts(parallelTvs, 2);
+
+    // Adding user defined constraint
+    Relation *F4_extend = F4->addUFConstraints("rowptr","<=", "diagptr");
+
+    // Simplifyng the constraints relation
+    Relation *F4_sim = F4_extend->simplifyForPartialParallel(parallelTvs);
+
+    // (7)
+    // Print out results
+
+    // Verify the results 
+    if ( ex_F4 != NULL && F4_sim != NULL) {
+        EXPECT_EQ(ex_F4->toISLString(), F4_sim->toISLString());
+    } else {
+        EXPECT_EQ(ex_F4, F4_sim);
+    }
+
+    delete A4;
+    delete F4;
+    delete A4_extend;
+    delete A4_sim;
+    delete F4_extend;
+    delete F4_sim;
+
+    // ----------------------------
+
+/* The fifth pair of possible data access dependences is comming from:
+   a read in S1 (v[diag[col[k]]]);  a write in S2 (v[j1]);
+   A flow (F5) or anti (A5) dependence can exist for these access pairs.
+
+for(int i=0; i < n; i++)
+{
+  for(int k= row[i]; k < diag[i]; k++)
+  {
+S1: v[k] = v[k] / v[diag[col[k]]]; 
+    tmp = v[k];
+
+    int j1 = k + 1, j2 = diag[col[k]] + 1;
+
+    while (j1 < row[i + 1] && j2 < row[col[k] + 1])
+    {
+      if (col[j1] < col[j2]) ++j1;
+      else if (col[j2] < col[j1]) ++j2;
+      else {
+S2:     v[j1] -= tmp*v[j2]; 
+        ++j1; ++j2;
+      }
+    }
+  }
+}
+*/
+
+    Relation *A5 = new Relation("[m] -> {[i,k,j1,j2] -> [ip,kp,j1p,j2p]: ip < i"
+                                   " && 0 <= i && i < m"
+                                  " && 0 <= ip && ip < m"
+                           " && rowptr(i) <= k && k < diagptr(i)"
+                         " && rowptr(ip) <= kp && kp < diagptr(ip)"
+                                   " && k < j1 && j1 < rowptr(1+i)"
+                                 " && kp < j1p && j1p < rowptr(1+ip)"
+                  " && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k))"
+                " && diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp))"
+                             " && colidx(j1) = colidx(j2)"
+                             " && colidx(j1p) = colidx(j2p)"
+
+                                     " && j1 = diagptr(colidx(kp)) }");
+
+    Relation *ex_A5 = new Relation("[ m, nnz ] -> { [i, k] -> [ip, kp] : i = colidx(kp) &&"
+" ip >= 0 && k >= 0 && kp >= 0 && colidx(k) >= 0 && colidx(kp) >= 0 &&"
+" diagptr(i) >= 0 && diagptr(i + 1) >= 0 && diagptr(ip) >= 0 &&"
+" diagptr(ip + 1) >= 0 && diagptr(colidx(k)) >= 0 &&"
+" diagptr(colidx(kp)) >= 0 && rowptr(i) >= 0 && rowptr(i + 1) >= 0 &&"
+" rowptr(ip) >= 0 && rowptr(ip + 1) >= 0 && rowptr(colidx(k)) >= 0 &&"
+" rowptr(colidx(kp)) >= 0 && k - rowptr(i) >= 0 && kp - rowptr(ip) >= 0 &&"
+" nnz - diagptr(colidx(k) + 1) >= 0 && nnz - diagptr(colidx(kp) + 1) >= 0 &&"
+" nnz - rowptr(colidx(k) + 1) >= 0 && nnz - rowptr(colidx(kp) + 1) >= 0 &&"
+" diagptr(i + 1) - rowptr(i + 1) >= 0 && diagptr(ip + 1) - rowptr(ip + 1) >= 0 &&"
+" diagptr(colidx(k)) - rowptr(colidx(k)) >= 0 && diagptr(colidx(k) + 1) + 1 >= 0 &&"
+" diagptr(colidx(kp)) - rowptr(colidx(kp)) >= 0 && diagptr(colidx(kp) + 1) + 1 >= 0 &&"
+" rowptr(colidx(k) + 1) + 1 >= 0 && rowptr(colidx(kp) + 1) + 1 >= 0 &&"
+" -ip + m - 2 >= 0 && -ip + colidx(kp) - 1 >= 0 && -k + nnz - 1 >= 0 &&"
+" -k + diagptr(i) - 1 >= 0 && -k + diagptr(colidx(kp)) - 1 >= 0 &&"
+" -kp + nnz - 1 >= 0 && -kp + diagptr(ip) - 1 >= 0 &&"
+" -kp + rowptr(ip + 1) - 2 >= 0 && m - colidx(k) - 2 >= 0 &&"
+" m - colidx(kp) - 2 >= 0 && nnz - diagptr(i) - 1 >= 0 &&"
+" nnz - diagptr(i + 1) - 1 >= 0 && nnz - diagptr(ip) - 1 >= 0 &&"
+" nnz - diagptr(ip + 1) - 1 >= 0 && nnz - diagptr(colidx(k)) - 1 >= 0 &&"
+" nnz - diagptr(colidx(kp)) - 1 >= 0 && nnz - rowptr(i) - 1 >= 0 &&"
+" nnz - rowptr(i + 1) - 1 >= 0 && nnz - rowptr(ip) - 1 >= 0 &&"
+" nnz - rowptr(ip + 1) - 1 >= 0 && nnz - rowptr(colidx(k)) - 1 >= 0 &&"
+" nnz - rowptr(colidx(kp)) - 1 >= 0 &&"
+" -diagptr(colidx(k)) + rowptr(colidx(k) + 1) + 3 >= 0 &&"
+" diagptr(colidx(k) + 1) - rowptr(colidx(k) + 1) + 10 >= 0 &&"
+" -diagptr(colidx(kp)) + rowptr(i + 1) - 1 >= 0 &&"
+" -diagptr(colidx(kp)) + rowptr(colidx(kp) + 1) + 3 >= 0 &&"
+" diagptr(colidx(kp) + 1) - rowptr(colidx(kp) + 1) + 10 >= 0 }");
+
+
+    Relation *F5 = new Relation("[m] -> {[i,k,j1,j2] -> [ip,kp,j1p,j2p]: i < ip"
+                                   " && 0 <= i && i < m"
+                                  " && 0 <= ip && ip < m"
+                           " && rowptr(i) <= k && k < diagptr(i)"
+                         " && rowptr(ip) <= kp && kp < diagptr(ip)"
+                                   " && k < j1 && j1 < rowptr(1+i)"
+                                 " && kp < j1p && j1p < rowptr(1+ip)"
+                  " && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k))"
+                " && diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp))"
+                             " && colidx(j1) = colidx(j2)"
+                             " && colidx(j1p) = colidx(j2p)"
+
+                                     " && j1 = diagptr(colidx(kp))}");
+
+    Relation *ex_F5 = new Relation("[ m, nnz ] -> { [i, k] -> [ip, kp] : i = colidx(kp) &&"
+" ip >= 0 && k >= 0 && kp >= 0 && colidx(k) >= 0 && colidx(kp) >= 0 &&"
+" diagptr(i) >= 0 && diagptr(i + 1) >= 0 && diagptr(ip) >= 0 &&"
+" diagptr(ip + 1) >= 0 && diagptr(colidx(k)) >= 0 && diagptr(colidx(kp)) >= 0 &&"
+" rowptr(i) >= 0 && rowptr(i + 1) >= 0 && rowptr(ip) >= 0 &&"
+" rowptr(ip + 1) >= 0 && rowptr(colidx(k)) >= 0 && rowptr(colidx(kp)) >= 0 &&"
+" k - rowptr(i) >= 0 && kp - rowptr(ip) >= 0 &&"
+" nnz - diagptr(colidx(k) + 1) >= 0 && nnz - diagptr(colidx(kp) + 1) >= 0 &&"
+" nnz - rowptr(colidx(k) + 1) >= 0 && nnz - rowptr(colidx(kp) + 1) >= 0 &&"
+" diagptr(i + 1) >= rowptr(i + 1) && diagptr(ip + 1) >= rowptr(ip + 1) &&"
+" diagptr(colidx(k)) - rowptr(colidx(k)) >= 0 &&"
+" diagptr(colidx(k) + 1) + 1 >= 0 &&"
+" diagptr(colidx(kp)) - rowptr(colidx(kp)) >= 0 &&"
+" diagptr(colidx(kp) + 1) + 1 >= 0 && rowptr(colidx(k) + 1) + 1 >= 0 &&"
+" rowptr(colidx(kp) + 1) + 1 >= 0 && -ip + m - 2 >= 0 &&"
+" ip > colidx(k) && nnz > k && -k + diagptr(i) - 1 >= 0 &&"
+" -k + diagptr(colidx(k)) - 1 >= 0 && -kp + nnz - 1 >= 0 &&"
+" -kp + diagptr(ip) - 1 >= 0 && -kp + rowptr(ip + 1) - 2 >= 0 &&"
+" m - colidx(k) - 2 >= 0 && m - colidx(kp) - 2 >= 0 &&"
+" nnz - diagptr(i) - 1 >= 0 && nnz - diagptr(i + 1) - 1 >= 0 &&"
+" nnz - diagptr(ip) - 1 >= 0 && nnz - diagptr(ip + 1) - 1 >= 0 &&"
+" nnz - diagptr(colidx(k)) - 1 >= 0 && nnz - diagptr(colidx(kp)) - 1 >= 0 &&"
+" nnz - rowptr(i) - 1 >= 0 && nnz - rowptr(i + 1) - 1 >= 0 &&"
+" nnz - rowptr(ip) - 1 >= 0 && nnz - rowptr(ip + 1) - 1 >= 0 &&"
+" nnz - rowptr(colidx(k)) - 1 >= 0 && nnz - rowptr(colidx(kp)) - 1 >= 0 &&"
+" -diagptr(colidx(k)) + rowptr(i + 1) - 1 >= 0 &&"
+" -diagptr(colidx(k)) + rowptr(colidx(k) + 1) + 3 >= 0 &&"
+" diagptr(colidx(k) + 1) - rowptr(colidx(k) + 1) + 10 >= 0 &&"
+" -diagptr(colidx(kp)) + rowptr(colidx(kp) + 1) + 3 >= 0 &&"
+" diagptr(colidx(kp) + 1) - rowptr(colidx(kp) + 1) + 10 >= 0 }");
+
+
+    //--- Simplifying Anti dependence
+
+    // (4)
+    // Applying heuristic for removing expensive iterators
+    A5->RemoveExpensiveConsts(parallelTvs, 2);
+
+    // Adding user defined constraint
+    Relation *A5_extend = A5->addUFConstraints("rowptr","<=", "diagptr");
+
+    // Simplifyng the constraints relation
+    Relation *A5_sim = A5_extend->simplifyForPartialParallel(parallelTvs);
+
+    // (7)
+    // Print out results
+
+
+    // Verify the results 
+    if ( ex_A5 != NULL && A5_sim != NULL) {
+//        EXPECT_EQ(ex_A5->toISLString(), A5_sim->toISLString());
+    } else {
+//        EXPECT_EQ(ex_A5, A5_sim);
+    }
+
+
+    //--- Simplifying FLow dependence
+
+    // (4)
+    // Applying heuristic for removing expensive iterators
+    F5->RemoveExpensiveConsts(parallelTvs, 2);
+
+    // Adding user defined constraint
+    Relation *F5_extend = F5->addUFConstraints("rowptr","<=", "diagptr");
+
+    // Simplifyng the constraints relation
+    Relation *F5_sim = F5_extend->simplifyForPartialParallel(parallelTvs);
+
+    // (7)
+    // Print out results
+
+
+    // Verify the results 
+    if ( ex_F5 != NULL && F5_sim != NULL) {
+//        EXPECT_EQ(ex_F5->toISLString(), F5_sim->toISLString());
+    } else {
+//        EXPECT_EQ(ex_F5, F5_sim);
+    }
+
+    delete A5;
+    delete F5;
+    delete A5_extend;
+    delete A5_sim;
+    delete F5_extend;
+    delete F5_sim;
+
+    // ----------------------------
+
+/* The sixth pair of possible data access dependences is comming from:
+   a write in S2 (v[j1]);  a write in S2 (v[j1]);
+   Depending on ordering one of two possible output dependences can exists.
+
+for(int i=0; i < n; i++)
+{
+  for(int k= row[i]; k < diag[i]; k++)
+  {
+S1: v[k] = v[k] / v[diag[col[k]]]; 
+    tmp = v[k];
+
+    int j1 = k + 1, j2 = diag[col[k]] + 1;
+
+    while (j1 < row[i + 1] && j2 < row[col[k] + 1])
+    {
+      if (col[j1] < col[j2]) ++j1;
+      else if (col[j2] < col[j1]) ++j2;
+      else {
+S2:     v[j1] -= tmp*v[j2]; 
+        ++j1; ++j2;
+      }
+    }
+  }
+}
+*/
+
+    Relation *A6 = new Relation("[m] -> {[i,k,j1,j2] -> [ip,kp,j1p,j2p]: ip < i"
+                                   " && 0 <= i && i < m"
+                                  " && 0 <= ip && ip < m"
+                           " && rowptr(i) <= k && k < diagptr(i)"
+                         " && rowptr(ip) <= kp && kp < diagptr(ip)"
+                                   " && k < j1 && j1 < rowptr(1+i)"
+                                 " && kp < j1p && j1p < rowptr(1+ip)"
+                  " && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k))"
+                " && diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp))"
+                             " && colidx(j1) = colidx(j2)"
+                             " && colidx(j1p) = colidx(j2p)"
+
+                                     " && j1 = j1p}");
+
+
+    Relation *ex_A6 = NULL;
+
+    Relation *F6 = new Relation("[m] -> {[i,k,j1,j2] -> [ip,kp,j1p,j2p]: i < ip"
+                                   " && 0 <= i && i < m"
+                                  " && 0 <= ip && ip < m"
+                           " && rowptr(i) <= k && k < diagptr(i)"
+                         " && rowptr(ip) <= kp && kp < diagptr(ip)"
+                                   " && k < j1 && j1 < rowptr(1+i)"
+                                 " && kp < j1p && j1p < rowptr(1+ip)"
+                  " && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k))"
+                " && diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp))"
+                             " && colidx(j1) = colidx(j2)"
+                             " && colidx(j1p) = colidx(j2p)"
+
+                                     " && j1 = j1p}");
+
+    Relation *ex_F6 = NULL;
+
+
+    //--- Simplifying Anti dependence
+
+    // (4)
+    // Applying heuristic for removing expensive iterators
+    A6->RemoveExpensiveConsts(parallelTvs, 2);
+
+    // Adding user defined constraint
+    Relation *A6_extend = A6->addUFConstraints("rowptr","<=", "diagptr");
+
+    // Simplifyng the constraints relation
+    Relation *A6_sim = A6_extend->simplifyForPartialParallel(parallelTvs);
+
+    // (7)
+    // Print out results
+
+
+    // Verify the results 
+    if ( ex_A6 != NULL && A6_sim != NULL) {
+        EXPECT_EQ(ex_A6->toISLString(), A6_sim->toISLString());
+    } else {
+        EXPECT_EQ(ex_A6, A6_sim);
+    }
+
+
+    //--- Simplifying Flow dependence
+
+    // (4)
+    // Applying heuristic for removing expensive iterators
+    F6->RemoveExpensiveConsts(parallelTvs, 2);
+
+    // Adding user defined constraint
+    Relation *F6_extend = F6->addUFConstraints("rowptr","<=", "diagptr");
+
+    // Simplifyng the constraints relation
+    Relation *F6_sim = F6_extend->simplifyForPartialParallel(parallelTvs);
+
+    // (7)
+    // Print out results
+
+
+    // Verify the results 
+    if ( ex_F6 != NULL && F6_sim != NULL) {
+        EXPECT_EQ(ex_F6->toISLString(), F6_sim->toISLString());
+    } else {
+        EXPECT_EQ(ex_F6, F6_sim);
+    }
+
+
+    delete A6;
+    delete F6;
+    delete A6_extend;
+    delete A6_sim;
+    delete F6_extend;
+    delete F6_sim;
+
+    // ----------------------------
+
+/* The seventh pair of possible data access dependences is comming from:
+   a read in S1 (v[k]);  a write in S2 (v[j1]);
+   A flow (F7) or anti (A7) dependence can exist for these access pairs.
+
+for(int i=0; i < n; i++)
+{
+  for(int k= row[i]; k < diag[i]; k++)
+  {
+S1: v[k] = v[k] / v[diag[col[k]]]; 
+    tmp = v[k];
+
+    int j1 = k + 1, j2 = diag[col[k]] + 1;
+
+    while (j1 < row[i + 1] && j2 < row[col[k] + 1])
+    {
+      if (col[j1] < col[j2]) ++j1;
+      else if (col[j2] < col[j1]) ++j2;
+      else {
+S2:     v[j1] -= tmp*v[j2]; 
+        ++j1; ++j2;
+      }
+    }
+  }
+}
+*/
+
+    Relation *A7 = new Relation("[m] -> {[i,k,j1,j2] -> [ip,kp,j1p,j2p]: ip < i"
+                                   " && 0 <= i && i < m"
+                                  " && 0 <= ip && ip < m"
+                           " && rowptr(i) <= k && k < diagptr(i)"
+                         " && rowptr(ip) <= kp && kp < diagptr(ip)"
+                                   " && k < j1 && j1 < rowptr(1+i)"
+                                 " && kp < j1p && j1p < rowptr(1+ip)"
+                  " && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k))"
+                " && diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp))"
+                             " && colidx(j1) = colidx(j2)"
+                             " && colidx(j1p) = colidx(j2p)"
+
+                                     " && j1 = kp}");
+
+    Relation *ex_A7 = NULL;
+
+    Relation *F7 = new Relation("[m] -> {[i,k,j1,j2] -> [ip,kp,j1p,j2p]: i < ip"
+                                   " && 0 <= i && i < m"
+                                  " && 0 <= ip && ip < m"
+                           " && rowptr(i) <= k && k < diagptr(i)"
+                         " && rowptr(ip) <= kp && kp < diagptr(ip)"
+                                   " && k < j1 && j1 < rowptr(1+i)"
+                                 " && kp < j1p && j1p < rowptr(1+ip)"
+                  " && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k))"
+                " && diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp))"
+                             " && colidx(j1) = colidx(j2)"
+                             " && colidx(j1p) = colidx(j2p)"
+
+                                     " && j1 = kp}");
+
+    Relation *ex_F7 = NULL;
+
+    //--- Simplifying Anti dependence
+
+    // (4)
+    // Applying heuristic for removing expensive iterators
+    A7->RemoveExpensiveConsts(parallelTvs, 2);
+
+    // (5)
+    // Adding user defined constraint
+    Relation *A7_extend = A7->addUFConstraints("rowptr","<=", "diagptr");
+
+    // (6)
+    // Simplifyng the constraints relation
+    Relation *A7_sim = A7_extend->simplifyForPartialParallel(parallelTvs);
+
+    // (7)
+    // Print out results
+
+
+    // Verify the results 
+    if ( ex_A7 != NULL && A7_sim != NULL) {
+        EXPECT_EQ(ex_A7->toISLString(), A7_sim->toISLString());
+    } else {
+        EXPECT_EQ(ex_A7, A7_sim);
+    }
+
+
+    //--- Simplifying flow dependence
+
+    // (4)
+    // Applying heuristic for removing expensive iterators
+    F7->RemoveExpensiveConsts(parallelTvs, 2);
+
+    // (5)
+    // Adding user defined constraint
+    Relation *F7_extend = F7->addUFConstraints("rowptr","<=", "diagptr");
+
+    // (6)
+    // Simplifyng the constraints relation
+    Relation *F7_sim = F7_extend->simplifyForPartialParallel(parallelTvs);
+
+    // (7)
+    // Print out results
+
+
+    // Verify the results 
+    if ( ex_F7 != NULL && F7_sim != NULL) {
+        EXPECT_EQ(ex_F7->toISLString(), F7_sim->toISLString());
+    } else {
+        EXPECT_EQ(ex_F7, F7_sim);
+    }
+
+    delete A7;
+    delete F7;
+    delete A7_extend;
+    delete A7_sim;
+    delete F7_extend;
+    delete F7_sim;
+
+    // ----------------------------
+
+/* The eighth pair of possible data access dependences is comming from:
+   a read in S2 (v[j2]);  a write in S2 (v[j1]);
+   A flow (F8) or anti (A8) dependence can exist for these access pairs.
+
+for(int i=0; i < n; i++)
+{
+  for(int k= row[i]; k < diag[i]; k++)
+  {
+S1: v[k] = v[k] / v[diag[col[k]]]; 
+    tmp = v[k];
+
+    int j1 = k + 1, j2 = diag[col[k]] + 1;
+
+    while (j1 < row[i + 1] && j2 < row[col[k] + 1])
+    {
+      if (col[j1] < col[j2]) ++j1;
+      else if (col[j2] < col[j1]) ++j2;
+      else {
+S2:     v[j1] -= tmp*v[j2]; 
+        ++j1; ++j2;
+      }
+    }
+  }
+}
+*/
+
+    Relation *A8 = new Relation("[m] -> {[i,k,j1,j2] -> [ip,kp,j1p,j2p]: ip < i"
+                                   " && 0 <= i && i < m"
+                                  " && 0 <= ip && ip < m"
+                           " && rowptr(i) <= k && k < diagptr(i)"
+                         " && rowptr(ip) <= kp && kp < diagptr(ip)"
+                                   " && k < j1 && j1 < rowptr(1+i)"
+                                 " && kp < j1p && j1p < rowptr(1+ip)"
+                  " && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k))"
+                " && diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp))"
+                             " && colidx(j1) = colidx(j2)"
+                             " && colidx(j1p) = colidx(j2p)"
+
+                                     " && j1 = j2p}");
+
+    Relation *ex_A8 = new Relation("[ m, nnz ] -> { [i, k] -> [ip, kp] : "
+                            " i = colidx(kp) &&  colidx(kp)+1 < m &&"
+               " rowptr(i) <= k && k <= rowptr(i + 1)-2 && k < diagptr(i) &&"
+                                   " 0 <= ip && ip < colidx(kp) &&"
+                          " rowptr(ip) <= kp && kp < diagptr(ip) &&"
+
+" colidx(k) >= 0 && rowptr(i) >= 0 && rowptr(ip) >= 0 &&"
+" rowptr(colidx(k)) >= 0 && rowptr(colidx(kp)) >= 0 &&"
+" nnz >= diagptr(colidx(k) + 1) &&"
+" nnz >= diagptr(colidx(kp) + 1) && nnz >= rowptr(colidx(k) + 1) &&"
+" nnz >= rowptr(colidx(kp) + 1) && diagptr(i + 1) >= rowptr(i + 1) &&"
+" diagptr(ip + 1) >= rowptr(ip + 1) &&"
+" diagptr(colidx(k)) >= rowptr(colidx(k)) &&"
+" diagptr(colidx(k) + 1) + 1 >= 0 &&"
+" diagptr(colidx(kp)) >= rowptr(colidx(kp)) &&"
+" diagptr(colidx(kp) + 1) + 1 >= 0 && rowptr(colidx(k) + 1) + 1 >= 0 &&"
+" rowptr(colidx(kp) + 1) + 1 >= 0 && rowptr(colidx(kp) + 1) + 2 >= k &&"
+" rowptr(ip + 1) >= kp + 2 && m >= colidx(k) + 2 && nnz > diagptr(i) &&"
+" nnz > diagptr(i + 1) && nnz > diagptr(ip) && nnz > diagptr(ip + 1) &&"
+" nnz > diagptr(colidx(k)) + 1 &&"
+" -diagptr(colidx(k)) + rowptr(colidx(k) + 1) + 2 >= 0 &&"
+" diagptr(colidx(k) + 1) + 8 >= rowptr(colidx(k) + 1) &&"
+" rowptr(i + 1) >= diagptr(colidx(kp)) + 2 &&"
+" rowptr(colidx(kp) + 1) + 2 >= diagptr(colidx(kp)) &&"
+" diagptr(colidx(kp) + 1) + 8 >=  rowptr(colidx(kp) + 1) }");
+
+    string ex_A8_str = ex_A8->toISLString();
+
+    Relation *F8 = new Relation("[m] -> {[i,k,j1,j2] -> [ip,kp,j1p,j2p]: i < ip"
+                                   " && 0 <= i && i < m"
+                                  " && 0 <= ip && ip < m"
+                           " && rowptr(i) <= k && k < diagptr(i)"
+                         " && rowptr(ip) <= kp && kp < diagptr(ip)"
+                                   " && k < j1 && j1 < rowptr(1+i)"
+                                 " && kp < j1p && j1p < rowptr(1+ip)"
+                  " && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k))"
+                " && diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp))"
+                             " && colidx(j1) = colidx(j2)"
+                             " && colidx(j1p) = colidx(j2p)"
+
+                                     " && j1 = j2p}");
+
+    Relation *ex_F8 = new Relation("[ m, nnz ] -> { [i, k] -> [ip, kp] : "
+                                     " i = colidx(kp) &&"
+               " rowptr(i) <= k && k <= rowptr(i + 1)-2 && k < diagptr(i) &&"
+                             " colidx(kp) < ip && ip < m-1 &&"
+                            " rowptr(ip) <= kp && kp < diagptr(ip) &&"
+
+" colidx(k) >= 0 && colidx(kp) >= 0 && rowptr(i) >= 0 && rowptr(ip) >= 0 &&"
+" rowptr(colidx(k)) >= 0 && rowptr(colidx(kp)) >= 0 &&"
+" nnz >= diagptr(colidx(k) + 1) &&"
+" nnz >= diagptr(colidx(kp) + 1) && nnz >= rowptr(colidx(k) + 1) &&"
+" nnz >= rowptr(colidx(kp) + 1) && diagptr(i + 1) >= rowptr(i + 1) &&"
+" diagptr(ip + 1) >= rowptr(ip + 1) &&"
+" diagptr(colidx(k)) >= rowptr(colidx(k)) &&"
+" diagptr(colidx(k) + 1) + 1 >= 0 &&"
+" diagptr(colidx(kp)) >= rowptr(colidx(kp)) &&"
+" diagptr(colidx(kp) + 1) + 1 >= 0 && rowptr(colidx(k) + 1) + 1 >= 0 &&"
+" rowptr(colidx(kp) + 1) + 1 >= 0 && rowptr(colidx(kp) + 1) + 2 >= k &&"
+" rowptr(ip + 1) >= kp + 2 && m >= colidx(k) + 2 && nnz > diagptr(i) &&"
+" nnz > diagptr(i + 1) && nnz > diagptr(ip) && nnz > diagptr(ip + 1) &&"
+" nnz > diagptr(colidx(k)) + 1 &&"
+" -diagptr(colidx(k)) + rowptr(colidx(k) + 1) + 2 >= 0 &&"
+" diagptr(colidx(k) + 1) + 8 >= rowptr(colidx(k) + 1) &&"
+" rowptr(i + 1) >= diagptr(colidx(kp)) + 2 &&"
+" rowptr(colidx(kp) + 1) + 2 >= diagptr(colidx(kp)) &&"
+" diagptr(colidx(kp) + 1) + 8 >=  rowptr(colidx(kp) + 1) }");
+
+    //--- Simplifying anti dependence
+
+    // (4)
+    // Applying heuristic for removing expensive iterators
+    A8->RemoveExpensiveConsts(parallelTvs, 2);
+
+    // (5)
+    // Adding user defined constraint
+    Relation *A8_extend = A8->addUFConstraints("rowptr","<=", "diagptr");
+
+    // (6)
+    // Simplifyng the constraints relation
+    Relation *A8_sim = A8_extend->simplifyForPartialParallel(parallelTvs);
+
+    // (7)
+    // Print out results
+
+
+    // Verify the results 
+    if ( ex_A8 != NULL && A8_sim != NULL) {
+        EXPECT_EQ(ex_A8->toISLString(), A8_sim->toISLString());
+    } else {
+        EXPECT_EQ(ex_A8, A8_sim);
+    }
+
+    //--- Simplifying flow dependence
+
+    // (4)
+    // Applying heuristic for removing expensive iterators
+    F8->RemoveExpensiveConsts(parallelTvs, 2);
+
+    // (5)
+    // Adding user defined constraint
+    Relation *F8_extend = F8->addUFConstraints("rowptr","<=", "diagptr");
+
+    // (6)
+    // Simplifyng the constraints relation
+    Relation *F8_sim = F8_extend->simplifyForPartialParallel(parallelTvs);
+
+    // (7)
+    // Print out results
+
+    // Verify the results 
+    if ( ex_F8 != NULL && F8_sim != NULL) {
+        EXPECT_EQ(ex_F8->toISLString(), F8_sim->toISLString());
+    } else {
+        EXPECT_EQ(ex_F8, F8_sim);
+    }
+
+    delete A8;
+    delete F8;
+    delete A8_extend;
+    delete A8_sim;
+    delete F8_extend;
+    delete F8_sim;
+
+}
+
