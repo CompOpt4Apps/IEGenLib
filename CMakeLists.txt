@@ -64,13 +64,13 @@ add_custom_command(OUTPUT iegen_lib_test
 add_custom_target(rtest DEPENDS iegen_lib_test)
 
 # Set flags for various builds. 
-set(CMAKE_CXX_FLAGS "-fPIC"     
+set(CMAKE_CXX_FLAGS "-std=c++11 -fPIC"     
     CACHE STRING "Flags used by the compiler during all build types." FORCE)
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG"     
+set(CMAKE_CXX_FLAGS_RELEASE "-std=c++11 -O3 -DNDEBUG"     
     CACHE STRING "Flags used by the compiler during release builds." FORCE)
-set(CMAKE_CXX_FLAGS_DEBUG  "-O0 -g"     
+set(CMAKE_CXX_FLAGS_DEBUG  "-std=c++11 -O0 -g"     
     CACHE STRING "Flags used by the compiler during debug builds." FORCE)
-set(CMAKE_EXE_LINKER_FLAGS_DEBUG  "-fPIC -O0 -g"     
+set(CMAKE_EXE_LINKER_FLAGS_DEBUG  "-std=c++11 -fPIC -O0 -g"     
     CACHE STRING "Flags used by the linker during debug builds." FORCE)
-set( CMAKE_MODULE_LINKER_DEBUG_FLAGS "-fPIC -O0 -g" CACHE STRING "" FORCE )
-set( CMAKE_SHARED_LINKER_DEBUG_FLAGS "-fPIC -O0 -g" CACHE STRING "" FORCE )
+set( CMAKE_MODULE_LINKER_DEBUG_FLAGS "-std=c++11 -fPIC -O0 -g" CACHE STRING "" FORCE )
+set( CMAKE_SHARED_LINKER_DEBUG_FLAGS "-std=c++11 -fPIC -O0 -g" CACHE STRING "" FORCE )
