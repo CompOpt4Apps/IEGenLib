@@ -2617,7 +2617,7 @@ class VisitorCollectPartOrd : public Visitor {
                     Term* solution_term = (*i);
                     
                     // Don't want to have partial ordering with a constant.
-                    if (solution_term->isConst()) continue;
+                    if (solution_term->isConst() || t->isConst() ) continue;
                     
                     // t >= solution_term + (other noneg terms) + c, c>=1
                     if (c>=1 && t->coefficient()>0) {
@@ -2755,6 +2755,8 @@ Set* Set::addConstraintsDueToMonotonicity() const {
 
 Relation* Relation::addConstraintsDueToMonotonicity() const {
     Relation* retval = new Relation(*this);
+    retval->boundDomainRange();
+
     retval->addConstraintsDueToMonotonicityHelper();
     return retval;
 }
@@ -3660,11 +3662,14 @@ Set* Set::simplifyForPartialParallel(std::set<int> parallelTvs )
     int lastTV = this->arity()-1;
     Set* copySet = new Set(*this);
 
+    copySet->normalize();
+    if( copySet->isDefault() ){
+        return NULL;
+    }
+
     // Adding constraints dut to Monotonicity of UFCs (if any exists)
     result = copySet->addConstraintsDueToMonotonicity();
     delete copySet;
-
-    result->normalize();
 
     // Projecting out any tuple variable that are not argument to a UFCall 
     // starting from inner most loops. We also do not project out indecies
@@ -3702,8 +3707,13 @@ Relation* Relation::simplifyForPartialParallel(std::set<int> parallelTvs)
     int lastTV = this->arity()-1;
     Relation* copyRelation = new Relation(*this);
 
+    copyRelation->normalize();
+    if( copyRelation->isDefault() ){
+        return NULL;
+    }
+
     // Adding constraints dut to Monotonicity of UFCs (if any exists)
-    result = this->addConstraintsDueToMonotonicity();
+    result = copyRelation->addConstraintsDueToMonotonicity();
     delete copyRelation;
     
     // Projecting out any tuple variable that are not argument to a UFCall 
