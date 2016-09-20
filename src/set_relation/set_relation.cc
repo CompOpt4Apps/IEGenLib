@@ -2565,6 +2565,10 @@ class VisitorCollectPartOrd : public Visitor {
 
     // See class header for logic.
     void deriveInfo(iegenlib::Term * t) {
+
+        // will collect partial ordering relationships between non-constant terms 
+        if ( t->isConst() ) return;
+        
         Exp* e = mCurrExpStack.top();
         
         // solve for factor treats the constraint like exp=0
@@ -2617,7 +2621,7 @@ class VisitorCollectPartOrd : public Visitor {
                     Term* solution_term = (*i);
                     
                     // Don't want to have partial ordering with a constant.
-                    if (solution_term->isConst() || t->isConst() ) continue;
+                    if (solution_term->isConst()) continue;
                     
                     // t >= solution_term + (other noneg terms) + c, c>=1
                     if (c>=1 && t->coefficient()>0) {
@@ -3662,11 +3666,6 @@ Set* Set::simplifyForPartialParallel(std::set<int> parallelTvs )
     int lastTV = this->arity()-1;
     Set* copySet = new Set(*this);
 
-    copySet->normalize();
-    if( copySet->isDefault() ){
-        return NULL;
-    }
-
     // Adding constraints dut to Monotonicity of UFCs (if any exists)
     result = copySet->addConstraintsDueToMonotonicity();
     delete copySet;
@@ -3706,11 +3705,6 @@ Relation* Relation::simplifyForPartialParallel(std::set<int> parallelTvs)
     Relation *result,*temp;
     int lastTV = this->arity()-1;
     Relation* copyRelation = new Relation(*this);
-
-    copyRelation->normalize();
-    if( copyRelation->isDefault() ){
-        return NULL;
-    }
 
     // Adding constraints dut to Monotonicity of UFCs (if any exists)
     result = copyRelation->addConstraintsDueToMonotonicity();

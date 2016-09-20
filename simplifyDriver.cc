@@ -28,6 +28,13 @@
     IEGENLIB_HOME, then you can run following to compile:
 
     g++ -o simplifyDriver simplifyDriver.cc -I src build/src/libiegenlib.a -lisl -std=c++11
+
+ * Now to run the driver, you should put your dependence relation inside
+ * JSON files and give them as inputs to driver, JSON file format is
+ * demonstrated by examples gs_csr.json and ilu_csr.json:
+ 
+   ./simplifyDriver gs_csr.json ilu_csr.json
+
  *     
  *
  * \date Date Started: 3/21/2016
@@ -87,9 +94,7 @@ using namespace std;
 //! If you wish not to see the output, change the value: verbose = false;
 bool verbose=true;
 
-// Examples
-void CSR_Gauss_Seidel_Example();
-void CSR_ILU_Example();
+void simplify(string inputFile);
 
 // Utility function
 bool printRelation(string msg, Relation *rel);
@@ -97,9 +102,30 @@ void EXPECT_EQ(string a, string b);
 void EXPECT_EQ(Relation *a, Relation *b);
 int str2int(string str);
 
+
+//----------------------- MAIN ---------------
+int main(int argc, char **argv)
+{
+
+//CSR_Gauss_Seidel_Example();
+
+  if (argc == 1)
+  {
+    cout<<"\n\nYou need to specify the input JSON files that contain dependence relations:"
+          "\n./simplifyDriver file1.json file2.json ...\n\n";
+  } else if (argc >= 2){
+    // Parsing command line arguments and reading given files.
+    for(int arg = 1; arg < argc ; arg++){
+      simplify(string(argv[arg]));
+    }
+  }
+
+    return 0;
+}
+
 // Reads information from a JSON file (inputFile), and applies
 // the simplfication algorithm to the sets found in the file. 
-void simplifiy(string inputFile)
+void simplify(string inputFile)
 {
 
   iegenlib::setCurrEnv();
@@ -111,6 +137,9 @@ void simplifiy(string inputFile)
   in >> data;
 
   for(size_t p = 0; p < data.size(); ++p){    // Dependence relations (DR) found in the file
+
+    cout<<"\n\n"<<data[p][0]["Name"].as<string>()<<"\n\n";
+
   for (size_t i = 0; i < data[p].size(); ++i){// Conjunctions found for one DR in the file
 
     // (1)
@@ -216,97 +245,6 @@ void simplifiy(string inputFile)
   }
   } // End of p loop
 }
-
-//----------------------- MAIN ---------------
-int main(int argc, char **argv)
-{
-
-    CSR_Gauss_Seidel_Example();
-
-    CSR_ILU_Example();
-
-    return 0;
-}
-
-void CSR_Gauss_Seidel_Example(){
-
-    verbose && cout<<"\n\nGauss-Seidel_CSR: \n\n";
-
-/* Following is the Gauss-Seidel code. Dependence analysis of this code
-   would identify 1 pair of read/write data accesses (in S1) that may
-   produce data dependences. This pair produces two distinct conjunctions 
-   considering the ordering of accesses (Flow and Anti dependence). Overall, 
-   there are 2 distinct conjunctions for the complete dependence relation.
-   
-   We will apply simplififcation algorithm to these 2 conjunctions.
-
-for (i=0; i < N; i++) {
-    for (j=rowptr[i];j<rowptr[i + 1];j++) {
-S1:     y[i] -= values[j]*y[colidx[j]];
-    }
-}
-
-Source of data accesses:
-
-1) a read in S1 (y[colidx[j]]);  a write in S1 (y[i]); 
-
-*/
-
-  simplifiy(string("gs_csr.json"));
-
-}
-
-void CSR_ILU_Example(){
-
-
-    verbose && cout<<"\n\nILU_CSR: \n\n";
-
-/* Following is the ILU0 code. Dependence analysis of this code
-   would identify 8 pairs of read/write or write/write(in or between S1 & S2)
-   data accesses that may be data dependences. Each pair produces two 
-   distinct conjunctions considering the ordering of accesses. Overall there 
-   are 16 distinct conjunctions for the complete dependence relation.
-   
-   We will apply simplififcation algorithm to all of these 16 conjunctions.
-
-for(int i=0; i < n; i++)
-{
-  for(int k= row[i]; k < diag[i]; k++)
-  {
-S1: v[k] = v[k] / v[diag[col[k]]]; 
-    tmp = v[k];
-
-    int j1 = k + 1, j2 = diag[col[k]] + 1;
-
-    while (j1 < row[i + 1] && j2 < row[col[k] + 1])
-    {
-      if (col[j1] < col[j2]) ++j1;
-      else if (col[j2] < col[j1]) ++j2;
-      else {
-S2:     v[j1] -= tmp*v[j2]; 
-        ++j1; ++j2;
-      }
-    }
-  }
-}
-
-Source of data accesses:
-
-1) a read in S1 (v[k]);  a write in S1 (v[k]); 
-2) a read in S1 (v[diag[col[k]]]);  a write in S1 (v[k]);
-3) a write in S1 (v[k]);  a write in S2 (v[j1]);
-4) a write in S1 (v[k]);  a read in S2 (v[j2]);
-5) a read in S1 (v[diag[col[k]]]);  a write in S2 (v[j1]);
-6) a write in S2 (v[j1]);  a write in S2 (v[j1]);
-7) a read in S1 (v[k]);  a write in S2 (v[j1]);
-8) a read in S2 (v[j2]);  a write in S2 (v[j1]);
-
-*/
-
-  simplifiy(string("ilu_csr.json"));
-
-}
-
 
 bool printRelation(string msg, Relation *rel){
 
