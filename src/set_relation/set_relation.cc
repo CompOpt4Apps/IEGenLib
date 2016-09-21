@@ -2565,10 +2565,6 @@ class VisitorCollectPartOrd : public Visitor {
 
     // See class header for logic.
     void deriveInfo(iegenlib::Term * t) {
-
-        // will collect partial ordering relationships between non-constant terms 
-        if ( t->isConst() ) return;
-        
         Exp* e = mCurrExpStack.top();
         
         // solve for factor treats the constraint like exp=0
@@ -2759,8 +2755,6 @@ Set* Set::addConstraintsDueToMonotonicity() const {
 
 Relation* Relation::addConstraintsDueToMonotonicity() const {
     Relation* retval = new Relation(*this);
-    retval->boundDomainRange();
-
     retval->addConstraintsDueToMonotonicityHelper();
     return retval;
 }
@@ -3670,6 +3664,8 @@ Set* Set::simplifyForPartialParallel(std::set<int> parallelTvs )
     result = copySet->addConstraintsDueToMonotonicity();
     delete copySet;
 
+    result->normalize();
+
     // Projecting out any tuple variable that are not argument to a UFCall 
     // starting from inner most loops. We also do not project out indecies
     // specified in parallelTvs, since they are going to be parallelized.
@@ -3707,7 +3703,7 @@ Relation* Relation::simplifyForPartialParallel(std::set<int> parallelTvs)
     Relation* copyRelation = new Relation(*this);
 
     // Adding constraints dut to Monotonicity of UFCs (if any exists)
-    result = copyRelation->addConstraintsDueToMonotonicity();
+    result = this->addConstraintsDueToMonotonicity();
     delete copyRelation;
     
     // Projecting out any tuple variable that are not argument to a UFCall 

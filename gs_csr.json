@@ -1,7 +1,7 @@
 [
   [
     {
-      "Name" : "CSR_Gauss-Siedel",
+      "Name" : "CSR_Gauss-Seidel",
       "Input Type" : "IEgenLIB Relation",
       "Relation" : "{ [i,j] -> [ip,jp] : i<ip && i=colidx(jp) && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= j && j < rowptr(i+1) && rowptr(ip) <= jp && jp < rowptr(ip+1) }",
       "Expected" : "{ [i] -> [ip,jp] : i=colidx(jp) && colidx(jp) < ip && ip < m-1 && rowptr(i) < rowptr(i+1) && rowptr(ip) <= jp && jp < rowptr(ip+1) && colidx(jp) >= 0 && rowptr(i) >= 0 && rowptr(ip) >= 0 && rowptr(i+1) < nnz && rowptr(ip+1) < nnz}",
@@ -31,7 +31,7 @@
         "i", "ip"
       ],
       "Remove Constraints" : "0",
-      "Comment 0" : [
+      "Comment: Code" : [
                   "Following is the Gauss-Seidel code. Dependence analysis of",
                   "this code would identify 1 pair of read/write data accesses",
                   "(in S1) that may produce data dependences. This pair produces",
@@ -44,8 +44,7 @@
                   "  }",
                   "}"
                   ],
-      "Comment 1" : [
-                    "Data access for this relation:",
+      "Comment: Source of data access in the code for this relation" : [
                     " ",
                     "a read in S1 (y[colidx[j]]);  a write in S1 (y[i]); "
                   ]
@@ -55,8 +54,7 @@
       "Input Type" : "IEgenLIB Relation",
       "Relation" : "{ [i,j] -> [ip,jp] : ip<i && i=colidx(jp) && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= j && j < rowptr(i+1) && rowptr(ip) <= jp && jp < rowptr(ip+1) }",
       "Expected" : "{ [i] -> [ip,jp] : i=colidx(jp) && 0 <= ip && ip < colidx(jp) && rowptr(i) < rowptr(i+1) && rowptr(ip) <= jp && jp < rowptr(ip+1) && colidx(jp) < m-1 && rowptr(i) >= 0 && rowptr(ip) >= 0 && rowptr(i+1) < nnz && rowptr(ip+1) < nnz}",
-      "Comment 1" : [
-                    "Data accesses for this relation:",
+      "Comment: Source of data access in the code for this relation" : [
                     " ",
                     "a read in S1 (y[colidx[j]]);  a write in S1 (y[i]); "
                   ]

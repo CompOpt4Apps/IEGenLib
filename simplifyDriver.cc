@@ -29,9 +29,9 @@
 
     g++ -o simplifyDriver simplifyDriver.cc -I src build/src/libiegenlib.a -lisl -std=c++11
 
- * Now to run the driver, you should put your dependence relation inside
- * JSON files and give them as inputs to driver, JSON file format is
- * demonstrated by examples gs_csr.json and ilu_csr.json:
+ * Now to run the driver, you should put your dependence relations inside
+ * JSON files and give them as inputs to the driver, one or more files at a time.
+ * JSON file format is demonstrated by examples gs_csr.json and ilu_csr.json:
  
    ./simplifyDriver gs_csr.json ilu_csr.json
 
@@ -111,8 +111,8 @@ int main(int argc, char **argv)
 
   if (argc == 1)
   {
-    cout<<"\n\nYou need to specify the input JSON files that contain dependence relations:"
-          "\n./simplifyDriver file1.json file2.json ...\n\n";
+    cout<<"\n\nYou need to specify the input JSON files (one or more) that contain dependence relations:"
+          "\n./simplifyDriver file1.json file2.json\n\n";
   } else if (argc >= 2){
     // Parsing command line arguments and reading given files.
     for(int arg = 1; arg < argc ; arg++){
