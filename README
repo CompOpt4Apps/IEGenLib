@@ -61,7 +61,7 @@ compile the simplifyDriver.c using following command:
     g++ -o simplifyDriver simplifyDriver.cc -I src build/src/libiegenlib.a -lisl -std=c++11
 
 Then, to produce the simplified dependence relations of 
-Gauss-Seidle and Incomplete LU examples discussed in the paper, 
+Gauss-Seidel and Incomplete LU examples discussed in the paper, 
 use following command:
 
    ./simplifyDriver gs_csr.json ilu_csr.json
@@ -69,7 +69,7 @@ use following command:
 Note that dependence relations (along with the reference codes) 
 are inside two json files seen in the command above. 
 For a detail description read rest of this section and 
-comments in the simplifyDrver.cc. 
+comments in the simplifyDriver.cc. 
 
 
 The paper:
