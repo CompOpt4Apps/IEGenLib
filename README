@@ -55,6 +55,23 @@ choosing an alternative installation directory is covered in the section IV.
 
 ---- B. Replicating relation simplification result from the SC 2016 paper ---
 
+After building IEGenLib using above commands, 
+compile the simplifyDriver.c using following command:
+
+    g++ -o simplifyDriver simplifyDriver.cc -I src build/src/libiegenlib.a -lisl -std=c++11
+
+Then, to produce the simplified dependence relations of 
+Gauss-Seidle and Incomplete LU examples discussed in the paper, 
+use following command:
+
+   ./simplifyDriver gs_csr.json ilu_csr.json
+
+Note that dependence relations (along with the reference codes) 
+are inside two json files seen in the command above. 
+For a detail description read rest of this section and 
+comments in the simplifyDrver.cc. 
+
+
 The paper:
 
 Anand Venkat, Mahdi Soltan Mohammadi, Hongbo Rong, Rajkishore Barik,
