@@ -31,9 +31,15 @@
 
  * Now to run the driver, you should put your dependence relations inside
  * JSON files and give them as inputs to the driver, one or more files at a time.
- * JSON file format is demonstrated by examples gs_csr.json and ilu_csr.json:
+ * JSON file format is demonstrated by examples gs_csr.json and ilu_csr.json that
+ * can be found in same directory as this driver. The json input files include commnet
+ * fields that have the application code (Gauss-Seidel and ILU) in them, and says where
+ * in the code each dependence relation is getting extract. So you can run following
+ * afetr compiling the driver to get the simplified relations:
  
    ./simplifyDriver gs_csr.json ilu_csr.json
+
+ * Note: the driver can read one or as many input json files as given.
 
  *     
  *
@@ -46,13 +52,17 @@
  * See COPYING for details. <br>
  * 
  *
- * HOW TO USE INTERFACAE TO SIMPLIFICATION ALGORITHM for
- * simplifying constraints relation containing Uninterpreted Function Calls:
+ * HOW TO USE INTERFACE TO SIMPLIFICATION ALGORITHM for
+ * simplifying constraints relation containing Uninterpreted Function Calls.
+ * the overall process is explained in the 7 steps bellow, the simplify function
+ * implementes these steps using IEGenLib's Functions:
  * 
  * (1) You need to define uninterpreted function calls (UFCs) that appear
- *        in constraints for iegenlib enviroment. The example in the main
- *        function shows how to do this. Note that, you need to do this
- *        only once for relations that have same UFSs during one run
+ *        in constraints for iegenlib environment. These informations are 
+ *        the first set of information that simplify function reads from 
+ *        input json files and puts them in the IEGenLib enviroment.
+ *        Note that, you need to do this only once for 
+ *        relations that have same UFSs during one run.
  *
  * (2) You need to put constraints in iegenlib Relation (or Set).
  * 
@@ -76,7 +86,7 @@
  
  *  We have demonstrated these steps in the simplify function
  *  This function reads information from a JSON file (inputFile), and applies
- *  the simplfication algorithm to the sets found in the file. 
+ *  the simplification algorithm to the sets found in the file. 
  */
 
 
@@ -124,7 +134,7 @@ int main(int argc, char **argv)
 }
 
 // Reads information from a JSON file (inputFile), and applies
-// the simplfication algorithm to the sets found in the file. 
+// the simplification algorithm to the sets found in the file. 
 void simplify(string inputFile)
 {
 
@@ -143,7 +153,7 @@ void simplify(string inputFile)
   for (size_t i = 0; i < data[p].size(); ++i){// Conjunctions found for one DR in the file
 
     // (1)
-    // Introduce the uninterpreted function symbols to enviroment, and indicate
+    // Introduce the uninterpreted function symbols to environment, and indicate
     // their domain, range, whether they are bijective, or monotonic.
     if( i == 0 ){  // Read these data only once. 
                    // They are stored in the first conjunction.

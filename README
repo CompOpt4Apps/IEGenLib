@@ -9,7 +9,7 @@ Contents of this README:
 I.   Getting The Source Code
 II.  Quick Start
         A. Building IEGenLib
-        B. Simplifying constraints set containing Uninterpreted Function Calls
+        B. Replicating relation simplification result from the SC 2016 paper
         C. Using the IEGenLib Python bindings
 III. Distribution Organization
 IV.  Building IEGenLib from Source
@@ -53,18 +53,63 @@ Please note there are requirements for python binding. These requirements and
 choosing an alternative installation directory is covered in the section IV.
 
 
----- B. Simplifying constraints set containing Uninterpreted Function Calls ---
+---- B. Replicating relation simplification result from the SC 2016 paper ---
 
-One of the biggest functionalites currently implemented in IEGenLib is
-simplifying sets of constraints containing uninterpreted function calls.
-These sets can represent non-affine relations that result from
+After building IEGenLib using above commands, 
+compile the simplifyDriver.c using following command:
+
+    g++ -o simplifyDriver simplifyDriver.cc -I src build/src/libiegenlib.a -lisl -std=c++11
+
+Then, to produce the simplified dependence relations of 
+Gauss-Seidel and Incomplete LU examples discussed in the paper, 
+use following command:
+
+   ./simplifyDriver gs_csr.json ilu_csr.json
+
+Note that dependence relations (along with the reference codes) 
+are inside two json files seen in the command above. 
+For a detail description read rest of this section and 
+comments in the simplifyDriver.cc. 
+
+
+The paper:
+
+Anand Venkat, Mahdi Soltan Mohammadi, Hongbo Rong, Rajkishore Barik,
+Jongsoo Park, Michelle Mills Strout and Mary Hall, 
+"Automating Wavefront Parallelization for Sparse Matrix Computations,"
+in Proceedings of the International Conference for High Performance Computing,
+Networking, Storage and Analysis (SC16), Salt Lack City, Utah, 2016.
+
+LINK TO THE PAPER: You could have free access to the paper
+using the publication link from author's publication webpage:
+
+http://cgi.cs.arizona.edu/~mstrout/Papers/pubs-main.php
+
+presents a simplification algorithm for simplifying non-affine sets of 
+constraints that contain uninterpreted function symbols (UFSs).
+These sets can represent non-affine relations that result from 
 data dependence analysis of sparse matrix computation. The simplified sets
 can be used for generating efficient inspectors in Inspector/Executor strategy.
+Here, we explain how users could access and replicate the example relations
+and simplifications that were carried out in the paper. 
 
-After building IEGenLib library, this functionality can be used outside IEGenLib 
-independently or get integrated into other libraries.
-The driver file that shows how to do this, simplifyDriver.cc, is located
-in home directory of IEGenLib, just next to this README file.
+There are two code examples discussed in the paper that from each,
+we can extract more than one dependence relations.
+The code examples and the pertaining relations can be found in
+two json files: gs_csr.json, and ilu_csr.json, located in the home 
+directory of IEGenLib just next to this README file. Files respectively
+correspond to Gauss-Seidel and Incomplete LU factorization codes
+discussed in the paper. The json files are self explanatory about
+how you can specify required inputs and outputs.
+
+Before even looking at the input json files you can look at simplifyDriver.cc.
+This driver, which is located in the same directory as this README,
+explains how to use simplification functionality in IEGenLib to 
+simplify such non-affine sets that are placed into input json files.
+
+After building IEGenLib library, simplification functionality can be used
+outside IEGenLib independently or get integrated into other libraries.
+The driver, simplifyDriver.cc, is an example of this.
 You can also have a look at the main test case for the functionality that is
 located in the chillusage_test. There are also various test cases for 
 sub-functionalities pertaining to simplification in the test cases.
