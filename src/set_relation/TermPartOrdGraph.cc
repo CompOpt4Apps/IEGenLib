@@ -92,6 +92,16 @@ int TermPartOrdGraph::findOrInsertTermId(const Term* t) {
             termId = mVarTerm2IntMap[*vterm];
         }
     } else if (temp->type()=="Term") {
+        // When we insert a constant like 1, we also insert the negative of
+        // that constant. This is because when we move a term from one side 
+        // of the in/equality to the other side, their coefficient gets 
+        // multiplied by -1, for non-constant terms this is not important
+        // since we do not care about their coefficient. However, in case of
+        // constants the coefficient is the term itself. And, if after getting
+        // done with inserting terms, we encounter one of the constants that
+        // we already have inserted to partial ordering, but with different sign,
+        // we would try to insert that term as well. This situation would cause
+        // an assertion for inserting terms after being done with term insertion
         Term* term = dynamic_cast<Term*>(temp);
         if (mTerm2IntMap.find(*term)==mTerm2IntMap.end()) {
             mTerm2IntMap[*term] = mNumTerms++;
@@ -101,7 +111,6 @@ int TermPartOrdGraph::findOrInsertTermId(const Term* t) {
         } else {
             termId = mTerm2IntMap[*term];
         }
-
     } else {
         std::cerr << "TermPartOrdGraph::findOrInsertTermId: "
                      "ERROR unhandled term type" << std::endl;
@@ -176,16 +185,14 @@ void TermPartOrdGraph::doneInsertingTerms() {
 
     // Adds orderings between (just) constant terms  e.g. 1 < 2
     for (std::map<Term,int>::iterator it=mTerm2IntMap.begin(); 
-          it!=mTerm2IntMap.end(); it++){ 
-        if( it->first.coefficient() >= 0 ){
-            Term* temp = it->first.clone();
-            mNonNegativeTerms.insert(temp);
-        }
+          it!=mTerm2IntMap.end(); it++){
+
         std::map<Term,int>::iterator jt = it;
         jt++;
         for ( ; jt!=mTerm2IntMap.end(); jt++){
             if( it->first.coefficient() == jt->first.coefficient() ){
-                 mGraphPtr->equal( it->second , jt->second );
+               throw assert_exception( "TermPartOrdGraph::doneInsertingTerms: ERROR"
+                  " more than one instance of unique constant term in parOrdGraph");
             }
             else if( it->first.coefficient() < jt->first.coefficient() ){
                 mGraphPtr->strict( it->second , jt->second );
@@ -193,7 +200,6 @@ void TermPartOrdGraph::doneInsertingTerms() {
             else {
                  mGraphPtr->strict( jt->second , it->second );
             }
-
         }
     }
 }
