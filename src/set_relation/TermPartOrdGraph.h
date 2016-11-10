@@ -137,13 +137,14 @@ public:
     
     //! Returns a string representation of the class instance for debugging.
     std::string toString() const;        
-        
+
 private:
     int                         mNumTerms;
 
     std::map<UFCallTerm,int>    mUFCallTerm2IntMap;
     std::map<TupleVarTerm,int>  mTupleVarTerm2IntMap;
     std::map<VarTerm,int>       mVarTerm2IntMap;
+    std::map<Term,int>          mTerm2IntMap;
     
     std::set<Term*>             mNonNegativeTerms;
     

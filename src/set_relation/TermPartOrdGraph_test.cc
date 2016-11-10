@@ -55,7 +55,7 @@ TEST(TermPartOrdGraphTest, TermPartOrdGraphToString) {
     EXPECT_EQ("TermPartOrdGraph:\n\tDoneInsertingTerms = 0\n"
               "\tNumTerms = 1\n\tNonNegativeTerms = \n"
               "\tUFCallTerm2IntMap = \n\tTupleVarTerm2IntMap ="
-              " \n\tVarTerm2IntMap = \n\t\tterm = N, id = 0\n", 
+              " \n\tVarTerm2IntMap = \n\t\tterm = N, id = 0\n\tTerm2IntMap = \n", 
               g.toString());
     //std::cout << g.toString();
     
@@ -243,4 +243,65 @@ TEST(TermPartOrdGraphTest, TermPartOrdGraphPartOrd) {
     delete uf_call2;
     delete uf_call3;
 
+}
+
+
+#pragma mark TermPartOrdGraphConstOrd
+TEST(TermPartOrdGraphTest, TermPartOrdGraphConstOrd) {
+
+    TermPartOrdGraph g;
+    VarTerm * v = new VarTerm( "N" );
+    g.insertTerm( v );
+    g.termNonNegative( v );
+
+    UFCallTerm* uf_call = new UFCallTerm("tau", 2); // tau(i,j)
+    Exp *tau_arg_1 = new Exp();
+    tau_arg_1->addTerm(new VarTerm("i"));
+    uf_call->setParamExp(0,tau_arg_1);
+    Exp *tau_arg_2 = new Exp();
+    tau_arg_2->addTerm(new VarTerm("j"));
+    uf_call->setParamExp(1,tau_arg_2);
+
+    g.insertTerm( uf_call );
+
+    Term * c1 = new Term( 1 ); // When we insert a constant like 1, we also insert
+    g.insertTerm( c1 );        // the negative of the constant.
+                               // This is because when we move a term from one side 
+    Term * c2 = new Term( 6 ); // of the in/equality to the other side their coefficient 
+    g.insertTerm( c2 );        // gets multiplied by -1, for non-constant term this is not 
+                               // important since we do not care about their coefficient. 
+                               // However, in case of constants the coefficient is the term itself.
+
+    Term * c3 = new Term( 1 ); // Unique contant terms get inserted only once.
+    g.insertTerm( c3 );        // g would not change.
+
+    Term * c4 = new Term( -6 );
+    g.insertTerm( c4 );        // g would not change.
+
+    g.doneInsertingTerms();
+    
+    //std::cout << g.toString();
+
+    EXPECT_EQ(true, g.isLT(c1,c2));
+    EXPECT_EQ(false, g.isLT(c1,c4));
+    EXPECT_EQ(true, g.isEqual(c1,c3));
+
+    EXPECT_EQ("TermPartOrdGraph:\n\tDoneInsertingTerms = 1\n"
+              "\tNumTerms = 6\n\tNonNegativeTerms = \n\t\tN\n\t\t6\n\t\t1\n"
+              "\tUFCallTerm2IntMap = \n\t\tterm = tau(i, j), id = 1"
+              "\n\tTupleVarTerm2IntMap ="
+              " \n\tVarTerm2IntMap = \n\t\tterm = N, id = 0\n\tTerm2IntMap = "
+              "\n\t\tterm = -6, id = 5\n\t\tterm = -1, id = 3\n\t\t"
+              "term = 1, id = 2\n\t\tterm = 6, id = 4\n"
+              "PartOrdGraph:\n\tmN = 6\n\t\t0\t1\t2\t3\t4\t5\n\t"
+              "0\t=\t\t\t\t\t\n\t1\t\t=\t\t\t\t\n\t2\t\t\t=\t\t<\t\n\t"
+              "3\t\t\t<\t=\t<\t\n\t4\t\t\t\t\t=\t\n\t5\t\t\t<\t<\t<\t=\n\n", 
+              g.toString());
+    
+    delete v;
+    delete uf_call;
+    delete c1;
+    delete c2;
+    delete c3;
+    delete c4;
 }

@@ -2449,6 +2449,7 @@ class VisitorCollectTerms : public Visitor {
     TermPartOrdGraph returnPartOrd() { return mPartOrd; }
 
     void postVisitTerm(iegenlib::Term * t) {
+        mPartOrd.insertTerm(t);
         mConstTermVal[mCurrExpStack.top()] = t->coefficient();
     }
     void postVisitUFCallTerm(iegenlib::UFCallTerm * t) {
@@ -2547,7 +2548,9 @@ class VisitorCollectPartOrd : public Visitor {
     
   public:
     VisitorCollectPartOrd(TermPartOrdGraph partOrd) :
-        mFoundNonNeg(false), mPartOrd(partOrd) {}
+        mFoundNonNeg(false) {
+        mPartOrd = partOrd;
+    }
     ~VisitorCollectPartOrd() {}
   
     bool hasConverged() { return !mFoundNonNeg; }
@@ -2565,6 +2568,11 @@ class VisitorCollectPartOrd : public Visitor {
 
     // See class header for logic.
     void deriveInfo(iegenlib::Term * t) {
+
+        // Don't want to solve for a constant when have i < 3 
+        // (we will get this order from 'i').
+        if (t->isConst()) return;
+
         Exp* e = mCurrExpStack.top();
         
         // solve for factor treats the constraint like exp=0
@@ -2615,10 +2623,7 @@ class VisitorCollectPartOrd : public Visitor {
                 std::list<Term*>::const_iterator i;
                 for (i=termList.begin(); i != termList.end(); ++i) {
                     Term* solution_term = (*i);
-                    
-                    // Don't want to have partial ordering with a constant.
-                    if (solution_term->isConst()) continue;
-                    
+                                        
                     // t >= solution_term + (other noneg terms) + c, c>=1
                     if (c>=1 && t->coefficient()>0) {
                         mPartOrd.insertLT(solution_term, t);
@@ -2903,9 +2908,11 @@ void VisitorBoundDomainRange::preVisitUFCallTerm(UFCallTerm * t){
     // look up bound for uninterpreted function
     Set* domain = iegenlib::queryDomainCurrEnv(uf_call->name());
 
+//std::cout<<"\n\n\nDomain = "<<domain->toString()<<"\n\n\nTuple Exp = "<<tuple_exp.toString()<<"\n\n\n";
+
     // have the domain create the constraints and store those constraints
     Set* constraintSet = domain->boundTupleExp(tuple_exp);
-
+//std::cout<<"\n\n\nHI!\n\n\n ";
     // The constraintSet returned by boundTupleExp will not have any
     // tuple variables. We want the tuple variable declaration to line up.
     constraintSet->setTupleDecl( addedConstSet->getTupleDecl() );
