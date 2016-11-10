@@ -191,8 +191,8 @@ void TermPartOrdGraph::doneInsertingTerms() {
         jt++;
         for ( ; jt!=mTerm2IntMap.end(); jt++){
             if( it->first.coefficient() == jt->first.coefficient() ){
-               throw assert_exception( "TermPartOrdGraph::doneInsertingTerms: ERROR"
-                  " more than one instance of unique constant term in parOrdGraph");
+              throw assert_exception( "TermPartOrdGraph::doneInsertingTerms: ERROR"
+               " more than one instance of an unique constant term in parOrdGraph");
             }
             else if( it->first.coefficient() < jt->first.coefficient() ){
                 mGraphPtr->strict( it->second , jt->second );
