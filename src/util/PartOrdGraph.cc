@@ -45,8 +45,8 @@ PartOrdGraph::PartOrdGraph(unsigned int N) {
     this->mN = N;
     this->mAdjacencyMatrix = new CompareEnum[N*N];
     // Initialize all 
-    for (int i=0; i<N; i++) {
-        for (int j=0; j<N; j++) {
+    for (unsigned int i=0; i<N; i++) {
+        for (unsigned int j=0; j<N; j++) {
             mAdjacencyMatrix[getIndex(i,j)] = NO_ORD;
             if (i==j) {
                 mAdjacencyMatrix[getIndex(i,j)] = EQUAL;
@@ -64,8 +64,8 @@ PartOrdGraph::PartOrdGraph(const PartOrdGraph& other) {
 PartOrdGraph& PartOrdGraph::operator=(const PartOrdGraph& other) {
     mN = other.mN;
     this->mAdjacencyMatrix = new CompareEnum[mN*mN];
-    for (int i=0; i<mN; i++) {
-        for (int j=0; j<mN; j++) {
+    for (unsigned int i=0; i<mN; i++) {
+        for (unsigned int j=0; j<mN; j++) {
             mAdjacencyMatrix[getIndex(i,j)]
                 = other.mAdjacencyMatrix[getIndex(i,j)];
         }
@@ -209,14 +209,14 @@ std::string PartOrdGraph::toString() {
     ss << "PartOrdGraph:\n\tmN = " << this->mN << std::endl;
     // column headers
     ss << "\t";
-    for (int j=0; j<this->mN; j++) {
+    for (unsigned int j=0; j<this->mN; j++) {
         ss << "\t" << j;
     }
     ss << std::endl;
     // rows in adjacency matrix
-    for (int i=0; i<this->mN; i++) {
+    for (unsigned int i=0; i<this->mN; i++) {
         ss << "\t" << i;
-        for (int j=0; j<this->mN; j++) {
+        for (unsigned int j=0; j<this->mN; j++) {
             ss << "\t";
             if (isStrict(i,j)) { ss << "<"; }
             if (isNonStrict(i,j)) { ss << "<="; }

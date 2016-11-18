@@ -385,22 +385,20 @@ TEST_F(NormalizationTest, NestedUFCalls1D2D1D) {
 
 
     r1->normalize();
-    EXPECT_EQ("{ [s, i1, s2, e] : __tv0 - __tv2 = 0 && "
-              "__tv1 - sigma(left(__tv3)[0], left(__tv3)[1]) = 0 "
-              "&& __tv1 >= 0 && "
-              "__tv3 >= 0 && left(__tv3)[0] >= 0 && left(__tv3)[1] >= 0 && "
-              "-__tv1 + N - 1 >= 0 && -__tv3 + K - 1 >= 0 && "
-              "M - left(__tv3)[0] - 1 >= 0 && P - left(__tv3)[1] - 1 >= 0 }",
-              r1->toString());
+    EXPECT_EQ("{ [s, i1, s2, e] : s - s2 = 0 && i1 - sigma(left(e)[0], "
+              "left(e)[1]) = 0 && e >= 0 && left(e)[0] >= 0 && left(e)[1] >= 0 "
+              "&& sigma(left(e)[0], left(e)[1]) >= 0 && -e + K - 1 >= 0 && "
+              "M - left(e)[0] - 1 >= 0 && N - sigma(left(e)[0], "
+              "left(e)[1]) - 1 >= 0 ""&& P - left(e)[1] - 1 >= 0 }",
+              r1->prettyPrintString());
 
     r2->normalize();
-    EXPECT_EQ("{ [s, i1, s, f] : __tv0 - __tv2 = 0 && "
-              "__tv1 - sigma(left(__tv3)[0], left(__tv3)[1]) = 0 "
-              "&& __tv1 >= 0 && "
-              "__tv3 >= 0 && left(__tv3)[0] >= 0 && left(__tv3)[1] >= 0 && "
-              "-__tv1 + N - 1 >= 0 && -__tv3 + K - 1 >= 0 && "
-              "M - left(__tv3)[0] - 1 >= 0 && P - left(__tv3)[1] - 1 >= 0 }",
-              r2->toString());
+    EXPECT_EQ("{ [s, i1, s, f] : s - s = 0 && i1 - sigma(left(f)[0], "
+              "left(f)[1]) = 0 && f >= 0 && left(f)[0] >= 0 && left(f)[1] >= 0 "
+              "&& sigma(left(f)[0], left(f)[1]) >= 0 && -f + K - 1 >= 0 && "
+              "M - left(f)[0] - 1 >= 0 && N - sigma(left(f)[0], "
+              "left(f)[1]) - 1 >= 0 && P - left(f)[1] - 1 >= 0 }",
+              r2->prettyPrintString());
 
     EXPECT_TRUE((*r1) == (*r2));
     
