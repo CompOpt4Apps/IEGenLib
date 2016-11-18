@@ -413,6 +413,15 @@ public:
     void RemoveExpensiveConsts(std::set<int> parallelTvs, 
                                      int mNumConstsToRemove  );
 
+    /*! Sometimes to provide arguments of an UFC like sigma(a1, a2, ...)
+    **  we use another UFC that is not indexed like left(f). Here, the
+    **  expanded form would look like this: 
+    **                          sigma(left(f)[0], left(f)[1], ...) 
+    **  indexUFCs() would create the expanded format for normalization purposes.
+    */
+    void indexUFCs();
+
+
 // FIXME: what methods should we have to iterate over conjunctions so
 // this can go back to protected?
 //protected:

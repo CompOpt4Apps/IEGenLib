@@ -1867,6 +1867,13 @@ Set* Set::boundTupleExp(const TupleExpTerm& tuple_exp) const {
 // Replace UFs with vars, pass to ISL, and then reverse substitution.
 void Set::normalize() {
 
+    // Sometimes to provide arguments of an UFC like sigma(a1, a2, ...)
+    // we use another UFC that is not indexed like left(f). Here, the
+    // expanded form would look like this: 
+    //                         sigma(left(f)[0], left(f)[1], ...) 
+    // indexUFCs() would create the expanded format for normalization purposes.
+    indexUFCs();
+
     // Create variable names for UF calls.
     UFCallMap* uf_call_map = mapUFCtoSym();
     
@@ -2203,6 +2210,13 @@ void Relation::addConjunction(Conjunction *adoptedConjunction) {
 // Replace UFs with vars, pass to ISL, and then reverse substitution.
 void Relation::normalize() {
 
+    // Sometimes to provide arguments of an UFC like sigma(a1, a2, ...)
+    // we use another UFC that is not indexed like left(f). Here, the
+    // expanded form would look like this: 
+    //                         sigma(left(f)[0], left(f)[1], ...) 
+    // indexUFCs() would create the expanded format for normalization purposes.
+    indexUFCs();
+
     // Create variable names for UF calls.
     UFCallMap* uf_call_map = mapUFCtoSym();
     
@@ -2276,6 +2290,54 @@ void Relation::acceptVisitor(Visitor *v) {
     v->postVisitRelation(this);
 }
 
+
+
+/******************************************************************************/
+#pragma mark -
+/*************** VisitorIndexUFC *****************************/
+/*! Vistor Class used for indexing, non-indexing UFCs
+**  Sometimes to provide arguments of an UFC like sigma(a1, a2, ...)
+**  we use another UFC that is not indexed like left(f). Here, the
+**  expanded form would look like this: 
+**                                sigma(left(f)[0], left(f)[1], ...)
+*/
+class VisitorIndexUFC : public Visitor {
+  public:
+    VisitorIndexUFC(){}
+    //! For each UFC adds Domain & Range constraints to addedConstSet
+    void postVisitUFCallTerm(UFCallTerm * t){
+           
+        Set * s = queryDomainCurrEnv( t->name() );
+        int act_nArg = s->arity();
+        int cur_nArg = t->numArgs();
+ 
+        if( cur_nArg == 1 && act_nArg > 1){
+            
+            Exp* par = t->getParamExp(0);
+            Term *ta = par->getTerm();
+            if( !(ta) || !(ta->type()=="UFCallTerm") ){
+                throw assert_exception("VisitorIndexUFC: Null or non UFC tuple argument");
+            }
+            UFCallTerm* uft = dynamic_cast<UFCallTerm*>(ta);
+ 
+            UFCallTerm new_ufc(t->coefficient(), t->name() , act_nArg);
+            for(int i = 0 ; i < act_nArg ; i++){
+                UFCallTerm* temp = dynamic_cast<UFCallTerm*>( uft->clone() );
+                temp->setTupleIndex(i);
+                Exp *ae = new Exp(); 
+                ae->addTerm( temp );
+                new_ufc.setParamExp(i,ae);
+            }
+            *t = new_ufc;               
+        }
+    }
+};
+
+void SparseConstraints::indexUFCs()
+{
+    VisitorIndexUFC* v = new VisitorIndexUFC();
+    this->acceptVisitor(v);
+}
 
 /******************************************************************************/
 #pragma mark addUFConstraints
