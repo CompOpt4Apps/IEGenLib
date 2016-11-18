@@ -32,6 +32,7 @@ TermPartOrdGraph& TermPartOrdGraph::operator=(const TermPartOrdGraph& other) {
     mUFCallTerm2IntMap      = other.mUFCallTerm2IntMap;
     mTupleVarTerm2IntMap    = other.mTupleVarTerm2IntMap;
     mVarTerm2IntMap         = other.mVarTerm2IntMap;
+    mTerm2IntMap            = other.mTerm2IntMap;
     std::set<Term*>::const_iterator iter;
     for (iter=other.mNonNegativeTerms.begin();
             iter!=other.mNonNegativeTerms.end(); iter++){
@@ -66,7 +67,7 @@ int TermPartOrdGraph::findOrInsertTermId(const Term* t) {
     int initialNumTerms = mNumTerms;
     
     Term* temp = t->clone();
-    temp->setCoefficient(1);
+    if(temp->type()!="Term") temp->setCoefficient(1);
 
     // Insert the term into the correct map.
     if (temp->type()=="UFCallTerm") {
@@ -90,6 +91,26 @@ int TermPartOrdGraph::findOrInsertTermId(const Term* t) {
         } else {
             termId = mVarTerm2IntMap[*vterm];
         }
+    } else if (temp->type()=="Term") {
+        // When we insert a constant like 1, we also insert the negative of
+        // that constant. This is because when we move a term from one side 
+        // of the in/equality to the other side, their coefficient gets 
+        // multiplied by -1, for non-constant terms this is not important
+        // since we do not care about their coefficient. However, in case of
+        // constants the coefficient is the term itself. And, if after getting
+        // done with inserting terms, we encounter one of the constants that
+        // we already have inserted to partial ordering, but with different sign,
+        // we would try to insert that term as well. This situation would cause
+        // an assertion for inserting terms after being done with term insertion
+        Term* term = dynamic_cast<Term*>(temp);
+        if (mTerm2IntMap.find(*term)==mTerm2IntMap.end()) {
+            mTerm2IntMap[*term] = mNumTerms++;
+            Term* nterm = dynamic_cast<Term*>(temp);
+            nterm->setCoefficient( (-1*term->coefficient()) );
+            mTerm2IntMap[*nterm] = mNumTerms++;
+        } else {
+            termId = mTerm2IntMap[*term];
+        }
     } else {
         std::cerr << "TermPartOrdGraph::findOrInsertTermId: "
                      "ERROR unhandled term type" << std::endl;
@@ -100,8 +121,7 @@ int TermPartOrdGraph::findOrInsertTermId(const Term* t) {
     delete temp;
     
     // Check that we didn't just do an insertion after doneInsertingItems call.
-    if ( !((isDoneInsertingTerms() and (initialNumTerms==mNumTerms))
-            || !isDoneInsertingTerms()) ) {
+    if ( isDoneInsertingTerms() and (initialNumTerms!=mNumTerms) ) {
         throw assert_exception( "TermPartOrdGraph: insertion after "
                                 "doneInsertingItems() call");
     }
@@ -112,6 +132,7 @@ int TermPartOrdGraph::findOrInsertTermId(const Term* t) {
 //! Changes coeff to 1 and then makes sure the term is unique.
 //! Does NOT take ownership of term.
 void TermPartOrdGraph::insertTerm( const Term* t ) {
+
     findOrInsertTermId(t);
 }
 
@@ -161,6 +182,26 @@ bool TermPartOrdGraph::isNonNegative( const Term* term ) const {
 //! of the PartOrdGraph data structure.
 void TermPartOrdGraph::doneInsertingTerms() {
     mGraphPtr = new PartOrdGraph(mNumTerms);
+
+    // Adds orderings between (just) constant terms  e.g. 1 < 2
+    for (std::map<Term,int>::iterator it=mTerm2IntMap.begin(); 
+          it!=mTerm2IntMap.end(); it++){
+
+        std::map<Term,int>::iterator jt = it;
+        jt++;
+        for ( ; jt!=mTerm2IntMap.end(); jt++){
+            if( it->first.coefficient() == jt->first.coefficient() ){
+              throw assert_exception( "TermPartOrdGraph::doneInsertingTerms: ERROR"
+               " more than one instance of an unique constant term in parOrdGraph");
+            }
+            else if( it->first.coefficient() < jt->first.coefficient() ){
+                mGraphPtr->strict( it->second , jt->second );
+            }
+            else {
+                 mGraphPtr->strict( jt->second , it->second );
+            }
+        }
+    }
 }
 
 //! Once user is done inserting items we can create an instance
@@ -261,6 +302,7 @@ std::set<UFCallTerm*> TermPartOrdGraph::getUniqueUFCallTerms() {
     termMapCopyTerms<Term*,UFCallTerm>(mUFCallTerm2IntMap, uniqueTerms);
     termMapCopyTerms<Term*,TupleVarTerm>(mTupleVarTerm2IntMap, uniqueTerms);
     termMapCopyTerms<Term*,VarTerm>(mVarTerm2IntMap, uniqueTerms);
+    termMapCopyTerms<Term*,Term>(mTerm2IntMap, uniqueTerms);
     return uniqueTerms;
 }*/
 
@@ -303,12 +345,13 @@ std::string TermPartOrdGraph::toString() const {
     ss << termMapToString<TupleVarTerm>(mTupleVarTerm2IntMap);
     ss << "\tVarTerm2IntMap = " << std::endl;
     ss << termMapToString<VarTerm>(mVarTerm2IntMap);
-    
+    ss << "\tTerm2IntMap = " << std::endl;
+    ss << termMapToString<Term>(mTerm2IntMap);
+
     // Underlying partial ordering on integer ids.
     if (mGraphPtr!=NULL) { ss << mGraphPtr->toString(); }
     
     return ss.str();
 }
     
-
 }
