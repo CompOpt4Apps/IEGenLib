@@ -1,0 +1,173 @@
+[
+  [
+    {
+      "Name" : "CSR Incoplete Cholesky 0",
+      "Input Type" : "IEgenLIB Relation",
+      "Relation" : "{ [i,m,k,l] -> [ip,mp,kp,lp] : row(i) = mp && i < ip  && 0 <= i && i < n-1 && 0 <= ip && ip < n-1  && row(i)+1 <= m && m < row(i+1) && row(ip)+1 <= mp && mp < row(ip+1) && row(col(m)) <= k && k < row(col(m)+1) && row(col(mp)) <= kp && kp < row(col(mp)+1) && m <= l && l < row(i+1) && mp <= lp && lp < row(ip+1) && col(l+1) <= col(k) && col(lp+1) <= col(kp)}",
+      "Expected" : "Not Satisfiable",
+      "UFS" :
+      [
+        { 
+           "Name" : "col",
+           "Domain" : "{[i]:0<=i && i<nnz}",
+           "Range" : "{[j]: 0<=j && j<m}",
+           "Bijective" : "false",
+           "Monotonicity" : "Monotonic_NONE"
+        },
+        { 
+           "Name" : "row",
+           "Domain" : "{[j]:0<=j &&j<m}",
+           "Range" : "{[i]:0<=i &&i<nnz}",
+           "Bijective" : "false",
+           "Monotonicity" : "Monotonic_Increasing"
+        }
+      ],
+      "User Defined" :
+      [
+      ],
+      "Do Not Project Out" :
+      [
+        "i", "ip"
+      ],
+      "Remove Constraints" : "0",
+      "Comment: Code" : [
+                  "Following is the CSR Incoplete Cholesky 0 code.", 
+                  "Dependence analysis of this code would identify",
+                  "6 pairs of read/write data accesses (in or between",
+                  "S1, S2, and S3) that may produce data dependences.",
+                  "These pair produce 12 distinct conjunctions considering",
+                  "the ordering of accesses (Flow and Anti dependence).",
+                  " ",
+                  "for (i = 0; i < n - 1; i++){",
+                  "  val[row[i]] = sqrt(val[row[i]]);      //S1",
+                  "  for (m = row[i] + 1; m < row[i+1]; m++){",
+                  "    val[m] = val[m] / val[row[i]];      //S2",
+                  "  }",
+                  "  for (m = row[i] + 1; m < row[i+1]; m++) {",
+                  "    for (k = row[col[m]] ; k && k < row[col[m]+1]; k++){",
+                  "      for ( l = m; l && l < row[i+1] && col[l+1] <= col[k]; l++){",
+                  "        if (col[l] == col[k]){",
+                  "          val[k] -= val[m]* val[l];      //S3",
+                  "        }", 
+                  "      }",
+                  "    }",
+                  "  }",
+                  "}"
+                  ],
+      "Comment: Source of data access in the code for this relation" : [
+                    " ",
+                    "a write in S1 (val[row[i]]);  a read in S2 (val[m]);"
+                  ]
+    },
+    {
+      "Name" : "CSR Incoplete Cholesky 0",
+      "Input Type" : "IEgenLIB Relation",
+      "Relation" : "{ [i,m,k,l] -> [ip,mp,kp,lp] : row(i) = mp && ip < i  && 0 <= i && i < n-1 && 0 <= ip && ip < n-1  && row(i)+1 <= m && m < row(i+1) && row(ip)+1 <= mp && mp < row(ip+1) && row(col(m)) <= k && k < row(col(m)+1) && row(col(mp)) <= kp && kp < row(col(mp)+1) && m <= l && l < row(i+1) && mp <= lp && lp < row(ip+1) && col(l+1) <= col(k) && col(lp+1) <= col(kp)}",
+      "Expected" : "Not Satisfiable",
+      "Comment: Source of data access in the code for this relation" : [
+                    " ",
+                    "a write in S1 (val[row[i]]);  a read in S2 (val[m]);"
+                  ]
+    },
+    {
+      "Name" : "CSR Incoplete Cholesky 0",
+      "Input Type" : "IEgenLIB Relation",
+      "Relation" : "{ [i,m,k,l] -> [ip,mp,kp,lp] : row(i) = kp && i < ip  && 0 <= i && i < n-1 && 0 <= ip && ip < n-1  && row(i)+1 <= m && m < row(i+1) && row(ip)+1 <= mp && mp < row(ip+1) && row(col(m)) <= k && k < row(col(m)+1) && row(col(mp)) <= kp && kp < row(col(mp)+1) && m <= l && l < row(i+1) && mp <= lp && lp < row(ip+1) && col(l+1) <= col(k) && col(lp+1) <= col(kp) && col(l+1) <= col(k) && col(l) = col(k) && col(lp+1) <= col(kp) && col(lp) = col(kp)}",
+      "Expected" : "Not Satisfiable",
+      "Comment: Source of data access in the code for this relation" : [
+                    " ",
+                    "a write in S1 (val[row[i]]);  a write in S3 (val[k]);"
+                  ]
+    },
+    {
+      "Name" : "CSR Incoplete Cholesky 0",
+      "Input Type" : "IEgenLIB Relation",
+      "Relation" : "{ [i,m,k,l] -> [ip,mp,kp,lp] : row(i) = kp && ip < i  && 0 <= i && i < n-1 && 0 <= ip && ip < n-1  && row(i)+1 <= m && m < row(i+1) && row(ip)+1 <= mp && mp < row(ip+1) && row(col(m)) <= k && k < row(col(m)+1) && row(col(mp)) <= kp && kp < row(col(mp)+1) && m <= l && l < row(i+1) && mp <= lp && lp < row(ip+1) && col(l+1) <= col(k) && col(lp+1) <= col(kp) && col(l+1) <= col(k) && col(l) = col(k) && col(lp+1) <= col(kp) && col(lp) = col(kp)}",
+      "Expected" : "Not Satisfiable",
+      "Comment: Source of data access in the code for this relation" : [
+                    " ",
+                    "a write in S1 (val[row[i]]);  a write in S3 (val[k]);"
+                  ]
+    },
+    {
+      "Name" : "CSR Incoplete Cholesky 0",
+      "Input Type" : "IEgenLIB Relation",
+      "Relation" : "{ [i,m,k,l] -> [ip,mp,kp,lp] : row(i) = mp && i < ip  && 0 <= i && i < n-1 && 0 <= ip && ip < n-1  && row(i)+1 <= m && m < row(i+1) && row(ip)+1 <= mp && mp < row(ip+1) && row(col(m)) <= k && k < row(col(m)+1) && row(col(mp)) <= kp && kp < row(col(mp)+1) && m <= l && l < row(i+1) && mp <= lp && lp < row(ip+1) && col(l+1) <= col(k) && col(lp+1) <= col(kp) && col(l+1) <= col(k) && col(l) = col(k) && col(lp+1) <= col(kp) && col(lp) = col(kp)}",
+      "Expected" : "Not Satisfiable",
+      "Comment: Source of data access in the code for this relation" : [
+                    " ",
+                    "a write in S1 (val[row[i]]);  a read in S3 (val[m]);"
+                  ]
+    },
+    {
+      "Name" : "CSR Incoplete Cholesky 0",
+      "Input Type" : "IEgenLIB Relation",
+      "Relation" : "{ [i,m,k,l] -> [ip,mp,kp,lp] : row(i) = mp && ip < i  && 0 <= i && i < n-1 && 0 <= ip && ip < n-1  && row(i)+1 <= m && m < row(i+1) && row(ip)+1 <= mp && mp < row(ip+1) && row(col(m)) <= k && k < row(col(m)+1) && row(col(mp)) <= kp && kp < row(col(mp)+1) && m <= l && l < row(i+1) && mp <= lp && lp < row(ip+1) && col(l+1) <= col(k) && col(lp+1) <= col(kp) && col(l+1) <= col(k) && col(l) = col(k) && col(lp+1) <= col(kp) && col(lp) = col(kp)}",
+      "Expected" : "Not Satisfiable",
+      "Comment: Source of data access in the code for this relation" : [
+                    " ",
+                    "a write in S1 (val[row[i]]);  a read in S3 (val[m]);"
+                  ]
+    },
+    {
+      "Name" : "CSR Incoplete Cholesky 0",
+      "Input Type" : "IEgenLIB Relation",
+      "Relation" : "{ [i,m,k,l] -> [ip,mp,kp,lp] : row(i) = lp && i < ip  && 0 <= i && i < n-1 && 0 <= ip && ip < n-1  && row(i)+1 <= m && m < row(i+1) && row(ip)+1 <= mp && mp < row(ip+1) && row(col(m)) <= k && k < row(col(m)+1) && row(col(mp)) <= kp && kp < row(col(mp)+1) && m <= l && l < row(i+1) && mp <= lp && lp < row(ip+1) && col(l+1) <= col(k) && col(lp+1) <= col(kp) && col(l+1) <= col(k) && col(l) = col(k) && col(lp+1) <= col(kp) && col(lp) = col(kp)}",
+      "Expected" : "Not Satisfiable",
+      "Comment: Source of data access in the code for this relation" : [
+                    " ",
+                    "a write in S1 (val[row[i]]);  a read in S3 (val[l]);"
+                  ]
+    },
+    {
+      "Name" : "CSR Incoplete Cholesky 0",
+      "Input Type" : "IEgenLIB Relation",
+      "Relation" : "{ [i,m,k,l] -> [ip,mp,kp,lp] : row(i) = lp && ip < i  && 0 <= i && i < n-1 && 0 <= ip && ip < n-1  && row(i)+1 <= m && m < row(i+1) && row(ip)+1 <= mp && mp < row(ip+1) && row(col(m)) <= k && k < row(col(m)+1) && row(col(mp)) <= kp && kp < row(col(mp)+1) && m <= l && l < row(i+1) && mp <= lp && lp < row(ip+1) && col(l+1) <= col(k) && col(lp+1) <= col(kp) && col(l+1) <= col(k) && col(l) = col(k) && col(lp+1) <= col(kp) && col(lp) = col(kp)}",
+      "Expected" : "Not Satisfiable",
+      "Comment: Source of data access in the code for this relation" : [
+                    " ",
+                    "a write in S1 (val[row[i]]);  a read in S3 (val[l]);"
+                  ]
+    },
+    {
+      "Name" : "CSR Incoplete Cholesky 0",
+      "Input Type" : "IEgenLIB Relation",
+      "Relation" : "{ [i,m,k,l] -> [ip,mp,kp,lp] : m = kp && i < ip  && 0 <= i && i < n-1 && 0 <= ip && ip < n-1  && row(i)+1 <= m && m < row(i+1) && row(ip)+1 <= mp && mp < row(ip+1) && row(col(m)) <= k && k < row(col(m)+1) && row(col(mp)) <= kp && kp < row(col(mp)+1) && m <= l && l < row(i+1) && mp <= lp && lp < row(ip+1) && col(l+1) <= col(k) && col(lp+1) <= col(kp) && col(l+1) <= col(k) && col(l) = col(k) && col(lp+1) <= col(kp) && col(lp) = col(kp)}",
+      "Expected" : "Not Satisfiable",
+      "Comment: Source of data access in the code for this relation" : [
+                    " ",
+                    "a write in S2 (val[m]);  a write in S3 (val[k]);"
+                  ]
+    },
+    {
+      "Name" : "CSR Incoplete Cholesky 0",
+      "Input Type" : "IEgenLIB Relation",
+      "Relation" : "{ [i,m,k,l] -> [ip,mp,kp,lp] : m = kp && ip < i  && 0 <= i && i < n-1 && 0 <= ip && ip < n-1  && row(i)+1 <= m && m < row(i+1) && row(ip)+1 <= mp && mp < row(ip+1) && row(col(m)) <= k && k < row(col(m)+1) && row(col(mp)) <= kp && kp < row(col(mp)+1) && m <= l && l < row(i+1) && mp <= lp && lp < row(ip+1) && col(l+1) <= col(k) && col(lp+1) <= col(kp) && col(l+1) <= col(k) && col(l) = col(k) && col(lp+1) <= col(kp) && col(lp) = col(kp)}",
+      "Expected" : "Not Satisfiable",
+      "Comment: Source of data access in the code for this relation" : [
+                    " ",
+                    "a write in S2 (val[m]);  a write in S3 (val[k]);"
+                  ]
+    },
+    {
+      "Name" : "CSR Incoplete Cholesky 0",
+      "Input Type" : "IEgenLIB Relation",
+      "Relation" : "{ [i,m,k,l] -> [ip,mp,kp,lp] : m = lp && i < ip  && 0 <= i && i < n-1 && 0 <= ip && ip < n-1  && row(i)+1 <= m && m < row(i+1) && row(ip)+1 <= mp && mp < row(ip+1) && row(col(m)) <= k && k < row(col(m)+1) && row(col(mp)) <= kp && kp < row(col(mp)+1) && m <= l && l < row(i+1) && mp <= lp && lp < row(ip+1) && col(l+1) <= col(k) && col(lp+1) <= col(kp) && col(l+1) <= col(k) && col(l) = col(k) && col(lp+1) <= col(kp) && col(lp) = col(kp)}",
+      "Expected" : "Not Satisfiable",
+      "Comment: Source of data access in the code for this relation" : [
+                    " ",
+                    "a write in S2 (val[m]);  a read in S3 (val[l]);"
+                  ]
+    },
+    {
+      "Name" : "CSR Incoplete Cholesky 0",
+      "Input Type" : "IEgenLIB Relation",
+      "Relation" : "{ [i,m,k,l] -> [ip,mp,kp,lp] : m = lp && ip < i  && 0 <= i && i < n-1 && 0 <= ip && ip < n-1  && row(i)+1 <= m && m < row(i+1) && row(ip)+1 <= mp && mp < row(ip+1) && row(col(m)) <= k && k < row(col(m)+1) && row(col(mp)) <= kp && kp < row(col(mp)+1) && m <= l && l < row(i+1) && mp <= lp && lp < row(ip+1) && col(l+1) <= col(k) && col(lp+1) <= col(kp) && col(l+1) <= col(k) && col(l) = col(k) && col(lp+1) <= col(kp) && col(lp) = col(kp)}",
+      "Expected" : "Not Satisfiable",
+      "Comment: Source of data access in the code for this relation" : [
+                    " ",
+                    "a write in S2 (val[m]);  a read in S3 (val[l]);"
+                  ]
+    }
+  ]
+]
