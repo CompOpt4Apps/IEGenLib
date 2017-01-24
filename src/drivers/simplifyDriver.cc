@@ -25,19 +25,20 @@
    
     IEGENLIB_HOME indicates where you have your copy of IEgenLIB.
     For example if you are compiling this file in its original location that is 
-    IEGENLIB_HOME, then you can run following to compile:
+    IEGENLIB_HOME/src/drivers, FROM IEGENLIB_HOME run following to compile:
 
-    g++ -o simplifyDriver simplifyDriver.cc -I src build/src/libiegenlib.a -lisl -std=c++11
+    g++ -o build/bin/simplifyDriver src/ drivers/simplifyDriver.cc -I src build/src/libiegenlib.a -lisl -std=c++11
 
  * Now to run the driver, you should put your dependence relations inside
- * JSON files and give them as inputs to the driver, one or more files at a time.
- * JSON file format is demonstrated by examples gs_csr.json and ilu_csr.json that
- * can be found in same directory as this driver. The json input files include commnet
- * fields that have the application code (Gauss-Seidel and ILU) in them, and says where
- * in the code each dependence relation is getting extract. So you can run following
- * afetr compiling the driver to get the simplified relations:
+ * JSON files and give them as inputs to the driver, one or more files
+ * at a time. JSON file format is demonstrated by examples gs_csr.json and
+ * ilu_csr.json that can be found in IEGENLIB_HOME/data directory as this driver.
+ * The json input files include commnet fields that have the application code
+ * (Gauss-Seidel and ILU) in them, and says where in the code each
+ * dependence relation is getting extract. So you can run following
+ * after compiling the driver to get the simplified relations:
  
-   ./simplifyDriver gs_csr.json ilu_csr.json
+   /build/bin/simplifyDriver data/gs_csr.json data/ilu_csr.json
 
  * Note: the driver can read one or as many input json files as given.
 
