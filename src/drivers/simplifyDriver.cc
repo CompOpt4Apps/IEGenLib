@@ -27,7 +27,8 @@
     For example if you are compiling this file in its original location that is 
     IEGENLIB_HOME/src/drivers, FROM IEGENLIB_HOME run following to compile:
 
-    g++ -o build/bin/simplifyDriver src/ drivers/simplifyDriver.cc -I src build/src/libiegenlib.a -lisl -std=c++11
+    g++ -o build/bin/simplifyDriver src/drivers/simplifyDriver.cc 
+        -I src build/src/libiegenlib.a -lisl -std=c++11
 
  * Now to run the driver, you should put your dependence relations inside
  * JSON files and give them as inputs to the driver, one or more files
@@ -38,7 +39,7 @@
  * dependence relation is getting extract. So you can run following
  * after compiling the driver to get the simplified relations:
  
-   /build/bin/simplifyDriver data/gs_csr.json data/ilu_csr.json
+   build/bin/simplifyDriver data/gs_csr.json data/ilu_csr.json
 
  * Note: the driver can read one or as many input json files as given.
 

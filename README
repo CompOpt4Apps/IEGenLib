@@ -46,14 +46,14 @@ Set IEGEN_HOME to /full/path/to/IEGenLib/iegen
 After building IEGenLib using above commands, 
 compile the simplifyDriver.c using following command:
 
-     g++ -o build/bin/simplifyDriver src/ drivers/simplifyDriver.cc 
+     g++ -o build/bin/simplifyDriver src/drivers/simplifyDriver.cc 
          -I src build/src/libiegenlib.a -lisl -std=c++11
 
 Then, to produce the simplified dependence relations of 
 Gauss-Seidel and Incomplete LU examples discussed in the paper, 
 use following command:
 
-   /build/bin/simplifyDriver data/gs_csr.json data/ilu_csr.json
+   build/bin/simplifyDriver data/gs_csr.json data/ilu_csr.json
 
 Note that dependence relations (along with the reference codes) 
 are inside two json files seen in the command above. 
