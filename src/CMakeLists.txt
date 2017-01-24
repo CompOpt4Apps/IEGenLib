@@ -45,6 +45,11 @@ list(REMOVE_ITEM iegenlib_SOURCES
 list(REMOVE_ITEM iegenlib_SOURCES 
 	${IEGENCC_SOURCE_DIR}/src/iegenlib/cpp_api_example.cc)
 
+list(REMOVE_ITEM iegenlib_SOURCES 
+	${IEGENLIB_SOURCE_DIR}/src/drivers/simplifyDriver.cc)
+list(REMOVE_ITEM iegenlib_SOURCES 
+	${IEGENLIB_SOURCE_DIR}/src/drivers/eval.cc)
+
 ############################### STEP 2 ########################################
 ######################  Generate the Parser Code ##############################
 if(GEN_PARSER)
