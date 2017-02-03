@@ -2774,8 +2774,11 @@ void SparseConstraints::addConstraintsDueToMonotonicityHelper() {
                              ==queryMonoTypeEnv(ufCall1->name()))
                             || (Monotonic_Increasing
                              ==queryMonoTypeEnv(ufCall1->name())) ) ) {
-                
-                    // if ufCall1(e1) == ufCall2(e2) then useful??
+
+                    bool strict = false;   // Is UFC strictly increasing?
+                    if(Monotonic_Increasing == queryMonoTypeEnv(ufCall1->name())){
+                      strict = true;
+                    }
 
                     // Create largerTerm - smallerTerm just in case need it.
                     Exp* new_constraint = new Exp();
@@ -2784,17 +2787,25 @@ void SparseConstraints::addConstraintsDueToMonotonicityHelper() {
                     new_constraint->addExp(smallerExp);
                     new_constraint->addExp(ufCall2->getParamExp(0)->clone());
 
-                    // if ufCall1(e1) < ufCall2(e2) then e1 < e2
+                    // if ufCall1(e1) < ufCall2(e2) then e1 < e2 
+                    // strict or not, this is true
                     if (partOrd.isLT(ufCall1,ufCall2)) {
                         // largerTerm - smallerTerm - 1 >= 0
                         new_constraint->addTerm(new Term(-1));
                         conjunct->addInequality(new_constraint);
                         
                     // if ufCall1(e1) <= ufCall2(e2) then e1 <= e2
-                    } else if (partOrd.isLTE(ufCall1,ufCall2)) {
+                    // Only holds for strictly increasing
+                    } else if (partOrd.isLTE(ufCall1,ufCall2) && strict) {
                         // largerTerm - smallerTerm >= 0
                         conjunct->addInequality(new_constraint);
                         
+                    // if ufCall1(e1) == ufCall2(e2) and Incre. then e1 = e2  
+                    // Only holds for strictly increasing                      
+                    } else if (partOrd.isEqual(ufCall1,ufCall2) && strict){
+                        // largerTerm - smallerTerm >= 0
+                        conjunct->addEquality(new_constraint);
+                   
                     } else {
                         delete new_constraint;
                     }
@@ -2805,22 +2816,26 @@ void SparseConstraints::addConstraintsDueToMonotonicityHelper() {
     } // loop over Conjuncts
 }
 
-
+// Note: Before calling following two functions, one should always
+//       apply normalize function to Set/Relation, because:
+// (1) We need to have the domain and range constraints,
+//     added by normalize. Otherwise we don't get any of 
+//     the uninterpreted functions as nonnegative.
+// (2) if a Set/Relation is obviously unsatisfiable this function
+//     would through an assertion, 
+//     for instance if constraints i = ip and i < ip exist.
+//     Such unsatisfiable cases should be determined by normalize
+//     before calling this function. Since monotonicity constraints 
+//     are added based on ordering between terms.
 Set* Set::addConstraintsDueToMonotonicity() const {
     
-    // Add in constraints due to domain and range.
-    // We always want to do this here because otherwise we don't get
-    // any of the uninterpreted functions as non-negative.
     Set* retval = new Set(*this); 
-    retval->boundDomainRange();
-    
-    // FIXME: inconsistency as to whether these methods update current
-    // or return a new.    
     retval->addConstraintsDueToMonotonicityHelper();
     return retval;
 }
 
 Relation* Relation::addConstraintsDueToMonotonicity() const {
+
     Relation* retval = new Relation(*this);
     retval->addConstraintsDueToMonotonicityHelper();
     return retval;
@@ -3079,12 +3094,13 @@ class VisitorSuperAffineSet : public Visitor {
          Conjunction* affineConj;
          std::list<Conjunction*> maffineConj;
          Exp* affineExp;
-         bool visit;       // helps to know which Exp is UFC argument
+         int notVisit;     // Helps us to recognize nested UFCs,
+                           // since we do not want to iterate inside UFC arguments
   public:
          VisitorSuperAffineSet(UFCallMap* imap){ufcmap = imap;}
          // We do not change any type of Term except for UFCallTerm
          void preVisitTerm(Term * t) {
-             if(visit){ affineExp->addTerm( t->clone() ); }
+             if( !notVisit ){ affineExp->addTerm( t->clone() ); }
          }
          /*! We iterate over terms in Exp, if the term is not a UFCall
          **  then we just add it to our affine set.
@@ -3092,20 +3108,20 @@ class VisitorSuperAffineSet : public Visitor {
          **  symbolic constants to make an affine set.
          */
          void preVisitUFCallTerm(UFCallTerm * t){
-             if(visit){
+             if( !notVisit ){
                  VarTerm* vt = ufcmap->find( t );
                  vt->setCoefficient(t->coefficient());
                  affineExp->addTerm( vt );
              }
          }
          void preVisitTupleVarTerm(TupleVarTerm * t){
-             if(visit){ affineExp->addTerm( t->clone() ); }
+             if( !notVisit ){ affineExp->addTerm( t->clone() ); }
          }
          void preVisitVarTerm(VarTerm * t){
-             if(visit){ affineExp->addTerm( t->clone() ); }
+             if( !notVisit ){ affineExp->addTerm( t->clone() ); }
          }
          void preVisitTupleExpTerm(TupleExpTerm * t){ 
-             if(visit){ affineExp->addTerm( t->clone() ); }
+             if( !notVisit ){ affineExp->addTerm( t->clone() ); }
          }
          /*! Intialize an affineExp if Exp is not a UFCall argument
          ** If this is a argument to a UFCall, we don't want to modify it.
@@ -3115,9 +3131,9 @@ class VisitorSuperAffineSet : public Visitor {
          */
          void preVisitExp(iegenlib::Exp * e){
              if( e->isExpression() ){
-                 visit = false;
+                 notVisit++; // We are iterating over an UFC's arguments
              }else{
-                 visit = true;
+                 notVisit = 0;
                  affineExp = new Exp();  
              }
          }
@@ -3127,9 +3143,9 @@ class VisitorSuperAffineSet : public Visitor {
          **  but not the sub-expression (j+1) that an is argument to row.
          */ 
          void postVisitExp(iegenlib::Exp * e){
-             if( e->isExpression() ){
-                 // we need visit = true for nested expressions
-                 visit = true;
+             // we are finished iterating arguments of an UFC
+             if( e->isExpression() ){ 
+                 notVisit--;   // Consider the fact that UFCs can be nested
                  return;
              }
              Exp* CaffineExp = affineExp->clone();

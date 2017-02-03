@@ -63,7 +63,7 @@ mkdir -p build
 cd build
 
 #Creating bin directory
-mkdir bin
+mkdir -p bin
 
 echo "cmake .. -DCMAKE_BUILD_TYPE:STRING=$release_str -DGEN_PARSER=$gen_parser -DBUILD_PYTHON=$build_python -DCMAKE_INSTALL_PREFIX=$install_prefix"
 
