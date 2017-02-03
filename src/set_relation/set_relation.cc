@@ -3094,13 +3094,13 @@ class VisitorSuperAffineSet : public Visitor {
          Conjunction* affineConj;
          std::list<Conjunction*> maffineConj;
          Exp* affineExp;
-         int notVisit;     // Helps us to recognize nested UFCs,
+         int ufcDepth;     // Helps us to recognize nested UFCs,
                            // since we do not want to iterate inside UFC arguments
   public:
          VisitorSuperAffineSet(UFCallMap* imap){ufcmap = imap;}
          // We do not change any type of Term except for UFCallTerm
          void preVisitTerm(Term * t) {
-             if( !notVisit ){ affineExp->addTerm( t->clone() ); }
+             if( ufcDepth == 0 ){ affineExp->addTerm( t->clone() ); }
          }
          /*! We iterate over terms in Exp, if the term is not a UFCall
          **  then we just add it to our affine set.
@@ -3108,20 +3108,20 @@ class VisitorSuperAffineSet : public Visitor {
          **  symbolic constants to make an affine set.
          */
          void preVisitUFCallTerm(UFCallTerm * t){
-             if( !notVisit ){
+             if( ufcDepth == 0 ){
                  VarTerm* vt = ufcmap->find( t );
                  vt->setCoefficient(t->coefficient());
                  affineExp->addTerm( vt );
              }
          }
          void preVisitTupleVarTerm(TupleVarTerm * t){
-             if( !notVisit ){ affineExp->addTerm( t->clone() ); }
+             if( ufcDepth == 0 ){ affineExp->addTerm( t->clone() ); }
          }
          void preVisitVarTerm(VarTerm * t){
-             if( !notVisit ){ affineExp->addTerm( t->clone() ); }
+             if( ufcDepth == 0 ){ affineExp->addTerm( t->clone() ); }
          }
          void preVisitTupleExpTerm(TupleExpTerm * t){ 
-             if( !notVisit ){ affineExp->addTerm( t->clone() ); }
+             if( ufcDepth == 0 ){ affineExp->addTerm( t->clone() ); }
          }
          /*! Intialize an affineExp if Exp is not a UFCall argument
          ** If this is a argument to a UFCall, we don't want to modify it.
@@ -3131,9 +3131,9 @@ class VisitorSuperAffineSet : public Visitor {
          */
          void preVisitExp(iegenlib::Exp * e){
              if( e->isExpression() ){
-                 notVisit++; // We are iterating over an UFC's arguments
+                 ufcDepth++; // We are iterating over an UFC's arguments
              }else{
-                 notVisit = 0;
+                 ufcDepth = 0;
                  affineExp = new Exp();  
              }
          }
@@ -3145,7 +3145,7 @@ class VisitorSuperAffineSet : public Visitor {
          void postVisitExp(iegenlib::Exp * e){
              // we are finished iterating arguments of an UFC
              if( e->isExpression() ){ 
-                 notVisit--;   // Consider the fact that UFCs can be nested
+                 ufcDepth--;   // Consider the fact that UFCs can be nested
                  return;
              }
              Exp* CaffineExp = affineExp->clone();
