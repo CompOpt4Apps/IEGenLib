@@ -1704,6 +1704,58 @@ void SparseConstraints::remapTupleVars(const std::vector<int>& oldToNewLocs) {
     }
 }
 
+
+//! This function returns a set of constraints that are in caller but not in A
+std::set<Exp> SparseConstraints::constraintsDifference(SparseConstraints* A){
+
+  // Right now, this should only be called if there is a single Conjunction.
+  if(mConjunctions.size() != 1 ){
+    throw assert_exception("constraintsDifference:: "
+                           "more than one Conjunction in Relation");
+  }
+
+  Conjunction * conjB = this->mConjunctions.front();
+  Conjunction * conjA = A->mConjunctions.front();
+
+  std::set<Exp> diffSet;
+
+  const std::list<Exp*> eqB = conjB->equalities();
+  const std::list<Exp*> ineqB = conjB->inequalities();
+  const std::list<Exp*> eqA = conjA->equalities();
+  const std::list<Exp*> ineqA = conjA->inequalities();
+
+  int found = 0;
+  for (std::list<Exp*>::const_iterator it=eqB.begin(); it != eqB.end(); it++){
+    found = 0;
+    for (std::list<Exp*>::const_iterator jt=eqA.begin(); jt != eqA.end(); jt++){
+      if( (*(*it)) == (*(*jt)) ){ 
+        found = 1;
+        break;
+      }
+    }
+    if(!found){
+      diffSet.insert( *(*it) );
+    }  
+  }
+
+  for (std::list<Exp*>::const_iterator it=ineqB.begin(); it != ineqB.end(); it++){
+    found = 0;
+    for (std::list<Exp*>::const_iterator jt=ineqA.begin(); jt != ineqA.end(); jt++){
+      if( (*(*it)) == (*(*jt)) ){ 
+        found = 1;
+        break;
+      }
+    }
+    if(!found){
+      diffSet.insert( *(*it) );
+    }  
+  }
+
+  return diffSet;
+}
+
+
+
 /******************************************************************************/
 #pragma mark -
 
@@ -2941,7 +2993,6 @@ class VisitorBoundDomainRange : public Visitor {
   private:
          Set* addedConstSet;  // In one Conjunction, for internal use only
          int in_ar;
-         std::set<Exp> AddedExps; // Added constrants overall, the return value
   public:
          //! For each UFC adds Domain & Range constraints to addedConstSet
          void preVisitUFCallTerm(UFCallTerm * t);
@@ -2955,17 +3006,9 @@ class VisitorBoundDomainRange : public Visitor {
              Conjunction *ct = c->Intersect(addedConstSet->mConjunctions.front());
              *c = *ct;
              c->setInArity( in_ar );
-
-             const std::list<Exp*> cl = 
-                         (addedConstSet->mConjunctions.front())->inequalities();
-             for (std::list<Exp*>::const_iterator it=cl.begin(); it != cl.end(); ++it)
-                 AddedExps.insert( *(*it) );
-
              delete addedConstSet;
              delete ct;
          }
-         // Return added constraints
-         std::set<Exp> getAddedExps(){ return AddedExps; }
 };
 
 void VisitorBoundDomainRange::preVisitUFCallTerm(UFCallTerm * t){
@@ -2985,11 +3028,9 @@ void VisitorBoundDomainRange::preVisitUFCallTerm(UFCallTerm * t){
     // look up bound for uninterpreted function
     Set* domain = iegenlib::queryDomainCurrEnv(uf_call->name());
 
-//std::cout<<"\n\n\nDomain = "<<domain->toString()<<"\n\n\nTuple Exp = "<<tuple_exp.toString()<<"\n\n\n";
-
     // have the domain create the constraints and store those constraints
     Set* constraintSet = domain->boundTupleExp(tuple_exp);
-//std::cout<<"\n\n\nHI!\n\n\n ";
+
     // The constraintSet returned by boundTupleExp will not have any
     // tuple variables. We want the tuple variable declaration to line up.
     constraintSet->setTupleDecl( addedConstSet->getTupleDecl() );
@@ -3022,9 +3063,6 @@ void VisitorBoundDomainRange::preVisitUFCallTerm(UFCallTerm * t){
     // Determine what the output arity of this particular UF call is
     // taking into consideration that it could be indexed.
     unsigned int out_arity = range->arity();
-//    if (uf_call->isIndexed()) {
-//        out_arity = 1; // only one element is being accessed
-//    } 
 
     for (unsigned int i=0; i<out_arity; i++) {    
         // Create a temporary variable and maintain correspondence 
@@ -3058,24 +3096,41 @@ void VisitorBoundDomainRange::preVisitUFCallTerm(UFCallTerm * t){
     delete range;
    }
 
-    delete uf_call;
+   delete uf_call;
 }
 
-/*! Adds constraints due to domain and range of all UFCalls in the set.
-**  The constraints are added inplace. The returned std::set<Exp> is
-**  set of added constraints. User owns the returned Set object.
+/*! Adds constraints due to domain and range of all UFCalls in the Set.
+**  Function returns the new Set with added constraints, leaving caller
+**  unchanged. User owns the returned Set object.
 */
-std::set<Exp> SparseConstraints::boundDomainRange()
+Set* Set::boundDomainRange()
 {
+    Set* s = new Set(*this);
     VisitorBoundDomainRange *v = new VisitorBoundDomainRange();
     
-    acceptVisitor(v);
+    s->acceptVisitor(v);
 
-    std::set<Exp> ret = v->getAddedExps();
     delete v;
 
-    return ret;
+    return s;
 }
+
+/*! Adds constraints due to domain and range of all UFCalls in the Relation.
+**  Function returns the new Relation with added constraints, leaving caller
+**  unchanged. User owns the returned Relation object.
+*/
+Relation* Relation::boundDomainRange()
+{
+    Relation* r = new Relation(*this);
+    VisitorBoundDomainRange *v = new VisitorBoundDomainRange();
+    
+    r->acceptVisitor(v);
+
+    delete v;
+
+    return r;
+}
+
 
 /*****************************************************************************/
 #pragma mark -
@@ -3197,8 +3252,7 @@ class VisitorSuperAffineSet : public Visitor {
 */
 Set* Set::superAffineSet(UFCallMap* ufcmap)
 {
-    Set* copySet = new Set(*this);
-    copySet->boundDomainRange();
+    Set* copySet = this->boundDomainRange();
 
     VisitorSuperAffineSet* v = new VisitorSuperAffineSet(ufcmap);
     copySet->acceptVisitor( v );
@@ -3214,8 +3268,7 @@ Set* Set::superAffineSet(UFCallMap* ufcmap)
 //! Same as Set
 Relation* Relation::superAffineRelation(UFCallMap* ufcmap)
 {
-    Relation* copyRelation = new Relation(*this);
-    copyRelation->boundDomainRange();
+    Relation* copyRelation = this->boundDomainRange();
 
     VisitorSuperAffineSet* v = new VisitorSuperAffineSet(ufcmap);
     copyRelation->acceptVisitor( v );
@@ -3562,14 +3615,14 @@ Relation* Relation::projectOut(int tvar)
 class VisitorNumUFCallConstsMustRemove : public Visitor {
   private:
     int mTupleID;
-    std::set<Exp> domainRangeConsts;
+    std::set<Exp> ignore;
     bool seenTupleVar;
     int UFCLevel;
     int count;
 
   public:
-    VisitorNumUFCallConstsMustRemove(int tupleID, std::set<Exp>& iDomainRangeConsts)
-                  : mTupleID(tupleID), domainRangeConsts(iDomainRangeConsts),   
+    VisitorNumUFCallConstsMustRemove(int tupleID, std::set<Exp>& iignore)
+                  : mTupleID(tupleID), ignore(iignore),   
                   seenTupleVar(false), UFCLevel(0), count(0){}
 
     virtual ~VisitorNumUFCallConstsMustRemove(){ }
@@ -3595,7 +3648,7 @@ class VisitorNumUFCallConstsMustRemove : public Visitor {
         if( e->isExpression() ){
              UFCLevel--;
         } else if ( seenTupleVar) {
-            if( domainRangeConsts.find(*e) == domainRangeConsts.end() ){
+            if( ignore.find(*e) == ignore.end() ){
                 count++;
             }
         }
@@ -3604,13 +3657,13 @@ class VisitorNumUFCallConstsMustRemove : public Visitor {
 
 /*! This function considers tuple variable i; and counts the number of
 **  constraints in the set where this tuple variable is argument to an UFC.
-**  However, it excludes constraints that are in the domainRangeConsts set.
+**  However, it excludes constraints that are in the ignore set.
 **  Since, these constraints are related to domain/range of UFCs in the set.
 */
-int SparseConstraints::numUFCallConstsMustRemove(int i, std::set<Exp>& domainRangeConsts)
+int SparseConstraints::numUFCallConstsMustRemove(int i, std::set<Exp>& ignore)
 {
     VisitorNumUFCallConstsMustRemove *v = new VisitorNumUFCallConstsMustRemove(
-                                               i, domainRangeConsts);
+                                               i, ignore);
     this->acceptVisitor(v);
 
     int count = v->getCount();
@@ -3707,12 +3760,10 @@ void SparseConstraints::removeUFCallConsts(int i)
 
 //! This function is implementation of a heuristic algorithm to remove
 //  expensive contranits from the set.
-void SparseConstraints::RemoveExpensiveConsts(std::set<int> parallelTvs, 
-                                     int mNumConstsToRemove  )
+void SparseConstraints::removeExpensiveConstraints(std::set<int> parallelTvs, 
+                              int mNumConstsToRemove , std::set<Exp> ignore )
 {
     int lastTV = this->arity()-1, nConstsToRemove = 0;
-
-    std::set<Exp> domainRangeConsts = this->boundDomainRange();
 
     for (int i = lastTV ; i >= 0 ; i-- ) {
 
@@ -3720,7 +3771,7 @@ void SparseConstraints::RemoveExpensiveConsts(std::set<int> parallelTvs,
             continue;
         }
 
-        nConstsToRemove = this->numUFCallConstsMustRemove(i, domainRangeConsts);
+        nConstsToRemove = this->numUFCallConstsMustRemove(i, ignore);
 
         if ( nConstsToRemove > mNumConstsToRemove ){
             continue;

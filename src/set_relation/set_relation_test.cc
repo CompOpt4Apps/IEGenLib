@@ -3519,8 +3519,8 @@ TEST_F(SetRelationTest, addConstraintsDueToMonotonicity){
 
     {
     Set* s = new Set("{[i,j] : f(i)<f(j) && 0<=f(i) && 0<=f(j)}");
-    s->boundDomainRange();
-    Set* result = s->addConstraintsDueToMonotonicity();
+    Set* copyS = s->boundDomainRange();
+    Set* result = copyS->addConstraintsDueToMonotonicity();
     Set* expected = new Set("{[i,j] : f(i) >= 0 && f(j) >= 0 && "
                             "f(i)<G && f(j)<G && "
                             "0<=i && i<G && 0<=j && j<G &&"
@@ -3529,14 +3529,15 @@ TEST_F(SetRelationTest, addConstraintsDueToMonotonicity){
     EXPECT_EQ(expected->prettyPrintString(), result->prettyPrintString());
     
     delete s;
+    delete copyS;
     delete result;
     delete expected;
     }
     
     {
     Set* s = new Set("{[i,j] : f(i)<f(j) && 0<=f(i) && 0<=f(j)}");
-    s->boundDomainRange();
-    Set* result = s->addConstraintsDueToMonotonicity();
+    Set* copyS = s->boundDomainRange();
+    Set* result = copyS->addConstraintsDueToMonotonicity();
     Set* expected = new Set("{[i,j] : f(i) >= 0 && f(j) >= 0 && "
                             "f(i)<G && f(j)<G && "
                             "0<=i && i<G && 0<=j && j<G &&"
@@ -3545,6 +3546,7 @@ TEST_F(SetRelationTest, addConstraintsDueToMonotonicity){
     EXPECT_EQ(expected->prettyPrintString(), result->prettyPrintString());
     
     delete s;
+    delete copyS;
     delete result;
     delete expected;
     }
@@ -3555,8 +3557,8 @@ TEST_F(SetRelationTest, addConstraintsDueToMonotonicity){
 
     {
     Set* s = new Set("{[i,j] : g(i)<g(j) && 0<=g(i) && 0<=g(j)}");
-    s->boundDomainRange();
-    Set* result = s->addConstraintsDueToMonotonicity();
+    Set* copyS = s->boundDomainRange();
+    Set* result = copyS->addConstraintsDueToMonotonicity();
     Set* expected = new Set("{[i,j] : g(i) >= 0 && g(j) >= 0 && "
                             "g(i)<G && g(j)<G && "
                             "0<=i && i<G && 0<=j && j<G &&"
@@ -3565,6 +3567,7 @@ TEST_F(SetRelationTest, addConstraintsDueToMonotonicity){
     EXPECT_EQ(expected->prettyPrintString(), result->prettyPrintString());
     
     delete s;
+    delete copyS;
     delete result;
     delete expected;
     }
@@ -3716,22 +3719,26 @@ TEST_F(SetRelationTest, boundDomainRange) {
     //!  ----------------   Testing boundDomainRange for Set ------------
 
     s->boundDomainRange();
+    Set* extendedS = s->boundDomainRange();
 //    std::cout<<std::endl<<ns->prettyPrintString()<<std::endl;
 
-    EXPECT_EQ( ex_s->prettyPrintString() , s->prettyPrintString() );
+    EXPECT_EQ( ex_s->prettyPrintString() , extendedS->prettyPrintString() );
 
 
     //!  ----------------   Testing boundDomainRange for Relation -------
 
     r->boundDomainRange();
+    Relation* extendedR = r->boundDomainRange();
 //    std::cout<<std::endl<<nr->prettyPrintString()<<std::endl;
 
-    EXPECT_EQ( ex_r->prettyPrintString() , r->prettyPrintString() );
+    EXPECT_EQ( ex_r->prettyPrintString() , extendedR->prettyPrintString() );
 
 
     delete s;
+    delete extendedS;
     delete ex_s;
     delete r;
+    delete extendedR;
     delete ex_r;
 }
 
@@ -4061,13 +4068,14 @@ TEST_F(SetRelationTest, debugingForILU){
    // Adding constraints due to monotonicity. This also considers constraints
    // that should be added based on partial ordering.
 
-   partOrd->boundDomainRange();
-   Set* partOrdMont = partOrd->addConstraintsDueToMonotonicity();
+   Set* extendedPartOrd = partOrd->boundDomainRange();
+   Set* partOrdMont = extendedPartOrd->addConstraintsDueToMonotonicity();
 
    EXPECT_EQ( ex_partOrd->toISLString() , partOrdMont->toISLString() );
 
    delete islEqSet;
    delete partOrd;
+   delete extendedPartOrd;
    delete partOrdMont;
 }
 
@@ -4101,8 +4109,8 @@ TEST_F(SetRelationTest, numUFCallConstsMustRemove){
 
 
    // Adding constraints due to domain and range of UFCs
-
-   std::set<Exp> domainRangeConsts = F1->boundDomainRange();
+   Set* extendedF1 = F1->boundDomainRange();
+   std::set<Exp> domainRangeConsts = extendedF1->constraintsDifference(F1);
 
    int KPcount = F1->numUFCallConstsMustRemove(3, domainRangeConsts);
 
@@ -4115,6 +4123,7 @@ TEST_F(SetRelationTest, numUFCallConstsMustRemove){
 //std::cout<<"\n\nKcount = "<<Kcount<<"  KPcount = "<<KPcount<<"\n\n";
 
    delete F1;
+   delete extendedF1;
 }
 
 #pragma mark removeUFCallConsts
@@ -4179,8 +4188,8 @@ TEST_F(SetRelationTest, removeUFCallConsts){
                                      " && k = kp}");
    
    // Adding domain and range constraints before removing UFCall constraints
-   F2->boundDomainRange();
-   F2->removeUFCallConsts(2);
+   Set *extendedF2 = F2->boundDomainRange();
+   extendedF2->removeUFCallConsts(2);
 
    Set* ex_F2 = new Set("[m] -> {[i,ip,k,kp]: i < ip"
                                    " && 0 <= i && i < m"
@@ -4203,9 +4212,14 @@ TEST_F(SetRelationTest, removeUFCallConsts){
 
                                      " && k = kp}");
 
-   EXPECT_EQ( ex_F2->toISLString() , F2->toISLString() );
+   EXPECT_EQ( ex_F2->toISLString() , extendedF2->toISLString() );
 
 //std::cout<<"\n\nF1 = "<<F1->toISLString()<<"\n\n"; 
 
    delete F1;
+   delete ex1_F1;
+   delete ex2_F1;
+   delete F2;
+   delete ex_F2;
+   delete extendedF2;
 }

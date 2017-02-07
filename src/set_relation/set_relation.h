@@ -389,12 +389,6 @@ public:
     //! a pointer to final UFCallMap that the user is responsible for deleting.
     UFCallMap* mapUFCtoSym();
 
-    /*! Adds constraints due to domain and range of all UFCalls in the set.
-    **  The constraints are added inplace. The returned std::set<Exp> is
-    **  set of added constraints. User owns the returned Set object.
-    */
-    std::set<Exp> boundDomainRange();
-
     /*! This function considers tuple variable i; and counts the number of
     **  constraints in the set where this tuple variable is argument to an UFC.
     **  However, it excludes constraints that are in the domainRangeConsts set.
@@ -410,8 +404,8 @@ public:
    
     //! This function is implementation of a heuristic algorithm to remove
     //  expensive contranits from the set.
-    void RemoveExpensiveConsts(std::set<int> parallelTvs, 
-                                     int mNumConstsToRemove  );
+    void removeExpensiveConstraints(std::set<int> parallelTvs, 
+                          int mNumConstsToRemove , std::set<Exp> ignore );
 
     /*! Sometimes to provide arguments of an UFC like sigma(a1, a2, ...)
     **  we use another UFC that is not indexed like left(f). Here, the
@@ -420,6 +414,9 @@ public:
     **  indexUFCs() would create the expanded format for normalization purposes.
     */
     void indexUFCs();
+
+    //! This function returns a set of constraints that are in caller but not in A
+    std::set<Exp> constraintsDifference(SparseConstraints* A);
 
 
 // FIXME: what methods should we have to iterate over conjunctions so
@@ -528,6 +525,12 @@ public:
     ** \return Set will contain new constraints and will be owned by caller
     */
     Set* addConstraintsDueToMonotonicity() const;
+
+    /*! Adds constraints due to domain and range of all UFCalls in the Set.
+    **  Function returns the new Set with added constraints, leaving caller
+    **  unchanged. User owns the returned Set object.
+    */
+    Set* boundDomainRange();
 
     //! Send through ISL to achieve a canonical form.
     void normalize();
@@ -690,6 +693,12 @@ public:
     */
     Relation* addUFConstraints(std::string uf1str, 
                                std::string opstr, std::string uf2str) const;
+
+    /*! Adds constraints due to domain and range of all UFCalls in the
+    **  Relation. Function returns the new Relation with added constraints,
+    **  leaving caller unchanged. User owns the returned Relation object.
+    */
+    Relation* boundDomainRange();
     
     /*! For UFs declared as having a Monotonicity value (see 
     **  MonotonicType in UninterFunc.h) constraints will be
