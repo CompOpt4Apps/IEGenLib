@@ -233,7 +233,6 @@ TEST_F(ChillUsageTest, AddUFConstraints)
     delete expect1;
 }
 
-
 /*! Test cases for CSR Gauss-Seidel code's data access dependencies.
 */
 TEST_F(ChillUsageTest, GS_CSR_DepSimplification)
@@ -296,14 +295,16 @@ S1:     y[i] -= values[j]*y[colidx[j]];
 
     // (4)
     // Applying heuristic for removing expensive iterators
-    flow->RemoveExpensiveConsts(parallelTvs, 0);
+    Relation* extendedFlow = flow->boundDomainRange();
+    std::set<Exp> ignore = extendedFlow->constraintsDifference(flow);
+    extendedFlow->removeExpensiveConstraints(parallelTvs, 0, ignore);
 
     // (5)
     // Add user defined constraints
 
     // (6)
     // Simplifyng the constraints relation
-    Relation* flow_sim = flow->simplifyForPartialParallel(parallelTvs);
+    Relation* flow_sim = extendedFlow->simplifyForPartialParallel(parallelTvs);
 
     // (7)
     // Print out results: if not satisfiable returns NULL
@@ -336,14 +337,15 @@ S1:     y[i] -= values[j]*y[colidx[j]];
 
     // (4)
     // Applying heuristic for removing expensive iterators
-    flow->RemoveExpensiveConsts(parallelTvs, 0);
-
+    Relation* extendedAnti = anti->boundDomainRange();
+    ignore = extendedFlow->constraintsDifference(anti);
+    extendedAnti->removeExpensiveConstraints(parallelTvs, 0, ignore);
     // (5)
     // Add user defined constraints
 
     // (6)
     // Simplifyng the constraints relation
-    Relation* anti_sim = anti->simplifyForPartialParallel(parallelTvs);
+    Relation* anti_sim = extendedAnti->simplifyForPartialParallel(parallelTvs);
 
     // (7)
     // Print out results: if not satisfiable returns NULL
@@ -474,11 +476,12 @@ S2:     v[j1] -= tmp*v[j2];
 
     // (4)
     // Applying heuristic for removing expensive iterators
-    A1->RemoveExpensiveConsts(parallelTvs, 2);
-
+    Relation* DRA1 = A1->boundDomainRange();
+    std::set<Exp> ignore = DRA1->constraintsDifference(A1);
+    DRA1->removeExpensiveConstraints(parallelTvs, 2, ignore);
     // (5)
     // How to add user defined constraint
-    Relation *A1_extend = A1->addUFConstraints("rowptr","<=", "diagptr");
+    Relation *A1_extend = DRA1->addUFConstraints("rowptr","<=", "diagptr");
 
 
     // (6)
@@ -520,11 +523,13 @@ S2:     v[j1] -= tmp*v[j2];
 
     // (4)
     // Applying heuristic for removing expensive iterators
-    F1->RemoveExpensiveConsts(parallelTvs, 2);
+    Relation* DRF1 = F1->boundDomainRange();
+    ignore = DRF1->constraintsDifference(A1);
+    DRF1->removeExpensiveConstraints(parallelTvs, 2, ignore);
 
     // (5)
     // Adding user defined constraint
-    Relation *F1_extend = F1->addUFConstraints("rowptr","<=", "diagptr");
+    Relation *F1_extend = DRF1->addUFConstraints("rowptr","<=", "diagptr");
 
     // (6)
     // Simplifyng the constraints relation
@@ -542,6 +547,8 @@ S2:     v[j1] -= tmp*v[j2];
 
     delete A1;
     delete F1;
+    delete DRA1;
+    delete DRF1;
     delete A1_extend;
     delete A1_sim;
     delete F1_extend;
@@ -613,10 +620,12 @@ S2:     v[j1] -= tmp*v[j2];
 
     // (4)
     // Applying heuristic for removing expensive iterators
-    A2->RemoveExpensiveConsts(parallelTvs, 2);
+    Relation* DRA2 = A2->boundDomainRange();
+    ignore = DRA2->constraintsDifference(A2);
+    DRA2->removeExpensiveConstraints(parallelTvs, 2, ignore);
 
     // Adding user defined constraint
-    Relation *A2_extend = A2->addUFConstraints("rowptr","<=", "diagptr");
+    Relation *A2_extend = DRA2->addUFConstraints("rowptr","<=", "diagptr");
 
     // Simplifyng the constraints relation
     Relation *A2_sim = A2_extend->simplifyForPartialParallel(parallelTvs);
@@ -637,10 +646,12 @@ S2:     v[j1] -= tmp*v[j2];
 
     // (4)
     // Applying heuristic for removing expensive iterators
-    F2->RemoveExpensiveConsts(parallelTvs, 2);
+    Relation* DRF2 = F2->boundDomainRange();
+    ignore = DRF2->constraintsDifference(F2);
+    DRF2->removeExpensiveConstraints(parallelTvs, 2, ignore);
 
     // Adding user defined constraint
-    Relation *F2_extend = F2->addUFConstraints("rowptr","<=", "diagptr");
+    Relation *F2_extend = DRF2->addUFConstraints("rowptr","<=", "diagptr");
 
     // Simplifyng the constraints relation
     Relation *F2_sim = F2_extend->simplifyForPartialParallel(parallelTvs);
@@ -657,6 +668,8 @@ S2:     v[j1] -= tmp*v[j2];
 
     delete A2;
     delete F2;
+    delete DRA2;
+    delete DRF2;
     delete A2_extend;
     delete A2_sim;
     delete F2_extend;
@@ -728,10 +741,12 @@ S2:     v[j1] -= tmp*v[j2];
 
     // (4)
     // Applying heuristic for removing expensive iterators
-    A3->RemoveExpensiveConsts(parallelTvs, 2);
+    Relation* DRA3 = A3->boundDomainRange();
+    ignore = DRA3->constraintsDifference(A3);
+    DRA3->removeExpensiveConstraints(parallelTvs, 2, ignore);
 
     // Adding user defined constraint
-    Relation *A3_extend = A3->addUFConstraints("rowptr","<=", "diagptr");
+    Relation *A3_extend = DRA3->addUFConstraints("rowptr","<=", "diagptr");
 
     // Simplifyng the constraints relation
     Relation *A3_sim = A3_extend->simplifyForPartialParallel(parallelTvs);
@@ -752,10 +767,12 @@ S2:     v[j1] -= tmp*v[j2];
 
     // (4)
     // Applying heuristic for removing expensive iterators
-    F3->RemoveExpensiveConsts(parallelTvs, 2);
+    Relation* DRF3 = F3->boundDomainRange();
+    ignore = DRF3->constraintsDifference(F3);
+    DRF3->removeExpensiveConstraints(parallelTvs, 2, ignore);
 
     // Adding user defined constraint
-    Relation *F3_extend = F3->addUFConstraints("rowptr","<=", "diagptr");
+    Relation *F3_extend = DRF3->addUFConstraints("rowptr","<=", "diagptr");
 
     // Simplifyng the constraints relation
     Relation *F3_sim = F3_extend->simplifyForPartialParallel(parallelTvs);
@@ -773,6 +790,8 @@ S2:     v[j1] -= tmp*v[j2];
 
     delete A3;
     delete F3;
+    delete DRA3;
+    delete DRF3;
     delete A3_extend;
     delete A3_sim;
     delete F3_extend;
@@ -843,10 +862,12 @@ S2:     v[j1] -= tmp*v[j2];
 
     // (4)
     // Applying heuristic for removing expensive iterators
-    A4->RemoveExpensiveConsts(parallelTvs, 2);
+    Relation* DRA4 = A4->boundDomainRange();
+    ignore = DRA4->constraintsDifference(A4);
+    DRA4->removeExpensiveConstraints(parallelTvs, 2, ignore);
 
     // Adding user defined constraint
-    Relation *A4_extend = A4->addUFConstraints("rowptr","<=", "diagptr");
+    Relation *A4_extend = DRA4->addUFConstraints("rowptr","<=", "diagptr");
 
     // Simplifyng the constraints relation
     Relation *A4_sim = A4_extend->simplifyForPartialParallel(parallelTvs);
@@ -866,10 +887,12 @@ S2:     v[j1] -= tmp*v[j2];
 
     // (4)
     // Applying heuristic for removing expensive iterators
-    F4->RemoveExpensiveConsts(parallelTvs, 2);
+    Relation* DRF4 = F4->boundDomainRange();
+    ignore = DRF4->constraintsDifference(F4);
+    DRF4->removeExpensiveConstraints(parallelTvs, 2, ignore);
 
     // Adding user defined constraint
-    Relation *F4_extend = F4->addUFConstraints("rowptr","<=", "diagptr");
+    Relation *F4_extend = DRF4->addUFConstraints("rowptr","<=", "diagptr");
 
     // Simplifyng the constraints relation
     Relation *F4_sim = F4_extend->simplifyForPartialParallel(parallelTvs);
@@ -886,6 +909,8 @@ S2:     v[j1] -= tmp*v[j2];
 
     delete A4;
     delete F4;
+    delete DRA4;
+    delete DRF4;
     delete A4_extend;
     delete A4_sim;
     delete F4_extend;
@@ -1014,10 +1039,12 @@ S2:     v[j1] -= tmp*v[j2];
 
     // (4)
     // Applying heuristic for removing expensive iterators
-    A5->RemoveExpensiveConsts(parallelTvs, 2);
+    Relation* DRA5 = A5->boundDomainRange();
+    ignore = DRA5->constraintsDifference(A5);
+    DRA5->removeExpensiveConstraints(parallelTvs, 2, ignore);
 
     // Adding user defined constraint
-    Relation *A5_extend = A5->addUFConstraints("rowptr","<=", "diagptr");
+    Relation *A5_extend = DRA5->addUFConstraints("rowptr","<=", "diagptr");
 
     // Simplifyng the constraints relation
     Relation *A5_sim = A5_extend->simplifyForPartialParallel(parallelTvs);
@@ -1038,10 +1065,12 @@ S2:     v[j1] -= tmp*v[j2];
 
     // (4)
     // Applying heuristic for removing expensive iterators
-    F5->RemoveExpensiveConsts(parallelTvs, 2);
+    Relation* DRF5 =F5->boundDomainRange();
+    ignore = DRF5->constraintsDifference(F5);
+    DRF5->removeExpensiveConstraints(parallelTvs, 2, ignore);
 
     // Adding user defined constraint
-    Relation *F5_extend = F5->addUFConstraints("rowptr","<=", "diagptr");
+    Relation *F5_extend = DRF5->addUFConstraints("rowptr","<=", "diagptr");
 
     // Simplifyng the constraints relation
     Relation *F5_sim = F5_extend->simplifyForPartialParallel(parallelTvs);
@@ -1059,6 +1088,8 @@ S2:     v[j1] -= tmp*v[j2];
 
     delete A5;
     delete F5;
+    delete DRA5;
+    delete DRF5;
     delete A5_extend;
     delete A5_sim;
     delete F5_extend;
@@ -1130,10 +1161,12 @@ S2:     v[j1] -= tmp*v[j2];
 
     // (4)
     // Applying heuristic for removing expensive iterators
-    A6->RemoveExpensiveConsts(parallelTvs, 2);
+    Relation* DRA6 = A6->boundDomainRange();
+    ignore = DRA6->constraintsDifference(A6);
+    DRA6->removeExpensiveConstraints(parallelTvs, 2, ignore);
 
     // Adding user defined constraint
-    Relation *A6_extend = A6->addUFConstraints("rowptr","<=", "diagptr");
+    Relation *A6_extend = DRA6->addUFConstraints("rowptr","<=", "diagptr");
 
     // Simplifyng the constraints relation
     Relation *A6_sim = A6_extend->simplifyForPartialParallel(parallelTvs);
@@ -1154,10 +1187,12 @@ S2:     v[j1] -= tmp*v[j2];
 
     // (4)
     // Applying heuristic for removing expensive iterators
-    F6->RemoveExpensiveConsts(parallelTvs, 2);
+    Relation* DRF6 = F6->boundDomainRange();
+    ignore = DRF6->constraintsDifference(F6);
+    DRF6->removeExpensiveConstraints(parallelTvs, 2, ignore);
 
     // Adding user defined constraint
-    Relation *F6_extend = F6->addUFConstraints("rowptr","<=", "diagptr");
+    Relation *F6_extend = DRF6->addUFConstraints("rowptr","<=", "diagptr");
 
     // Simplifyng the constraints relation
     Relation *F6_sim = F6_extend->simplifyForPartialParallel(parallelTvs);
@@ -1176,6 +1211,8 @@ S2:     v[j1] -= tmp*v[j2];
 
     delete A6;
     delete F6;
+    delete DRA6;
+    delete DRF6;
     delete A6_extend;
     delete A6_sim;
     delete F6_extend;
@@ -1245,11 +1282,13 @@ S2:     v[j1] -= tmp*v[j2];
 
     // (4)
     // Applying heuristic for removing expensive iterators
-    A7->RemoveExpensiveConsts(parallelTvs, 2);
+    Relation* DRA7 = A7->boundDomainRange();
+    ignore = DRA7->constraintsDifference(A7);
+    DRA7->removeExpensiveConstraints(parallelTvs, 2, ignore);
 
     // (5)
     // Adding user defined constraint
-    Relation *A7_extend = A7->addUFConstraints("rowptr","<=", "diagptr");
+    Relation *A7_extend = DRA7->addUFConstraints("rowptr","<=", "diagptr");
 
     // (6)
     // Simplifyng the constraints relation
@@ -1271,11 +1310,13 @@ S2:     v[j1] -= tmp*v[j2];
 
     // (4)
     // Applying heuristic for removing expensive iterators
-    F7->RemoveExpensiveConsts(parallelTvs, 2);
+    Relation* DRF7 = F7->boundDomainRange();
+    ignore = DRF7->constraintsDifference(F7);
+    DRF7->removeExpensiveConstraints(parallelTvs, 2, ignore);
 
     // (5)
     // Adding user defined constraint
-    Relation *F7_extend = F7->addUFConstraints("rowptr","<=", "diagptr");
+    Relation *F7_extend = DRF7->addUFConstraints("rowptr","<=", "diagptr");
 
     // (6)
     // Simplifyng the constraints relation
@@ -1294,6 +1335,8 @@ S2:     v[j1] -= tmp*v[j2];
 
     delete A7;
     delete F7;
+    delete DRA7;
+    delete DRF7;
     delete A7_extend;
     delete A7_sim;
     delete F7_extend;
@@ -1399,11 +1442,13 @@ S2:     v[j1] -= tmp*v[j2];
 
     // (4)
     // Applying heuristic for removing expensive iterators
-    A8->RemoveExpensiveConsts(parallelTvs, 2);
+    Relation* DRA8 = A8->boundDomainRange();
+    ignore = DRA8->constraintsDifference(A8);
+    DRA8->removeExpensiveConstraints(parallelTvs, 2, ignore);
 
     // (5)
     // Adding user defined constraint
-    Relation *A8_extend = A8->addUFConstraints("rowptr","<=", "diagptr");
+    Relation *A8_extend = DRA8->addUFConstraints("rowptr","<=", "diagptr");
 
     // (6)
     // Simplifyng the constraints relation
@@ -1424,11 +1469,13 @@ S2:     v[j1] -= tmp*v[j2];
 
     // (4)
     // Applying heuristic for removing expensive iterators
-    F8->RemoveExpensiveConsts(parallelTvs, 2);
+    Relation* DRF8 = F8->boundDomainRange();
+    ignore = DRF8->constraintsDifference(F8);
+    DRF8->removeExpensiveConstraints(parallelTvs, 2, ignore);
 
     // (5)
     // Adding user defined constraint
-    Relation *F8_extend = F8->addUFConstraints("rowptr","<=", "diagptr");
+    Relation *F8_extend = DRF8->addUFConstraints("rowptr","<=", "diagptr");
 
     // (6)
     // Simplifyng the constraints relation
@@ -1446,10 +1493,11 @@ S2:     v[j1] -= tmp*v[j2];
 
     delete A8;
     delete F8;
+    delete DRA8;
+    delete DRF8;
     delete A8_extend;
     delete A8_sim;
     delete F8_extend;
     delete F8_sim;
 
 }
-

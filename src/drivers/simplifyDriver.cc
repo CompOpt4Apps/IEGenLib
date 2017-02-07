@@ -14,20 +14,20 @@
 
     Run the following command with YOUR OWN ADDRESSES:
 
-        g++ -o EXECUTABLE simplifyDriver.cc 
+        g++ -o EXECUTABLE simplifyDriver.cc \
             -I IEGENLIB_HOME/src IEGENLIB_HOME/build/src/libiegenlib.a -lisl -std=c++11
 
     You can also run following command after running "make install" for IEgenLIB:
 
-       g++ -o EXECUTABLE simplifyDriver.cc 
-           -I INSTALLATION_FOLDER/include/iegenlib cpp_api_example.cc
+       g++ -o EXECUTABLE simplifyDriver.cc \
+           -I INSTALLATION_FOLDER/include/iegenlib cpp_api_example.cc \
               INSTALLATION_FOLDER/lib/libiegenlib.a -lisl -std=c++11
    
     IEGENLIB_HOME indicates where you have your copy of IEgenLIB.
     For example if you are compiling this file in its original location that is 
     IEGENLIB_HOME/src/drivers, FROM IEGENLIB_HOME run following to compile:
 
-    g++ -o build/bin/simplifyDriver src/drivers/simplifyDriver.cc 
+    g++ -o build/bin/simplifyDriver src/drivers/simplifyDriver.cc \
         -I src build/src/libiegenlib.a -lisl -std=c++11
 
  * Now to run the driver, you should put your dependence relations inside
@@ -218,26 +218,28 @@ void simplify(string inputFile)
     // (4)
     // Applying heuristic for removing expensive iterators
     int numConstToRemove = str2int(data[p][0]["Remove Constraints"].as<string>());
-    rel->RemoveExpensiveConsts(parallelTvs, numConstToRemove );
+    Relation* relWithDR = rel->boundDomainRange();
+    std::set<iegenlib::Exp> ignore = relWithDR->constraintsDifference(rel);
+    relWithDR->removeExpensiveConstraints(parallelTvs, numConstToRemove, ignore);
 
     // (5)
     // Add user defined constraints
     Relation *rel_extend;
     for (size_t j = 0; j < data[p][0]["User Defined"].size(); ++j){
  
-      rel_extend = rel->addUFConstraints(
+      rel_extend = relWithDR->addUFConstraints(
                     data[p][0]["User Defined"][j]["Func1"].as<string>(),
                     data[p][0]["User Defined"][j]["operator"].as<string>(),
                     data[p][0]["User Defined"][j]["Func2"].as<string>()
                                             );
-      *rel = *rel_extend;
+      *relWithDR = *rel_extend;
       delete rel_extend;
 
     }
 
     // (6)
     // Simplifyng the constraints relation
-    Relation* rel_sim = rel->simplifyForPartialParallel(parallelTvs);
+    Relation* rel_sim = relWithDR->simplifyForPartialParallel(parallelTvs);
 
     // (7)
     // Print out results: if not satisfiable returns NULL
@@ -253,6 +255,7 @@ void simplify(string inputFile)
     }
 
     delete rel;   
+    delete relWithDR;
     delete rel_sim;
   }
   } // End of p loop
