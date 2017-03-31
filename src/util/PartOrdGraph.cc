@@ -41,18 +41,21 @@
 #include <sstream>
 #include <assert.h>
 
-PartOrdGraph::PartOrdGraph(unsigned int N) {
-    this->mN = N;
-    this->mAdjacencyMatrix = new CompareEnum[N*N];
+PartOrdGraph::PartOrdGraph(unsigned int curN, unsigned int maxN) {
+    this->mCurN = curN;
+    this->mMaxN = maxN;
+//std::cerr<<"\n\nPartOrdGraph::PartOrdGraph  cur= "<<curN<<"\n\n";
+    this->mAdjacencyMatrix = new CompareEnum[maxN*maxN];
     // Initialize all 
-    for (unsigned int i=0; i<N; i++) {
-        for (unsigned int j=0; j<N; j++) {
+    for (unsigned int i=0; i<maxN; i++) {
+        for (unsigned int j=0; j<maxN; j++) {
             mAdjacencyMatrix[getIndex(i,j)] = NO_ORD;
             if (i==j) {
                 mAdjacencyMatrix[getIndex(i,j)] = EQUAL;
             }
         }
     }
+//std::cerr<<"\n\nPartOrdGraph::PartOrdGraph  Idx = "<<getIndex(3,5)<<"\n\n";
 }
 
 //! Copy constructor.  Performs a deep copy.
@@ -62,10 +65,11 @@ PartOrdGraph::PartOrdGraph(const PartOrdGraph& other) {
 
 //! Copy assignment.
 PartOrdGraph& PartOrdGraph::operator=(const PartOrdGraph& other) {
-    mN = other.mN;
-    this->mAdjacencyMatrix = new CompareEnum[mN*mN];
-    for (unsigned int i=0; i<mN; i++) {
-        for (unsigned int j=0; j<mN; j++) {
+    mCurN = other.mCurN;
+    mMaxN = other.mMaxN;
+    this->mAdjacencyMatrix = new CompareEnum[mMaxN*mMaxN];
+    for (unsigned int i=0; i<mCurN; i++) {
+        for (unsigned int j=0; j<mCurN; j++) {
             mAdjacencyMatrix[getIndex(i,j)]
                 = other.mAdjacencyMatrix[getIndex(i,j)];
         }
@@ -125,7 +129,7 @@ CompareEnum PartOrdGraph::meet(CompareEnum op1, CompareEnum op2) {
 
 void PartOrdGraph::updatePair(unsigned int a, unsigned int b, CompareEnum to) {
     // Check vertices are within range of partial ordering.
-    assert((a<mN) && (b<mN));
+    assert((a<mCurN) && (b<mCurN));
     
     // Fail if the opposite direction is already in partial ordering
     // or if this an an attempt for a self-loop unless we are doing EQUAL.
@@ -160,11 +164,11 @@ void PartOrdGraph::equal(unsigned int a, unsigned int b) {
 void PartOrdGraph::transitiveClosure() {
     
     // iterate over all nodes k
-    for (unsigned int k=0; k<mN; k++) {
+    for (unsigned int k=0; k<mCurN; k++) {
         // iterate over all rows k
-        for (unsigned int i=0; i<mN; i++) {
+        for (unsigned int i=0; i<mCurN; i++) {
             // iterate over all columns j
-            for (unsigned int j=0; j<mN; j++) {
+            for (unsigned int j=0; j<mCurN; j++) {
                 mAdjacencyMatrix[ getIndex(i,j) ]
                     = update( mAdjacencyMatrix[ getIndex(i,j) ],
                               meet( mAdjacencyMatrix[ getIndex(i,k) ],
@@ -179,44 +183,45 @@ void PartOrdGraph::transitiveClosure() {
 }
 
 bool PartOrdGraph::isStrict(unsigned int a, unsigned int b) {
-    assert((a<mN) && (b<mN));
+    assert((a<mCurN) && (b<mCurN));
     return (mAdjacencyMatrix[ getIndex(a,b) ] == STRICT);
 }
 
 bool PartOrdGraph::isNonStrict(unsigned int a, unsigned int b) {
-    assert((a<mN) && (b<mN));
+    assert((a<mCurN) && (b<mCurN));
     return (mAdjacencyMatrix[ getIndex(a,b) ] == NONSTRICT);
 }
 
 bool PartOrdGraph::isEqual(unsigned int a, unsigned int b) {
-    assert((a<mN) && (b<mN));
+    assert((a<mCurN) && (b<mCurN));
     return (mAdjacencyMatrix[ getIndex(a,b) ] == EQUAL);
 }
 
 bool PartOrdGraph::isNoOrder(unsigned int a, unsigned int b) {
-    assert((a<mN) && (b<mN));
+    assert((a<mCurN) && (b<mCurN));
     return (mAdjacencyMatrix[ getIndex(a,b) ] == NO_ORD);
 }
 
 
 // Doing indexing arithmetic in a helper function.
 unsigned int PartOrdGraph::getIndex(unsigned int a, unsigned int b) {
-    return a*mN + b;
+    return a*mMaxN + b;
 }
 
 std::string PartOrdGraph::toString() {
     std::stringstream ss;
-    ss << "PartOrdGraph:\n\tmN = " << this->mN << std::endl;
+    ss << "PartOrdGraph:\n\tmCurN = "<<this->mCurN<< 
+                         "\tmMaxN = "<<this->mMaxN<<std::endl;
     // column headers
     ss << "\t";
-    for (unsigned int j=0; j<this->mN; j++) {
+    for (unsigned int j=0; j<this->mCurN; j++) {
         ss << "\t" << j;
     }
     ss << std::endl;
     // rows in adjacency matrix
-    for (unsigned int i=0; i<this->mN; i++) {
+    for (unsigned int i=0; i<this->mCurN; i++) {
         ss << "\t" << i;
-        for (unsigned int j=0; j<this->mN; j++) {
+        for (unsigned int j=0; j<this->mCurN; j++) {
             ss << "\t";
             if (isStrict(i,j)) { ss << "<"; }
             if (isNonStrict(i,j)) { ss << "<="; }

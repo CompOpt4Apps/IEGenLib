@@ -18,7 +18,8 @@
 
 namespace iegenlib{
 
-TermPartOrdGraph::TermPartOrdGraph() : mNumTerms(0), mGraphPtr(NULL) {}
+TermPartOrdGraph::TermPartOrdGraph() : mNumTerms(0), mMaxNumTerms(0), 
+                                       mGraphPtr(NULL) {}
 
 //! Copy constructor.  Performs a deep copy of PartOrdGraph, but does not
 //! own any Terms so just copying their pointers.
@@ -29,6 +30,7 @@ TermPartOrdGraph::TermPartOrdGraph(const TermPartOrdGraph& other) {
 //! Copy assignment.
 TermPartOrdGraph& TermPartOrdGraph::operator=(const TermPartOrdGraph& other) {
     mNumTerms               = other.mNumTerms;
+    mMaxNumTerms            = other.mMaxNumTerms;
     mUFCallTerm2IntMap      = other.mUFCallTerm2IntMap;
     mTupleVarTerm2IntMap    = other.mTupleVarTerm2IntMap;
     mVarTerm2IntMap         = other.mVarTerm2IntMap;
@@ -43,10 +45,13 @@ TermPartOrdGraph& TermPartOrdGraph::operator=(const TermPartOrdGraph& other) {
     mGraphPtr = NULL;
     if (other.mGraphPtr!=NULL) {
         if (mGraphPtr==NULL) {
-            mGraphPtr = new PartOrdGraph(other.mGraphPtr->numItems());
+//std::cerr<<"\n\nTermPartOrdGraph::=  curN= "<<other.mGraphPtr->numItems()<<"\n\n";
+            mGraphPtr = new PartOrdGraph(other.mGraphPtr->numItems(),
+                                         other.mGraphPtr->numMaxItems());
         }
         *mGraphPtr = *(other.mGraphPtr);
     }
+//std::cerr<<"\n\nTermPartOrdGraph::= After curN= "<<mNumTerms<<"\n\n";
     return *this;
 }
 
@@ -92,25 +97,43 @@ int TermPartOrdGraph::findOrInsertTermId(const Term* t) {
             termId = mVarTerm2IntMap[*vterm];
         }
     } else if (temp->type()=="Term") {
-        // When we insert a constant like 1, we also insert the negative of
-        // that constant. This is because when we move a term from one side 
-        // of the in/equality to the other side, their coefficient gets 
-        // multiplied by -1, for non-constant terms this is not important
-        // since we do not care about their coefficient. However, in case of
-        // constants the coefficient is the term itself. And, if after getting
-        // done with inserting terms, we encounter one of the constants that
-        // we already have inserted to partial ordering, but with different sign,
-        // we would try to insert that term as well. This situation would cause
-        // an assertion for inserting terms after being done with term insertion
-        Term* term = dynamic_cast<Term*>(temp);
-        if (mTerm2IntMap.find(*term)==mTerm2IntMap.end()) {
-            mTerm2IntMap[*term] = mNumTerms++;
-            Term* nterm = dynamic_cast<Term*>(temp);
-            nterm->setCoefficient( (-1*term->coefficient()) );
-            mTerm2IntMap[*nterm] = mNumTerms++;
-        } else {
-            termId = mTerm2IntMap[*term];
+      // MAHDI FIXME
+      // When we insert a constant like 1, we also insert the negative of
+      // that constant. This is because when we move a term from one side 
+      // of the in/equality to the other side, their coefficient gets 
+      // multiplied by -1, for non-constant terms this is not important
+      // since we do not care about their coefficient. Consequently, it
+      // is good idea to negative of a constant just in case we need it.
+      Term* term = dynamic_cast<Term*>(temp);
+      if (mTerm2IntMap.find(*term)==mTerm2IntMap.end()) {
+        mTerm2IntMap[*term] = mNumTerms++;
+        Term* nterm = term->clone();
+        nterm->setCoefficient( (-1*term->coefficient()) );
+        mTerm2IntMap[*nterm] = mNumTerms++;
+
+        if ( isDoneInsertingInitialTerms() and (initialNumTerms!=mNumTerms) ) {
+          mGraphPtr->updateNumItems( (mNumTerms-initialNumTerms) );
+          initialNumTerms = mNumTerms;
+
+          // We know the orderings between integers from basic math!
+          // So, lets just add them to partial ordering.
+          for (std::map<Term,int>::iterator it=mTerm2IntMap.begin(); 
+               it!=mTerm2IntMap.end(); it++){
+            if( it->first.coefficient() < term->coefficient() ){
+              mGraphPtr->strict( it->second , mTerm2IntMap[*term] );
+            } else if( it->first.coefficient() > term->coefficient() ){
+              mGraphPtr->strict( mTerm2IntMap[*term] , it->second );
+            }
+            if( it->first.coefficient() < nterm->coefficient() ){
+              mGraphPtr->strict( it->second , mTerm2IntMap[*nterm] );
+            } else if( it->first.coefficient() > nterm->coefficient() ){
+              mGraphPtr->strict( mTerm2IntMap[*nterm] , it->second );
+            }
+          }
         }
+      } else {
+            termId = mTerm2IntMap[*term];
+      }
     } else {
         std::cerr << "TermPartOrdGraph::findOrInsertTermId: "
                      "ERROR unhandled term type" << std::endl;
@@ -119,12 +142,16 @@ int TermPartOrdGraph::findOrInsertTermId(const Term* t) {
     }
     
     delete temp;
-    
-    // Check that we didn't just do an insertion after doneInsertingItems call.
-    if ( isDoneInsertingTerms() and (initialNumTerms!=mNumTerms) ) {
-        throw assert_exception( "TermPartOrdGraph: insertion after "
-                                "doneInsertingItems() call");
+
+    // MAHDI FIXME
+    // Check if we just do an insertion after doneInsertingItems call, in which
+    // case we should update number of current terms in underlying PartrOrdGraph
+    if ( isDoneInsertingInitialTerms() and (initialNumTerms!=mNumTerms) ) {
+//std::cerr<<"\n\nTermPartOrdGraph::updateNumItems  cur= "<<initialNumTerms<<"\n\n";
+        mGraphPtr->updateNumItems( (mNumTerms-initialNumTerms) );
+//std::cerr<<"\n\nTermPartOrdGraph::updateNumItems  cur+1= "<<mNumTerms<<"\n\n";
     }
+
     return termId;    
 }
 
@@ -178,10 +205,13 @@ bool TermPartOrdGraph::isNonNegative( const Term* term ) const {
 //===============================================================
 // Methods for creating partial orderings.
 
-//! Once user is done inserting items we can create an instance
+//! Once user is done inserting initial items we can create an instance
 //! of the PartOrdGraph data structure.
-void TermPartOrdGraph::doneInsertingTerms() {
-    mGraphPtr = new PartOrdGraph(mNumTerms);
+void TermPartOrdGraph::doneInsertingInitialTerms() {
+    // MAHDI FIXME
+//std::cerr<<"\n\nTermPartOrdGraph::BPOG = "<<mMaxNumTerms<<"\n\n";
+    mMaxNumTerms = (mNumTerms*5);
+    mGraphPtr = new PartOrdGraph(mNumTerms , mMaxNumTerms);
 
     // Adds orderings between (just) constant terms  e.g. 1 < 2
     for (std::map<Term,int>::iterator it=mTerm2IntMap.begin(); 
@@ -202,18 +232,19 @@ void TermPartOrdGraph::doneInsertingTerms() {
             }
         }
     }
+//std::cerr<<"\n\nTermPartOrdGraph::ACONT = "<<mNumTerms<<"\n\n";
 }
 
 //! Once user is done inserting items we can create an instance
 //! of the PartOrdGraph data structure.
-bool TermPartOrdGraph::isDoneInsertingTerms() const {
+bool TermPartOrdGraph::isDoneInsertingInitialTerms() const {
     return mGraphPtr != NULL;
 }
 
 //! Term1 <= Term2
 void TermPartOrdGraph::insertLTE( Term* term1, Term* term2 ) {
-    if (!isDoneInsertingTerms()) {
-        throw assert_exception("TermPartOrdGraph: Not done inserting items");
+    if (!isDoneInsertingInitialTerms()) {
+        throw assert_exception("TermPartOrdGraph: Not done inserting initial items");
     }
     int term1Id = findOrInsertTermId(term1);
     int term2Id = findOrInsertTermId(term2);
@@ -222,8 +253,8 @@ void TermPartOrdGraph::insertLTE( Term* term1, Term* term2 ) {
 
 //! Term1 < Term2
 void TermPartOrdGraph::insertLT( Term* term1, Term* term2 ) {
-    if (!isDoneInsertingTerms()) {
-        throw assert_exception("TermPartOrdGraph: Not done inserting items");
+    if (!isDoneInsertingInitialTerms()) {
+        throw assert_exception("TermPartOrdGraph: Not done inserting initial items");
     }
     int term1Id = findOrInsertTermId(term1);
     int term2Id = findOrInsertTermId(term2);
@@ -232,8 +263,8 @@ void TermPartOrdGraph::insertLT( Term* term1, Term* term2 ) {
 
 //! Term1 == Term2
 void TermPartOrdGraph::insertEqual( Term* term1, Term* term2 ) {
-    if (!isDoneInsertingTerms()) {
-        throw assert_exception("TermPartOrdGraph: Not done inserting items");
+    if (!isDoneInsertingInitialTerms()) {
+        throw assert_exception("TermPartOrdGraph: Not done inserting initial items");
     }
     int term1Id = findOrInsertTermId(term1);
     int term2Id = findOrInsertTermId(term2);
@@ -246,8 +277,8 @@ void TermPartOrdGraph::insertEqual( Term* term1, Term* term2 ) {
 
 //! returns true if Term1 <= Term2
 bool TermPartOrdGraph::isLTE( Term* term1, Term* term2 ) {
-    if (!isDoneInsertingTerms()) {
-        throw assert_exception("TermPartOrdGraph: Not done inserting items");
+    if (!isDoneInsertingInitialTerms()) {
+        throw assert_exception("TermPartOrdGraph: Not done inserting initial items");
     }
     int term1Id = findOrInsertTermId(term1);
     int term2Id = findOrInsertTermId(term2);
@@ -255,8 +286,8 @@ bool TermPartOrdGraph::isLTE( Term* term1, Term* term2 ) {
 }
 //! returns true if Term1 < Term2
 bool TermPartOrdGraph::isLT( Term* term1, Term* term2 ) {
-    if (!isDoneInsertingTerms()) {
-        throw assert_exception("TermPartOrdGraph: Not done inserting items");
+    if (!isDoneInsertingInitialTerms()) {
+        throw assert_exception("TermPartOrdGraph: Not done inserting initial items");
     }
     int term1Id = findOrInsertTermId(term1);
     int term2Id = findOrInsertTermId(term2);
@@ -264,8 +295,8 @@ bool TermPartOrdGraph::isLT( Term* term1, Term* term2 ) {
 }
 //! returns true if Term1 == Term2
 bool TermPartOrdGraph::isEqual( Term* term1, Term* term2 ) {
-    if (!isDoneInsertingTerms()) {
-        throw assert_exception("TermPartOrdGraph: Not done inserting items");
+    if (!isDoneInsertingInitialTerms()) {
+        throw assert_exception("TermPartOrdGraph: Not done inserting initial items");
     }
     int term1Id = findOrInsertTermId(term1);
     int term2Id = findOrInsertTermId(term2);
@@ -328,7 +359,7 @@ std::string TermPartOrdGraph::toString() const {
     std::stringstream ss;
     ss << "TermPartOrdGraph:" << std::endl;
     
-    ss << "\tDoneInsertingTerms = " << isDoneInsertingTerms() << std::endl;
+    ss << "\tDoneInsertingInitialTerms = " << isDoneInsertingInitialTerms() << std::endl;
     
     ss << "\tNumTerms = " << mNumTerms << std::endl;
     

@@ -21,8 +21,6 @@
 #include <map>
 #include <assert.h>
 
-//#include "isl_str_manipulation.h"
-
 namespace iegenlib{
 
 /************************ ISL helper routines ****************************/
@@ -2457,7 +2455,7 @@ void SparseConstraints::addUFConstraintsHelper(std::string uf1str,
         UFCallTerm uf1term = (*tIter);
         
         // Copy uf1 term and then name the function to uf2 in copy.
-        // Need to copies because constraints will own both terms.
+        // Need two copies because constraints will own both terms.
         UFCallTerm *uf1copy1 = new UFCallTerm(uf1term);
         UFCallTerm *uf1copy2 = new UFCallTerm(uf1term);
         uf1copy2->setName(uf2str);
@@ -2534,8 +2532,8 @@ Relation* Relation::addUFConstraints(std::string uf1str,
 /******************************************************************************/
 #pragma mark addConstraintsDueToMonotonicity
 /*************** addConstraintsDueToMonotonicity ******************************/
-/*! This visitor will collect all of the terms except for constants
-    from the constraints and will indicate which of the terms are
+/*! This visitor will collect all of the terms from
+    the constraints and will indicate which of the terms are
     non-negative due to a constraint c <= term where c is a
     constant integer that is >=0.  It is also looking at any range
     information associated with uninterpreted functions.
@@ -2663,6 +2661,7 @@ class VisitorCollectPartOrd : public Visitor {
   public:
     VisitorCollectPartOrd(TermPartOrdGraph partOrd) :
         mFoundNonNeg(false) {
+//std::cerr<<"\n\nIn VCPO\n\n";
         mPartOrd = partOrd;
     }
     ~VisitorCollectPartOrd() {}
@@ -2796,9 +2795,10 @@ void SparseConstraints::addConstraintsDueToMonotonicityHelper() {
         conjunct->acceptVisitor(&v1);
         TermPartOrdGraph partOrd = v1.returnPartOrd();
 
-        // Indicate we are done adding terms into the partial ordering.
-        partOrd.doneInsertingTerms();
-        
+        // Indicate we are done adding initial terms into the partial ordering.
+//std::cerr<<"\n\nB D I!\n\n";
+        partOrd.doneInsertingInitialTerms();
+//std::cerr<<"\n\nA D I!\n\n";
         // Call the visitor that will insert partial orderings.
         // Call in a loop until determination of non-negativity,
         // which impacts partial orderings, has converged.
@@ -3866,6 +3866,240 @@ Relation* Relation::simplifyForPartialParallel(std::set<int> parallelTvs)
     }
 
     return result;    
+}
+
+
+/******************************************************************************/
+#pragma mark domainInfo
+/*************** domainInfo ******************************/
+
+// This visitor collects all uninterpreted function calls for each function symbol
+// and stores them in a map
+class VisitorCollectAllUFCalls : public Visitor {
+  private:
+    std::map< std::string , std::set<UFCallTerm> > ufsMap;
+    
+  public:
+    VisitorCollectAllUFCalls() {}
+  
+    std::map< std::string , std::set<UFCallTerm> > returnResult()
+    { return ufsMap; }
+    
+    void postVisitUFCallTerm(iegenlib::UFCallTerm * t) {
+        UFCallTerm termCopy = *t;
+        termCopy.setCoefficient(1);
+        ufsMap[t->name()].insert(termCopy);
+    }
+};
+
+
+/* This function adds user defined constraints based on 
+// universally quantified expressions, of the form:
+//    Forall e1, e2  if (e1 expOpStr e2) then add ( UF1(e1) ufOpStr UF2(e2) )
+// Note: 
+//    expOpStr and ufOpStr can be: '<' or '<=' or '=' or '>' or '>='
+// FIXME Mahdi: explain how function works esp what exp we consider 
+
+Following is how I am imaging to have the interface in the JSON file:
+
+        { 
+          "expOp" : "expOpStr",    // expOpStr: = < > <= >=
+          "Func1" : "UF1",
+          "Func2" : "UF2",
+          "funcOP" : "ufOpStr"
+        },
+
+
+   Note that this interface can encode one side of Monotinicity property, and
+   functional consistency constraints, as well as more general user defined
+   constraints for universally quantified expressions. 
+*/
+void addConsForUniversQuantExp(std::string expOpStr, std::string uf1Str, 
+        std::string uf2Str, std::string ufOpStr, TermPartOrdGraph &partOrd,
+        std::map< std::string , std::set<UFCallTerm> > &ufsMap){
+
+
+  //FIXME Mahdi: for now we only have partial ordering between terms. 
+  std::list<Term*> termList;
+ 
+  // Extract the parameter expressions from UFCs for uf1Str
+  for (std::set<UFCallTerm>::const_iterator iter1 = (ufsMap[uf1Str]).begin();
+       iter1 != (ufsMap[uf1Str]).end(); iter1++) {
+
+    Exp *parExp1 = (*iter1).getParamExp(0);
+    Term *parTerm1 = parExp1->getTerm();
+    // If parameter expressiopn of UFC has more than 1 term just ignore it
+    if ( !parTerm1 ){  
+      continue;
+    }
+    
+    termList.push_back (parTerm1);
+  }
+  // Extract the parameter expressions from UFCs for uf2Str
+  for (std::set<UFCallTerm>::const_iterator iter2 = (ufsMap[uf2Str]).begin();
+       iter2 != (ufsMap[uf2Str]).end(); iter2++) {
+
+    Exp *parExp2 = (*iter2).getParamExp(0);
+    Term *parTerm2 = parExp2->getTerm();
+    // If parameter expressiopn of UFC has more than 1 term just ignore it
+    if ( !parTerm2 ){  
+      continue;
+    }
+
+    termList.push_back (parTerm2);
+  }
+
+  // Going to show if antecedent of the implication is correct:
+  // Forall e1, e2  if (e1 expOpStr e2) then add ( UF1(e1) ufOpStr UF2(e2) )
+  bool antMatch = false; 
+
+  // Going over all the terms that are parameter to UF1 or UF2 and checking 
+  // to see whether ordering between them would match the comparision provided by users
+  // If so we are going to add the desired constraints between UF1 and UF2.
+  for (std::list<Term*>::const_iterator i = termList.begin();
+       i != termList.end(); i++) {
+    for (std::list<Term*>::const_iterator j = termList.begin();
+         j != termList.end(); j++) {
+      
+      antMatch = false;
+
+      // exp1 = exp2 => ...
+      if ( expOpStr == "=" && partOrd.isEqual( *i , *j ) ){
+        antMatch = true.
+      }
+      // exp1 < exp2 => ...
+      else if ( expOpStr == "<" && partOrd.isStrict( *i , *j ) ){
+        antMatch = true.
+      }
+      // exp1 <= exp2 => ...
+      else if ( expOpStr == "<=" && partOrd.isNonStrict( *i , *j ) ){
+        antMatch = true.
+      }
+
+      if ( antMatch ){
+
+      /* Add UF1(e1) ufOpStr UF2(e2) */
+      }
+
+    }
+  }
+      
+
+  // I am thinking about having an exception for when we have
+  // expOpStr is '=' (e1 = e2), in this situation we do not need to check
+  // partial ordering for any expresion (e) that is argument to UF1 or UF2, to
+  // add UF1(e) ufOpStr UF2(e), since forall e, e = e
+}
+
+/* This function adds user defined constraints based on relation between UFCs:
+//    If ( UF1(e1) ufOpStr UF2(e2) ) then add (e1 expOpStr e2)
+// Note: 
+//    expOpStr and ufOpStr can be: '<' or '<=' or '=' or '>' or '>='
+// FIXME Mahdi: explain how function works esp what exp we consider 
+
+Following is how I am imaging to have the interface in the JSON file:
+
+        { 
+          "Func1" : "UF1",
+          "Func2" : "UF2",
+          "funcOP" : "ufOpStr"
+          "expOp" : "expOpStr",    // expOpStr: = < > <= >=
+        },
+
+*/
+void addConsForUFcRel(std::string uf1Str, std::string uf2Str, 
+        std::string ufOpStr, std::string expOpStr, TermPartOrdGraph &partOrd,
+        std::map< std::string , std::set<UFCallTerm> > &ufsMap){
+
+  // Going to be very similar to curent addConstraintsDueToMonotonicityHelper
+  // however, this more general since it is going to encode shared Monotonicity 
+  // as well.
+}
+
+
+
+// The high level interface for adding all domain information about UFCs
+// to constraints, including Monotonicity and other user defined information
+// The function first creates a partial ordering between terms in the original
+// constraints set. Then, it adds constraints based on partial ordering
+// pertaining to different domain information recursively untill it converges. 
+//
+void SparseConstraints::domainInfoHelper(json &data, int conjN){
+
+  Conjunction *conjunct = mConjunctions.front();
+
+  // Create and stroe the partial ordering
+
+  // Collect all of the terms and determine what terms are nonnegative
+  VisitorCollectTerms vCT;
+  conjunct->acceptVisitor(&vCT);
+  TermPartOrdGraph partOrd = vCT.returnPartOrd();
+  // Indicate we are done adding initial terms into the partial ordering.
+  partOrd.doneInsertingInitialTerms();
+  // Call the visitor that will insert partial orderings.
+  // Call in a loop until determination of non-negativity,
+  // which impacts partial orderings, has converged.
+  VisitorCollectPartOrd v2(partOrd);
+        do {
+            conjunct->acceptVisitor(&v2);
+        } while (!(v2.hasConverged()));
+        partOrd = v2.returnPartOrd();
+
+  // Collect all uninterpreted function symbols in the conjunction and
+  // their instances (calls of each sysmbol), and put them in a std::map
+  std::map< std::string , std::set<UFCallTerm> > ufsMap;
+  VisitorCollectAllUFCalls vCUFC;
+  conjunct->acceptVisitor(&vCUFC);
+  ufsMap = vCUFC.returnResult();
+
+
+  //while( untill adding cdomain info converges ){
+
+    // (1)
+    // Read user defined constraints based on universally quantified expressions
+    // from json &data, and call addConsForUniversQuantExp to add them
+  
+    // (2)
+    // read user defined relations between UFCs, then call addConsForUFcRel
+    // to add related constraints.
+
+    // (3)
+    // Read Monotinicity info of UFCs, then 
+    // call addConsForUniversQuantExp and addConsForUFcRel to add
+    // related constraints. Each of those function for one of the directions of 
+    // Monotonicity.  
+
+  //}
+
+
+/* For debugging purposes
+  std::cerr<<"\n\nPartOrd: "<<partOrd.toString()<<"\n";
+
+  std::set<UFCallTerm*> ufCallTerms = partOrd.getUniqueUFCallTerms();
+  std::set<UFCallTerm*>::const_iterator i;
+  for (i = ufCallTerms.begin(); i!=ufCallTerms.end(); i++) {
+ 
+    std::set<UFCallTerm> usL = ufsMap[ (*i)->name() ];
+    std::set<UFCallTerm>::const_iterator j;
+    std::cerr<<"\n"<<(*i)->name()<<": ";
+    for (j = usL.begin(); j!=usL.end(); j++) {
+      std::cerr<<(*j).toString()<<"  ";
+    }
+  }
+  std::cerr<<"\n\n";
+*/
+}
+
+Set* Set::domainInfo(json &data, int conjN) {
+  Set* retval = new Set(*this);
+  retval->domainInfoHelper(data,conjN);
+  return retval;
+}
+
+Relation* Relation::domainInfo(json &data, int conjN) {
+  Relation* retval = new Relation(*this);
+  retval->domainInfoHelper(data,conjN);
+  return retval;
 }
 
 }//end namespace iegenlib

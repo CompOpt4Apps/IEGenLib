@@ -21,6 +21,7 @@
 */
 
 #include <string>
+#include <cassert>
 
 #ifndef __PARTORDGRAPH__
 #define __PARTORDGRAPH__
@@ -35,7 +36,7 @@ typedef enum {
 
 class PartOrdGraph {
     public:
-        PartOrdGraph(unsigned int N);
+        PartOrdGraph(unsigned int curN, unsigned int maxN);
         //! Copy constructor.  Performs a deep copy.
         PartOrdGraph(const PartOrdGraph& other);
         //! Copy assignment.
@@ -52,12 +53,26 @@ class PartOrdGraph {
         bool isEqual(unsigned int, unsigned int);
         bool isNoOrder(unsigned int, unsigned int);
 
-        int numItems() { return mN; }
+        int numItems() { return mCurN; }
+        int numMaxItems() { return mMaxN; }
+
+        void updateNumItems(int i) { 
+          assert( (mCurN+i) <= mMaxN );
+          //if( (mCurN+i) > mMaxN ){
+          //  throw assert_exception( "PartOrdGraph::updateNumItems: ERROR"
+          //    " exceeding parOrdGraph's Max capicity");
+          //}
+          mCurN += i;
+        }
 
         std::string toString(); 
 
     private:
-        unsigned int mN;
+// MAHDI FIXME
+//        unsigned int mN;
+        unsigned int mCurN;
+        unsigned int mMaxN;
+
         CompareEnum * mAdjacencyMatrix;
 
         // helper routines to access the matrix, stored in 1D array

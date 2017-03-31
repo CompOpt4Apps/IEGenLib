@@ -34,12 +34,13 @@ class Visitor;
 #include <string>
 #include <sstream>
 #include <iostream>
-#include <map>
-
 #include "isl_str_manipulation.h"
 
 #include <isl/set.h>   // ISL Sets
 #include <isl/map.h>   // ISL Relations
+
+#include "parser/jsoncons/json.hpp"
+using jsoncons::json;
 
 namespace iegenlib{
 
@@ -431,6 +432,8 @@ public:
                                 std::string opstr, std::string uf2str);
 
     void addConstraintsDueToMonotonicityHelper();
+
+    void domainInfoHelper(json &data, int conjN);
 };
 
 /*!
@@ -575,6 +578,8 @@ public:
             return false;
         }
     }
+
+    Set* domainInfo(json &data, int conjN);
 
 private:
     int mArity;
@@ -756,6 +761,14 @@ public:
             return false;
         }
     }
+ 
+    // The high level interface for adding all domain information about UFCs
+    // to constraints, including Monotonicity and other userdefined information
+    // The function first creates a partial ordering between terms in the original
+    // constraints set. Then, it adds constraints based on partial ordering
+    // pertaining to different domain information recursively untill it converges. 
+    //   
+    Relation* domainInfo(json &data, int conjN);
 
 private:
     int mInArity;
