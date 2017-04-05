@@ -48,15 +48,20 @@ using iegenlib::Exp;
 #pragma mark TermPartOrdGraphToString
 TEST(TermPartOrdGraphTest, TermPartOrdGraphToString) {
 
-    TermPartOrdGraph g;
+    // TermPartOrdGraph constructs PartOrdGraph based on a max number of terms
+    //      TermPartOrdGraph g(maxNoOfTerms);
+    TermPartOrdGraph g(3);
     VarTerm * v = new VarTerm( "N" );
-    g.insertTerm( v );
+    TupleVarTerm *i = new TupleVarTerm(1, 0);
 
-    EXPECT_EQ("TermPartOrdGraph:\n\tDoneInsertingInitialTerms = 0\n"
-              "\tNumTerms = 1\n\tNonNegativeTerms = \n"
-              "\tUFCallTerm2IntMap = \n\tTupleVarTerm2IntMap ="
-              " \n\tVarTerm2IntMap = \n\t\tterm = N, id = 0\n\tTerm2IntMap = \n", 
-              g.toString());
+    // Terms get added whenever we add ordering for new term
+    g.insertLT(i,v);
+
+    EXPECT_EQ("TermPartOrdGraph:\n\tNumTerms = 2\n\tNonNegativeTerms = \n"
+              "\tUFCallTerm2IntMap = \n\tTupleVarTerm2IntMap = \n\t\tterm"
+              " = __tv0, id = 0\n\tVarTerm2IntMap = \n\t\tterm = N, id = "
+              "1\n\tTerm2IntMap = \nPartOrdGraph:\n\tmCurN = 2\tmMaxN = 3"
+              "\n\t\t0\t1\n\t0\t=\t<\n\t1\t\t=\n\n", g.toString());
     //std::cout << g.toString();
     
     delete v;
@@ -65,9 +70,8 @@ TEST(TermPartOrdGraphTest, TermPartOrdGraphToString) {
 #pragma mark TermPartOrdGraphIsNonNegative
 TEST(TermPartOrdGraphTest, TermPartOrdGraphIsNonNegative) {
 
-    TermPartOrdGraph g;
+    TermPartOrdGraph g(10);
     VarTerm * v = new VarTerm( "N" );
-    g.insertTerm( v );
     g.termNonNegative( v );
 
     UFCallTerm* uf_call = new UFCallTerm("tau", 2); // tau(i,j)
@@ -78,8 +82,6 @@ TEST(TermPartOrdGraphTest, TermPartOrdGraphIsNonNegative) {
     tau_arg_2->addTerm(new VarTerm("j"));
     uf_call->setParamExp(1,tau_arg_2);
 
-    g.insertTerm( uf_call );
-    
     //std::cout << g.toString();
 
     EXPECT_EQ(true, g.isNonNegative( v ));
@@ -92,14 +94,12 @@ TEST(TermPartOrdGraphTest, TermPartOrdGraphIsNonNegative) {
 #pragma mark TermPartOrdGraphUniqueTerms
 TEST(TermPartOrdGraphTest, TermPartOrdGraphUniqueTerms) {
 
-    TermPartOrdGraph g;
+    TermPartOrdGraph g(10);
     
     // term = N
     VarTerm * v = new VarTerm( 3, "N" );
-    g.insertTerm( v );
     g.termNonNegative( v );
     VarTerm * v2 = new VarTerm( -1, "N" );
-    g.insertTerm( v2 );
     
     // Check that non-negative stayed the same.
     EXPECT_EQ(true, g.isNonNegative( v ));
@@ -119,8 +119,8 @@ TEST(TermPartOrdGraphTest, TermPartOrdGraphUniqueTerms) {
     Exp *tau_arg_2 = new Exp();
     tau_arg_2->addTerm(new VarTerm("j"));
     uf_call->setParamExp(1,tau_arg_2);
+    g.termNonNegative( uf_call );
     }
-    g.insertTerm( uf_call );
 
     {
     // Check the size of the unique sets.
@@ -138,8 +138,8 @@ TEST(TermPartOrdGraphTest, TermPartOrdGraphUniqueTerms) {
     Exp *tau_arg_2 = new Exp();
     tau_arg_2->addTerm(new VarTerm("j"));
     uf_call2->setParamExp(1,tau_arg_2);
+    g.termNonNegative( uf_call2 );
     }
-    g.insertTerm( uf_call2 );
 
     {
     // Check the size of the unique sets.
@@ -153,8 +153,8 @@ TEST(TermPartOrdGraphTest, TermPartOrdGraphUniqueTerms) {
     Exp *g0 = new Exp();
     g0->addTerm(new TupleVarTerm(3, 3));
     uf_call3->setParamExp(0,g0);
+    g.termNonNegative( uf_call3 );
     }
-    g.insertTerm( uf_call3 );
 
     {
     // Check the size of the unique sets.
@@ -168,8 +168,8 @@ TEST(TermPartOrdGraphTest, TermPartOrdGraphUniqueTerms) {
     Exp *g0 = new Exp();
     g0->addTerm(new TupleVarTerm(2, 3));
     uf_call4->setParamExp(0,g0);
+    g.termNonNegative( uf_call4 );
     }
-    g.insertTerm( uf_call4 );
 
     {
     // Check the size of the unique sets.
@@ -191,11 +191,10 @@ TEST(TermPartOrdGraphTest, TermPartOrdGraphUniqueTerms) {
 #pragma mark TermPartOrdGraphPartOrd
 TEST(TermPartOrdGraphTest, TermPartOrdGraphPartOrd) {
 
-    TermPartOrdGraph g;
+    TermPartOrdGraph g(10);
     
     // term = N
     VarTerm * v = new VarTerm( 3, "N" );
-    g.insertTerm( v );
     
     // term = tau(i,j)
     UFCallTerm* uf_call1 = new UFCallTerm("tau", 2);
@@ -206,26 +205,17 @@ TEST(TermPartOrdGraphTest, TermPartOrdGraphPartOrd) {
     tau_arg_2->addTerm(new VarTerm("j"));
     uf_call1->setParamExp(1,tau_arg_2);
 
-    g.insertTerm( uf_call1 );
-
     // term = g(3 __tv3)
     UFCallTerm* uf_call2 = new UFCallTerm("g", 1);
     Exp* g0 = new Exp();
     g0->addTerm(new TupleVarTerm(3, 3));
     uf_call2->setParamExp(0,g0);
-    
-    g.insertTerm( uf_call2 );
 
     // term = g(2 __tv3)
     UFCallTerm* uf_call3 = new UFCallTerm("g", 1);
     g0 = new Exp();
     g0->addTerm(new TupleVarTerm(2, 3));
     uf_call3->setParamExp(0,g0);
-    
-    g.insertTerm( uf_call3 );
-
-
-    g.doneInsertingInitialTerms();
 
     // Put in relationships between terms
     // v < uf_call1, uf_call1 <= uf_call2, uf_call3 < uf_call1
@@ -253,46 +243,29 @@ TEST(TermPartOrdGraphTest, TermPartOrdGraphConstOrd) {
     //   2. Use these ordering to do transitive closures like: 
     //        ii <= 3 && 6 < ufcall(j)  => ii < ufcall(j)
 
-    TermPartOrdGraph g;
+    TermPartOrdGraph g(10);
     VarTerm * v = new VarTerm( "N" );
-    g.insertTerm( v );
     g.termNonNegative( v );
 
     TupleVarTerm *ii = new TupleVarTerm(1, 0);
     TupleVarTerm *jj = new TupleVarTerm(1, 1);
 
-    g.insertTerm( ii );
-    g.insertTerm( jj );
+    Term * c2 = new Term( 6 ); 
 
-
-    Term * c2 = new Term( 6 ); // one side of the in/equality to the other side 
-    g.insertTerm( c2 );        // their coefficient gets multiplied by -1, 
-                               // for non-constant term this is not important 
-                               // since we do not care about their coefficient.
-                               // However, in case of constants the coefficient
-                               // is the term itself.
-
-
-
-    Term * c4 = new Term( -6 );// g would not change, we have already 
-    g.insertTerm( c4 );        // inserted -6 when inserting 6.
-
-    g.doneInsertingInitialTerms();    // This will automatically add -6 < -1, -6 < 1, ...
+    Term * c4 = new Term( -6 );
 
     UFCallTerm* uf_call = new UFCallTerm("tau",1); // tau(__tv2)
     Exp *tau_arg_1 = new Exp();
     tau_arg_1->addTerm( new TupleVarTerm(1, 2) );
     uf_call->setParamExp(0,tau_arg_1);
-    g.insertTerm( uf_call );
 
     // Put in relationships between terms
     g.insertLT( c2 , uf_call );    // 6 < uf_call
-    Term * c1 = new Term( 3 ); // When we insert a constant like 1, we also 
-    g.insertTerm( c1 );        // insert the negative of the constant. 
-                               // This is because when we move a term from 
+    Term * c1 = new Term( 3 ); 
+
     g.insertLTE(ii , c1 );         // __tv0 <= 3
     Term * c3 = new Term( 3 ); // Unique contant terms get inserted only once.
-    g.insertTerm( c3 );        // g would not change.
+
     g.insertLTE( c3 , jj );        // 3 <=  __tv1
 
 
@@ -307,16 +280,16 @@ TEST(TermPartOrdGraphTest, TermPartOrdGraphConstOrd) {
     // 3 == 3 ?
     EXPECT_EQ(true, g.isEqual(c1,c3));
 
-    EXPECT_EQ("TermPartOrdGraph:\n\tDoneInsertingInitialTerms = 1\n\t"
-"NumTerms = 8\n\tNonNegativeTerms = \n\t\tN\n\tUFCallTerm2IntMap = \n"
-"\t\tterm = tau(__tv2), id = 5\n\tTupleVarTerm2IntMap = \n\t\tterm = __tv0"
-", id = 1\n\t\tterm = __tv1, id = 2\n\tVarTerm2IntMap = \n\t\tterm = N, "
-"id = 0\n\tTerm2IntMap = \n\t\tterm = -6, id = 4\n\t\tterm = -3, id = 7"
-"\n\t\tterm = 3, id = 6\n\t\tterm = 6, id = 3\nPartOrdGraph:\n\tmCurN = 8"
-"\tmMaxN = 25\n\t\t0\t1\t2\t3\t4\t5\t6\t7\n\t0\t=\t\t\t\t\t\t\t\n\t1\t\t="
-"\t<=\t<\t\t<\t<=\t\n\t2\t\t\t=\t\t\t\t\t\n\t3\t\t\t\t=\t\t<\t\t\n\t4\t\t"
-"\t<\t<\t=\t<\t<\t<\n\t5\t\t\t\t\t\t=\t\t\n\t6\t\t\t<=\t<\t\t<\t=\t\n\t7"
-                               "\t\t\t<\t<\t\t<\t<\t=\n\n",  g.toString());
+    EXPECT_EQ("TermPartOrdGraph:\n\tNumTerms = 7\n\tNonNegativeTerms = \n"
+              "\t\tN\n\tUFCallTerm2IntMap = \n\t\tterm = tau(__tv2), id ="
+              " 2\n\tTupleVarTerm2IntMap = \n\t\tterm = __tv0, id = 3\n\t"
+              "\tterm = __tv1, id = 5\n\tVarTerm2IntMap = \n\t\tterm = N,"
+              " id = 0\n\tTerm2IntMap = \n\t\tterm = -6, id = 6\n\t\tterm"
+              " = 3, id = 4\n\t\tterm = 6, id = 1\nPartOrdGraph:\n\tmCurN"
+              " = 7\tmMaxN = 10\n\t\t0\t1\t2\t3\t4\t5\t6\n\t0\t=\t\t\t\t\t"
+              "\t\n\t1\t\t=\t<\t\t\t\t\n\t2\t\t\t=\t\t\t\t\n\t3\t\t<\t<\t"
+              "=\t<=\t<=\t\n\t4\t\t<\t<\t\t=\t<=\t\n\t5\t\t\t\t\t\t=\t\n"
+              "\t6\t\t<\t<\t\t<\t<\t=\n\n",  g.toString());
     
     delete v;
     delete ii;

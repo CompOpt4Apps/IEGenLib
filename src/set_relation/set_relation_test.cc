@@ -3520,6 +3520,7 @@ TEST_F(SetRelationTest, addConstraintsDueToMonotonicity){
     {
     Set* s = new Set("{[i,j] : f(i)<f(j) && 0<=f(i) && 0<=f(j)}");
     Set* copyS = s->boundDomainRange();
+
     Set* result = copyS->addConstraintsDueToMonotonicity();
     Set* expected = new Set("{[i,j] : f(i) >= 0 && f(j) >= 0 && "
                             "f(i)<G && f(j)<G && "
@@ -3533,7 +3534,7 @@ TEST_F(SetRelationTest, addConstraintsDueToMonotonicity){
     delete result;
     delete expected;
     }
-    
+/*
     {
     Set* s = new Set("{[i,j] : f(i)<f(j) && 0<=f(i) && 0<=f(j)}");
     Set* copyS = s->boundDomainRange();
@@ -3572,7 +3573,7 @@ TEST_F(SetRelationTest, addConstraintsDueToMonotonicity){
     delete expected;
     }
 
-
+*/
   }
 
 }

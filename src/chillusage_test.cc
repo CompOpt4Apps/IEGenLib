@@ -366,7 +366,7 @@ S1:     y[i] -= values[j]*y[colidx[j]];
     delete anti_sim;
 }
 
-
+//#if 0
 /*! Test cases for CSR ILU code's data access dependencies
 */
 TEST_F(ChillUsageTest, ILU_CSR_DepSimplification)
@@ -1501,3 +1501,6 @@ S2:     v[j1] -= tmp*v[j2];
     delete F8_sim;
 
 }
+
+//#endif
+

@@ -41,8 +41,8 @@
 #include <sstream>
 #include <assert.h>
 
-PartOrdGraph::PartOrdGraph(unsigned int curN, unsigned int maxN) {
-    this->mCurN = curN;
+PartOrdGraph::PartOrdGraph(unsigned int maxN) {
+    this->mCurN = 0;
     this->mMaxN = maxN;
 //std::cerr<<"\n\nPartOrdGraph::PartOrdGraph  cur= "<<curN<<"\n\n";
     this->mAdjacencyMatrix = new CompareEnum[maxN*maxN];
@@ -55,6 +55,7 @@ PartOrdGraph::PartOrdGraph(unsigned int curN, unsigned int maxN) {
             }
         }
     }
+//std::cerr<<"\n\n"<<toString()<<"\n\n";
 //std::cerr<<"\n\nPartOrdGraph::PartOrdGraph  Idx = "<<getIndex(3,5)<<"\n\n";
 }
 
@@ -65,15 +66,17 @@ PartOrdGraph::PartOrdGraph(const PartOrdGraph& other) {
 
 //! Copy assignment.
 PartOrdGraph& PartOrdGraph::operator=(const PartOrdGraph& other) {
+//std::cerr<<"\n\nBefore  "<<toString()<<"\n\n";
     mCurN = other.mCurN;
     mMaxN = other.mMaxN;
     this->mAdjacencyMatrix = new CompareEnum[mMaxN*mMaxN];
-    for (unsigned int i=0; i<mCurN; i++) {
-        for (unsigned int j=0; j<mCurN; j++) {
+    for (unsigned int i=0; i<mMaxN; i++) {
+        for (unsigned int j=0; j<mMaxN; j++) {
             mAdjacencyMatrix[getIndex(i,j)]
                 = other.mAdjacencyMatrix[getIndex(i,j)];
         }
     }
+//std::cerr<<"\n\nAfter  "<<toString()<<"\n\n";
     return *this;
 }
 
@@ -128,9 +131,17 @@ CompareEnum PartOrdGraph::meet(CompareEnum op1, CompareEnum op2) {
 
 
 void PartOrdGraph::updatePair(unsigned int a, unsigned int b, CompareEnum to) {
-    // Check vertices are within range of partial ordering.
-    assert((a<mCurN) && (b<mCurN));
-    
+    // Mahdi FIXME: turn these asserts into "throw assert_exception"
+    // Check vertices are within range of allocated memory for partial ordering.
+    assert((a<mMaxN) && (b<mMaxN));
+
+    if( a >= mCurN ){ // If any of a or b is bigger than current number of
+      mCurN = a+1;    // terms that PartOrdGraphis keeping track of, it 
+    }                 // means that TermPartOrdGraph has inserted some new
+    if( b >= mCurN ){ // terms (at least one). Therefore, we need to update 
+      mCurN = b+1;    // the number of current terms, namely mCurN.
+    }
+//std::cerr<<"\n\n updatePair:  a = "<<a<<"  b = "<<b<<"  to = "<<to<<"  "<<toString()<<"\n\n";
     // Fail if the opposite direction is already in partial ordering
     // or if this an an attempt for a self-loop unless we are doing EQUAL.
     if (to==STRICT) { assert(isNoOrder(b,a)); }
@@ -183,22 +194,18 @@ void PartOrdGraph::transitiveClosure() {
 }
 
 bool PartOrdGraph::isStrict(unsigned int a, unsigned int b) {
-    assert((a<mCurN) && (b<mCurN));
     return (mAdjacencyMatrix[ getIndex(a,b) ] == STRICT);
 }
 
 bool PartOrdGraph::isNonStrict(unsigned int a, unsigned int b) {
-    assert((a<mCurN) && (b<mCurN));
     return (mAdjacencyMatrix[ getIndex(a,b) ] == NONSTRICT);
 }
 
 bool PartOrdGraph::isEqual(unsigned int a, unsigned int b) {
-    assert((a<mCurN) && (b<mCurN));
     return (mAdjacencyMatrix[ getIndex(a,b) ] == EQUAL);
 }
 
 bool PartOrdGraph::isNoOrder(unsigned int a, unsigned int b) {
-    assert((a<mCurN) && (b<mCurN));
     return (mAdjacencyMatrix[ getIndex(a,b) ] == NO_ORD);
 }
 

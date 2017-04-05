@@ -28,7 +28,7 @@ namespace iegenlib{
 
 /*!
  * \class TermPartOrdGraph
- *
+ * Mahdi FIXME
  * This class will keep track of unique terms found in the constraints,
  * then once all initial terms have been added 
  * (TermPartOrdGraph::doneInsertingInitialTerms)
@@ -71,7 +71,7 @@ namespace iegenlib{
  */
 class TermPartOrdGraph {
 public:
-    TermPartOrdGraph();
+    TermPartOrdGraph(int maxNumTerms);
     
     //! Copy constructor.  Performs a deep copy of PartOrdGraph, but does not
     //! own any Terms so just copying their pointers.
@@ -81,10 +81,6 @@ public:
 
     ~TermPartOrdGraph();
     
-    //! Insert a term into graph vertex set.  Will pretend coeff 1.
-    //! Does not take ownership of term.
-    void insertTerm( const Term* term);
-    
     //! Indicate the given term is non-negative.  Will pretend coeff 1.
     //! Assumes that given term has already been inserted.
     //! Does not take ownership of term.
@@ -92,15 +88,10 @@ public:
  
     //! Queries whether a term is non-negative.  Will pretend coeff 1.
     //! Does not take ownership of term.
-    bool isNonNegative( const Term* term ) const;
-   
-    //! Call when all term insertions are done and ready for partial orders.
-    void doneInsertingInitialTerms();
+    bool isNonNegative( const Term* term );
 
     //! ==== NONE of the below take ownership of term.
     //! ==== They all will pretend the coeffs are 1.
-    //! ==== They only work after doneInsertingInitialTerms has been called.
-    //! ==== Will throw an assert exception if called before that.
     //! Term1 <= Term2
     void insertLTE( Term* term1, Term* term2 );
     //! Term1 < Term2
@@ -108,16 +99,8 @@ public:
     //! Term1 == Term2
     void insertEqual( Term* term1, Term* term2 );
 
- 
-    //! ==== Query methods
- 
-    //! Returns true if doneInsertingInitialTerms() has been called.
-    bool isDoneInsertingInitialTerms() const;
- 
+    //! ==== Query methods 
     //! ==== NONE of the below take ownership of term.
-    //! ==== They all will pretend the coeffs are 1.
-    //! ==== They only work after doneInsertingInitialTerms has been called.
-    //! ==== Will throw an assert exception if called before that.
     //! returns true if Term1 <= Term2
     bool isLTE( Term* term1, Term* term2 );
     //! returns true if Term1 < Term2

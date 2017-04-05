@@ -262,6 +262,14 @@ public:
     //! Visitor design pattern, see Visitor.h for usage
     void acceptVisitor(Visitor *v);
 
+    // returns the number of all terms (unique and replicates)
+    // inside the conjuction.
+    int termCount();
+
+    void addConsForUniversQuantExp(std::string expOpStr, std::string uf1Str,
+        std::string uf2Str, std::string ufOpStr, TermPartOrdGraph &partOrd,
+        std::map< std::string , std::set<UFCallTerm> > &ufsMap);
+
 private:
 
     /// Set of equality constraints.

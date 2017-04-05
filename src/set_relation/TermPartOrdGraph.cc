@@ -18,8 +18,14 @@
 
 namespace iegenlib{
 
-TermPartOrdGraph::TermPartOrdGraph() : mNumTerms(0), mMaxNumTerms(0), 
-                                       mGraphPtr(NULL) {}
+//TermPartOrdGraph::TermPartOrdGraph() : mNumTerms(0), mMaxNumTerms(0), 
+//                                       mGraphPtr(NULL) {}
+TermPartOrdGraph::TermPartOrdGraph(int maxNumTerms){
+   mNumTerms = 0;
+   mMaxNumTerms = maxNumTerms;
+
+   mGraphPtr = new PartOrdGraph(mMaxNumTerms);
+}
 
 //! Copy constructor.  Performs a deep copy of PartOrdGraph, but does not
 //! own any Terms so just copying their pointers.
@@ -46,8 +52,7 @@ TermPartOrdGraph& TermPartOrdGraph::operator=(const TermPartOrdGraph& other) {
     if (other.mGraphPtr!=NULL) {
         if (mGraphPtr==NULL) {
 //std::cerr<<"\n\nTermPartOrdGraph::=  curN= "<<other.mGraphPtr->numItems()<<"\n\n";
-            mGraphPtr = new PartOrdGraph(other.mGraphPtr->numItems(),
-                                         other.mGraphPtr->numMaxItems());
+            mGraphPtr = new PartOrdGraph(other.mGraphPtr->numMaxItems());
         }
         *mGraphPtr = *(other.mGraphPtr);
     }
@@ -69,7 +74,6 @@ TermPartOrdGraph::~TermPartOrdGraph() {
 //! Don't want to expose IDs in TermPartOrdGraph interface.
 int TermPartOrdGraph::findOrInsertTermId(const Term* t) {
     int termId = mNumTerms; // Initial assumption is insertion.
-    int initialNumTerms = mNumTerms;
     
     Term* temp = t->clone();
     if(temp->type()!="Term") temp->setCoefficient(1);
@@ -97,23 +101,9 @@ int TermPartOrdGraph::findOrInsertTermId(const Term* t) {
             termId = mVarTerm2IntMap[*vterm];
         }
     } else if (temp->type()=="Term") {
-      // MAHDI FIXME
-      // When we insert a constant like 1, we also insert the negative of
-      // that constant. This is because when we move a term from one side 
-      // of the in/equality to the other side, their coefficient gets 
-      // multiplied by -1, for non-constant terms this is not important
-      // since we do not care about their coefficient. Consequently, it
-      // is good idea to negative of a constant just in case we need it.
-      Term* term = dynamic_cast<Term*>(temp);
-      if (mTerm2IntMap.find(*term)==mTerm2IntMap.end()) {
-        mTerm2IntMap[*term] = mNumTerms++;
-        Term* nterm = term->clone();
-        nterm->setCoefficient( (-1*term->coefficient()) );
-        mTerm2IntMap[*nterm] = mNumTerms++;
-
-        if ( isDoneInsertingInitialTerms() and (initialNumTerms!=mNumTerms) ) {
-          mGraphPtr->updateNumItems( (mNumTerms-initialNumTerms) );
-          initialNumTerms = mNumTerms;
+        Term* term = dynamic_cast<Term*>(temp);
+        if (mTerm2IntMap.find(*term)==mTerm2IntMap.end()) {
+          mTerm2IntMap[*term] = mNumTerms++;
 
           // We know the orderings between integers from basic math!
           // So, lets just add them to partial ordering.
@@ -124,16 +114,10 @@ int TermPartOrdGraph::findOrInsertTermId(const Term* t) {
             } else if( it->first.coefficient() > term->coefficient() ){
               mGraphPtr->strict( mTerm2IntMap[*term] , it->second );
             }
-            if( it->first.coefficient() < nterm->coefficient() ){
-              mGraphPtr->strict( it->second , mTerm2IntMap[*nterm] );
-            } else if( it->first.coefficient() > nterm->coefficient() ){
-              mGraphPtr->strict( mTerm2IntMap[*nterm] , it->second );
-            }
           }
-        }
-      } else {
+        } else {
             termId = mTerm2IntMap[*term];
-      }
+        }
     } else {
         std::cerr << "TermPartOrdGraph::findOrInsertTermId: "
                      "ERROR unhandled term type" << std::endl;
@@ -143,48 +127,40 @@ int TermPartOrdGraph::findOrInsertTermId(const Term* t) {
     
     delete temp;
 
-    // MAHDI FIXME
-    // Check if we just do an insertion after doneInsertingItems call, in which
-    // case we should update number of current terms in underlying PartrOrdGraph
-    if ( isDoneInsertingInitialTerms() and (initialNumTerms!=mNumTerms) ) {
-//std::cerr<<"\n\nTermPartOrdGraph::updateNumItems  cur= "<<initialNumTerms<<"\n\n";
-        mGraphPtr->updateNumItems( (mNumTerms-initialNumTerms) );
+//std::cerr<<"\n\nTermPartOrdGraph   T = "<< t->toString()<<"\n\n";
 //std::cerr<<"\n\nTermPartOrdGraph::updateNumItems  cur+1= "<<mNumTerms<<"\n\n";
-    }
 
     return termId;    
-}
-
-//! Use this to insert a term.
-//! Changes coeff to 1 and then makes sure the term is unique.
-//! Does NOT take ownership of term.
-void TermPartOrdGraph::insertTerm( const Term* t ) {
-
-    findOrInsertTermId(t);
 }
 
 //! Indicate the given term is non-negative.  Will pretend coeff 1.
 //! Assumes that given term has already been inserted.
 //! Creates a copy of the term and owns that copy.
-void TermPartOrdGraph::termNonNegative( const Term* t ) {
-    Term* temp = t->clone();
+void TermPartOrdGraph::termNonNegative( const Term* term ) {
+    Term* temp = term->clone();
     temp->setCoefficient(1);
     
     // Make sure the term has already been inserted into graph.
-    
+    int termId = findOrInsertTermId(temp);
+
     // If so then insert into non-negative set if it is not
     // already in there.
-    if (!isNonNegative(t)) {
+    if (!isNonNegative(temp)) {
         mNonNegativeTerms.insert(temp); // Will own temp so don't delete.
     } 
 }
 
-bool TermPartOrdGraph::isNonNegative( const Term* term ) const {
-    if (term->isConst()) {
+bool TermPartOrdGraph::isNonNegative( const Term* term ) {
+
+    Term* temp = term->clone();
+    // Make sure the term has already been inserted into graph.
+    int termId = findOrInsertTermId(term);
+
+    if (temp->isConst()) {
         return (term->coefficient()>0);
     }
-    // If have a non-constant term, clone it and set clone coeff to 1.
-    Term* temp = term->clone();
+
+    // If have a non-constant term, set clone coeff to 1.
     temp->setCoefficient(1);
     bool retval = false;
 
@@ -205,47 +181,9 @@ bool TermPartOrdGraph::isNonNegative( const Term* term ) const {
 //===============================================================
 // Methods for creating partial orderings.
 
-//! Once user is done inserting initial items we can create an instance
-//! of the PartOrdGraph data structure.
-void TermPartOrdGraph::doneInsertingInitialTerms() {
-    // MAHDI FIXME
-//std::cerr<<"\n\nTermPartOrdGraph::BPOG = "<<mMaxNumTerms<<"\n\n";
-    mMaxNumTerms = (mNumTerms*5);
-    mGraphPtr = new PartOrdGraph(mNumTerms , mMaxNumTerms);
-
-    // Adds orderings between (just) constant terms  e.g. 1 < 2
-    for (std::map<Term,int>::iterator it=mTerm2IntMap.begin(); 
-          it!=mTerm2IntMap.end(); it++){
-
-        std::map<Term,int>::iterator jt = it;
-        jt++;
-        for ( ; jt!=mTerm2IntMap.end(); jt++){
-            if( it->first.coefficient() == jt->first.coefficient() ){
-              throw assert_exception( "TermPartOrdGraph::doneInsertingTerms: ERROR"
-               " more than one instance of an unique constant term in parOrdGraph");
-            }
-            else if( it->first.coefficient() < jt->first.coefficient() ){
-                mGraphPtr->strict( it->second , jt->second );
-            }
-            else {
-                 mGraphPtr->strict( jt->second , it->second );
-            }
-        }
-    }
-//std::cerr<<"\n\nTermPartOrdGraph::ACONT = "<<mNumTerms<<"\n\n";
-}
-
-//! Once user is done inserting items we can create an instance
-//! of the PartOrdGraph data structure.
-bool TermPartOrdGraph::isDoneInsertingInitialTerms() const {
-    return mGraphPtr != NULL;
-}
-
 //! Term1 <= Term2
 void TermPartOrdGraph::insertLTE( Term* term1, Term* term2 ) {
-    if (!isDoneInsertingInitialTerms()) {
-        throw assert_exception("TermPartOrdGraph: Not done inserting initial items");
-    }
+
     int term1Id = findOrInsertTermId(term1);
     int term2Id = findOrInsertTermId(term2);
     mGraphPtr->nonStrict(term1Id,term2Id);
@@ -253,9 +191,7 @@ void TermPartOrdGraph::insertLTE( Term* term1, Term* term2 ) {
 
 //! Term1 < Term2
 void TermPartOrdGraph::insertLT( Term* term1, Term* term2 ) {
-    if (!isDoneInsertingInitialTerms()) {
-        throw assert_exception("TermPartOrdGraph: Not done inserting initial items");
-    }
+
     int term1Id = findOrInsertTermId(term1);
     int term2Id = findOrInsertTermId(term2);
     mGraphPtr->strict(term1Id,term2Id);
@@ -263,9 +199,7 @@ void TermPartOrdGraph::insertLT( Term* term1, Term* term2 ) {
 
 //! Term1 == Term2
 void TermPartOrdGraph::insertEqual( Term* term1, Term* term2 ) {
-    if (!isDoneInsertingInitialTerms()) {
-        throw assert_exception("TermPartOrdGraph: Not done inserting initial items");
-    }
+
     int term1Id = findOrInsertTermId(term1);
     int term2Id = findOrInsertTermId(term2);
     mGraphPtr->equal(term1Id,term2Id);
@@ -277,27 +211,21 @@ void TermPartOrdGraph::insertEqual( Term* term1, Term* term2 ) {
 
 //! returns true if Term1 <= Term2
 bool TermPartOrdGraph::isLTE( Term* term1, Term* term2 ) {
-    if (!isDoneInsertingInitialTerms()) {
-        throw assert_exception("TermPartOrdGraph: Not done inserting initial items");
-    }
+
     int term1Id = findOrInsertTermId(term1);
     int term2Id = findOrInsertTermId(term2);
     return mGraphPtr->isNonStrict(term1Id,term2Id);
 }
 //! returns true if Term1 < Term2
 bool TermPartOrdGraph::isLT( Term* term1, Term* term2 ) {
-    if (!isDoneInsertingInitialTerms()) {
-        throw assert_exception("TermPartOrdGraph: Not done inserting initial items");
-    }
+
     int term1Id = findOrInsertTermId(term1);
     int term2Id = findOrInsertTermId(term2);
     return mGraphPtr->isStrict(term1Id,term2Id);
 }
 //! returns true if Term1 == Term2
 bool TermPartOrdGraph::isEqual( Term* term1, Term* term2 ) {
-    if (!isDoneInsertingInitialTerms()) {
-        throw assert_exception("TermPartOrdGraph: Not done inserting initial items");
-    }
+
     int term1Id = findOrInsertTermId(term1);
     int term2Id = findOrInsertTermId(term2);
     return mGraphPtr->isEqual(term1Id,term2Id);
@@ -358,8 +286,6 @@ std::string termMapToString( const std::map<TermType,int>& termMap ) {
 std::string TermPartOrdGraph::toString() const {
     std::stringstream ss;
     ss << "TermPartOrdGraph:" << std::endl;
-    
-    ss << "\tDoneInsertingInitialTerms = " << isDoneInsertingInitialTerms() << std::endl;
     
     ss << "\tNumTerms = " << mNumTerms << std::endl;
     

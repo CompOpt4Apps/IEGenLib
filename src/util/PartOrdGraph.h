@@ -36,7 +36,7 @@ typedef enum {
 
 class PartOrdGraph {
     public:
-        PartOrdGraph(unsigned int curN, unsigned int maxN);
+        PartOrdGraph(unsigned int maxN);
         //! Copy constructor.  Performs a deep copy.
         PartOrdGraph(const PartOrdGraph& other);
         //! Copy assignment.
@@ -55,15 +55,6 @@ class PartOrdGraph {
 
         int numItems() { return mCurN; }
         int numMaxItems() { return mMaxN; }
-
-        void updateNumItems(int i) { 
-          assert( (mCurN+i) <= mMaxN );
-          //if( (mCurN+i) > mMaxN ){
-          //  throw assert_exception( "PartOrdGraph::updateNumItems: ERROR"
-          //    " exceeding parOrdGraph's Max capicity");
-          //}
-          mCurN += i;
-        }
 
         std::string toString(); 
 
