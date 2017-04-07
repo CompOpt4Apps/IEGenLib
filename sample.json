@@ -1,0 +1,107 @@
+[
+  [
+    {
+      "Name" : "CSR_ILU",
+      "Input Type" : "IEgenLIB Relation",
+      "Relation" : "[m] -> {[i,k] -> [ip,kp]: i < ip && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && k = kp }",
+      "Expected" : "Not Satisfiable",
+      "UFS" :
+      [
+        { 
+           "Name" : "colidx",
+           "Domain" : "{[i]:0<=i &&i<nnz}",
+           "Range" : "{[j]:0<=j &&j<m}",
+           "Bijective" : "false",
+           "Monotonicity" : "Monotonic_NONE"
+        },
+        { 
+           "Name" : "rowptr",
+           "Domain" : "{[j]:0<=j &&j<m}",
+           "Range" : "{[i]:0<=i &&i<nnz}",
+           "Bijective" : "false",
+           "Monotonicity" : "Monotonic_Increasing"
+        },
+        { 
+           "Name" : "diagptr",
+           "Domain" : "{[j]:0<=j &&j<m}",
+           "Range" : "{[i]:0<=i &&i<nnz}",
+           "Bijective" : "false",
+           "Monotonicity" : "Monotonic_Increasing"
+        }
+      ],
+      "User Defined" :
+      [
+        {
+          "Type" : "Comment: 1",
+          "Forall e1, e2: if e1 is? e2" : "OP",
+          "then add: UFSymbol1?(e1)" : "UF1",
+          " is? " : "OP",
+          "UFSymbol2?(e2)" : "UF2"
+        },
+        {
+          "Type" : "Comment: 2",
+          "Forall e1, e2: if UFSymbol1?(e1)" : "UFSymbol1",
+          " is? " : "UFSymbol1",
+          "UFSymbol2?(e2)" : "UFSymbol2",
+          "then add: e1 is? e2" : "OP"
+        },
+        {
+          "Type" : "1",
+          "Forall e1, e2: if e1 is? e2" : "=",
+          "then add: UFSymbol1?(e1)" : "rowptr",
+          " is? " : "<=",
+          "UFSymbol2?(e2)" : "diagptr"
+        },
+        {
+          "Type" : "1",
+          "Forall e1, e2: if e1 is? e2" : "<",
+          "then add: UFSymbol1?(e1)" : "diagptr",
+          " is? " : "<",
+          "UFSymbol2?(e2)" : "rowptr"
+        }
+      ],
+      "Do Not Project Out" :
+      [
+        "i", "ip"
+      ],
+      "Remove Constraints" : "2",
+      "Comment: Code" : [
+                  "Following is the CSR ILU0 code. Dependence analysis of this",
+                  "code would identify 8 pairs of read/write data accesses",
+                  "(in or between S1 and S2) that may produce data dependences.",
+                  "This pair produces two distinct conjunctions considering",
+                  "the ordering of accesses (Flow and Anti dependence).",
+                  "Overall, there are 16 distinct conjunctions for",
+                  "the complete dependence relation.",
+                  " ",
+                  "for(int i=0; i < n; i++){",
+                  "  for(int k= row[i]; k < diag[i]; k++){",
+                  "S1: v[k] = v[k] / v[diag[col[k]]];",
+                  "    tmp = v[k];",
+                  "    int j1 = k + 1, j2 = diag[col[k]] + 1;",
+                  " ",
+                  "    while (j1 < row[i + 1] && j2 < row[col[k] + 1]){",
+                  "      if (col[j1] < col[j2]) ++j1;",
+                  "      else if (col[j2] < col[j1]) ++j2;",
+                  "      else {",
+                  "S2:     v[j1] -= tmp*v[j2];", 
+                  "        ++j1; ++j2;",
+                  "} } } }"
+                  ],
+      "Comment: Source of data access in the code for this relation" : [
+                    " ",
+                    "a read in S1 (v[k]);  a write in S1 (v[k]);"
+                  ]
+    },
+    {
+      "Name" : "CSR_ILU",
+      "Input Type" : "IEgenLIB Relation",
+      "Relation" : "[m] -> {[i,k,j1,j2] -> [ip,kp,j1p,j2p]: i < ip && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && k = diagptr(colidx(kp)) }",
+      "Expected" : "Not Satisfiable",
+      "Comment: Source of data access in the code for this relation" : [
+                    " ",
+                    "a read in S1 (v[diag[col[k]]]);  a write in S1 (v[k]);"
+                  ]
+    }
+  ]
+]

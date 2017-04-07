@@ -25,7 +25,7 @@
 #include <util/util.h>
 #include "expression.h"
 #include "SubMap.h"
-//#include "UFCallMap.h"
+#include "TermPartOrdGraph.h"
 class Visitor;
 
 #include <set>
@@ -267,7 +267,11 @@ public:
     int termCount();
 
     void addConsForUniversQuantExp(std::string expOpStr, std::string uf1Str,
-        std::string uf2Str, std::string ufOpStr, TermPartOrdGraph &partOrd,
+        std::string ufOpStr, std::string uf2Str, TermPartOrdGraph &partOrd,
+        std::map< std::string , std::set<UFCallTerm> > &ufsMap);
+
+    void addConsForUFCallRel(std::string uf1Str, std::string ufOpStr, 
+        std::string uf2Str, std::string expOpStr, TermPartOrdGraph &partOrd,
         std::map< std::string , std::set<UFCallTerm> > &ufsMap);
 
 private:
