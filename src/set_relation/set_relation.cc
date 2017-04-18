@@ -99,15 +99,17 @@ Set* islSetProjectOut(Set* s, unsigned pos) {
 #pragma mark -
 /****************************** Conjunction *********************************/
 
-Conjunction::Conjunction(int arity) : mTupleDecl(arity), mInArity(0){
+Conjunction::Conjunction(int arity) : mTupleDecl(arity), mInArity(0),
+                                      unsat(false){
 }
 
-Conjunction::Conjunction(TupleDecl tdecl) : mTupleDecl(tdecl), mInArity(0) {
+Conjunction::Conjunction(TupleDecl tdecl) : mTupleDecl(tdecl), mInArity(0),
+                                      unsat(false){
 }
 
 
 Conjunction::Conjunction(int arity, int inarity)
-    : mTupleDecl(arity), mInArity(inarity){
+    : mTupleDecl(arity), mInArity(inarity), unsat(false){
 }
 
 Conjunction::Conjunction(const Conjunction& other) {
@@ -129,6 +131,7 @@ Conjunction& Conjunction::operator=(const Conjunction& other) {
 
     mTupleDecl = other.mTupleDecl;
     mInArity = other.mInArity;
+    unsat = other.unsat;
     return *this;
 }
 
@@ -3832,19 +3835,6 @@ class VisitorCollectAllUFCalls : public Visitor {
 //    expOpStr and ufOpStr can be: '<' or '<=' or '=' or '>' or '>='
 // FIXME Mahdi: explain how function works esp what exp we consider 
 
-Following is how I am imaging to have the interface in the JSON file:
-
-        { 
-          "expOp" : "expOpStr",    // expOpStr: = < > <= >=
-          "Func1" : "UF1",
-          "Func2" : "UF2",
-          "funcOP" : "ufOpStr"
-        },
-
-
-   Note that this interface can encode one side of Monotinicity property, and
-   functional consistency constraints, as well as more general user defined
-   constraints for universally quantified expressions. 
 */
 void Conjunction::addConsForUniversQuantExp(std::string expOpStr, std::string uf1Str,
         std::string ufOpStr, std::string uf2Str, TermPartOrdGraph &partOrd,
@@ -3976,6 +3966,11 @@ void Conjunction::addConsForUniversQuantExp(std::string expOpStr, std::string uf
           addInequality(constraint);
         }
 
+        if(  partOrd.isUnsat() ){
+          setUnsat();
+          return;        
+        }
+
       } // End of if( expMatch )
 
     }
@@ -3993,15 +3988,6 @@ void Conjunction::addConsForUniversQuantExp(std::string expOpStr, std::string uf
 // Note: 
 //    expOpStr and ufOpStr can be: '<' or '<=' or '=' or '>' or '>='
 // FIXME Mahdi: explain how function works esp what exp we consider 
-
-Following is how I am imaging to have the interface in the JSON file:
-
-        { 
-          "Func1" : "UF1",
-          "Func2" : "UF2",
-          "funcOP" : "ufOpStr"
-          "expOp" : "expOpStr",    // expOpStr: = < > <= >=
-        },
 
 */
 
@@ -4080,11 +4066,25 @@ void Conjunction::addConsForUFCallRel(std::string uf1Str, std::string ufOpStr,
         constraint->addExp(argE1);
         constraint->addExp(argE2);
 
+        // Call the visitor that will insert partial orderings.
+        // Call in a loop until determination of non-negativity,
+        // which impacts partial orderings, has converged.
+        VisitorCollectPartOrd v2(partOrd);
+        do {
+          constraint->acceptVisitor(&v2);
+        } while (!(v2.hasConverged()));
+        partOrd = v2.returnPartOrd();
+
         // Add e1 expOpStr e2
         if (constraint->isEquality()) {
           addEquality(constraint);
         } else {
           addInequality(constraint);
+        }
+
+        if(  partOrd.isUnsat() ){
+          setUnsat();
+          return;        
         }
       } // End of if( expMatch )
     }
@@ -4092,15 +4092,15 @@ void Conjunction::addConsForUFCallRel(std::string uf1Str, std::string ufOpStr,
 
 }
 
-
-/*
+/* FIXME Mahdi
 ** The high level interface for adding all domain information about UFCs
 // to constraints, including Monotonicity and other user defined information
 // The function first creates a partial ordering between terms in the original
 // constraints set. Then, it adds constraints based on partial ordering
 // pertaining to different domain information recursively until it converges. 
 */
-void SparseConstraints::domainInfoHelper(json &data, int conjN){
+void SparseConstraints::domainInfoHelper(
+     std::vector<struct domainInformation>  domainInfoVec){
 
   for (std::list<Conjunction*>::iterator conIter=mConjunctions.begin();
        conIter != mConjunctions.end(); conIter++) {
@@ -4108,7 +4108,6 @@ void SparseConstraints::domainInfoHelper(json &data, int conjN){
     Conjunction* conjunct = *conIter;
 
     // Create and store the partial ordering
-
     int termCount = conjunct->termCount();
     TermPartOrdGraph partOrd( termCount*2 );
 
@@ -4129,125 +4128,37 @@ void SparseConstraints::domainInfoHelper(json &data, int conjN){
     conjunct->acceptVisitor(&vCUFC);
     ufsMap = vCUFC.returnResult();
 
-    //while( untill adding domain info converges ){
+    // while( untill adding domain info converges ){
     for(int i=0 ; i < 3 ; i++){
-/*
-std::cerr<<"\n\nPartOrd: "<<partOrd.toString()<<"\n";
-  std::set<UFCallTerm*> ufCallTerms = partOrd.getUniqueUFCallTerms();
-  std::set<UFCallTerm*>::const_iterator it;
-  for (it = ufCallTerms.begin(); it!=ufCallTerms.end(); it++) {
- 
-    std::set<UFCallTerm> usL = ufsMap[ (*it)->name() ];
-    std::set<UFCallTerm>::const_iterator jt;
-    std::cerr<<"\n"<<(*it)->name()<<": ";
-    for (jt = usL.begin(); jt!=usL.end(); jt++) {
-      std::cerr<<(*jt).toString()<<"  ";
-    }
-  }
-std::cerr<<"\n\n";
-*/
+      for (size_t j = 0; j < domainInfoVec.size(); j++){
 
-      // (1)
-      // Loop over all the function symbols that we have, and add:
-      //   1.1 Functional consistency constraints 
-      //   1.2 Monotonicity constraints
-      // We are going to convert these constraints to calls to
-      // addConsForUniversQuantExp and addConsForUFCallRel functions.
-      for (std::map< std::string , std::set<UFCallTerm> >::iterator ufsIter =
-           ufsMap.begin(); ufsIter!=ufsMap.end(); ++ufsIter){
-        //Grab first UFCall of current UFSymbol as a sample
-        UFCallTerm sampleUFC = *((ufsIter->second).begin());
-
-        // 1.1 adding Functional consistency constraints:
-        //   forall e1, e2 : if e1 = e2 then f(e1) == f(e2)
-        conjunct->addConsForUniversQuantExp( "=" , sampleUFC.name(), 
-                                   "=", sampleUFC.name(), partOrd, ufsMap);
-
-        // 1.2 Adding Monotonicity constraints based on:
-        //   If UF monotonically strictly increasing then:
-        if ( sampleUFC.numArgs() == 1 && Monotonic_Increasing
-             == queryMonoTypeEnv( sampleUFC.name() ) ){
-
-          // forall e1, e2 : e1 < e2 => UF(e1) < UF(e2)
-          conjunct->addConsForUniversQuantExp( "<" , sampleUFC.name(), 
-                                   "<", sampleUFC.name(), partOrd, ufsMap);
-
-          // forall e1, e2 : UF(e1) = UF(e2) => e1 = e2
-          conjunct->addConsForUFCallRel(sampleUFC.name(), "=", 
-                                  sampleUFC.name(), "=",  partOrd, ufsMap);
-          // forall e1, e2 : UF(e1) < UF(e2) => e1 < e2
-          conjunct->addConsForUFCallRel(sampleUFC.name(), "<", 
-                                  sampleUFC.name(), "<",  partOrd, ufsMap);
-          // forall e1, e2 : UF(e1) <= UF(e2) => e1 <= e2
-          conjunct->addConsForUFCallRel(sampleUFC.name(), "<=", 
-                                  sampleUFC.name(), "<=",  partOrd, ufsMap);
-
-        //   If UF monotonically increasing then:
-        } else  if ( sampleUFC.numArgs() == 1 && Monotonic_Nondecreasing
-             == queryMonoTypeEnv( sampleUFC.name() ) ){
-
-          // forall e1, e2 : UF(e1) < UF(e2) => e1 < e2
-          conjunct->addConsForUFCallRel(sampleUFC.name(), "<", 
-                                  sampleUFC.name(), "<",  partOrd, ufsMap);
-
-        //   If UF monotonically strictly decreasing then
-        } else if ( sampleUFC.numArgs() == 1 && Monotonic_Decreasing
-             == queryMonoTypeEnv( sampleUFC.name() ) ){
-
-          // forall e1, e2 : e1 < e2 => UF(e1) > UF(e2)
-          conjunct->addConsForUniversQuantExp( "<" , sampleUFC.name(), 
-                                   ">", sampleUFC.name(), partOrd, ufsMap);
-
-          // forall e1, e2 : UF(e1) = UF(e2) => e1 = e2
-          conjunct->addConsForUFCallRel(sampleUFC.name(), "=", 
-                                  sampleUFC.name(), "=",  partOrd, ufsMap);
-          // forall e1, e2 : UF(e1) < UF(e2) => e1 > e2
-          conjunct->addConsForUFCallRel(sampleUFC.name(), "<", 
-                                  sampleUFC.name(), ">",  partOrd, ufsMap);
-          // forall e1, e2 : UF(e1) <= UF(e2) => e1 >= e2
-          conjunct->addConsForUFCallRel(sampleUFC.name(), "<=", 
-                                  sampleUFC.name(), ">=",  partOrd, ufsMap);
-
-        //   If UF monotonically decreasing then:
-        } else  if ( sampleUFC.numArgs() == 1 && Monotonic_Nonincreasing
-             == queryMonoTypeEnv( sampleUFC.name() ) ){
-
-          // forall e1, e2 : UF(e1) < UF(e2) => e1 > e2
-          conjunct->addConsForUFCallRel(sampleUFC.name(), "<", 
-                                 sampleUFC.name(), ">",  partOrd, ufsMap);
-        }
-      }
-
-
-      for (size_t j = 0; j < data[0][0]["User Defined"].size(); ++j){
 
         // (2)
         // Read user defined constraints based on universally quantified
         // expressions, then call addConsForUniversQuantExp to add them:
         //    Forall e1, e2: if ( e1 exOP e2 ) => ( UF1(e1) ufOP UF2(e2) )
-        if( data[0][0]["User Defined"][j]["Type"].as<string>() == "1"){
+        if( domainInfoVec[j].type == "1"){
 
-          conjunct->addConsForUniversQuantExp( 
-data[0][0]["User Defined"][j]["Forall e1, e2: if e1 is? e2"].as<string>(),
-data[0][0]["User Defined"][j]["then add: UFSymbol1?(e1)"].as<string>(), 
-data[0][0]["User Defined"][j][" is? "].as<string>(), 
-data[0][0]["User Defined"][j]["UFSymbol2?(e2)"].as<string>(), 
+          conjunct->addConsForUniversQuantExp(domainInfoVec[j].expCompOp,
+                                              domainInfoVec[j].ufSymbol1, 
+                                              domainInfoVec[j].ufCompOp, 
+                                              domainInfoVec[j].ufSymbol2, 
                                               partOrd, ufsMap);
         }
+        if( isUnsat() ){ return; }
 
         // (3)
         // read user defined relations between UFCs, then call 
         // addConsForUFCallRel to add related constraints:
         //    Forall e1, e2: if ( UF1(e1) ufOP UF2(e2) ) => ( e1 exOP e2 ) 
-        else if( data[0][0]["User Defined"][j]["Type"].as<string>() == "2"){
-
-          conjunct->addConsForUFCallRel( 
-data[0][0]["User Defined"][j]["Forall e1, e2: if UFSymbol1?(e1)"].as<string>(),
-data[0][0]["User Defined"][j][" is? "].as<string>(), 
-data[0][0]["User Defined"][j]["UFSymbol2?(e2)"].as<string>(), 
-data[0][0]["User Defined"][j]["then add: e1 is? e2"].as<string>(), 
-                                              partOrd, ufsMap);
+        else if( domainInfoVec[j].type == "2"){
+          conjunct->addConsForUFCallRel(domainInfoVec[j].ufSymbol1, 
+                                        domainInfoVec[j].ufCompOp, 
+                                        domainInfoVec[j].ufSymbol2,
+                                        domainInfoVec[j].expCompOp, 
+                                        partOrd, ufsMap);
         }
+        if( isUnsat() ){ return; }
       }
 
     }  
@@ -4255,15 +4166,15 @@ data[0][0]["User Defined"][j]["then add: e1 is? e2"].as<string>(),
 
 }
 
-Set* Set::domainInfo(json &data, int conjN) {
+Set* Set::domainInfo(std::vector<struct domainInformation>  domainInfoVec) {
   Set* retval = new Set(*this);
-  retval->domainInfoHelper(data,conjN);
+  retval->domainInfoHelper(domainInfoVec);
   return retval;
 }
 
-Relation* Relation::domainInfo(json &data, int conjN) {
+Relation* Relation::domainInfo(std::vector<struct domainInformation>  domainInfoVec) {
   Relation* retval = new Relation(*this);
-  retval->domainInfoHelper(data,conjN);
+  retval->domainInfoHelper(domainInfoVec);
   return retval;
 }
 

@@ -120,7 +120,8 @@ public:
 // upon destruction.
     
     //! Returns a string representation of the class instance for debugging.
-    std::string toString() const;        
+    std::string toString() const;
+    bool isUnsat(){ return mGraphPtr->isUnsat();}
 
 private:
     int                         mNumTerms;

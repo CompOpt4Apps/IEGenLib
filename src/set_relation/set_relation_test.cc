@@ -4225,7 +4225,7 @@ TEST_F(SetRelationTest, removeUFCallConsts){
    delete extendedF2;
 }
 
-
+/*
 #pragma mark domainInfoT
 TEST_F(SetRelationTest, domainInfoT){
 
@@ -4258,4 +4258,4 @@ TEST_F(SetRelationTest, domainInfoT){
     Set *res = F1->domainInfo(data, 0);
   
 }
-
+*/

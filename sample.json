@@ -3,7 +3,7 @@
     {
       "Name" : "CSR_ILU",
       "Input Type" : "IEgenLIB Relation",
-      "Relation" : "[m] -> {[i,k] -> [ip,kp]: i < ip && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && k = kp }",
+      "Relation" : "[m] -> {[i,k] -> [ip,kp]: i < ip && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && k = diagptr(colidx(kp)) }",
       "Expected" : "Not Satisfiable",
       "UFS" :
       [
@@ -33,9 +33,9 @@
       [
         {
           "Type" : "Comment: 1",
-          "Forall e1, e2: if e1 is? e2" : "OP",
+          "Forall e1, e2: if e1 is? e2" : "expCompOp",
           "then add: UFSymbol1?(e1)" : "UF1",
-          " is? " : "OP",
+          " is? " : "ufCompOp",
           "UFSymbol2?(e2)" : "UF2"
         },
         {
@@ -96,7 +96,7 @@
     {
       "Name" : "CSR_ILU",
       "Input Type" : "IEgenLIB Relation",
-      "Relation" : "[m] -> {[i,k,j1,j2] -> [ip,kp,j1p,j2p]: i < ip && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && k = diagptr(colidx(kp)) }",
+      "Relation" : "[m] -> {[i,k] -> [ip,kp]: i < ip && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && k = kp }",
       "Expected" : "Not Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
                     " ",

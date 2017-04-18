@@ -44,6 +44,7 @@
 PartOrdGraph::PartOrdGraph(unsigned int maxN) {
     this->mCurN = 0;
     this->mMaxN = maxN;
+    unsat=false;
 //std::cerr<<"\n\nPartOrdGraph::PartOrdGraph  cur= "<<curN<<"\n\n";
     this->mAdjacencyMatrix = new CompareEnum[maxN*maxN];
     // Initialize all 
@@ -69,6 +70,7 @@ PartOrdGraph& PartOrdGraph::operator=(const PartOrdGraph& other) {
 //std::cerr<<"\n\nBefore  "<<toString()<<"\n\n";
     mCurN = other.mCurN;
     mMaxN = other.mMaxN;
+    unsat = other.unsat;
     this->mAdjacencyMatrix = new CompareEnum[mMaxN*mMaxN];
     for (unsigned int i=0; i<mMaxN; i++) {
         for (unsigned int j=0; j<mMaxN; j++) {
@@ -102,6 +104,7 @@ CompareEnum PartOrdGraph::update(CompareEnum from, CompareEnum to) {
     else if (from==EQUAL && to==NONSTRICT)      { return EQUAL; }
     else if (from==to)                          { return to; }
     else {
+        // FIXME Mahdi: Should I consider this assertion as a case of unsat?!
         std::cerr << "Illegal update: from = " << from << ", to = " << to 
                  << std::endl;
         assert(0); 
@@ -144,7 +147,12 @@ void PartOrdGraph::updatePair(unsigned int a, unsigned int b, CompareEnum to) {
 //std::cerr<<"\n\n updatePair:  a = "<<a<<"  b = "<<b<<"  to = "<<to<<"  "<<toString()<<"\n\n";
     // Fail if the opposite direction is already in partial ordering
     // or if this an an attempt for a self-loop unless we are doing EQUAL.
-    if (to==STRICT) { assert(isNoOrder(b,a)); }
+    if (to==STRICT) { 
+//if(!isNoOrder(b,a))
+//  std::cerr<<"\n\nIsNoOrd:  a = "<<a<<"  b = "<<b<<"\n\n";
+//assert(isNoOrder(b,a));
+if( !isNoOrder(b,a) ){unsat=true; return;}
+}
     if (to!=EQUAL)  { assert(a!=b); }
 
     // create the new ordering

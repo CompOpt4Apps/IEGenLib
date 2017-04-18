@@ -58,11 +58,13 @@ class PartOrdGraph {
 
         std::string toString(); 
 
+        bool isUnsat(){ return unsat; }
+
     private:
-// MAHDI FIXME
-//        unsigned int mN;
         unsigned int mCurN;
         unsigned int mMaxN;
+
+        bool unsat;
 
         CompareEnum * mAdjacencyMatrix;
 

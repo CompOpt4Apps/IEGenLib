@@ -9,42 +9,43 @@
  *
  * To compile, after building IEgenLib with:
 
-       ./configure    
-       make
+     ./configure    
+     make
 
-    Run the following command with YOUR OWN ADDRESSES:
+   Run the following command with YOUR OWN ADDRESSES:
 
-        g++ -o EXECUTABLE simplifyDriver.cc \
-            -I IEGENLIB_HOME/src IEGENLIB_HOME/build/src/libiegenlib.a -lisl -std=c++11
+     g++ -o EXECUTABLE simplifyDriver.cc -I IEGENLIB_HOME/src \
+         IEGENLIB_HOME/build/src/libiegenlib.a -lisl -std=c++11
 
-    You can also run following command after running "make install" for IEgenLIB:
+   You can also run following command after running "make install" for IEgenLIB:
 
        g++ -o EXECUTABLE simplifyDriver.cc \
            -I INSTALLATION_FOLDER/include/iegenlib cpp_api_example.cc \
               INSTALLATION_FOLDER/lib/libiegenlib.a -lisl -std=c++11
    
-    IEGENLIB_HOME indicates where you have your copy of IEgenLIB.
-    For example if you are compiling this file in its original location that is 
-    IEGENLIB_HOME/src/drivers, FROM IEGENLIB_HOME run following to compile:
+   IEGENLIB_HOME indicates where you have your copy of IEgenLIB.
+   For example if you are compiling this file in its original location that is 
+   IEGENLIB_HOME/src/drivers, FROM IEGENLIB_HOME run following to compile:
 
-    g++ -o simplifyDriver simplifyDriver.cc -I src build/src/libiegenlib.a -lisl -std=c++11
+     g++ -o simplifyDriver simplifyDriver.cc -I src \ 
+         build/src/libiegenlib.a -lisl -std=c++11
 
  * Now to run the driver, you should put your dependence relations inside
  * JSON files and give them as inputs to the driver, one or more files
- * at a time. JSON file format is demonstrated by examples gs_csr.json and
- * ilu_csr.json that can be found in IEGENLIB_HOME/data directory as this driver.
- * The json input files include commnet fields that have the application code
- * (Gauss-Seidel and ILU) in them, and says where in the code each
- * dependence relation is getting extract. So you can run following
+ * at a time. JSON file format is demonstrated by example sample.json 
+ * in the same directory as this driver as well as several *.json files 
+ * in IEGENLIB_HOME/data directory. The json input files include comment 
+ * fields that have the application code, and says where in the code each
+ * dependence relation is getting extracted from. So you can run following
  * after compiling the driver to get the simplified relations:
  
-   build/bin/simplifyDriver data/gs_csr.json data/ilu_csr.json
+   build/bin/simplifyDriver sample.json
 
  * Note: the driver can read one or as many input json files as given.
 
  *     
  *
- * \date Date Started: 3/21/2016
+ * \date Date Started: 4/16/2017
  *
  * \authors Michelle Strout, Mahdi Soltan Mohammadi
  *
@@ -67,23 +68,25 @@
  *
  * (2) You need to put constraints in iegenlib Relation (or Set).
  * 
- * (3) Create a std::set that includes which tuple variables (loop iterators)
+ * (3) Determing unsatisfiability
+ * 
+ * (4) Create a std::set that includes which tuple variables (loop iterators)
  *     we are not going to project out. 
  *
- * (4) Apply a heuristic to remove expensive constraints that
+ * (5) Apply a heuristic to remove expensive constraints that
  *     is keeping us from projecting out an iterator:
          for instance: 
                         col(j) < n  would keep us from projecting 'j'
        We only remove constraints up to a maximum number determined by user.
  *
- * (5) You can add user defined constraints to the relation as demonstrated
+ * (6) You can add user defined constraints to the relation as demonstrated
  *     in examples. 
  * 
- * (6) Use simplifyForPartialParallel function that is main interface for the
+ * (7) Use simplifyForPartialParallel function that is main interface for the
  *     algorithm. If relation is not satisfiable the function would return NULL.
  *     Otherwise it would return the simplified result as iegenlib Relation.
  * 
- * (7) Print out result (if not NULL) using toISLString() function.  
+ * (8) Print out result (if not NULL) using toISLString() function.  
  
  *  We have demonstrated these steps in the simplify function
  *  This function reads information from a JSON file (inputFile), and applies
@@ -93,11 +96,14 @@
 
 #include <iostream>
 #include "iegenlib.h"
+#include "src/set_relation/Visitor.h"
 #include "parser/jsoncons/json.hpp"
 
 using jsoncons::json;
-using iegenlib::Set;
-using iegenlib::Relation;
+using namespace iegenlib;
+//using iegenlib::Set;
+//using iegenlib::Relation;
+//using iegenlib::UFCallTerm;
 using namespace std;
 
 
@@ -112,6 +118,25 @@ bool printRelation(string msg, Relation *rel);
 void EXPECT_EQ(string a, string b);
 void EXPECT_EQ(Relation *a, Relation *b);
 int str2int(string str);
+
+// This visitor collects all uninterpreted function calls for each function symbol
+// and stores them in a map
+class VisitorCollectAllUFCalls : public Visitor {
+  private:
+    std::map< std::string , std::set<UFCallTerm> > ufsMap;
+    
+  public:
+    VisitorCollectAllUFCalls() {}
+  
+    std::map< std::string , std::set<UFCallTerm> > returnResult()
+    { return ufsMap; }
+    
+    void postVisitUFCallTerm(iegenlib::UFCallTerm * t) {
+        UFCallTerm termCopy = *t;
+        termCopy.setCoefficient(1);
+        ufsMap[t->name()].insert(termCopy);
+    }
+};
 
 
 //----------------------- MAIN ---------------
@@ -193,8 +218,148 @@ void simplify(string inputFile)
     if ( expected_str != string("Not Satisfiable") ){
       ex_rel = new Relation(expected_str);
     }
+
+
+    // (3) Determining unsatisfiability
+    Relation* copyRelation = rel->boundDomainRange();
+
+    std::vector<struct domainInformation>  domainInfoVec;
+   
+    // Collect all uninterpreted function symbols
+    std::map< std::string , std::set<UFCallTerm> > ufsMap;
+    VisitorCollectAllUFCalls vCUFC;
+    copyRelation->acceptVisitor(&vCUFC);
+    ufsMap = vCUFC.returnResult();
+
+    // (3.1) Loop over all the function symbols that we have, 
+    //     and extract information for:
+    //   1.1 Functional consistency  
+    //   1.2 Monotonicity 
+    // Later, We are going to convert these information ino calls to
+    // addConsForUniversQuantExp and addConsForUFCallRel functions.
+    for (std::map< std::string , std::set<UFCallTerm> >::iterator ufsIter =
+         ufsMap.begin(); ufsIter!=ufsMap.end(); ++ufsIter){
+      //Grab first UFCall of current UFSymbol as a sample
+      UFCallTerm sampleUFC = *((ufsIter->second).begin());
+
+      // 3.1.1 adding Functional consistency constraints:
+      //   forall e1, e2 : if e1 = e2 then f(e1) == f(e2)
+      domainInfoVec.push_back ( { "1" , "=" , "=" , 
+                                   sampleUFC.name() , 
+                                   sampleUFC.name() } );
+
+      // 3.1.2 Adding Monotonicity constraints based on:
+      //   If UF monotonically strictly increasing then:
+      if ( sampleUFC.numArgs() == 1 && Monotonic_Increasing
+             == queryMonoTypeEnv( sampleUFC.name() ) ){
+
+        // forall e1, e2 : e1 < e2 => UF(e1) < UF(e2)
+        domainInfoVec.push_back ( { "1" , "<" , "<" , 
+                                     sampleUFC.name() , 
+                                     sampleUFC.name() } );
+
+        // forall e1, e2 : UF(e1) = UF(e2) => e1 = e2
+        domainInfoVec.push_back ( { "2" , "=" , "=" , 
+                                     sampleUFC.name() , 
+                                     sampleUFC.name() } );
+
+        // forall e1, e2 : UF(e1) < UF(e2) => e1 < e2
+        domainInfoVec.push_back ( { "2" , "<" , "<" , 
+                                     sampleUFC.name() , 
+                                     sampleUFC.name() } );
+
+        // forall e1, e2 : UF(e1) <= UF(e2) => e1 <= e2
+        domainInfoVec.push_back ( { "2" , "<=" , "<=" , 
+                                     sampleUFC.name() , 
+                                     sampleUFC.name() } );
+
+      //   If UF monotonically increasing then:
+      } else  if ( sampleUFC.numArgs() == 1 && Monotonic_Nondecreasing
+                   == queryMonoTypeEnv( sampleUFC.name() ) ){
+
+        // forall e1, e2 : UF(e1) < UF(e2) => e1 < e2
+        domainInfoVec.push_back ( { "2" , "<" , "<" , 
+                                     sampleUFC.name() , 
+                                     sampleUFC.name() } );
+
+      // If UF monotonically strictly decreasing then
+      } else if ( sampleUFC.numArgs() == 1 && Monotonic_Decreasing
+                  == queryMonoTypeEnv( sampleUFC.name() ) ){
+
+        // forall e1, e2 : e1 < e2 => UF(e1) > UF(e2)
+        domainInfoVec.push_back ( { "1" , "<" , ">" , 
+                                     sampleUFC.name() , 
+                                     sampleUFC.name() } );
+
+        // forall e1, e2 : UF(e1) = UF(e2) => e1 = e2
+        domainInfoVec.push_back ( { "2" , "=" , "=" , 
+                                     sampleUFC.name() , 
+                                     sampleUFC.name() } );
+
+        // forall e1, e2 : UF(e1) < UF(e2) => e1 > e2
+        domainInfoVec.push_back ( { "2" , "<" , ">" , 
+                                     sampleUFC.name() , 
+                                     sampleUFC.name() } );
+
+        // forall e1, e2 : UF(e1) <= UF(e2) => e1 >= e2
+        domainInfoVec.push_back ( { "2" , "<=" , ">=" , 
+                                     sampleUFC.name() , 
+                                     sampleUFC.name() } );
+
+      // If UF monotonically decreasing then:
+      } else  if ( sampleUFC.numArgs() == 1 && Monotonic_Nonincreasing
+                   == queryMonoTypeEnv( sampleUFC.name() ) ){
+
+        // forall e1, e2 : UF(e1) < UF(e2) => e1 > e2
+        domainInfoVec.push_back ( { "2" , "<" , ">" , 
+                                     sampleUFC.name() , 
+                                     sampleUFC.name() } );
+      }
+    }
+
+    for (size_t j = 0; j < data[p][0]["User Defined"].size(); ++j){
+
+      json ud = data[p][0]["User Defined"][j];
+      // (3.2)
+      // Read user defined constraints based on universally quantified
+      // expressions, then call addConsForUniversQuantExp to add them:
+      //    Forall e1, e2: if ( e1 exOP e2 ) => ( UF1(e1) ufOP UF2(e2) )
+      if( ud["Type"].as<string>() == "1"){
+
+        domainInfoVec.push_back({ "1" , 
+                      ud["Forall e1, e2: if e1 is? e2"].as<string>(),
+                      ud[" is? "].as<string>(),
+                      ud["then add: UFSymbol1?(e1)"].as<string>() , 
+                      ud["UFSymbol2?(e2)"].as<string>() } );
+        }
+
+        // (3.3)
+        // read user defined relations between UFCs, then call 
+        // addConsForUFCallRel to add related constraints:
+        //    Forall e1, e2: if ( UF1(e1) ufOP UF2(e2) ) => ( e1 exOP e2 ) 
+      else if( data[0][0]["User Defined"][j]["Type"].as<string>() == "2"){
+
+        domainInfoVec.push_back({ "2" , 
+                      ud["Forall e1, e2: if UFSymbol1?(e1)"].as<string>(),
+                      ud[" is? "].as<string>(),
+                      ud["UFSymbol2?(e2)"].as<string>() , 
+                      ud["then add: e1 is? e2"].as<string>() } );
+      }
+    }
+
+    Relation* relAf = copyRelation->domainInfo(domainInfoVec);
+
+    printRelation(string("Relation after domain info:  "), relAf);
+        if(  relAf->isUnsat() ){
+          std::cerr<<"\n\nUNSAT!!\n\n";
+          continue;    
+        } else {
+          std::cerr<<"\n\nSAT!!\n\n";      
+        }
+
+
     
-    // (3)
+    // (4)
     // Specify loops that are going to be parallelized, so we are not going to
     // project them out.
     if( i == 0 ){  // Read these data only once. 
@@ -213,11 +378,38 @@ void simplify(string inputFile)
         parallelTvs.insert( tvN );
       }
     }
-    
-    Relation* copyRelation = rel->boundDomainRange();
-    printRelation(string("Relation before domain info:  "), copyRelation);
-    Relation* relAf = copyRelation->domainInfo(data, i);
-    printRelation(string("Relation after domain info:  "), relAf);
+ 
+    // (5)
+    // Applying heuristic for removing expensive iterators
+    int numConstToRemove = str2int(data[p][0]["Remove Constraints"].as<string>());
+    Relation* relWithDR = rel->boundDomainRange();
+    std::set<iegenlib::Exp> ignore = relWithDR->constraintsDifference(rel);
+    relWithDR->removeExpensiveConstraints(parallelTvs, numConstToRemove, ignore);
+
+    // (6)
+    // Add user defined constraints
+    Relation *rel_extend;
+    for (size_t j = 0; j < data[p][0]["User Defined"].size(); ++j){
+ 
+      rel_extend = relWithDR->addUFConstraints(
+                    data[p][0]["User Defined"][j]["Func1"].as<string>(),
+                    data[p][0]["User Defined"][j]["operator"].as<string>(),
+                    data[p][0]["User Defined"][j]["Func2"].as<string>()
+                                            );
+      *relWithDR = *rel_extend;
+      delete rel_extend;
+
+    }
+
+    // (7)
+    // Simplifyng the constraints relation
+    Relation* rel_sim = relWithDR->simplifyForPartialParallel(parallelTvs);
+
+    // (8)
+    // Print out results: if not satisfiable returns NULL
+    char buffer [50];
+    sprintf (buffer, "Relation #%d.%d simplified = ", int(p)+1, int(i)+1);
+    verbose && printRelation(string(buffer), rel_sim);
 
   }
 
