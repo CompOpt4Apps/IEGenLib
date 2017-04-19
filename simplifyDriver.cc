@@ -225,7 +225,6 @@ void simplify(string inputFile)
 
    if( !(data[p][0]["Name"].as<string>() == 
        string("Incomplete LU") && (i == 12 || i ==13)) ){
-cout<<"\n\nHI "<<i<<"\n\n";
     std::vector<struct domainInformation>  domainInfoVec;
    
     // Collect all uninterpreted function symbols
