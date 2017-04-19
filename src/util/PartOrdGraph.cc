@@ -45,7 +45,6 @@ PartOrdGraph::PartOrdGraph(unsigned int maxN) {
     this->mCurN = 0;
     this->mMaxN = maxN;
     unsat=false;
-//std::cerr<<"\n\nPartOrdGraph::PartOrdGraph  cur= "<<curN<<"\n\n";
     this->mAdjacencyMatrix = new CompareEnum[maxN*maxN];
     // Initialize all 
     for (unsigned int i=0; i<maxN; i++) {
@@ -56,8 +55,6 @@ PartOrdGraph::PartOrdGraph(unsigned int maxN) {
             }
         }
     }
-//std::cerr<<"\n\n"<<toString()<<"\n\n";
-//std::cerr<<"\n\nPartOrdGraph::PartOrdGraph  Idx = "<<getIndex(3,5)<<"\n\n";
 }
 
 //! Copy constructor.  Performs a deep copy.
@@ -67,7 +64,6 @@ PartOrdGraph::PartOrdGraph(const PartOrdGraph& other) {
 
 //! Copy assignment.
 PartOrdGraph& PartOrdGraph::operator=(const PartOrdGraph& other) {
-//std::cerr<<"\n\nBefore  "<<toString()<<"\n\n";
     mCurN = other.mCurN;
     mMaxN = other.mMaxN;
     unsat = other.unsat;
@@ -78,7 +74,6 @@ PartOrdGraph& PartOrdGraph::operator=(const PartOrdGraph& other) {
                 = other.mAdjacencyMatrix[getIndex(i,j)];
         }
     }
-//std::cerr<<"\n\nAfter  "<<toString()<<"\n\n";
     return *this;
 }
 
@@ -104,10 +99,11 @@ CompareEnum PartOrdGraph::update(CompareEnum from, CompareEnum to) {
     else if (from==EQUAL && to==NONSTRICT)      { return EQUAL; }
     else if (from==to)                          { return to; }
     else {
+        return Illegal;
         // FIXME Mahdi: Should I consider this assertion as a case of unsat?!
-        std::cerr << "Illegal update: from = " << from << ", to = " << to 
-                 << std::endl;
-        assert(0); 
+        //std::cerr << "Illegal update: from = " << from << ", to = " << to 
+        //         << std::endl;
+        //assert(0); 
     }
 }
 
@@ -127,7 +123,8 @@ CompareEnum PartOrdGraph::meet(CompareEnum op1, CompareEnum op2) {
     else if (op1==STRICT || op2==STRICT)        { return STRICT; }
     else if (op1==op2)                          { return op1; }
     else {
-        assert(0);      // should have dealt with all cases
+        return Illegal;
+        //assert(0);      // should have dealt with all cases
     }
 }
 
@@ -144,21 +141,20 @@ void PartOrdGraph::updatePair(unsigned int a, unsigned int b, CompareEnum to) {
     if( b >= mCurN ){ // terms (at least one). Therefore, we need to update 
       mCurN = b+1;    // the number of current terms, namely mCurN.
     }
-//std::cerr<<"\n\n updatePair:  a = "<<a<<"  b = "<<b<<"  to = "<<to<<"  "<<toString()<<"\n\n";
+
     // Fail if the opposite direction is already in partial ordering
     // or if this an an attempt for a self-loop unless we are doing EQUAL.
     if (to==STRICT) { 
-//if(!isNoOrder(b,a))
-//  std::cerr<<"\n\nIsNoOrd:  a = "<<a<<"  b = "<<b<<"\n\n";
-//assert(isNoOrder(b,a));
-if( !isNoOrder(b,a) ){unsat=true; return;}
-}
+      if( !isNoOrder(b,a) ){unsat=true; return;}
+    }
     if (to!=EQUAL)  { assert(a!=b); }
 
     // create the new ordering
     mAdjacencyMatrix[ getIndex(a,b) ] 
         = update( mAdjacencyMatrix[ getIndex(a,b) ],    // from
                   to );                                 // to
+
+    if( mAdjacencyMatrix[ getIndex(a,b) ] == Illegal ){unsat=true; return;}
 
     // perform transitive closure to maintain data structure invariant
     transitiveClosure();
@@ -191,7 +187,9 @@ void PartOrdGraph::transitiveClosure() {
                 mAdjacencyMatrix[ getIndex(i,j) ]
                     = update( mAdjacencyMatrix[ getIndex(i,j) ],
                               meet( mAdjacencyMatrix[ getIndex(i,k) ],
-                                    mAdjacencyMatrix[ getIndex(k,j) ]) );                    
+                                    mAdjacencyMatrix[ getIndex(k,j) ]) );   
+                if( mAdjacencyMatrix[ getIndex(i,j) ] == Illegal )
+                {unsat=true; return;}      
                 if (isNonStrict(i,j) && isNonStrict(j,i)) {
                     mAdjacencyMatrix[ getIndex(i,j) ] = EQUAL;        
                     mAdjacencyMatrix[ getIndex(j,i) ] = EQUAL;   

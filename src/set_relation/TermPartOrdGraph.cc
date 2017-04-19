@@ -51,12 +51,10 @@ TermPartOrdGraph& TermPartOrdGraph::operator=(const TermPartOrdGraph& other) {
     mGraphPtr = NULL;
     if (other.mGraphPtr!=NULL) {
         if (mGraphPtr==NULL) {
-//std::cerr<<"\n\nTermPartOrdGraph::=  curN= "<<other.mGraphPtr->numItems()<<"\n\n";
             mGraphPtr = new PartOrdGraph(other.mGraphPtr->numMaxItems());
         }
         *mGraphPtr = *(other.mGraphPtr);
     }
-//std::cerr<<"\n\nTermPartOrdGraph::= After curN= "<<mNumTerms<<"\n\n";
     return *this;
 }
 

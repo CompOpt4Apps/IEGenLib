@@ -4129,7 +4129,7 @@ void SparseConstraints::domainInfoHelper(
     ufsMap = vCUFC.returnResult();
 
     // while( untill adding domain info converges ){
-    for(int i=0 ; i < 3 ; i++){
+    for(int i=0 ; i < 2 ; i++){
       for (size_t j = 0; j < domainInfoVec.size(); j++){
 
 

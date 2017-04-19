@@ -30,7 +30,8 @@ typedef enum {
     NO_ORD=3,
     STRICT=1,
     NONSTRICT=2,
-    EQUAL=0
+    EQUAL=0,
+    Illegal=10
 } CompareEnum;
 
 

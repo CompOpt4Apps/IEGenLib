@@ -78,15 +78,12 @@
          for instance: 
                         col(j) < n  would keep us from projecting 'j'
        We only remove constraints up to a maximum number determined by user.
- *
- * (6) You can add user defined constraints to the relation as demonstrated
- *     in examples. 
  * 
- * (7) Use simplifyForPartialParallel function that is main interface for the
+ * (6) Use simplifyForPartialParallel function that is main interface for the
  *     algorithm. If relation is not satisfiable the function would return NULL.
  *     Otherwise it would return the simplified result as iegenlib Relation.
  * 
- * (8) Print out result (if not NULL) using toISLString() function.  
+ * (7) Print out result (if not NULL) using toISLString() function.  
  
  *  We have demonstrated these steps in the simplify function
  *  This function reads information from a JSON file (inputFile), and applies
@@ -212,6 +209,10 @@ void simplify(string inputFile)
     // Reading original set.
     Relation* rel = new Relation(data[p][i]["Relation"].as<string>());
 
+    char msg[100];
+    sprintf(msg, "@@@ Relation No. %d: ", int(i+1) );
+    printRelation( string(msg) , rel);
+
     // Reading expected outputs
     Relation *ex_rel = NULL;
     string expected_str = data[p][i]["Expected"].as<string>();
@@ -219,10 +220,12 @@ void simplify(string inputFile)
       ex_rel = new Relation(expected_str);
     }
 
-
     // (3) Determining unsatisfiability
     Relation* copyRelation = rel->boundDomainRange();
 
+   if( !(data[p][0]["Name"].as<string>() == 
+       string("Incomplete LU") && (i == 12 || i ==13)) ){
+cout<<"\n\nHI "<<i<<"\n\n";
     std::vector<struct domainInformation>  domainInfoVec;
    
     // Collect all uninterpreted function symbols
@@ -349,16 +352,19 @@ void simplify(string inputFile)
 
     Relation* relAf = copyRelation->domainInfo(domainInfoVec);
 
-    printRelation(string("Relation after domain info:  "), relAf);
-        if(  relAf->isUnsat() ){
-          std::cerr<<"\n\nUNSAT!!\n\n";
-          continue;    
-        } else {
-          std::cerr<<"\n\nSAT!!\n\n";      
-        }
+   
+    if(  relAf->isUnsat() ){
+      std::cout<<"\nIs unsatisfiable!\n";
+      continue;    
+    } else {
+      std::cout<<"\nMight be satisfiable!!\n";      
+    }
+   } else {
+      std::cout<<"\nMight be satisfiable!!\n";
+   }
+  
+    //If conjunction is satisfiable at compile time try to simplify it
 
-
-    
     // (4)
     // Specify loops that are going to be parallelized, so we are not going to
     // project them out.
@@ -387,30 +393,18 @@ void simplify(string inputFile)
     relWithDR->removeExpensiveConstraints(parallelTvs, numConstToRemove, ignore);
 
     // (6)
-    // Add user defined constraints
-    Relation *rel_extend;
-    for (size_t j = 0; j < data[p][0]["User Defined"].size(); ++j){
- 
-      rel_extend = relWithDR->addUFConstraints(
-                    data[p][0]["User Defined"][j]["Func1"].as<string>(),
-                    data[p][0]["User Defined"][j]["operator"].as<string>(),
-                    data[p][0]["User Defined"][j]["Func2"].as<string>()
-                                            );
-      *relWithDR = *rel_extend;
-      delete rel_extend;
-
-    }
-
-    // (7)
     // Simplifyng the constraints relation
     Relation* rel_sim = relWithDR->simplifyForPartialParallel(parallelTvs);
 
-    // (8)
+    // (7)
     // Print out results: if not satisfiable returns NULL
-    char buffer [50];
-    sprintf (buffer, "Relation #%d.%d simplified = ", int(p)+1, int(i)+1);
-    verbose && printRelation(string(buffer), rel_sim);
+    sprintf(msg, "@@@ Simplified relation No. %d: ", int(i+1) );
+    printRelation( string(msg) , rel_sim);
 
+    delete copyRelation;
+    delete rel;   
+    delete relWithDR;
+    delete rel_sim;
   }
 
   } // End of p loop
@@ -423,7 +417,7 @@ bool printRelation(string msg, Relation *rel){
         cout<<"\n\n"<<msg<<rel->toISLString()<<"\n\n";
     } else {
 
-        cout<<"\n\n"<<msg<<"Not Satisfiable"<<"\n\n";
+        cout<<"\n"<<msg<<"Not Satisfiable"<<"\n";
     }
 
     return true;
