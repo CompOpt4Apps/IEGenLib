@@ -121,6 +121,11 @@ unsigned int queryRangeArityCurrEnv(const std::string funcName) {
     return retval;
 }
 
+//! add an universially quantified constraint to environment
+void addUniQuantConstraint(uniQuantConstraint uqCon){
+
+    currentEnv.addUniQuantConstraint(uqCon);
+}
 
 void Environment::append(Environment *other){
     mInverseMap.insert(other->mInverseMap.begin(),other->mInverseMap.end());

@@ -43,17 +43,6 @@ class Visitor;
 using jsoncons::json;
 
 namespace iegenlib{
-/*!
-** This 
-** 
-*/
-struct domainInformation {
-  string type;
-  string expCompOp;
-  string ufCompOp;
-  string ufSymbol1;
-  string ufSymbol2;
-};
 
 class Set;
 class Relation;
