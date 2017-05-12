@@ -229,7 +229,7 @@ unsigned int queryRangeArityCurrEnv(const std::string funcName) {
     return retval;
 }
 
-//! add an universially quantified constraint to environment
+//! add an universially quantified constraint to the environment
 void addUniQuantConstraint(uniQuantConstraint uqCon){
 
     currentEnv.addUniQuantConstraint(uqCon);
@@ -240,7 +240,7 @@ int queryNoUniQuantConstraintEnv(){
   return currentEnv.getNoUniQuantConstraint();
 }
 
-// Returns the universially quantified constraint No. j stored in the enviroment
+// Returns the universially quantified constraint No. idx stored in the enviroment
 uniQuantConstraint queryUniQuantConstraintEnv(int idx){
   return currentEnv.getUniQuantConstraint(idx);
 }

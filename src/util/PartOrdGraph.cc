@@ -59,7 +59,6 @@ PartOrdGraph::PartOrdGraph(unsigned int maxN) {
 
 //! Copy constructor.  Performs a deep copy.
 PartOrdGraph::PartOrdGraph(const PartOrdGraph& other) {
-    //*this = other;
 
     mCurN = other.mCurN;
     mMaxN = other.mMaxN;
@@ -71,7 +70,6 @@ PartOrdGraph::PartOrdGraph(const PartOrdGraph& other) {
                 = other.mAdjacencyMatrix[getIndex(i,j)];
         }
     }
-
 }
 
 //! Copy assignment.
@@ -80,22 +78,14 @@ PartOrdGraph& PartOrdGraph::operator=(const PartOrdGraph& other) {
     PartOrdGraph temp(other);
     temp.swap (*this); // Non-throwing swap
     return *this;
+}
 
-//    mCurN = other.mCurN;
-//    mMaxN = other.mMaxN;
-//    unsat = other.unsat;
-//    delete this->mAdjacencyMatrix;
-//    this->mAdjacencyMatrix = new CompareEnum[mMaxN*mMaxN];
-//    for (unsigned int i=0; i<mMaxN; i++) {
-//        for (unsigned int j=0; j<mMaxN; j++) {
-//            mAdjacencyMatrix[getIndex(i,j)]
-//                = other.mAdjacencyMatrix[getIndex(i,j)];
-//        }
-//    }
-
-
-
-   // return *this;
+//! helper function for implementing copy-and-swap
+void PartOrdGraph::swap(PartOrdGraph& second) throw() {
+    std::swap(mCurN, second.mCurN);
+    std::swap(mMaxN, second.mMaxN);
+    std::swap(unsat, second.unsat);
+    std::swap(mAdjacencyMatrix, second.mAdjacencyMatrix);
 }
 
 //! Destructor will delete the adjacency matrix.
@@ -152,7 +142,7 @@ CompareEnum PartOrdGraph::meet(CompareEnum op1, CompareEnum op2) {
 
 
 void PartOrdGraph::updatePair(unsigned int a, unsigned int b, CompareEnum to) {
-    // Mahdi FIXME: turn these asserts into "throw assert_exception"
+    // FIXME Mahdi: turn these asserts into "throw assert_exception"
     // Check vertices are within range of allocated memory for partial ordering.
     assert((a<mMaxN) && (b<mMaxN));
 

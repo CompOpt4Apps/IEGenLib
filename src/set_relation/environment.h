@@ -132,12 +132,19 @@ public:
 
     std::string toString() const;
 
+
+    //! Add a universially quantified constraint to the environment
     void addUniQuantConstraint(uniQuantConstraint con){
         uniQuantConstraintVec.push_back (con);
     }
+
+    //! Get the No. of universially quantified constraints
+    // available in the environment
     int getNoUniQuantConstraint(){
         return uniQuantConstraintVec.size();
     }
+    //! Get the universially quantified constraint No. idx from 
+    // the environment
     uniQuantConstraint getUniQuantConstraint(int idx){
         return uniQuantConstraintVec[idx];
     }

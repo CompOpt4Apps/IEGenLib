@@ -45,6 +45,9 @@ class PartOrdGraph {
         //! Destructor will delete the adjacency matrix.
         ~PartOrdGraph();
 
+        //! helper function for implementing copy-and-swap
+        void swap(PartOrdGraph& second) throw();
+
         void strict(unsigned int, unsigned int);
         void nonStrict(unsigned int, unsigned int);
         void equal(unsigned int, unsigned int);
@@ -60,19 +63,6 @@ class PartOrdGraph {
         std::string toString(); 
 
         bool isUnsat(){ return unsat; }
-
-    void swap(PartOrdGraph& second) throw()
-    {
-        // enable ADL (not necessary in our case, but good practice)
-        using std::swap;
-
-        // by swapping the members of two objects,
-        // the two objects are effectively swapped
-        swap(mCurN, second.mCurN);
-        swap(mMaxN, second.mMaxN);
-        swap(unsat, second.unsat);
-        swap(mAdjacencyMatrix, second.mAdjacencyMatrix);
-    }
 
     private:
         unsigned int mCurN;

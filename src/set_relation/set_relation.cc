@@ -3833,6 +3833,7 @@ class VisitorCollectAllUFCalls : public Visitor {
 //    Forall e1, e2  if (e1 expOpStr e2) then add ( UF1(e1) ufOpStr UF2(e2) )
 // Note: 
 //    expOpStr and ufOpStr can be: '<' or '<=' or '=' or '>' or '>='
+//
 // FIXME Mahdi: explain how function works esp what exp we consider 
 
 */
@@ -3845,7 +3846,6 @@ void Conjunction::addConsForUniversQuantExp( uniQuantConstraint uqConst,
   std::string ufOpStr = uqConst.getUfCompOp();
   std::string uf2Str = uqConst.getUfSymbol2();
 
-  //FIXME Mahdi: for now we only have partial ordering between terms. 
   //FIXME MAHDI: do I need to delete the memory for termSet?!
   std::set<Term*> termSet;
  
@@ -3918,9 +3918,6 @@ void Conjunction::addConsForUniversQuantExp( uniQuantConstraint uqConst,
         Exp* constraint = new Exp();
         constraint->setInequality(); // Default set to inEquality
 
-
-        //FIXME MAHDI: check the conversion between < (or >) and >=
-
         // Creating the constraint between UFCalls and updating partial ordering
         // UF1(e1) = UF2(e2), UF1(e1) - UF2(e2) = 0
         if (ufOpStr=="=") {
@@ -3952,7 +3949,7 @@ void Conjunction::addConsForUniversQuantExp( uniQuantConstraint uqConst,
             assert(0);
         }
 
-        // FIXME Mahdi: UPDATE THE UFSMAP WITH NEW ADDED UFCALLS
+        // UPDATE THE UFSMAP WITH NEW ADDED UFCALLS
         UFCallTerm uf1Copy = *uf1_call;
         uf1Copy.setCoefficient(1);
         ufsMap[uf1Str].insert(uf1Copy);
@@ -3981,6 +3978,7 @@ void Conjunction::addConsForUniversQuantExp( uniQuantConstraint uqConst,
     }
   }
 
+  // FIXME Mahdi: 
   // I am thinking about having an exception when expOpStr is '=' (e1 = e2).
   // In this case, to add UF1(e) ufOpStr UF2(e), we do not need to check 
   // the partial ordering for any expresion (e) that is argument to UF1 or UF2
@@ -4039,7 +4037,7 @@ void Conjunction::addConsForUFCallRel(uniQuantConstraint uqConst,
       // if antecedent of the implication is correct (UF1(e1) ufOpStr UF2(e2))
       // then add (e1 expOpStr e2)
       if ( expMatch ){
-if(debu){ static int coI = 0; std::cout<<"\ncoI = "<<coI++<<"\n";}
+
         // Getting e1 and e2 from UF1(e1) and UF2(e2)
         Exp* argE1 = ((*i).getParamExp(0))->clone();
         Exp* argE2 = ((*j).getParamExp(0))->clone();
@@ -4103,7 +4101,7 @@ if(debu){ static int coI = 0; std::cout<<"\ncoI = "<<coI++<<"\n";}
 
 }
 
-/* FIXME Mahdi
+/* FIXME Mahdi: Does this need more explanation?
 ** The high level interface for adding all domain information about UFCs
 // to constraints, including Monotonicity and other user defined information
 // The function first creates a partial ordering between terms in the original
@@ -4141,15 +4139,14 @@ void SparseConstraints::determineUnsatHelper(){
     int noUQConst = queryNoUniQuantConstraintEnv();
     uniQuantConstraint uqConst;
 
+    // FIXME Mahdi: fix this so we would stop adding after not being able 
+    // to add new constraints
     // while( untill adding domain info converges ){
     for(int i=0 ; i < 2 ; i++){
-std::cout<<"\n\ndetermineUnsatHelper i = "<<i<<"\n\n";
       for (int j = 0; j < noUQConst; j++){
 
         uqConst = queryUniQuantConstraintEnv(j);
 
-if (i >0){ std::cout<<"\n\n UQ #"<<j<<" = "<<uqConst.toString()<<"\n\n";
-debu = true;}
         // (2)
         // Read user defined constraints based on universally quantified
         // expressions, then call addConsForUniversQuantExp to add them:
@@ -4169,10 +4166,8 @@ debu = true;}
         }
         if( isUnsat() ){ return; }
       }
-
     }  
   }
-
 }
 
 Set* Set::determineUnsat() {

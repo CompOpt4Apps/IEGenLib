@@ -241,10 +241,6 @@ void simplify(string inputFile)
     // Reading original set.
     Relation* rel = new Relation(data[p][i]["Relation"].as<string>());
 
-    char msg[100];
-    sprintf(msg, "@@@ Relation No. %d: ", int(i+1) );
-    printRelation( string(msg) , rel);
-
     // Reading expected outputs
     Relation *ex_rel = NULL;
     string expected_str = data[p][i]["Expected"].as<string>();
@@ -255,6 +251,10 @@ void simplify(string inputFile)
     // (3) Determining unsatisfiability
     Relation* copyRelation = rel->boundDomainRange();
     Relation* relAf = copyRelation->determineUnsat();
+
+    char msg[100];
+    sprintf(msg, "@@@ Relation No. %d: ", int(i+1) );
+    printRelation( string(msg) , rel);
  
     if(  relAf->isUnsat() ){
       std::cout<<"\nIs unsatisfiable!\n";
@@ -262,7 +262,7 @@ void simplify(string inputFile)
     } else {
       std::cout<<"\nMight be satisfiable!!\n";      
     }
-  
+
     // If conjunction is satisfiable at compile time try to simplify it
 
     // (4)

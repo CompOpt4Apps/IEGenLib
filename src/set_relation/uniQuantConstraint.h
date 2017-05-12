@@ -23,8 +23,8 @@ namespace iegenlib{
 
 /*!
 ** This is the basic structure for storing different domain information
-** about uninterpreted function symbols in an environment, these 
-** information can be of two tupes:
+** about uninterpreted function symbols in the environment, these 
+** information can be of the types:
 
     Forall e1, e2, if e1 <> e2 then f1(e1) <> f2(e2)
     Forall e1, e2, if f1(e1) <> f2(e2) then e1 <> e2
