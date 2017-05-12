@@ -253,12 +253,12 @@ public:
     // inside the conjuction.
     int termCount();
 
-    void addConsForUniversQuantExp(std::string expOpStr, std::string uf1Str,
-        std::string ufOpStr, std::string uf2Str, TermPartOrdGraph &partOrd,
+    void addConsForUniversQuantExp(uniQuantConstraint uqConst,
+                                    TermPartOrdGraph &partOrd,
         std::map< std::string , std::set<UFCallTerm> > &ufsMap);
 
-    void addConsForUFCallRel(std::string uf1Str, std::string ufOpStr, 
-        std::string uf2Str, std::string expOpStr, TermPartOrdGraph &partOrd,
+    void addConsForUFCallRel(uniQuantConstraint uqConst,
+                                    TermPartOrdGraph &partOrd,
         std::map< std::string , std::set<UFCallTerm> > &ufsMap);
 
 
@@ -446,7 +446,7 @@ public:
 
     void addConstraintsDueToMonotonicityHelper();
 
-    void domainInfoHelper(std::vector<struct domainInformation>  domainInfoVec);
+    void determineUnsatHelper();
 };
 
 /*!
@@ -592,7 +592,10 @@ public:
         }
     }
 
-    Set* domainInfo(std::vector<struct domainInformation>  domainInfoVec);
+    // This function tries to determine if the set is unsatisfiable 
+    // utilizing available universially quantified constraints in 
+    // the environment about this sets's UFCs
+    Set* determineUnsat();
 
 private:
     int mArity;
@@ -780,8 +783,13 @@ public:
     // The function first creates a partial ordering between terms in the original
     // constraints set. Then, it adds constraints based on partial ordering
     // pertaining to different domain information recursively untill it converges. 
-    //   
-    Relation* domainInfo(std::vector<struct domainInformation>  domainInfoVec);
+    // Relation* domainInfo(std::vector<struct domainInformation>  domainInfoVec); 
+
+    // This function tries to determine if the set is unsatisfiable 
+    // utilizing available universially quantified constraints in 
+    // the environment about this sets's UFCs
+    Relation* determineUnsat();
+
 
 private:
     int mInArity;

@@ -59,11 +59,8 @@ PartOrdGraph::PartOrdGraph(unsigned int maxN) {
 
 //! Copy constructor.  Performs a deep copy.
 PartOrdGraph::PartOrdGraph(const PartOrdGraph& other) {
-    *this = other;
-}
+    //*this = other;
 
-//! Copy assignment.
-PartOrdGraph& PartOrdGraph::operator=(const PartOrdGraph& other) {
     mCurN = other.mCurN;
     mMaxN = other.mMaxN;
     unsat = other.unsat;
@@ -74,7 +71,31 @@ PartOrdGraph& PartOrdGraph::operator=(const PartOrdGraph& other) {
                 = other.mAdjacencyMatrix[getIndex(i,j)];
         }
     }
+
+}
+
+//! Copy assignment.
+PartOrdGraph& PartOrdGraph::operator=(const PartOrdGraph& other) {
+
+    PartOrdGraph temp(other);
+    temp.swap (*this); // Non-throwing swap
     return *this;
+
+//    mCurN = other.mCurN;
+//    mMaxN = other.mMaxN;
+//    unsat = other.unsat;
+//    delete this->mAdjacencyMatrix;
+//    this->mAdjacencyMatrix = new CompareEnum[mMaxN*mMaxN];
+//    for (unsigned int i=0; i<mMaxN; i++) {
+//        for (unsigned int j=0; j<mMaxN; j++) {
+//            mAdjacencyMatrix[getIndex(i,j)]
+//                = other.mAdjacencyMatrix[getIndex(i,j)];
+//        }
+//    }
+
+
+
+   // return *this;
 }
 
 //! Destructor will delete the adjacency matrix.

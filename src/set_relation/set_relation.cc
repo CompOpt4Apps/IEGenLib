@@ -2664,7 +2664,7 @@ class VisitorCollectPartOrd : public Visitor {
                     } else if (c==0 && t->coefficient()>0) {
                         mPartOrd.insertLTE(solution_term, t);
 
-                   // t <= solution_term + (other noneg terms) + c, c==0
+                    // t <= solution_term + (other noneg terms) + c, c==0
                     } else if (c==0 && t->coefficient()<0) {
                         mPartOrd.insertLTE(t, solution_term);
                     }
@@ -3836,9 +3836,14 @@ class VisitorCollectAllUFCalls : public Visitor {
 // FIXME Mahdi: explain how function works esp what exp we consider 
 
 */
-void Conjunction::addConsForUniversQuantExp(std::string expOpStr, std::string uf1Str,
-        std::string ufOpStr, std::string uf2Str, TermPartOrdGraph &partOrd,
-        std::map< std::string , std::set<UFCallTerm> > &ufsMap){
+void Conjunction::addConsForUniversQuantExp( uniQuantConstraint uqConst,
+                                             TermPartOrdGraph &partOrd,
+                 std::map< std::string , std::set<UFCallTerm> > &ufsMap){
+
+  std::string expOpStr = uqConst.getExpCompOp();
+  std::string uf1Str = uqConst.getUfSymbol1();
+  std::string ufOpStr = uqConst.getUfCompOp();
+  std::string uf2Str = uqConst.getUfSymbol2();
 
   //FIXME Mahdi: for now we only have partial ordering between terms. 
   //FIXME MAHDI: do I need to delete the memory for termSet?!
@@ -3990,11 +3995,15 @@ void Conjunction::addConsForUniversQuantExp(std::string expOpStr, std::string uf
 // FIXME Mahdi: explain how function works esp what exp we consider 
 
 */
+bool debu = false;
+void Conjunction::addConsForUFCallRel(uniQuantConstraint uqConst,
+                                      TermPartOrdGraph &partOrd,
+          std::map< std::string , std::set<UFCallTerm> > &ufsMap){
 
-void Conjunction::addConsForUFCallRel(std::string uf1Str, std::string ufOpStr,
-        std::string uf2Str, std::string expOpStr, TermPartOrdGraph &partOrd,
-        std::map< std::string , std::set<UFCallTerm> > &ufsMap){
-
+  std::string expOpStr = uqConst.getExpCompOp();
+  std::string uf1Str = uqConst.getUfSymbol1();
+  std::string ufOpStr = uqConst.getUfCompOp();
+  std::string uf2Str = uqConst.getUfSymbol2();
 
   // Going to show if antecedent of the implication is correct:
   // Forall e1, e2  if uf1Str(e1) ufOpStr uf2Str(e2) then add (e1 expOpStr e2)
@@ -4008,6 +4017,8 @@ void Conjunction::addConsForUFCallRel(std::string uf1Str, std::string ufOpStr,
     for (std::set<UFCallTerm>::const_iterator j = ufsMap[uf2Str].begin();
          j != ufsMap[uf2Str].end(); j++) {
       
+      if( uf1Str == uf2Str && i == j) continue;
+
       expMatch = false;
 
       Term* uf1 = ((Term*)(&(*i)));
@@ -4028,7 +4039,7 @@ void Conjunction::addConsForUFCallRel(std::string uf1Str, std::string ufOpStr,
       // if antecedent of the implication is correct (UF1(e1) ufOpStr UF2(e2))
       // then add (e1 expOpStr e2)
       if ( expMatch ){
-
+if(debu){ static int coI = 0; std::cout<<"\ncoI = "<<coI++<<"\n";}
         // Getting e1 and e2 from UF1(e1) and UF2(e2)
         Exp* argE1 = ((*i).getParamExp(0))->clone();
         Exp* argE2 = ((*j).getParamExp(0))->clone();
@@ -4099,8 +4110,7 @@ void Conjunction::addConsForUFCallRel(std::string uf1Str, std::string ufOpStr,
 // constraints set. Then, it adds constraints based on partial ordering
 // pertaining to different domain information recursively until it converges. 
 */
-void SparseConstraints::domainInfoHelper(
-     std::vector<struct domainInformation>  domainInfoVec){
+void SparseConstraints::determineUnsatHelper(){
 
   for (std::list<Conjunction*>::iterator conIter=mConjunctions.begin();
        conIter != mConjunctions.end(); conIter++) {
@@ -4116,7 +4126,7 @@ void SparseConstraints::domainInfoHelper(
     // which impacts partial orderings, has converged.
     VisitorCollectPartOrd v2(partOrd);
     do {
-      conjunct->acceptVisitor(&v2);
+     conjunct->acceptVisitor(&v2);
     } while (!(v2.hasConverged()));
     partOrd = v2.returnPartOrd();
 
@@ -4128,22 +4138,25 @@ void SparseConstraints::domainInfoHelper(
     conjunct->acceptVisitor(&vCUFC);
     ufsMap = vCUFC.returnResult();
 
+    int noUQConst = queryNoUniQuantConstraintEnv();
+    uniQuantConstraint uqConst;
+
     // while( untill adding domain info converges ){
     for(int i=0 ; i < 2 ; i++){
-      for (size_t j = 0; j < domainInfoVec.size(); j++){
+std::cout<<"\n\ndetermineUnsatHelper i = "<<i<<"\n\n";
+      for (int j = 0; j < noUQConst; j++){
 
+        uqConst = queryUniQuantConstraintEnv(j);
 
+if (i >0){ std::cout<<"\n\n UQ #"<<j<<" = "<<uqConst.toString()<<"\n\n";
+debu = true;}
         // (2)
         // Read user defined constraints based on universally quantified
         // expressions, then call addConsForUniversQuantExp to add them:
         //    Forall e1, e2: if ( e1 exOP e2 ) => ( UF1(e1) ufOP UF2(e2) )
-        if( domainInfoVec[j].type == "1"){
+        if( uqConst.getType() == "1"){
 
-          conjunct->addConsForUniversQuantExp(domainInfoVec[j].expCompOp,
-                                              domainInfoVec[j].ufSymbol1, 
-                                              domainInfoVec[j].ufCompOp, 
-                                              domainInfoVec[j].ufSymbol2, 
-                                              partOrd, ufsMap);
+          conjunct->addConsForUniversQuantExp(uqConst, partOrd, ufsMap);
         }
         if( isUnsat() ){ return; }
 
@@ -4151,12 +4164,8 @@ void SparseConstraints::domainInfoHelper(
         // read user defined relations between UFCs, then call 
         // addConsForUFCallRel to add related constraints:
         //    Forall e1, e2: if ( UF1(e1) ufOP UF2(e2) ) => ( e1 exOP e2 ) 
-        else if( domainInfoVec[j].type == "2"){
-          conjunct->addConsForUFCallRel(domainInfoVec[j].ufSymbol1, 
-                                        domainInfoVec[j].ufCompOp, 
-                                        domainInfoVec[j].ufSymbol2,
-                                        domainInfoVec[j].expCompOp, 
-                                        partOrd, ufsMap);
+        else if( uqConst.getType() == "2" ){
+          conjunct->addConsForUFCallRel(uqConst, partOrd, ufsMap);
         }
         if( isUnsat() ){ return; }
       }
@@ -4166,15 +4175,15 @@ void SparseConstraints::domainInfoHelper(
 
 }
 
-Set* Set::domainInfo(std::vector<struct domainInformation>  domainInfoVec) {
+Set* Set::determineUnsat() {
   Set* retval = new Set(*this);
-  retval->domainInfoHelper(domainInfoVec);
+  retval->determineUnsatHelper();
   return retval;
 }
 
-Relation* Relation::domainInfo(std::vector<struct domainInformation>  domainInfoVec) {
+Relation* Relation::determineUnsat() {
   Relation* retval = new Relation(*this);
-  retval->domainInfoHelper(domainInfoVec);
+  retval->determineUnsatHelper();
   return retval;
 }
 

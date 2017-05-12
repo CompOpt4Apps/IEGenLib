@@ -3,26 +3,12 @@
     {
       "Name" : "CSR_ILU",
       "Input Type" : "IEgenLIB Relation",
-      "Relation" : "[m] -> {[i,k] -> [ip,kp]: i < ip && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && k = diagptr(colidx(kp)) }",
+      "Relation" : "{ [colNo, k] -> [colNop, ip, lp] : k = lp && colNo < colNop && 0 <= colNo and colNo < n && 0 <= colNop and colNop < n && lC(colNo) <= k and k < lC(colNo+1) && 0 <= ip and ip < colNop && lC(ip) <= lp and lp < lC(ip+1) }",
       "Expected" : "Not Satisfiable",
       "UFS" :
       [
         { 
-           "Name" : "colidx",
-           "Domain" : "{[i]:0<=i &&i<nnz}",
-           "Range" : "{[j]:0<=j &&j<m}",
-           "Bijective" : "false",
-           "Monotonicity" : "Monotonic_NONE"
-        },
-        { 
-           "Name" : "rowptr",
-           "Domain" : "{[j]:0<=j &&j<m}",
-           "Range" : "{[i]:0<=i &&i<nnz}",
-           "Bijective" : "false",
-           "Monotonicity" : "Monotonic_Increasing"
-        },
-        { 
-           "Name" : "diagptr",
+           "Name" : "lC",
            "Domain" : "{[j]:0<=j &&j<m}",
            "Range" : "{[i]:0<=i &&i<nnz}",
            "Bijective" : "false",
@@ -44,25 +30,11 @@
           " is? " : "UFSymbol1",
           "UFSymbol2?(e2)" : "UFSymbol2",
           "then add: e1 is? e2" : "OP"
-        },
-        {
-          "Type" : "1",
-          "Forall e1, e2: if e1 is? e2" : "=",
-          "then add: UFSymbol1?(e1)" : "rowptr",
-          " is? " : "<=",
-          "UFSymbol2?(e2)" : "diagptr"
-        },
-        {
-          "Type" : "1",
-          "Forall e1, e2: if e1 is? e2" : "<",
-          "then add: UFSymbol1?(e1)" : "diagptr",
-          " is? " : "<",
-          "UFSymbol2?(e2)" : "rowptr"
         }
       ],
       "Do Not Project Out" :
       [
-        "i", "ip"
+        "colNo", "colNop"
       ],
       "Remove Constraints" : "2",
       "Comment: Code" : [
@@ -96,7 +68,7 @@
     {
       "Name" : "CSR_ILU",
       "Input Type" : "IEgenLIB Relation",
-      "Relation" : "[m] -> {[i,k] -> [ip,kp]: i < ip && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && k = kp }",
+      "Relation" : "{ [colNo, k] -> [colNop, kp] : k = kp && colNo < colNop && 0 <= colNo and colNo < n && 0 <= colNop and colNop < n && lC(colNo) <= k and k < lC(colNo+1) && lC(colNop) <= kp and kp < lC(colNop+1) }",
       "Expected" : "Not Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
                     " ",

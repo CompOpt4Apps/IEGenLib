@@ -30,11 +30,8 @@ TermPartOrdGraph::TermPartOrdGraph(int maxNumTerms){
 //! Copy constructor.  Performs a deep copy of PartOrdGraph, but does not
 //! own any Terms so just copying their pointers.
 TermPartOrdGraph::TermPartOrdGraph(const TermPartOrdGraph& other) {
-    *this = other;
-}
+//    *this = other;
 
-//! Copy assignment.
-TermPartOrdGraph& TermPartOrdGraph::operator=(const TermPartOrdGraph& other) {
     mNumTerms               = other.mNumTerms;
     mMaxNumTerms            = other.mMaxNumTerms;
     mUFCallTerm2IntMap      = other.mUFCallTerm2IntMap;
@@ -55,6 +52,35 @@ TermPartOrdGraph& TermPartOrdGraph::operator=(const TermPartOrdGraph& other) {
         }
         *mGraphPtr = *(other.mGraphPtr);
     }
+
+}
+
+//! Copy assignment.
+TermPartOrdGraph& TermPartOrdGraph::operator=(const TermPartOrdGraph& other) {
+
+    TermPartOrdGraph temp(other);
+    temp.swap (*this); // Non-throwing swap
+/*    mNumTerms               = other.mNumTerms;
+    mMaxNumTerms            = other.mMaxNumTerms;
+    mUFCallTerm2IntMap      = other.mUFCallTerm2IntMap;
+    mTupleVarTerm2IntMap    = other.mTupleVarTerm2IntMap;
+    mVarTerm2IntMap         = other.mVarTerm2IntMap;
+    mTerm2IntMap            = other.mTerm2IntMap;
+    std::set<Term*>::const_iterator iter;
+    for (iter=other.mNonNegativeTerms.begin();
+            iter!=other.mNonNegativeTerms.end(); iter++){
+        Term* nonNegTerm = (*iter);
+        mNonNegativeTerms.insert(nonNegTerm->clone());
+    }
+    
+    mGraphPtr = NULL;
+    if (other.mGraphPtr!=NULL) {
+        if (mGraphPtr==NULL) {
+            mGraphPtr = new PartOrdGraph(other.mGraphPtr->numMaxItems());
+        }
+        *mGraphPtr = *(other.mGraphPtr);
+    }
+*/
     return *this;
 }
 

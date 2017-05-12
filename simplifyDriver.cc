@@ -27,8 +27,7 @@
    For example if you are compiling this file in its original location that is 
    IEGENLIB_HOME/src/drivers, FROM IEGENLIB_HOME run following to compile:
 
-     g++ -o simplifyDriver simplifyDriver.cc -I src \ 
-         build/src/libiegenlib.a -lisl -std=c++11
+     g++ -o simplifyDriver simplifyDriver.cc -I src build/src/libiegenlib.a -lisl -std=c++11
 
  * Now to run the driver, you should put your dependence relations inside
  * JSON files and give them as inputs to the driver, one or more files
@@ -169,9 +168,9 @@ void simplify(string inputFile)
   json data;
   in >> data;
 
-  for(size_t p = 0; p < data.size(); ++p){    // Dependence relations (DR) found in the file
+ for(size_t p = 0; p < data.size(); ++p){    // Dependence relations (DR) found in the file
 
-    cout<<"\n\n"<<data[p][0]["Name"].as<string>()<<"\n\n";
+  cout<<"\n\n"<<data[p][0]["Name"].as<string>()<<"\n\n";
 
   for (size_t i = 0; i < data[p].size(); ++i){// Conjunctions found for one DR in the file
 
@@ -202,6 +201,39 @@ void simplify(string inputFile)
             monotonicity                                            // Monotonicity?
                                 );
       }
+
+      // (3.1) Loop over user defined domain information, 
+      //       and add them to environment
+      uniQuantConstraint uqConst;
+      for (size_t j = 0; j < data[p][0]["User Defined"].size(); ++j){
+
+        json ud = data[p][0]["User Defined"][j];
+        // 
+        // Read user defined constraints based on universally quantified
+        // expressions, then call addConsForUniversQuantExp to add them:
+        //    Forall e1, e2: if ( e1 exOP e2 ) => ( UF1(e1) ufOP UF2(e2) )
+        if( ud["Type"].as<string>() == "1"){
+          uqConst.setType("1");
+          uqConst.setExpCompOp(ud["Forall e1, e2: if e1 is? e2"].as<string>());
+          uqConst.setUfCompOp(ud[" is? "].as<string>());
+          uqConst.setUfSymbol1(ud["then add: UFSymbol1?(e1)"].as<string>());
+          uqConst.setUfSymbol2(ud["UFSymbol2?(e2)"].as<string>() );
+          iegenlib::addUniQuantConstraint(uqConst);
+        }
+
+        // (3.3)
+        // read user defined relations between UFCs, then call 
+        // addConsForUFCallRel to add related constraints:
+        //    Forall e1, e2: if ( UF1(e1) ufOP UF2(e2) ) => ( e1 exOP e2 ) 
+        else if( data[0][0]["User Defined"][j]["Type"].as<string>() == "2"){
+          uqConst.setType("2");
+          uqConst.setExpCompOp(ud["then add: e1 is? e2"].as<string>());
+          uqConst.setUfCompOp(ud[" is? "].as<string>() );
+          uqConst.setUfSymbol1(ud["Forall e1, e2: if UFSymbol1?(e1)"].as<string>());
+          uqConst.setUfSymbol2(ud["UFSymbol2?(e2)"].as<string>() );
+          iegenlib::addUniQuantConstraint(uqConst);
+        }
+      }
     }
 
     // (2)
@@ -222,154 +254,22 @@ void simplify(string inputFile)
 
     // (3) Determining unsatisfiability
     Relation* copyRelation = rel->boundDomainRange();
-
-   if( !(data[p][0]["Name"].as<string>() == 
-       string("Incomplete LU") && (i == 12 || i ==13)) ){
-    std::vector<struct domainInformation>  domainInfoVec;
-   
-    // Collect all uninterpreted function symbols
-    std::map< std::string , std::set<UFCallTerm> > ufsMap;
-    VisitorCollectAllUFCalls vCUFC;
-    copyRelation->acceptVisitor(&vCUFC);
-    ufsMap = vCUFC.returnResult();
-
-    // (3.1) Loop over all the function symbols that we have, 
-    //     and extract information for:
-    //   1.1 Functional consistency  
-    //   1.2 Monotonicity 
-    // Later, We are going to convert these information ino calls to
-    // addConsForUniversQuantExp and addConsForUFCallRel functions.
-    for (std::map< std::string , std::set<UFCallTerm> >::iterator ufsIter =
-         ufsMap.begin(); ufsIter!=ufsMap.end(); ++ufsIter){
-      //Grab first UFCall of current UFSymbol as a sample
-      UFCallTerm sampleUFC = *((ufsIter->second).begin());
-
-      // 3.1.1 adding Functional consistency constraints:
-      //   forall e1, e2 : if e1 = e2 then f(e1) == f(e2)
-      domainInfoVec.push_back ( { "1" , "=" , "=" , 
-                                   sampleUFC.name() , 
-                                   sampleUFC.name() } );
-
-      // 3.1.2 Adding Monotonicity constraints based on:
-      //   If UF monotonically strictly increasing then:
-      if ( sampleUFC.numArgs() == 1 && Monotonic_Increasing
-             == queryMonoTypeEnv( sampleUFC.name() ) ){
-
-        // forall e1, e2 : e1 < e2 => UF(e1) < UF(e2)
-        domainInfoVec.push_back ( { "1" , "<" , "<" , 
-                                     sampleUFC.name() , 
-                                     sampleUFC.name() } );
-
-        // forall e1, e2 : UF(e1) = UF(e2) => e1 = e2
-        domainInfoVec.push_back ( { "2" , "=" , "=" , 
-                                     sampleUFC.name() , 
-                                     sampleUFC.name() } );
-
-        // forall e1, e2 : UF(e1) < UF(e2) => e1 < e2
-        domainInfoVec.push_back ( { "2" , "<" , "<" , 
-                                     sampleUFC.name() , 
-                                     sampleUFC.name() } );
-
-        // forall e1, e2 : UF(e1) <= UF(e2) => e1 <= e2
-        domainInfoVec.push_back ( { "2" , "<=" , "<=" , 
-                                     sampleUFC.name() , 
-                                     sampleUFC.name() } );
-
-      //   If UF monotonically increasing then:
-      } else  if ( sampleUFC.numArgs() == 1 && Monotonic_Nondecreasing
-                   == queryMonoTypeEnv( sampleUFC.name() ) ){
-
-        // forall e1, e2 : UF(e1) < UF(e2) => e1 < e2
-        domainInfoVec.push_back ( { "2" , "<" , "<" , 
-                                     sampleUFC.name() , 
-                                     sampleUFC.name() } );
-
-      // If UF monotonically strictly decreasing then
-      } else if ( sampleUFC.numArgs() == 1 && Monotonic_Decreasing
-                  == queryMonoTypeEnv( sampleUFC.name() ) ){
-
-        // forall e1, e2 : e1 < e2 => UF(e1) > UF(e2)
-        domainInfoVec.push_back ( { "1" , "<" , ">" , 
-                                     sampleUFC.name() , 
-                                     sampleUFC.name() } );
-
-        // forall e1, e2 : UF(e1) = UF(e2) => e1 = e2
-        domainInfoVec.push_back ( { "2" , "=" , "=" , 
-                                     sampleUFC.name() , 
-                                     sampleUFC.name() } );
-
-        // forall e1, e2 : UF(e1) < UF(e2) => e1 > e2
-        domainInfoVec.push_back ( { "2" , "<" , ">" , 
-                                     sampleUFC.name() , 
-                                     sampleUFC.name() } );
-
-        // forall e1, e2 : UF(e1) <= UF(e2) => e1 >= e2
-        domainInfoVec.push_back ( { "2" , "<=" , ">=" , 
-                                     sampleUFC.name() , 
-                                     sampleUFC.name() } );
-
-      // If UF monotonically decreasing then:
-      } else  if ( sampleUFC.numArgs() == 1 && Monotonic_Nonincreasing
-                   == queryMonoTypeEnv( sampleUFC.name() ) ){
-
-        // forall e1, e2 : UF(e1) < UF(e2) => e1 > e2
-        domainInfoVec.push_back ( { "2" , "<" , ">" , 
-                                     sampleUFC.name() , 
-                                     sampleUFC.name() } );
-      }
-    }
-
-    for (size_t j = 0; j < data[p][0]["User Defined"].size(); ++j){
-
-      json ud = data[p][0]["User Defined"][j];
-      // (3.2)
-      // Read user defined constraints based on universally quantified
-      // expressions, then call addConsForUniversQuantExp to add them:
-      //    Forall e1, e2: if ( e1 exOP e2 ) => ( UF1(e1) ufOP UF2(e2) )
-      if( ud["Type"].as<string>() == "1"){
-
-        domainInfoVec.push_back({ "1" , 
-                      ud["Forall e1, e2: if e1 is? e2"].as<string>(),
-                      ud[" is? "].as<string>(),
-                      ud["then add: UFSymbol1?(e1)"].as<string>() , 
-                      ud["UFSymbol2?(e2)"].as<string>() } );
-        }
-
-        // (3.3)
-        // read user defined relations between UFCs, then call 
-        // addConsForUFCallRel to add related constraints:
-        //    Forall e1, e2: if ( UF1(e1) ufOP UF2(e2) ) => ( e1 exOP e2 ) 
-      else if( data[0][0]["User Defined"][j]["Type"].as<string>() == "2"){
-
-        domainInfoVec.push_back({ "2" , 
-                      ud["Forall e1, e2: if UFSymbol1?(e1)"].as<string>(),
-                      ud[" is? "].as<string>(),
-                      ud["UFSymbol2?(e2)"].as<string>() , 
-                      ud["then add: e1 is? e2"].as<string>() } );
-      }
-    }
-
-    Relation* relAf = copyRelation->domainInfo(domainInfoVec);
-
-   
+    Relation* relAf = copyRelation->determineUnsat();
+ 
     if(  relAf->isUnsat() ){
       std::cout<<"\nIs unsatisfiable!\n";
       continue;    
     } else {
       std::cout<<"\nMight be satisfiable!!\n";      
     }
-   } else {
-      std::cout<<"\nMight be satisfiable!!\n";
-   }
   
-    //If conjunction is satisfiable at compile time try to simplify it
+    // If conjunction is satisfiable at compile time try to simplify it
 
     // (4)
-    // Specify loops that are going to be parallelized, so we are not going to
-    // project them out.
+    // Specify loops that are going to be parallelized, 
+    // so we are not going to project them out.
     if( i == 0 ){  // Read these data only once. 
                    // They are stored in the first conjunction.
-
       for (size_t j = 0; j < data[p][0]["Do Not Project Out"].size(); ++j){
         string tvS = data[p][0]["Do Not Project Out"][j].as<string>();
         int tvN = 0;
@@ -402,11 +302,12 @@ void simplify(string inputFile)
 
     delete copyRelation;
     delete rel;   
-    delete relWithDR;
-    delete rel_sim;
+//    delete relWithDR;
+//    delete rel_sim;
+    delete relAf;
   }
 
-  } // End of p loop
+ } // End of p loop
 }
 
 bool printRelation(string msg, Relation *rel){

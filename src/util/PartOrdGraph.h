@@ -61,6 +61,19 @@ class PartOrdGraph {
 
         bool isUnsat(){ return unsat; }
 
+    void swap(PartOrdGraph& second) throw()
+    {
+        // enable ADL (not necessary in our case, but good practice)
+        using std::swap;
+
+        // by swapping the members of two objects,
+        // the two objects are effectively swapped
+        swap(mCurN, second.mCurN);
+        swap(mMaxN, second.mMaxN);
+        swap(unsat, second.unsat);
+        swap(mAdjacencyMatrix, second.mAdjacencyMatrix);
+    }
+
     private:
         unsigned int mCurN;
         unsigned int mMaxN;

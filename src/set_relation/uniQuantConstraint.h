@@ -17,6 +17,7 @@
 
 #include <vector>
 #include <string>
+#include <sstream>
 
 namespace iegenlib{
 
@@ -25,26 +26,15 @@ namespace iegenlib{
 ** about uninterpreted function symbols in an environment, these 
 ** information can be of two tupes:
 
-    Forall e1, e2, if e1 <c1> e2 then f1(e1) <c2> f2(e2)
-    Forall e1, e2, if f1(e1) <c3> f2(e2) then e1 <c4> e2
-    <c1>, <c2>, ... can be: = < <= >=
+    Forall e1, e2, if e1 <> e2 then f1(e1) <> f2(e2)
+    Forall e1, e2, if f1(e1) <> f2(e2) then e1 <> e2
+    <>, ... can be: = < <= >=
 
-*/
-struct domainInformation {
-  std::string type;
-  std::string expCompOp;
-  std::string ufCompOp;
-  std::string ufSymbol1;
-  std::string ufSymbol2;
-};
-
-
-/*!
  * \class uniQuantConstraint
  */
 class uniQuantConstraint {
 public:
-  uniQuantConstraint(); //{}
+  uniQuantConstraint(){}
   ~uniQuantConstraint(){
              
   }
@@ -63,7 +53,18 @@ public:
   }
 
   //! prints the content of the map into a std::string, and returns it
-  std::string toString();
+  std::string toString(){
+    std::stringstream ss;
+
+    if( type =="1" ){
+      ss <<"Forall e1, e2: if e1 "<<expCompOp<<" e2 -> "
+         <<ufSymbol1<<"(e1) "<<ufCompOp<<" "<<ufSymbol2<<"(e2)";
+    } else {
+      ss <<"Forall e1, e2: if "<<ufSymbol1<<"(e1) "<<ufCompOp<<" "<<ufSymbol2
+         <<"(e2) -> e1 "<<expCompOp<<" e2";
+    }
+    return ss.str();
+  }
 
   void setType(std::string f){ type = f; }
   void setExpCompOp(std::string f){ expCompOp = f; }

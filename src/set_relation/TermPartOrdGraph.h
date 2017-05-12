@@ -123,6 +123,27 @@ public:
     std::string toString() const;
     bool isUnsat(){ return mGraphPtr->isUnsat();}
 
+
+    void swap(TermPartOrdGraph& second) throw()
+    {
+        // enable ADL (not necessary in our case, but good practice)
+        using std::swap;
+
+        // by swapping the members of two objects,
+        // the two objects are effectively swapped
+        swap(mNumTerms, second.mNumTerms);
+        swap(mMaxNumTerms, second.mMaxNumTerms);
+        swap(mUFCallTerm2IntMap, second.mUFCallTerm2IntMap);
+        swap(mTupleVarTerm2IntMap, second.mTupleVarTerm2IntMap);
+        swap(mVarTerm2IntMap, second.mVarTerm2IntMap);
+        swap(mTerm2IntMap, second.mTerm2IntMap);
+        swap(mNonNegativeTerms, second.mNonNegativeTerms);
+        swap(mUniqueUFCallTerms, second.mUniqueUFCallTerms);
+        swap(mGraphPtr, second.mGraphPtr);
+
+    }
+
+
 private:
     int                         mNumTerms;
     int                         mMaxNumTerms;
