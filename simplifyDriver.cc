@@ -291,6 +291,12 @@ void simplify(string inputFile)
     std::set<iegenlib::Exp> ignore = relWithDR->constraintsDifference(rel);
     relWithDR->removeExpensiveConstraints(parallelTvs, numConstToRemove, ignore);
 
+    // Adding extra domain information
+    delete copyRelation;
+    copyRelation = relWithDR->determineUnsat();
+    delete relWithDR;
+    relWithDR = copyRelation;
+
     // (6)
     // Simplifyng the constraints relation
     Relation* rel_sim = relWithDR->simplifyForPartialParallel(parallelTvs);
@@ -300,7 +306,7 @@ void simplify(string inputFile)
     sprintf(msg, "@@@ Simplified relation No. %d: ", int(i+1) );
     printRelation( string(msg) , rel_sim);
 
-    delete copyRelation;
+//    delete copyRelation;
     delete rel;   
 //    delete relWithDR;
 //    delete rel_sim;

@@ -1,0 +1,91 @@
+[
+  [
+    {
+      "Name" : "partial leftLU with fill-in",
+      "Input Type" : "IEgenLIB Relation",
+      "Relation" : "{[i,l,j,curRow] -> [ip,lp,jp,curRowp]: i < ip && 0 <= i && i < colNo && 0 <= l && l < n && i+1 <= j && j < n && lC(i) <= curRow && curRow < lC(i+1) && 0 <= ip && ip < colNo && 0 <= lp && lp < n && ip+1 <= jp && jp < n && lC(ip) <= curRowp && curRowp < lC(ip+1) && l = lR(curRow) && lp = lR(curRowp) && l = jp }",
+      "Expected" : "Not Satisfiable",
+      "UFS" :
+      [
+        { 
+           "Name" : "lR",
+           "Domain" : "{[i]: 0<=i && i<nnz}",
+           "Range" : "{[j]: 0<=j && j<n}",
+           "Bijective" : "false",
+           "Monotonicity" : "Monotonic_NONE"
+        },
+        { 
+           "Name" : "lC",
+           "Domain" : "{[j]:0<=j &&j<n}",
+           "Range" : "{[i]:0<=i &&i<nnz}",
+           "Bijective" : "false",
+           "Monotonicity" : "Monotonic_Increasing"
+        }
+      ],
+      "User Defined" :
+      [
+
+      ],
+      "Do Not Project Out" :
+      [
+        "i", "ip"
+      ],
+      "Remove Constraints" : "0",
+      "Comment: Code" : [
+                  "Following is Matrix update nested loops from left LU factorization",
+                  "with fill-in. Dependence analysis of this code would identify",
+                  "2 pair of read/write data accesses (in S1 and S2) that may",
+                  "produce data dependences. Each pair produces two distinct",
+                  "conjunctions considering the ordering of accesses",
+                  "(Flow and Anti dependence).",
+                  "for (i = 0; i < colNo; ++i){",
+                  "  curRow = lC[i];",
+                  "  for ( l = 0; l < n ; ++l){",
+                  "    if(l==lR[curRow]){",
+                  "      srcCol[l] = f[i]*lValues[curRow];",
+                  "S1:   curRow++; //next row in col i",
+                  "    }",
+                  "    else { srcCol[l]=0; }",
+                  "  }",
+                  "  for (j = i+1; j < n; ++j){",
+                  "S2: f[j] = f[j] - srcCol[j];",
+                  "  }",
+                  "}"
+                  ],
+      "Comment: Source of data access in the code for this relation" : [
+                    " ",
+                    "a write in S1 (srcCol[l]);  a read in S2 (srcCol[j]);"
+                  ]
+    },
+    {
+      "Name" : "partial leftLU with fill-in",
+      "Input Type" : "IEgenLIB Relation",
+      "Relation" : "{[i,l,j,curRow] -> [ip,lp,jp,curRowp]: ip < i && 0 <= i && i < colNo && 0 <= l && l < n && i+1 <= j && j < n && lC(i) <= curRow && 0 <= ip && ip < colNo && 0 <= lp && lp < n && ip+1 <= jp && jp < n && lC(ip) <= curRowp && l = lR(curRow) && lp = lR(curRowp) && l = jp }",
+      "Expected" : "Not Satisfiable",
+      "Comment: Source of data access in the code for this relation" : [
+                    " ",
+                    "a write in S1 (srcCol[l]);  a read in S2 (srcCol[j]);"
+                  ]
+    },
+    {
+      "Name" : "partial leftLU with fill-in",
+      "Input Type" : "IEgenLIB Relation",
+      "Relation" : "{[i,l,j,curRow] -> [ip,lp,jp,curRowp]: i < ip && 0 <= i && i < colNo && 0 <= l && l < n && i+1 <= j && j < n && lC(i) <= curRow && 0 <= ip && ip < colNo && 0 <= lp && lp < n && ip+1 <= jp && jp < n && lC(ip) <= curRowp && l = lR(curRow) && lp = lR(curRowp) && j = ip }",
+      "Expected" : "Not Satisfiable",
+      "Comment: Source of data access in the code for this relation" : [
+                    " ",
+                    "a read in S1 (f[i]);  a write in S2 (f[j]); "
+                  ]
+    },
+    {
+      "Name" : "partial leftLU with fill-in",
+      "Input Type" : "IEgenLIB Relation",
+      "Relation" : "{[i,l,j,curRow] -> [ip,lp,jp,curRowp]: ip < i && 0 <= i && i < colNo && 0 <= l && l < n && i+1 <= j && j < n && lC(i) <= curRow && 0 <= ip && ip < colNo && 0 <= lp && lp < n && ip+1 <= jp && jp < n && lC(ip) <= curRowp && l = lR(curRow) && lp = lR(curRowp) && j = ip }",
+      "Expected" : "Not Satisfiable",
+      "Comment: Source of data access in the code for this relation" : [
+                    " ",
+                    "a read in S1 (f[i]);  a write in S2 (f[j]); "
+                  ]
+    }
+  ]
+]
