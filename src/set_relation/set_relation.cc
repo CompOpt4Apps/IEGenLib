@@ -4170,12 +4170,16 @@ void SparseConstraints::determineUnsatHelper(){
   }
 }
 
+/* FIXME Mahdi: Add explanation for this function
+*/
 Set* Set::determineUnsat() {
   Set* retval = new Set(*this);
   retval->determineUnsatHelper();
   return retval;
 }
 
+/* FIXME Mahdi: Add explanation for this function
+*/
 Relation* Relation::determineUnsat() {
   Relation* retval = new Relation(*this);
   retval->determineUnsatHelper();
