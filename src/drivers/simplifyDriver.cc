@@ -92,7 +92,7 @@
 
 #include <iostream>
 #include "iegenlib.h"
-#include "src/set_relation/Visitor.h"
+//#include "src/set_relation/Visitor.h"
 #include "parser/jsoncons/json.hpp"
 
 using jsoncons::json;
@@ -114,25 +114,6 @@ bool printRelation(string msg, Relation *rel);
 void EXPECT_EQ(string a, string b);
 void EXPECT_EQ(Relation *a, Relation *b);
 int str2int(string str);
-
-// This visitor collects all uninterpreted function calls for each function symbol
-// and stores them in a map
-class VisitorCollectAllUFCalls : public Visitor {
-  private:
-    std::map< std::string , std::set<UFCallTerm> > ufsMap;
-    
-  public:
-    VisitorCollectAllUFCalls() {}
-  
-    std::map< std::string , std::set<UFCallTerm> > returnResult()
-    { return ufsMap; }
-    
-    void postVisitUFCallTerm(iegenlib::UFCallTerm * t) {
-        UFCallTerm termCopy = *t;
-        termCopy.setCoefficient(1);
-        ufsMap[t->name()].insert(termCopy);
-    }
-};
 
 
 //----------------------- MAIN ---------------
@@ -262,6 +243,9 @@ void simplify(string inputFile)
     } else {
       std::cout<<"\nMight be satisfiable!!\n";      
     }
+
+    //sprintf(msg, "@@@ Relation No. %d After: ", int(i+1) );
+    //printRelation( string(msg) , relAf);
 
     // If conjunction is satisfiable at compile time try to simplify it
 

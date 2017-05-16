@@ -3,6 +3,7 @@
     {
       "Name" : "Incomplete LU",
       "Input Type" : "IEgenLIB Relation",
+      "Index" : "1",
       "Relation" : "[m] -> {[i,k] -> [ip,kp]: i < ip && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && k = kp }",
       "Expected" : "Not Satisfiable",
       "UFS" :
@@ -41,7 +42,7 @@
         {
           "Type" : "Comment: 2",
           "Forall e1, e2: if UFSymbol1?(e1)" : "UFSymbol1",
-          " is? " : "UFSymbol1",
+          " is? " : "OP",
           "UFSymbol2?(e2)" : "UFSymbol2",
           "then add: e1 is? e2" : "OP"
         },
@@ -61,13 +62,6 @@
         },
         {
           "Type" : "2",
-          "Forall e1, e2: if UFSymbol1?(e1)" : "rowptr",
-          " is? " : "<=",
-          "UFSymbol2?(e2)" : "diagptr",
-          "then add: e1 is? e2" : "<="
-        },
-        {
-          "Type" : "2",
           "Forall e1, e2: if UFSymbol1?(e1)" : "diagptr",
           " is? " : "<",
           "UFSymbol2?(e2)" : "rowptr",
@@ -76,7 +70,7 @@
       ],
       "Do Not Project Out" :
       [
-        "i", "ip"
+        "i", "ip", "k", "kp"
       ],
       "Remove Constraints" : "2",
       "Comment: Code" : [
@@ -94,7 +88,7 @@
                   "    int j1 = k + 1, j2 = diag[col[k]] + 1;",
                   " ",
                   "    while (j1 < row[i + 1] && j2 < row[col[k] + 1]){",
-                  "      if {",
+                  "      if(colidx[j1] == colidx[j2]) {",
                   "S2:     v[j1] -= v[k]*v[j2];", 
                   "        ++j1; ++j2;",
                   "      else if (col[j1] < col[j2]) ++j1;",
@@ -109,6 +103,7 @@
     {
       "Name" : "CSR_ILU",
       "Input Type" : "IEgenLIB Relation",
+      "Index" : "2",
       "Relation" : "[m] -> {[i,k] -> [ip,kp]: ip < i && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && k = kp }",
       "Expected" : "Not Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
@@ -119,6 +114,7 @@
     {
       "Name" : "CSR_ILU",
       "Input Type" : "IEgenLIB Relation",
+      "Index" : "3",
       "Relation" : "[m] -> {[i,k] -> [ip,kp]: i < ip && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && k = diagptr(colidx(kp)) }",
       "Expected" : "Not Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
@@ -129,6 +125,7 @@
     {
       "Name" : "CSR_ILU",
       "Input Type" : "IEgenLIB Relation",
+      "Index" : "4",
       "Relation" : "[m] -> {[i,k] -> [ip,kp]: ip < i && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && k = diagptr(colidx(kp)) }",
       "Expected" : "Not Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
@@ -139,6 +136,7 @@
     {
       "Name" : "CSR_ILU",
       "Input Type" : "IEgenLIB Relation",
+      "Index" : "5",
       "Relation" : "[m] -> {[i,k] -> [ip,kp,j1p,j2p]: i < ip && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && kp < j1p && j1p < rowptr(1+ip) && diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp)) && colidx(j1p) = colidx(j2p) && k = kp}",
       "Expected" : "Not Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
@@ -149,6 +147,7 @@
     {
       "Name" : "CSR_ILU",
       "Input Type" : "IEgenLIB Relation",
+      "Index" : "6",
       "Relation" : "[m] -> {[i,k] -> [ip,kp,j1p,j2p]: ip < i && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && kp < j1p && j1p < rowptr(1+ip) && diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp)) && colidx(j1p) = colidx(j2p) && k = kp}",
       "Expected" : "Not Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
@@ -159,6 +158,7 @@
     {
       "Name" : "CSR_ILU",
       "Input Type" : "IEgenLIB Relation",
+      "Index" : "7",
       "Relation" : "[m] -> {[i,k,j1,j2] -> [ip,kp]: i < ip && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && k < j1 && j1 < rowptr(1+i) && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k)) && colidx(j1) = colidx(j2) && j1 = kp}",
       "Expected" : "Not Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
@@ -169,6 +169,7 @@
     {
       "Name" : "CSR_ILU",
       "Input Type" : "IEgenLIB Relation",
+      "Index" : "8",
       "Relation" : "[m] -> {[i,k,j1,j2] -> [ip,kp]: ip < i && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && k < j1 && j1 < rowptr(1+i) && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k)) && colidx(j1) = colidx(j2) && j1 = kp}",
       "Expected" : "Not Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
@@ -179,6 +180,7 @@
     {
       "Name" : "CSR_ILU",
       "Input Type" : "IEgenLIB Relation",
+      "Index" : "9",
       "Relation" : "[m] -> {[i,k] -> [ip,kp,j1p,j2p]: i < ip && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && kp < j1p && j1p < rowptr(1+ip) && diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp)) && colidx(j1p) = colidx(j2p) && k = j2p}",
       "Expected" : "Not Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
@@ -189,6 +191,7 @@
     {
       "Name" : "CSR_ILU",
       "Input Type" : "IEgenLIB Relation",
+      "Index" : "10",
       "Relation" : "[m] -> {[i,k] -> [ip,kp,j1p,j2p]: ip < i && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && kp < j1p && j1p < rowptr(1+ip) && diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp)) && colidx(j1p) = colidx(j2p) && k = j2p}",
       "Expected" : "Not Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
@@ -199,6 +202,7 @@
     {
       "Name" : "CSR_ILU",
       "Input Type" : "IEgenLIB Relation",
+      "Index" : "11",
       "Relation" : "[m] -> {[i,k,j1,j2] -> [ip,kp]: i < ip && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && k < j1 && j1 < rowptr(1+i) && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k)) && colidx(j1) = colidx(j2) && j1 = diagptr(colidx(kp))}",
       "Expected" : "Not Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
@@ -209,6 +213,7 @@
     {
       "Name" : "CSR_ILU",
       "Input Type" : "IEgenLIB Relation",
+      "Index" : "12",
       "Relation" : "[m] -> {[i,k,j1,j2] -> [ip,kp]: ip < i && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && k < j1 && j1 < rowptr(1+i) && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k)) && colidx(j1) = colidx(j2) && j1 = diagptr(colidx(kp))}",
       "Expected" : "Not Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
@@ -219,6 +224,7 @@
     {
       "Name" : "CSR_ILU",
       "Input Type" : "IEgenLIB Relation",
+      "Index" : "13",
       "Relation" : "[m] -> {[i,k,j1,j2] -> [ip,kp,j1p,j2p]: i < ip && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && k < j1 && j1 < rowptr(1+i) && kp < j1p && j1p < rowptr(1+ip) && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k)) && diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp)) && colidx(j1) = colidx(j2) && colidx(j1p) = colidx(j2p) && j1 = j1p}",
       "Expected" : "Not Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
@@ -229,6 +235,7 @@
     {
       "Name" : "CSR_ILU",
       "Input Type" : "IEgenLIB Relation",
+      "Index" : "14",
       "Relation" : "[m] -> {[i,k,j1,j2] -> [ip,kp,j1p,j2p]: ip < i && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && k < j1 && j1 < rowptr(1+i) && kp < j1p && j1p < rowptr(1+ip) && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k)) && diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp)) && colidx(j1) = colidx(j2) && colidx(j1p) = colidx(j2p) && j1 = j1p}",
       "Expected" : "Not Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
@@ -239,6 +246,7 @@
     {
       "Name" : "CSR_ILU",
       "Input Type" : "IEgenLIB Relation",
+      "Index" : "15",
       "Relation" : "[m] -> {[i,k,j1,j2] -> [ip,kp,j1p,j2p]: i < ip && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && k < j1 && j1 < rowptr(1+i) && kp < j1p && j1p < rowptr(1+ip) && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k)) && diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp)) && colidx(j1) = colidx(j2) && colidx(j1p) = colidx(j2p) && j1 = kp}",
       "Expected" : "Not Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
@@ -249,6 +257,7 @@
     {
       "Name" : "CSR_ILU",
       "Input Type" : "IEgenLIB Relation",
+      "Index" : "16",
       "Relation" : "[m] -> {[i,k,j1,j2] -> [ip,kp,j1p,j2p]: ip < i && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && k < j1 && j1 < rowptr(1+i) && kp < j1p && j1p < rowptr(1+ip) && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k)) && diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp)) && colidx(j1) = colidx(j2) && colidx(j1p) = colidx(j2p) && j1 = kp}",
       "Expected" : "Not Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
@@ -259,6 +268,7 @@
     {
       "Name" : "CSR_ILU",
       "Input Type" : "IEgenLIB Relation",
+      "Index" : "17",
       "Relation" : "[m] -> {[i,k,j1,j2] -> [ip,kp,j1p,j2p]: i < ip && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && k < j1 && j1 < rowptr(1+i) && kp < j1p && j1p < rowptr(1+ip) && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k)) && diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp)) && colidx(j1) = colidx(j2) && colidx(j1p) = colidx(j2p) && j1 = j2p}",
       "Expected" : "[ m, nnz ] -> { [i, k] -> [ip, kp] : i - colidx(kp) = 0 && colidx(k) >= 0 && colidx(kp) >= 0 && rowptr(i) >= 0 && rowptr(ip) >= 0 && rowptr(colidx(k)) >= 0 && rowptr(colidx(kp)) >= 0 && k - rowptr(i) >= 0 && kp - rowptr(ip) >= 0 && diagptr(i + 1) - rowptr(i + 1) >= 0 && diagptr(ip + 1) - rowptr(ip + 1) >= 0 && diagptr(colidx(k)) - rowptr(colidx(k)) >= 0 && diagptr(colidx(k) + 1) - rowptr(colidx(k) + 1) >= 0 && diagptr(colidx(kp)) - rowptr(colidx(kp)) >= 0 && diagptr(colidx(kp) + 1) - rowptr(colidx(kp) + 1) >= 0 && -k + diagptr(i) - 1 >= 0 && -k + rowptr(i + 1) - 2 >= 0 && -k + rowptr(colidx(kp) + 1) - 2 >= 0 && -ip + m - 2 >= 0 && ip - colidx(kp) - 1 >= 0 && -kp + diagptr(ip) - 1 >= 0 && -kp + rowptr(ip + 1) - 2 >= 0 && m - colidx(k) - 2 >= 0 && nnz - diagptr(i) - 1 >= 0 && nnz - diagptr(i + 1) - 1 >= 0 && nnz - diagptr(ip) - 1 >= 0 && nnz - diagptr(ip + 1) - 1 >= 0 && nnz - diagptr(colidx(k) + 1) - 1 >= 0 && nnz - diagptr(colidx(kp) + 1) - 1 >= 0 && -diagptr(colidx(k)) + rowptr(colidx(k) + 1) - 2 >= 0 && -diagptr(colidx(kp)) + rowptr(i + 1) - 2 >= 0 && -diagptr(colidx(kp)) + rowptr(colidx(kp) + 1) - 2 >= 0 }",
       "Comment: Source of data access in the code for this relation" : [
@@ -269,6 +279,7 @@
     {
       "Name" : "CSR_ILU",
       "Input Type" : "IEgenLIB Relation",
+      "Index" : "18",
       "Relation" : "[m] -> {[i,k,j1,j2] -> [ip,kp,j1p,j2p]: ip < i && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && k < j1 && j1 < rowptr(1+i) && kp < j1p && j1p < rowptr(1+ip) && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k)) && diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp)) && colidx(j1) = colidx(j2) && colidx(j1p) = colidx(j2p) && j1 = j2p}",
       "Expected" : "[ m, nnz ] -> { [i, k] -> [ip, kp] : i - colidx(kp) = 0 && ip >= 0 && colidx(k) >= 0 && rowptr(i) >= 0 && rowptr(ip) >= 0 && rowptr(colidx(k)) >= 0 && rowptr(colidx(kp)) >= 0 && k - rowptr(i) >= 0 && kp - rowptr(ip) >= 0 && diagptr(i + 1) - rowptr(i + 1) >= 0 && diagptr(ip + 1) - rowptr(ip + 1) >= 0 && diagptr(colidx(k)) - rowptr(colidx(k)) >= 0 && diagptr(colidx(k) + 1) - rowptr(colidx(k) + 1) >= 0 && diagptr(colidx(kp)) - rowptr(colidx(kp)) >= 0 && diagptr(colidx(kp) + 1) - rowptr(colidx(kp) + 1) >= 0 && -k + diagptr(i) - 1 >= 0 && -k + rowptr(i + 1) - 2 >= 0 && -k + rowptr(colidx(kp) + 1) - 2 >= 0 && -ip + colidx(kp) - 1 >= 0 && -kp + diagptr(ip) - 1 >= 0 && -kp + rowptr(ip + 1) - 2 >= 0 && m - colidx(k) - 2 >= 0 && m - colidx(kp) - 2 >= 0 && nnz - diagptr(i) - 1 >= 0 && nnz - diagptr(i + 1) - 1 >= 0 && nnz - diagptr(ip) - 1 >= 0 && nnz - diagptr(ip + 1) - 1 >= 0 && nnz - diagptr(colidx(k) + 1) - 1 >= 0 && nnz - diagptr(colidx(kp) + 1) - 1 >= 0 && -diagptr(colidx(k)) + rowptr(colidx(k) + 1) - 2 >= 0 && -diagptr(colidx(kp)) + rowptr(i + 1) - 2 >= 0 && -diagptr(colidx(kp)) + rowptr(colidx(kp) + 1) - 2 >= 0 }",
       "Comment: Source of data access in the code for this relation" : [

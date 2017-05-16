@@ -2705,7 +2705,7 @@ void SparseConstraints::addConstraintsDueToMonotonicityHelper() {
         Conjunction* conjunct = *iter;
         int termCount = conjunct->termCount();
 
-        TermPartOrdGraph partOrd( termCount-10 );
+        TermPartOrdGraph partOrd( termCount*2 );
 
         // Call the visitor that will insert partial orderings.
         // Call in a loop until determination of non-negativity,
@@ -4128,6 +4128,11 @@ void SparseConstraints::determineUnsatHelper(){
     } while (!(v2.hasConverged()));
     partOrd = v2.returnPartOrd();
 
+    if(  partOrd.isUnsat() ){
+      conjunct->setUnsat();
+      return;        
+    }
+
     // Collect all uninterpreted function symbols in the conjunction and
     // their instances (calls of each sysmbol), and put them in a std::map
     // For example:  row -> {row(i), row(ip+1), ...}
@@ -4166,7 +4171,7 @@ void SparseConstraints::determineUnsatHelper(){
         }
         if( isUnsat() ){ return; }
       }
-    }  
+    } 
   }
 }
 
