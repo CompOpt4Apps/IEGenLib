@@ -21,6 +21,7 @@
 */
 
 #include <string>
+#include <cassert>
 
 #ifndef __PARTORDGRAPH__
 #define __PARTORDGRAPH__
@@ -29,19 +30,23 @@ typedef enum {
     NO_ORD=3,
     STRICT=1,
     NONSTRICT=2,
-    EQUAL=0
+    EQUAL=0,
+    Illegal=10
 } CompareEnum;
 
 
 class PartOrdGraph {
     public:
-        PartOrdGraph(unsigned int N);
+        PartOrdGraph(unsigned int maxN);
         //! Copy constructor.  Performs a deep copy.
         PartOrdGraph(const PartOrdGraph& other);
         //! Copy assignment.
         PartOrdGraph& operator=(const PartOrdGraph& other);
         //! Destructor will delete the adjacency matrix.
         ~PartOrdGraph();
+
+        //! helper function for implementing copy-and-swap
+        void swap(PartOrdGraph& second) throw();
 
         void strict(unsigned int, unsigned int);
         void nonStrict(unsigned int, unsigned int);
@@ -52,12 +57,19 @@ class PartOrdGraph {
         bool isEqual(unsigned int, unsigned int);
         bool isNoOrder(unsigned int, unsigned int);
 
-        int numItems() { return mN; }
+        int numItems() { return mCurN; }
+        int numMaxItems() { return mMaxN; }
 
         std::string toString(); 
 
+        bool isUnsat(){ return unsat; }
+
     private:
-        unsigned int mN;
+        unsigned int mCurN;
+        unsigned int mMaxN;
+
+        bool unsat;
+
         CompareEnum * mAdjacencyMatrix;
 
         // helper routines to access the matrix, stored in 1D array

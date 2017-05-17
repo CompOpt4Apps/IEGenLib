@@ -61,12 +61,120 @@ void setCurrEnv(std::string str) {
 
 void appendCurrEnv(std::string funcName, Set* domain, Set* range, 
                    bool bijective, MonotonicType monoType) {
-    // create a new uninterpreted function description
-    UninterpFunc* ufunc = new UninterpFunc(funcName, domain, range, 
+  // create a new uninterpreted function description
+  UninterpFunc* ufunc = new UninterpFunc(funcName, domain, range, 
                                            bijective, monoType);
-    // create new environment
-    Environment* env = new Environment(ufunc);
-    currentEnv.append(env);
+  // create new environment
+  Environment* env = new Environment(ufunc);
+  currentEnv.append(env);
+
+/////////////////////////////////////////////////
+  uniQuantConstraint uqConst;
+
+  // 3.1.1 adding Functional consistency constraints:
+  //   forall e1, e2 : if e1 = e2 then f(e1) == f(e2)
+  uqConst.setType("1");
+  uqConst.setExpCompOp( "=" );
+  uqConst.setUfCompOp( "=" );
+  uqConst.setUfSymbol1( funcName );
+  uqConst.setUfSymbol2( funcName );
+  currentEnv.addUniQuantConstraint( uqConst );
+
+  // 3.1.2 Adding Monotonicity constraints based on:
+  //   If UF monotonically strictly increasing then:
+  if ( Monotonic_Increasing == monoType ){
+
+    // forall e1, e2 : e1 < e2 => UF(e1) < UF(e2)
+    uqConst.setType("1");
+    uqConst.setExpCompOp( "<" );
+    uqConst.setUfCompOp( "<" );
+    uqConst.setUfSymbol1( funcName );
+    uqConst.setUfSymbol2( funcName );
+    currentEnv.addUniQuantConstraint( uqConst );
+
+    // forall e1, e2 : UF(e1) = UF(e2) => e1 = e2
+    uqConst.setType("2");
+    uqConst.setExpCompOp( "=" );
+    uqConst.setUfCompOp( "=" );
+    uqConst.setUfSymbol1( funcName );
+    uqConst.setUfSymbol2( funcName );
+    currentEnv.addUniQuantConstraint( uqConst );
+
+    // forall e1, e2 : UF(e1) < UF(e2) => e1 < e2
+    uqConst.setType("2");
+    uqConst.setExpCompOp( "<" );
+    uqConst.setUfCompOp( "<" );
+    uqConst.setUfSymbol1( funcName );
+    uqConst.setUfSymbol2( funcName );
+    currentEnv.addUniQuantConstraint( uqConst );
+
+    // forall e1, e2 : UF(e1) <= UF(e2) => e1 <= e2
+    uqConst.setType("2");
+    uqConst.setExpCompOp( "<=" );
+    uqConst.setUfCompOp( "<=" );
+    uqConst.setUfSymbol1( funcName );
+    uqConst.setUfSymbol2( funcName );
+    currentEnv.addUniQuantConstraint( uqConst );
+
+  //   If UF monotonically increasing then:
+  } else  if ( Monotonic_Nondecreasing == monoType ){
+
+    // forall e1, e2 : UF(e1) < UF(e2) => e1 < e2
+    uqConst.setType("2");
+    uqConst.setExpCompOp( "<" );
+    uqConst.setUfCompOp( "<" );
+    uqConst.setUfSymbol1( funcName );
+    uqConst.setUfSymbol2( funcName );
+    currentEnv.addUniQuantConstraint( uqConst );
+
+  // If UF monotonically strictly decreasing then
+  } else if ( Monotonic_Decreasing == monoType ){
+
+    // forall e1, e2 : e1 < e2 => UF(e1) > UF(e2)
+    uqConst.setType("1");
+    uqConst.setExpCompOp( "<" );
+    uqConst.setUfCompOp( ">" );
+    uqConst.setUfSymbol1( funcName );
+    uqConst.setUfSymbol2( funcName );
+    currentEnv.addUniQuantConstraint( uqConst );
+
+    // forall e1, e2 : UF(e1) = UF(e2) => e1 = e2
+    uqConst.setType("2");
+    uqConst.setExpCompOp( "=" );
+    uqConst.setUfCompOp( "=" );
+    uqConst.setUfSymbol1( funcName );
+    uqConst.setUfSymbol2( funcName );
+    currentEnv.addUniQuantConstraint( uqConst );
+
+    // forall e1, e2 : UF(e1) < UF(e2) => e1 > e2
+    uqConst.setType("2");
+    uqConst.setExpCompOp( ">" );
+    uqConst.setUfCompOp( "<" );
+    uqConst.setUfSymbol1( funcName );
+    uqConst.setUfSymbol2( funcName );
+    currentEnv.addUniQuantConstraint( uqConst );
+
+    // forall e1, e2 : UF(e1) <= UF(e2) => e1 >= e2
+    uqConst.setType("2");
+    uqConst.setExpCompOp( ">=" );
+    uqConst.setUfCompOp( "<=" );
+    uqConst.setUfSymbol1( funcName );
+    uqConst.setUfSymbol2( funcName );
+    currentEnv.addUniQuantConstraint( uqConst );
+
+      // If UF monotonically decreasing then:
+  } else  if ( Monotonic_Nonincreasing == monoType ){
+
+    // forall e1, e2 : UF(e1) < UF(e2) => e1 > e2
+    uqConst.setType("2");
+    uqConst.setExpCompOp( ">" );
+    uqConst.setUfCompOp( "<" );
+    uqConst.setUfSymbol1( funcName );
+    uqConst.setUfSymbol2( funcName );
+    currentEnv.addUniQuantConstraint( uqConst );
+  }
+
+/////////////////////////////////////////////////////////////////
 }
 /*
 void appendCurrEnv(std::string str) {
@@ -121,6 +229,21 @@ unsigned int queryRangeArityCurrEnv(const std::string funcName) {
     return retval;
 }
 
+//! add an universially quantified constraint to the environment
+void addUniQuantConstraint(uniQuantConstraint uqCon){
+
+    currentEnv.addUniQuantConstraint(uqCon);
+}
+
+// Return the number of available universially quantified constraints
+int queryNoUniQuantConstraintEnv(){
+  return currentEnv.getNoUniQuantConstraint();
+}
+
+// Returns the universially quantified constraint No. idx stored in the enviroment
+uniQuantConstraint queryUniQuantConstraintEnv(int idx){
+  return currentEnv.getUniQuantConstraint(idx);
+}
 
 void Environment::append(Environment *other){
     mInverseMap.insert(other->mInverseMap.begin(),other->mInverseMap.end());

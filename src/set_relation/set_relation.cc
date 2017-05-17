@@ -16,12 +16,9 @@
 #include "set_relation.h"
 #include "UFCallMap.h"
 #include "Visitor.h"
-#include "TermPartOrdGraph.h"
 #include <stack>
 #include <map>
 #include <assert.h>
-
-//#include "isl_str_manipulation.h"
 
 namespace iegenlib{
 
@@ -102,15 +99,17 @@ Set* islSetProjectOut(Set* s, unsigned pos) {
 #pragma mark -
 /****************************** Conjunction *********************************/
 
-Conjunction::Conjunction(int arity) : mTupleDecl(arity), mInArity(0){
+Conjunction::Conjunction(int arity) : mTupleDecl(arity), mInArity(0),
+                                      unsat(false){
 }
 
-Conjunction::Conjunction(TupleDecl tdecl) : mTupleDecl(tdecl), mInArity(0) {
+Conjunction::Conjunction(TupleDecl tdecl) : mTupleDecl(tdecl), mInArity(0),
+                                      unsat(false){
 }
 
 
 Conjunction::Conjunction(int arity, int inarity)
-    : mTupleDecl(arity), mInArity(inarity){
+    : mTupleDecl(arity), mInArity(inarity), unsat(false){
 }
 
 Conjunction::Conjunction(const Conjunction& other) {
@@ -132,6 +131,7 @@ Conjunction& Conjunction::operator=(const Conjunction& other) {
 
     mTupleDecl = other.mTupleDecl;
     mInArity = other.mInArity;
+    unsat = other.unsat;
     return *this;
 }
 
@@ -2457,7 +2457,7 @@ void SparseConstraints::addUFConstraintsHelper(std::string uf1str,
         UFCallTerm uf1term = (*tIter);
         
         // Copy uf1 term and then name the function to uf2 in copy.
-        // Need to copies because constraints will own both terms.
+        // Need two copies because constraints will own both terms.
         UFCallTerm *uf1copy1 = new UFCallTerm(uf1term);
         UFCallTerm *uf1copy2 = new UFCallTerm(uf1term);
         uf1copy2->setName(uf2str);
@@ -2534,90 +2534,6 @@ Relation* Relation::addUFConstraints(std::string uf1str,
 /******************************************************************************/
 #pragma mark addConstraintsDueToMonotonicity
 /*************** addConstraintsDueToMonotonicity ******************************/
-/*! This visitor will collect all of the terms except for constants
-    from the constraints and will indicate which of the terms are
-    non-negative due to a constraint c <= term where c is a
-    constant integer that is >=0.  It is also looking at any range
-    information associated with uninterpreted functions.
-    
-    This visitor does not take ownership of any of the terms visited.
-*/
-class VisitorCollectTerms : public Visitor {
-  private:
-    TermPartOrdGraph        mPartOrd;
-    
-    // FIXME: Don't need maps here.  No nesting of equality and inequality
-    // expressions in each other.
-    std::map<Exp*,Term*>    mNonConstTerm; // will be NULL if none or >1
-    std::map<Exp*,int>      mNumNonConstTerms;
-    std::map<Exp*,int>      mConstTermVal;
-    
-    // Do need a stack of expressions.  Within inequality and equality
-    // expressions there can be nested uninterpreted function param exps.
-    std::stack<Exp*>        mCurrExpStack;
-    
-  public:
-    VisitorCollectTerms() {}
-    ~VisitorCollectTerms() {}
-  
-    TermPartOrdGraph returnPartOrd() { return mPartOrd; }
-
-    void postVisitTerm(iegenlib::Term * t) {
-        mPartOrd.insertTerm(t);
-        mConstTermVal[mCurrExpStack.top()] = t->coefficient();
-    }
-    void postVisitUFCallTerm(iegenlib::UFCallTerm * t) {
-        mPartOrd.insertTerm(t);
-        nonConstTerm(t);
-    }
-    void postVisitTupleVarTerm(iegenlib::TupleVarTerm * t) {
-        mPartOrd.insertTerm(t);
-        nonConstTerm(t);
-    }
-    void postVisitVarTerm(iegenlib::VarTerm * t) {
-        mPartOrd.insertTerm(t);
-        nonConstTerm(t);
-    }
-/*    // FIXME: do I really want to do the below?
-    void postVisitTupleExpTerm(iegenlib::TupleExpTerm * t) {
-        mPartOrd.insertTerm(t);
-        nonConstTerm(t);
-    }
-*/    
-    void preVisitExp(iegenlib::Exp * e) {
-        mCurrExpStack.push(e);
-        mNonConstTerm[e] = NULL;
-        mNumNonConstTerms[e] = 0;
-        mConstTermVal[e] = 0;
-    }
-    void postVisitExp(iegenlib::Exp * e) {
-        if ((e->isEquality() || e->isInequality())
-                && mNonConstTerm[e]!=NULL && mConstTermVal[e]>=0) {
-            mPartOrd.termNonNegative( mNonConstTerm[e] );
-        }
-        mCurrExpStack.pop();
-    }
-
-private:
-    // Called when visiting each non-const term.  If only
-    // end up with 1 non-const term, then the postVisitExp will determine
-    // if that non constant term is non-negative.
-    // Method does not take on ownership of t.
-    void nonConstTerm(iegenlib::Term* t) {
-        Exp* e = mCurrExpStack.top();
-        if (e->isEquality() || e->isInequality()) {
-            mNumNonConstTerms[e]++;
-            // we are current candidate for only term
-            mNonConstTerm[e] = t;
-            // unless there are others
-            if (mNumNonConstTerms[e]>1) {
-                mNonConstTerm[e] = NULL;
-            }
-        }
-    }
-    
-};
-
 bool termsNonNeg(Exp* e, TermPartOrdGraph partOrd) {
     bool allNonNeg = true;
     std::list<Term*> termList = e->getTermList();
@@ -2662,8 +2578,7 @@ class VisitorCollectPartOrd : public Visitor {
     
   public:
     VisitorCollectPartOrd(TermPartOrdGraph partOrd) :
-        mFoundNonNeg(false) {
-        mPartOrd = partOrd;
+        mFoundNonNeg(false), mPartOrd (partOrd) {
     }
     ~VisitorCollectPartOrd() {}
   
@@ -2688,7 +2603,6 @@ class VisitorCollectPartOrd : public Visitor {
         if (t->isConst()) return;
 
         Exp* e = mCurrExpStack.top();
-        
         // solve for factor treats the constraint like exp=0
         Term * t_with_coeff_1 = t->clone();
         t_with_coeff_1->setCoefficient(1);
@@ -2750,13 +2664,12 @@ class VisitorCollectPartOrd : public Visitor {
                     } else if (c==0 && t->coefficient()>0) {
                         mPartOrd.insertLTE(solution_term, t);
 
-                   // t <= solution_term + (other noneg terms) + c, c==0
+                    // t <= solution_term + (other noneg terms) + c, c==0
                     } else if (c==0 && t->coefficient()<0) {
                         mPartOrd.insertLTE(t, solution_term);
                     }
                 }
             } // endif termsNonNeg(solution,mPartOrd)
-            
         } // endif e->isInequality()
 
     }
@@ -2790,15 +2703,10 @@ void SparseConstraints::addConstraintsDueToMonotonicityHelper() {
             iter != mConjunctions.end(); iter++) {
 
         Conjunction* conjunct = *iter;
+        int termCount = conjunct->termCount();
 
-        // Collect all of the terms and determine what terms are nonnegative
-        VisitorCollectTerms v1;
-        conjunct->acceptVisitor(&v1);
-        TermPartOrdGraph partOrd = v1.returnPartOrd();
+        TermPartOrdGraph partOrd( termCount*2 );
 
-        // Indicate we are done adding terms into the partial ordering.
-        partOrd.doneInsertingTerms();
-        
         // Call the visitor that will insert partial orderings.
         // Call in a loop until determination of non-negativity,
         // which impacts partial orderings, has converged.
@@ -3866,6 +3774,421 @@ Relation* Relation::simplifyForPartialParallel(std::set<int> parallelTvs)
     }
 
     return result;    
+}
+
+
+/******************************************************************************/
+#pragma mark domainInfo
+/*************** domainInfo ******************************/
+/*! This visitor will count the number of terms in a conjunction.
+    It consider all replicates of a terms as well, so the result 
+    is not the number of unique terms in the conjunction.    
+    
+    This visitor does not take ownership of any of the terms visited.
+*/
+class VisitorCountTerms : public Visitor {
+  private:
+    int termCount;
+    
+  public:
+    VisitorCountTerms() {termCount = 0;}
+    ~VisitorCountTerms() {}
+    int returnCount() { return termCount; }
+    void postVisitTerm(iegenlib::Term * t) { termCount++; }
+    void postVisitUFCallTerm(iegenlib::UFCallTerm * t) { termCount++; }
+    void postVisitTupleVarTerm(iegenlib::TupleVarTerm * t) { termCount++; }
+    void postVisitVarTerm(iegenlib::VarTerm * t) { termCount++; }  
+};
+
+int Conjunction::termCount(){
+  VisitorCountTerms tc;
+  this->acceptVisitor(&tc);
+  int tCount = tc.returnCount();
+  return tCount;
+}
+
+
+// This visitor collects all uninterpreted function calls for each function symbol
+// and stores them in a map
+class VisitorCollectAllUFCalls : public Visitor {
+  private:
+    std::map< std::string , std::set<UFCallTerm> > ufsMap;
+    
+  public:
+    VisitorCollectAllUFCalls() {}
+  
+    std::map< std::string , std::set<UFCallTerm> > returnResult()
+    { return ufsMap; }
+    
+    void postVisitUFCallTerm(iegenlib::UFCallTerm * t) {
+        UFCallTerm termCopy = *t;
+        termCopy.setCoefficient(1);
+        ufsMap[t->name()].insert(termCopy);
+    }
+};
+
+
+/* This function adds user defined constraints based on 
+// universally quantified expressions, of the form:
+//    Forall e1, e2  if (e1 expOpStr e2) then add ( UF1(e1) ufOpStr UF2(e2) )
+// Note: 
+//    expOpStr and ufOpStr can be: '<' or '<=' or '=' or '>' or '>='
+//
+// FIXME Mahdi: explain how function works esp what exp we consider 
+
+*/
+void Conjunction::addConsForUniversQuantExp( uniQuantConstraint uqConst,
+                                             TermPartOrdGraph &partOrd,
+                 std::map< std::string , std::set<UFCallTerm> > &ufsMap){
+
+  std::string expOpStr = uqConst.getExpCompOp();
+  std::string uf1Str = uqConst.getUfSymbol1();
+  std::string ufOpStr = uqConst.getUfCompOp();
+  std::string uf2Str = uqConst.getUfSymbol2();
+
+  //FIXME MAHDI: do I need to delete the memory for termSet?!
+  std::set<Term*> termSet;
+ 
+  // Extract the parameter expressions from UFCs for uf1Str
+  for (std::set<UFCallTerm>::const_iterator iter1 = (ufsMap[uf1Str]).begin();
+       iter1 != (ufsMap[uf1Str]).end(); iter1++) {
+
+    Exp *parExp1 = (*iter1).getParamExp(0);
+    Term *parTerm1 = parExp1->getTerm();
+    // If parameter expressiopn of UFC has more than 1 term just ignore it
+    if ( !parTerm1 ){  
+      continue;
+    }
+    
+    termSet.insert(parTerm1);
+  }
+  // Extract the parameter expressions from UFCs for uf2Str
+  for (std::set<UFCallTerm>::const_iterator iter2 = (ufsMap[uf2Str]).begin();
+       iter2 != (ufsMap[uf2Str]).end(); iter2++) {
+
+    Exp *parExp2 = (*iter2).getParamExp(0);
+    Term *parTerm2 = parExp2->getTerm();
+    // If parameter expressiopn of UFC has more than 1 term just ignore it
+    if ( !parTerm2 ){  
+      continue;
+    }
+
+    termSet.insert(parTerm2);
+  }
+
+  // Going to show if antecedent of the implication is correct:
+  // Forall e1, e2  if (e1 expOpStr e2) then add ( UF1(e1) ufOpStr UF2(e2) )
+  bool expMatch = false; 
+
+  // Going over all the terms that are parameter to UF1 or UF2 and checking 
+  // to see whether ordering between them would match the comparision provided
+  // If so we are going to add the desired constraints between UF1 and UF2.
+  for (std::set<Term*>::const_iterator i = termSet.begin();
+       i != termSet.end(); i++) {
+    for (std::set<Term*>::const_iterator j = termSet.begin();
+         j != termSet.end(); j++) {
+      
+      expMatch = false;
+
+      if ( expOpStr == "=" && partOrd.isEqual( *i , *j ) ){
+        expMatch = true;                                 // e1 = e2 => ...
+      } else if ( expOpStr == "<" && partOrd.isLT( *i , *j ) ){ 
+        expMatch = true;                                 // e1 < e2 => ...
+      } else if ( expOpStr == "<=" && partOrd.isLTE( *i , *j ) ){
+        expMatch = true;                                 // e1 <= e2 => ...
+      } else if ( expOpStr == ">" && partOrd.isLT( *j , *i ) ){
+        expMatch = true;                                 // e1 > e2 => ...
+      } else if ( expOpStr == ">=" && partOrd.isLTE( *j , *i ) ){
+        expMatch = true;                                 // e1 >= e2 => ...
+      }
+
+      // if antecedent of the implication is correct (e1 expOpStr e2)
+      // then add ( UF1(e1) ufOpStr UF2(e2) )
+      if ( expMatch ){
+
+        // Creating UF1(exp1) and UF2(exp2)
+        UFCallTerm *uf1_call = new UFCallTerm(1, uf1Str, 1);
+        Exp* arg1 = new Exp();
+        arg1->addTerm( (*i)->clone() );
+        uf1_call->setParamExp(0,arg1);
+        UFCallTerm *uf2_call = new UFCallTerm(1, uf2Str, 1);
+        Exp* arg2 = new Exp();
+        arg2->addTerm( (*j)->clone() );
+        uf2_call->setParamExp(0,arg2);
+        Exp* constraint = new Exp();
+        constraint->setInequality(); // Default set to inEquality
+
+        // Creating the constraint between UFCalls and updating partial ordering
+        // UF1(e1) = UF2(e2), UF1(e1) - UF2(e2) = 0
+        if (ufOpStr=="=") {
+            partOrd.insertEqual( uf1_call , uf2_call ); // update partOrd
+            uf2_call->multiplyBy(-1);
+            constraint->setEquality();
+        // UF1(e1) >= UF2(e2), UF1(e1) - UF2(e2) >= 0
+        } else if (ufOpStr==">=") {
+            partOrd.insertLTE( uf2_call , uf1_call ); // update partOrd
+            uf2_call->multiplyBy(-1);
+        // UF1(e1) > UF2(e2), UF1(e1) - UF2(e2) - 1 >= 0
+        } else if (ufOpStr==">") {
+            partOrd.insertLT( uf2_call , uf1_call ); // update partOrd
+            uf2_call->multiplyBy(-1);
+            constraint->addTerm( new Term(-1) );
+        // UF1(e1) <= UF2(e2), UF2(e1) - UF1(e2) >= 0
+        } else if (ufOpStr=="<=") {
+            partOrd.insertLTE( uf1_call , uf2_call ); // update partOrd
+            uf1_call->multiplyBy(-1);
+        // UF1(e1) < UF2(e2), UF2(e1) - UF1(e2) - 1 >= 0 
+        } else if (ufOpStr=="<") {
+            partOrd.insertLT( uf1_call , uf2_call ); // update partOrd
+            uf1_call->multiplyBy(-1);
+            constraint->addTerm( new Term(-1) );
+        // Otherwise have comparison operator we don't handle.
+        } else {
+            std::cerr << "SparseConstraints::addConsForUniversQuantExp: "
+                      << "operator not handled " << ufOpStr << std::endl;
+            assert(0);
+        }
+
+        // UPDATE THE UFSMAP WITH NEW ADDED UFCALLS
+        UFCallTerm uf1Copy = *uf1_call;
+        uf1Copy.setCoefficient(1);
+        ufsMap[uf1Str].insert(uf1Copy);
+        UFCallTerm uf2Copy = *uf2_call;
+        uf2Copy.setCoefficient(1);
+        ufsMap[uf2Str].insert(uf2Copy);
+
+        // Actually add in the constraint.
+        constraint->addTerm(uf1_call);
+        constraint->addTerm(uf2_call);
+
+        // Add UF1(e1) ufOpStr UF2(e2)
+        if (constraint->isEquality()) {
+          addEquality(constraint);
+        } else {
+          addInequality(constraint);
+        }
+
+        if(  partOrd.isUnsat() ){
+          setUnsat();
+          return;        
+        }
+
+      } // End of if( expMatch )
+
+    }
+  }
+
+  // FIXME Mahdi: 
+  // I am thinking about having an exception when expOpStr is '=' (e1 = e2).
+  // In this case, to add UF1(e) ufOpStr UF2(e), we do not need to check 
+  // the partial ordering for any expresion (e) that is argument to UF1 or UF2
+  // because forall e, e = e
+}
+
+
+/* This function adds user defined constraints based on relation between UFCs:
+//    If ( UF1(e1) ufOpStr UF2(e2) ) then add (e1 expOpStr e2)
+// Note: 
+//    expOpStr and ufOpStr can be: '<' or '<=' or '=' or '>' or '>='
+// FIXME Mahdi: explain how function works esp what exp we consider 
+
+*/
+bool debu = false;
+void Conjunction::addConsForUFCallRel(uniQuantConstraint uqConst,
+                                      TermPartOrdGraph &partOrd,
+          std::map< std::string , std::set<UFCallTerm> > &ufsMap){
+
+  std::string expOpStr = uqConst.getExpCompOp();
+  std::string uf1Str = uqConst.getUfSymbol1();
+  std::string ufOpStr = uqConst.getUfCompOp();
+  std::string uf2Str = uqConst.getUfSymbol2();
+
+  // Going to show if antecedent of the implication is correct:
+  // Forall e1, e2  if uf1Str(e1) ufOpStr uf2Str(e2) then add (e1 expOpStr e2)
+  bool expMatch = false; 
+
+  // Going over all the terms that are parameter to UF1 or UF2 and checking 
+  // to see whether ordering between them would match the comparision provided
+  // If so we are going to add the desired constraints between UF1 and UF2.
+  for (std::set<UFCallTerm>::const_iterator i = ufsMap[uf1Str].begin();
+       i != ufsMap[uf1Str].end(); i++) {
+    for (std::set<UFCallTerm>::const_iterator j = ufsMap[uf2Str].begin();
+         j != ufsMap[uf2Str].end(); j++) {
+      
+      if( uf1Str == uf2Str && i == j) continue;
+
+      expMatch = false;
+
+      Term* uf1 = ((Term*)(&(*i)));
+      Term* uf2 = ((Term*)(&(*j)));
+
+      if( ufOpStr == "=" && partOrd.isEqual( uf1 , uf2 ) ){
+        expMatch = true;                   // UF1(e1) = UF2(e2) => ...
+      } else if ( ufOpStr == "<" && partOrd.isLT( uf1 , uf2 ) ){ 
+        expMatch = true;                   // UF1(e1) < UF2(e2) => ...
+      } else if ( ufOpStr == "<=" && partOrd.isLTE( uf1 , uf2 ) ){
+        expMatch = true;                   // UF1(e1) <= UF2(e2) => ...
+      } else if ( ufOpStr == ">" && partOrd.isLT( uf2 , uf1 ) ){
+        expMatch = true;                   // UF1(e1) > UF2(e2) => ...
+      } else if ( ufOpStr == ">=" && partOrd.isLTE( uf2 , uf1 ) ){
+        expMatch = true;                   // UF1(e1) >= UF2(e2) => ...
+      }
+
+      // if antecedent of the implication is correct (UF1(e1) ufOpStr UF2(e2))
+      // then add (e1 expOpStr e2)
+      if ( expMatch ){
+
+        // Getting e1 and e2 from UF1(e1) and UF2(e2)
+        Exp* argE1 = ((*i).getParamExp(0))->clone();
+        Exp* argE2 = ((*j).getParamExp(0))->clone();
+        Exp* constraint = new Exp();
+        constraint->setInequality(); // Default set to inEquality
+
+        // Creating the constraint and updating the partial ordering
+        // FIXME Mahdi: update the partial ordering
+        // e1 = e2, e1 - e2 = 0
+        if (expOpStr=="=") {
+            argE2->multiplyBy(-1);
+            constraint->setEquality();
+        // e1 >= e2, e1 - e2 >= 0
+        } else if (expOpStr==">=") {
+            argE2->multiplyBy(-1);
+        // e1 > e2, e1 - e2 - 1 >= 0
+        } else if (expOpStr==">") {
+            argE2->multiplyBy(-1);
+            constraint->addTerm( new Term(-1) );
+        // e1 <= e2, e2 - e1 >= 0
+        } else if (expOpStr=="<=") {
+            argE1->multiplyBy(-1);
+        // e1 < e2, e2 - e1 - 1 >= 0
+        } else if (expOpStr=="<") {
+            argE1->multiplyBy(-1);
+            constraint->addTerm( new Term(-1) );
+        // Otherwise have comparison operator we don't handle.
+        } else {
+            std::cerr << "SparseConstraints::addConsForUniversQuantExp: "
+                      << "operator not handled " << ufOpStr << std::endl;
+            assert(0);
+        }
+
+        // Add e1 and e2 to the constraint
+        constraint->addExp(argE1);
+        constraint->addExp(argE2);
+
+        // Call the visitor that will insert partial orderings.
+        // Call in a loop until determination of non-negativity,
+        // which impacts partial orderings, has converged.
+        VisitorCollectPartOrd v2(partOrd);
+        do {
+          constraint->acceptVisitor(&v2);
+        } while (!(v2.hasConverged()));
+        partOrd = v2.returnPartOrd();
+
+        // Add e1 expOpStr e2
+        if (constraint->isEquality()) {
+          addEquality(constraint);
+        } else {
+          addInequality(constraint);
+        }
+
+        if(  partOrd.isUnsat() ){
+          setUnsat();
+          return;        
+        }
+      } // End of if( expMatch )
+    }
+  }
+
+}
+
+/* FIXME Mahdi: Does this need more explanation?
+** The high level interface for adding all domain information about UFCs
+// to constraints, including Monotonicity and other user defined information
+// The function first creates a partial ordering between terms in the original
+// constraints set. Then, it adds constraints based on partial ordering
+// pertaining to different domain information recursively until it converges. 
+*/
+void SparseConstraints::determineUnsatHelper(){
+
+  for (std::list<Conjunction*>::iterator conIter=mConjunctions.begin();
+       conIter != mConjunctions.end(); conIter++) {
+
+    Conjunction* conjunct = *conIter;
+
+    // Create and store the partial ordering
+    int termCount = conjunct->termCount();
+    TermPartOrdGraph partOrd( termCount*2 );
+
+    // Call the visitor that will insert partial orderings.
+    // Call in a loop until determination of non-negativity,
+    // which impacts partial orderings, has converged.
+    VisitorCollectPartOrd v2(partOrd);
+    do {
+     conjunct->acceptVisitor(&v2);
+    } while (!(v2.hasConverged()));
+    partOrd = v2.returnPartOrd();
+
+    if(  partOrd.isUnsat() ){
+      conjunct->setUnsat();
+      return;        
+    }
+
+    // Collect all uninterpreted function symbols in the conjunction and
+    // their instances (calls of each sysmbol), and put them in a std::map
+    // For example:  row -> {row(i), row(ip+1), ...}
+    std::map< std::string , std::set<UFCallTerm> > ufsMap;
+    VisitorCollectAllUFCalls vCUFC;
+    conjunct->acceptVisitor(&vCUFC);
+    ufsMap = vCUFC.returnResult();
+
+    int noUQConst = queryNoUniQuantConstraintEnv();
+    uniQuantConstraint uqConst;
+
+    // FIXME Mahdi: fix this so we would stop adding after not being able 
+    // to add new constraints
+    // while( untill adding domain info converges ){
+    for(int i=0 ; i < 2 ; i++){
+      for (int j = 0; j < noUQConst; j++){
+
+        uqConst = queryUniQuantConstraintEnv(j);
+
+        // (2)
+        // Read user defined constraints based on universally quantified
+        // expressions, then call addConsForUniversQuantExp to add them:
+        //    Forall e1, e2: if ( e1 exOP e2 ) => ( UF1(e1) ufOP UF2(e2) )
+        if( uqConst.getType() == "1"){
+
+          conjunct->addConsForUniversQuantExp(uqConst, partOrd, ufsMap);
+        }
+        if( isUnsat() ){ return; }
+
+        // (3)
+        // read user defined relations between UFCs, then call 
+        // addConsForUFCallRel to add related constraints:
+        //    Forall e1, e2: if ( UF1(e1) ufOP UF2(e2) ) => ( e1 exOP e2 ) 
+        else if( uqConst.getType() == "2" ){
+          conjunct->addConsForUFCallRel(uqConst, partOrd, ufsMap);
+        }
+        if( isUnsat() ){ return; }
+      }
+    } 
+  }
+}
+
+/* FIXME Mahdi: Add explanation for this function
+*/
+Set* Set::determineUnsat() {
+  Set* retval = new Set(*this);
+  retval->determineUnsatHelper();
+  return retval;
+}
+
+/* FIXME Mahdi: Add explanation for this function
+*/
+Relation* Relation::determineUnsat() {
+  Relation* retval = new Relation(*this);
+  retval->determineUnsatHelper();
+  return retval;
 }
 
 }//end namespace iegenlib

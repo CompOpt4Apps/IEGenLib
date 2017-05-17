@@ -3,8 +3,9 @@
     {
       "Name" : "CSR_Gauss-Seidel",
       "Input Type" : "IEgenLIB Relation",
-      "Relation" : "{ [i,j] -> [ip,jp] : i<ip && i=colidx(jp) && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= j && j < rowptr(i+1) && rowptr(ip) <= jp && jp < rowptr(ip+1) }",
-      "Expected" : "{ [i] -> [ip,jp] : i=colidx(jp) && colidx(jp) < ip && ip < m-1 && rowptr(i) < rowptr(i+1) && rowptr(ip) <= jp && jp < rowptr(ip+1) && colidx(jp) >= 0 && rowptr(i) >= 0 && rowptr(ip) >= 0 && rowptr(i+1) < nnz && rowptr(ip+1) < nnz}",
+      "Index" : "1",
+      "Relation" : "{ [i] -> [ip,jp] : i < ip && i = colidx(jp) && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(ip) <= jp && jp < rowptr(ip+1) }",
+      "Expected" : "{ [i] -> [ip,jp] : i = colidx(jp) && colidx(jp) < ip && ip < m-1 && rowptr(i) < rowptr(i+1) && rowptr(ip) <= jp && jp < rowptr(ip+1) && colidx(jp) >= 0 && rowptr(i) >= 0 && rowptr(ip) >= 0 && rowptr(i+1) < nnz && rowptr(ip+1) < nnz}",
       "UFS" :
       [
         { 
@@ -38,25 +39,50 @@
                   "two distinct conjunctions considering the ordering of accesses",
                   "(Flow and Anti dependence). Overall, there are 2 distinct",
                   "conjunctions for the complete dependence relation.",
-                  "for (i=0; i < N; i++) {",
-                  "  for (j=rowptr[i];j<rowptr[i + 1];j++) {",
-                  "S1:  y[i] -= values[j]*y[colidx[j]];",
-                  "  }",
-                  "}"
+                  "  for (i=0; i < N; i++) {",
+                  "    double sum = b[i];",
+                  "    for (j=rowptr[i];j<rowptr[i + 1];j++) {",
+                  "S1:   sum -= values[j]*y[colidx[j]];",
+                  "    }",
+                  "S2: y[i] = sum*idiag[i];",
+                  "  }"
                   ],
+      "Comment: Source of data access in the code for this relation" : [
+                    " ",
+                    "a read in S1 (y[colidx[j]]);  a write in S2 (y[i]); "
+                  ]
+    },
+    {
+      "Name" : "CSR_Gauss-Seidel",
+      "Input Type" : "IEgenLIB Relation",
+      "Index" : "2",
+      "Relation" : "{ [i] -> [ip,jp] : ip < i && i = colidx(jp) && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(ip) <= jp && jp < rowptr(ip+1) }",
+      "Expected" : "{ [i] -> [ip,jp] : i=colidx(jp) && 0 <= ip && ip < colidx(jp) && rowptr(i) < rowptr(i+1) && rowptr(ip) <= jp && jp < rowptr(ip+1) && colidx(jp) < m-1 && rowptr(i) >= 0 && rowptr(ip) >= 0 && rowptr(i+1) < nnz && rowptr(ip+1) < nnz}",
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     "a read in S1 (y[colidx[j]]);  a write in S1 (y[i]); "
                   ]
     },
     {
-      "Name" : "CSR_Gauss-siedel",
+      "Name" : "CSR_Gauss-Seidel",
       "Input Type" : "IEgenLIB Relation",
-      "Relation" : "{ [i,j] -> [ip,jp] : ip<i && i=colidx(jp) && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= j && j < rowptr(i+1) && rowptr(ip) <= jp && jp < rowptr(ip+1) }",
-      "Expected" : "{ [i] -> [ip,jp] : i=colidx(jp) && 0 <= ip && ip < colidx(jp) && rowptr(i) < rowptr(i+1) && rowptr(ip) <= jp && jp < rowptr(ip+1) && colidx(jp) < m-1 && rowptr(i) >= 0 && rowptr(ip) >= 0 && rowptr(i+1) < nnz && rowptr(ip+1) < nnz}",
+      "Index" : "3",
+      "Relation" : "{ [i] -> [ip] : i < ip && i = ip && 0 <= i && i < m && 0 <= ip && ip < m }",
+      "Expected" : "Not Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
                     " ",
-                    "a read in S1 (y[colidx[j]]);  a write in S1 (y[i]); "
+                    "a write in S2 (y[i]);  a write in S2 (y[i]); "
+                  ]
+    },
+    {
+      "Name" : "CSR_Gauss-Seidel",
+      "Input Type" : "IEgenLIB Relation",
+      "Index" : "4",
+      "Relation" : "{ [i] -> [ip] : ip < i && i = ip && 0 <= i && i < m && 0 <= ip && ip < m }",
+      "Expected" : "Not Satisfiable",
+      "Comment: Source of data access in the code for this relation" : [
+                    " ",
+                    "a write in S2 (y[i]);  a write in S2 (y[i]); "
                   ]
     }
   ]

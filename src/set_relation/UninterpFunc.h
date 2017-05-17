@@ -36,7 +36,9 @@ class Set;
 typedef enum {
     Monotonic_NONE,
     Monotonic_Nondecreasing,
-    Monotonic_Increasing
+    Monotonic_Increasing,
+    Monotonic_Nonincreasing,
+    Monotonic_Decreasing
     // Here is where others would go when we get them
 } MonotonicType;
 

@@ -3520,6 +3520,7 @@ TEST_F(SetRelationTest, addConstraintsDueToMonotonicity){
     {
     Set* s = new Set("{[i,j] : f(i)<f(j) && 0<=f(i) && 0<=f(j)}");
     Set* copyS = s->boundDomainRange();
+
     Set* result = copyS->addConstraintsDueToMonotonicity();
     Set* expected = new Set("{[i,j] : f(i) >= 0 && f(j) >= 0 && "
                             "f(i)<G && f(j)<G && "
@@ -3533,7 +3534,7 @@ TEST_F(SetRelationTest, addConstraintsDueToMonotonicity){
     delete result;
     delete expected;
     }
-    
+/*
     {
     Set* s = new Set("{[i,j] : f(i)<f(j) && 0<=f(i) && 0<=f(j)}");
     Set* copyS = s->boundDomainRange();
@@ -3572,7 +3573,7 @@ TEST_F(SetRelationTest, addConstraintsDueToMonotonicity){
     delete expected;
     }
 
-
+*/
   }
 
 }
@@ -4223,3 +4224,38 @@ TEST_F(SetRelationTest, removeUFCallConsts){
    delete ex_F2;
    delete extendedF2;
 }
+
+/*
+#pragma mark domainInfoT
+TEST_F(SetRelationTest, domainInfoT){
+
+    iegenlib::setCurrEnv();
+    iegenlib::appendCurrEnv("colidx",
+            new Set("{[i]:0<=i &&i<nnz}"),         // Domain 
+            new Set("{[j]:0<=j &&j<m}"),           // Range
+            false,                                 // Not bijective.
+            iegenlib::Monotonic_NONE               // no monotonicity
+            );
+    iegenlib::appendCurrEnv("rowptr",
+        new Set("{[i]:0<=i &&i<m}"), 
+        new Set("{[j]:0<=j &&j<nnz}"), false, iegenlib::Monotonic_Increasing);
+    iegenlib::appendCurrEnv("diagptr",
+        new Set("{[i]:0<=i &&i<m}"), 
+        new Set("{[j]:0<=j &&j<nnz}"), false, iegenlib::Monotonic_Increasing);
+
+    Set *F1 = new Set("[m] -> {[i,ip,k,kp]: i < ip"
+                                   " && 0 <= i && i < m"
+                                  " && 0 <= ip && ip < m"
+                           " && rowptr(i) <= k && k < diagptr(i)"
+                         " && rowptr(ip) <= kp && kp < diagptr(ip)"
+                       " && diagptr(colidx(k)) = rowptr(1+colidx(k))"
+                       " && diagptr(colidx(k)) = rowptr(1+colidx(kp))"
+                       " && diagptr(k) = 1+colidx(kp)"
+                                     " && k = kp}");
+
+    json data;
+
+    Set *res = F1->domainInfo(data, 0);
+  
+}
+*/

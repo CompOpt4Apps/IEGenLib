@@ -12,14 +12,14 @@
            "Domain" : "{[i]: 0<=i && i<nnz}",
            "Range" : "{[j]: 0<=j && j<n}",
            "Bijective" : "false",
-           "Monotonicity" : "iegenlib::Monotonic_NONE"
+           "Monotonicity" : "Monotonic_NONE"
         },
         { 
            "Name" : "Ap",
            "Domain" : "{[j]:0<=j &&j<n}",
            "Range" : "{[i]:0<=i &&i<nnz}",
            "Bijective" : "false",
-           "Monotonicity" : "iegenlib::Monotonic_Increasing"
+           "Monotonicity" : "Monotonic_Increasing"
         }
       ],
       "User Defined" :

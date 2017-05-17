@@ -20,7 +20,7 @@
 
 #ifndef ENVIRONMENT_H_
 #define ENVIRONMENT_H_
-
+#include "uniQuantConstraint.h"
 #include <string>
 #include <map>
 #include <set>
@@ -75,6 +75,15 @@ MonotonicType queryMonoTypeEnv(const std::string funcName);
 //! search this environment for a function range arity
 unsigned int queryRangeArityCurrEnv(const std::string funcName);
 
+//! add an universially quantified constraint to environment
+void addUniQuantConstraint(uniQuantConstraint uqCon);
+
+// Return the number of available universially quantified constraints
+int queryNoUniQuantConstraintEnv();
+
+// Returns the universially quantified constraint No. j stored in the enviroment
+uniQuantConstraint queryUniQuantConstraintEnv(int idx);
+
 
 class Environment {
 public:
@@ -112,21 +121,38 @@ public:
     bool hasInverse(const std::string funcName) const 
 		{ return not funcInverse(funcName).empty(); }
 	
-	//! Returns a clone of the function's domain Set or NULL.
-	Set* funcDomain(const std::string funcName) const;
+    //! Returns a clone of the function's domain Set or NULL.
+    Set* funcDomain(const std::string funcName) const;
 
-	//! Returns a clone of the function's range Set or NULL.
-	Set* funcRange(const std::string funcName) const;
+    //! Returns a clone of the function's range Set or NULL.
+    Set* funcRange(const std::string funcName) const;
 	
-	//! Returns whether a function is monotonistic or not and how.
-	MonotonicType funcMonoType(const std::string funcName) const;
+    //! Returns whether a function is monotonistic or not and how.
+    MonotonicType funcMonoType(const std::string funcName) const;
 
     std::string toString() const;
-	  
+
+
+    //! Add a universially quantified constraint to the environment
+    void addUniQuantConstraint(uniQuantConstraint con){
+        uniQuantConstraintVec.push_back (con);
+    }
+
+    //! Get the No. of universially quantified constraints
+    // available in the environment
+    int getNoUniQuantConstraint(){
+        return uniQuantConstraintVec.size();
+    }
+    //! Get the universially quantified constraint No. idx from 
+    // the environment
+    uniQuantConstraint getUniQuantConstraint(int idx){
+        return uniQuantConstraintVec[idx];
+    }
 
 private:
     std::map<std::string, UninterpFunc*> mUninterpFuncMap;
-	std::map<std::string, std::string> mInverseMap;
+    std::map<std::string, std::string> mInverseMap;
+    std::vector<uniQuantConstraint>  uniQuantConstraintVec;
 };
 
 extern Environment currentEnv;

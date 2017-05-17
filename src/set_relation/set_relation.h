@@ -25,7 +25,7 @@
 #include <util/util.h>
 #include "expression.h"
 #include "SubMap.h"
-//#include "UFCallMap.h"
+#include "TermPartOrdGraph.h"
 class Visitor;
 
 #include <set>
@@ -34,12 +34,13 @@ class Visitor;
 #include <string>
 #include <sstream>
 #include <iostream>
-#include <map>
-
 #include "isl_str_manipulation.h"
 
 #include <isl/set.h>   // ISL Sets
 #include <isl/map.h>   // ISL Relations
+
+#include "parser/jsoncons/json.hpp"
+using jsoncons::json;
 
 namespace iegenlib{
 
@@ -50,19 +51,6 @@ namespace parser{
 extern Set* parse_set(std::string set_string);
 extern Relation* parse_relation(std::string relation_string);
 }
-
-/*!
- * This function runs the Relation string through ISL using isl_map
- * and returns the resulting string.  More normalization possible.
- */
-//std::string getRelationStringFromISL(std::string rstr);
-
-/*!
- * This function runs the Relation string through ISL using isl_basic_mao
- * and returns the resulting string.  Less normalization possible.
- */
-//std::string getRelationStringFromBasicISL(std::string rstr);
-
 
 /*!
  * \class Conjunction
@@ -210,7 +198,7 @@ public:
     ** bound assuming this domain, or range.
     ** User must deallocate returned Conjunction.
     ** 
-    ** \param tuple_exp Expression tuple to bound.  Could just have one elem.
+    ** \param tuple_exp Expression tuple to bound. Could just have one elem.
     ** 
     ** \return Conjunction will contain all bounds on expressions 
     **         in tuple expression.  Will have no tuple variables.
@@ -261,6 +249,23 @@ public:
     //! Visitor design pattern, see Visitor.h for usage
     void acceptVisitor(Visitor *v);
 
+    // returns the number of all terms (unique and replicates)
+    // inside the conjuction.
+    int termCount();
+
+    void addConsForUniversQuantExp(uniQuantConstraint uqConst,
+                                    TermPartOrdGraph &partOrd,
+        std::map< std::string , std::set<UFCallTerm> > &ufsMap);
+
+    void addConsForUFCallRel(uniQuantConstraint uqConst,
+                                    TermPartOrdGraph &partOrd,
+        std::map< std::string , std::set<UFCallTerm> > &ufsMap);
+
+
+
+    void setUnsat(){ unsat = true;}
+    bool isUnsat(){return unsat;}
+
 private:
 
     /// Set of equality constraints.
@@ -275,6 +280,8 @@ private:
     /// To track how many tuple variables counted in the arity are input
     int mInArity;
 
+    // When we find out that conjunction is unsatisfiable we set this true.
+    bool unsat;
 };
 
 /*!
@@ -418,19 +425,28 @@ public:
     //! This function returns a set of constraints that are in caller but not in A
     std::set<Exp> constraintsDifference(SparseConstraints* A);
 
+    bool isUnsat(){
+      for (std::list<Conjunction*>::const_iterator i = mConjunctions.begin();
+           i != mConjunctions.end(); i++)  if((*i)->isUnsat()) return true;
+      return false;
+    }
+
 
 // FIXME: what methods should we have to iterate over conjunctions so
 // this can go back to protected?
-//protected:
+// protected:
     std::list<Conjunction*> mConjunctions;
 
 
   protected:
+
     // FIXME: can't we incorporate these into visitor?
     void addUFConstraintsHelper(std::string uf1str, 
                                 std::string opstr, std::string uf2str);
 
     void addConstraintsDueToMonotonicityHelper();
+
+    void determineUnsatHelper();
 };
 
 /*!
@@ -575,6 +591,11 @@ public:
             return false;
         }
     }
+
+    // This function tries to determine if the set is unsatisfiable 
+    // utilizing available universially quantified constraints in 
+    // the environment about this sets's UFCs
+    Set* determineUnsat();
 
 private:
     int mArity;
@@ -756,6 +777,19 @@ public:
             return false;
         }
     }
+ 
+    // The high level interface for adding all domain information about UFCs
+    // to constraints, including Monotonicity and other userdefined information
+    // The function first creates a partial ordering between terms in the original
+    // constraints set. Then, it adds constraints based on partial ordering
+    // pertaining to different domain information recursively untill it converges. 
+    // Relation* domainInfo(std::vector<struct domainInformation>  domainInfoVec); 
+
+    // This function tries to determine if the set is unsatisfiable 
+    // utilizing available universially quantified constraints in 
+    // the environment about this sets's UFCs
+    Relation* determineUnsat();
+
 
 private:
     int mInArity;

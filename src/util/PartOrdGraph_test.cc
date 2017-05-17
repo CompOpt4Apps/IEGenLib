@@ -19,7 +19,7 @@
 
 TEST(PartOrdGraphTest, Strict) {
     // Construct partial ordering an put 2->1 and 1->4 and 4->3 in
-    PartOrdGraph g(5);
+    PartOrdGraph g(25);
     g.strict(2,1);
     g.strict(1,4);
     g.strict(4,3);
@@ -44,7 +44,7 @@ TEST(PartOrdGraphTest, Strict) {
 }
 
 TEST (PartOrdGraphTest, NonStrict) { 
-    PartOrdGraph g(5);
+    PartOrdGraph g(25);
     g.nonStrict(0,1);
     g.nonStrict(1,2);
     g.nonStrict(2,3);
@@ -70,7 +70,7 @@ TEST (PartOrdGraphTest, NonStrict) {
 }
 
 TEST (PartOrdGraphTest, AllThree) { 
-    PartOrdGraph g(6);
+    PartOrdGraph g(30);
     
     // f < g, g <= foo, foo=baz
     // 0:g, 1:foo, 2:f, 3:baz

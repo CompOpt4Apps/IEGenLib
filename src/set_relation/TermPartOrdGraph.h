@@ -28,9 +28,10 @@ namespace iegenlib{
 
 /*!
  * \class TermPartOrdGraph
- *
+ * FIXME Mahdi
  * This class will keep track of unique terms found in the constraints,
- * then once all terms have been added (TermPartOrdGraph::doneInsertingTerms)
+ * then once all initial terms have been added 
+ * (TermPartOrdGraph::doneInsertingInitialTerms)
  * it is possible to start adding partial ordering constraints between
  * any of the Terms.
  *
@@ -42,9 +43,9 @@ namespace iegenlib{
  *      g.insertTerm( tv );
  *      g.insertTerm( uf );     // Will do object comparison and only keep one.
  *      
- *      g.doneInsertingTerms();
+ *      g.doneInsertingInitialTerms();
  *
- *      // Insertions of orderings can only come after doneInsertingTerms.
+ *      // Insertions of orderings can only come after doneInsertingInitialTerms.
  *      g.insertLTE( uf, tv);   // (*uf) <= (*tv)
  *      g.insertLT( uf, tv);    // (*uf) < (*tv)
  *      g.insertEqual( uf,tv ); // Will cause an error in this case.
@@ -70,7 +71,7 @@ namespace iegenlib{
  */
 class TermPartOrdGraph {
 public:
-    TermPartOrdGraph();
+    TermPartOrdGraph(int maxNumTerms);
     
     //! Copy constructor.  Performs a deep copy of PartOrdGraph, but does not
     //! own any Terms so just copying their pointers.
@@ -80,10 +81,9 @@ public:
 
     ~TermPartOrdGraph();
     
-    //! Insert a term into graph vertex set.  Will pretend coeff 1.
-    //! Does not take ownership of term.
-    void insertTerm( const Term* term);
-    
+    //! helper function for implementing copy-and-swap
+    void swap(TermPartOrdGraph& second) throw();
+
     //! Indicate the given term is non-negative.  Will pretend coeff 1.
     //! Assumes that given term has already been inserted.
     //! Does not take ownership of term.
@@ -91,15 +91,10 @@ public:
  
     //! Queries whether a term is non-negative.  Will pretend coeff 1.
     //! Does not take ownership of term.
-    bool isNonNegative( const Term* term ) const;
-   
-    //! Call when all term insertions are done and ready for partial orders.
-    void doneInsertingTerms();
+    bool isNonNegative( const Term* term );
 
     //! ==== NONE of the below take ownership of term.
     //! ==== They all will pretend the coeffs are 1.
-    //! ==== They only work after doneInsertingTerms has been called.
-    //! ==== Will throw an assert exception if called before that.
     //! Term1 <= Term2
     void insertLTE( Term* term1, Term* term2 );
     //! Term1 < Term2
@@ -107,16 +102,8 @@ public:
     //! Term1 == Term2
     void insertEqual( Term* term1, Term* term2 );
 
- 
-    //! ==== Query methods
- 
-    //! Returns true if doneInsertingTerms() has been called.
-    bool isDoneInsertingTerms() const;
- 
+    //! ==== Query methods 
     //! ==== NONE of the below take ownership of term.
-    //! ==== They all will pretend the coeffs are 1.
-    //! ==== They only work after doneInsertingTerms has been called.
-    //! ==== Will throw an assert exception if called before that.
     //! returns true if Term1 <= Term2
     bool isLTE( Term* term1, Term* term2 );
     //! returns true if Term1 < Term2
@@ -136,10 +123,14 @@ public:
 // upon destruction.
     
     //! Returns a string representation of the class instance for debugging.
-    std::string toString() const;        
+    std::string toString() const;
+    // Query if underlying partial ordering has become inconsistence
+    bool isUnsat(){ return mGraphPtr->isUnsat();}
+
 
 private:
     int                         mNumTerms;
+    int                         mMaxNumTerms;
 
     std::map<UFCallTerm,int>    mUFCallTerm2IntMap;
     std::map<TupleVarTerm,int>  mTupleVarTerm2IntMap;
