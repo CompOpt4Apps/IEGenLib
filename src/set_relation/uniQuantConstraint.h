@@ -35,9 +35,7 @@ namespace iegenlib{
 class uniQuantConstraint {
 public:
   uniQuantConstraint(){}
-  ~uniQuantConstraint(){
-             
-  }
+  ~uniQuantConstraint(){}
 
   //! Copy constructor.
   uniQuantConstraint( const uniQuantConstraint& other ){ *this = other; }

@@ -3993,7 +3993,6 @@ void Conjunction::addConsForUniversQuantExp( uniQuantConstraint uqConst,
 // FIXME Mahdi: explain how function works esp what exp we consider 
 
 */
-bool debu = false;
 void Conjunction::addConsForUFCallRel(uniQuantConstraint uqConst,
                                       TermPartOrdGraph &partOrd,
           std::map< std::string , std::set<UFCallTerm> > &ufsMap){
@@ -4190,5 +4189,167 @@ Relation* Relation::determineUnsat() {
   retval->determineUnsatHelper();
   return retval;
 }
+
+
+
+
+/******************************************************************************/
+#pragma mark checkUnsat
+/*************** checkUnsat ******************************/
+
+/*! Vistor Class used in 
+*/
+class VisitorPurification : public Visitor {
+  private:
+         std::list<Exp*> newEqualities;
+         int varC;
+         std::map<Exp, string> uniqueVars; 
+         std::map<string, Exp> revMap;     //Reverse of uniqueVars
+
+  public:
+         VisitorPurification(){varC = 0;}
+
+         // This function helps to use the same variable for an expression
+         // that exists mutiple times in the conjunction, e.g.:
+         //   rwo(ip+1)>0 && i+ip+1>0 => row(v1)>0 && i+v1>0 && v1=ip+1
+         std::string uniVarName(Exp te){
+           string varN;
+           if (uniqueVars.count( te ) > 0){
+             varN = uniqueVars[ te ];
+           } else { // Expression does not exist.
+             char varNc[20];
+             sprintf(varNc, "var_%d", (varC++));
+             varN = varNc;
+             uniqueVars[ te ] = varN;
+             revMap[varN] = te; // Record keeping
+           }
+           return varN;
+         }
+
+         /*
+           This function turns complicated arguments of UFCs into single
+           variables, e.g.:
+              diag(ip+j+1)  ->  diag(v1) and v1=ip+j+1
+              row(col(i+1)+j) ->  row(v2) and v2=col(v1)+j and col(v1) and v1=i+1
+         /
+         void postVisitUFCallTerm(iegenlib::UFCallTerm * ut) {
+           // If UFC has argumet with only 1 term. e.g row(i), no need to do anything 
+           if ( (ut->getParamExp(0))->getTerm() ) return;
+
+           string varN;
+           if (uniqueVars.count( *(ut->getParamExp(0)) )>0){
+             varN = uniqueVars[ *(ut->getParamExp(0)) ];
+           } else { // Expression does not exist.
+             char varNc[20];
+             sprintf(varNc, "var_%d", (varC++));
+             varN = varNc;
+             uniqueVars[ *(ut->getParamExp(0)) ] = varN;
+           }
+
+           Exp *te = new Exp();  // var_N = argExp
+           te->addTerm(new VarTerm(-1,varN));
+           te->addExp( (ut->getParamExp(0))->clone() );
+
+           newEqualities.push_front(te); // Record new eq.
+
+           // Update the parameter of the UFC
+           Exp *uExp = new Exp();  // var_N 
+           uExp->addTerm(new VarTerm(varN));
+           ut->setParamExp(0,uExp);
+         }
+         */
+
+         /*! 
+         */ 
+         void postVisitExp(iegenlib::Exp * e){
+           const std::list<Term*> olist = e->getTermList();
+           if( olist.size() <= 1) return; // No need to do anything
+           std::list<Term*> tlist;
+           for (std::list<Term*>::const_iterator i=olist.begin(); 
+                i != olist.end(); ++i) {
+             tlist.push_front((*i)->clone());
+           }
+           int j=0, orgC = tlist.size();
+           for( j = 0 ; j < orgC ; j++){
+             if( e->isExpression() && tlist.size() <= 1) break;
+             else if( e->isInequality() && tlist.size() <= 2) break;
+             else if( e->isEquality() && tlist.size() <= 3) break;
+
+             Term* tt1 = tlist.front(); tlist.pop_front();
+             Term* tt2 = tlist.front(); tlist.pop_front();
+             Exp *te = new Exp();  // var_N = tt2 + tt1
+             te->addTerm(tt1); te->addTerm(tt2);
+             std::string varN = uniVarName( *te );
+             te->addTerm(new VarTerm(-1,varN)); 
+
+             newEqualities.push_front(te); // Record new eq.
+             tlist.push_front(new VarTerm(varN));  // Update current exp.
+           }
+/*
+           // 
+           for (std::list<Term*>::iterator i=tlist.begin(); 
+                i != tlist.end(); ++i) {
+             if ((*i)->type()=="UFCallTerm") {
+               //char varN[20];
+               //sprintf(varN, "var_%d", (varC++));
+               Exp *te = new Exp();  // var_N = UF(arg)
+               te->addTerm((*i)->clone());
+               std::string varN = uniVarName( *te );
+               te->addTerm(new VarTerm(-1,varN)); 
+  
+               newEqualities.push_front(te); // Record new eq.
+               i = tlist.erase(i); i++;
+               tlist.push_front(new VarTerm(varN));  // Update current exp.
+             }
+           }
+*/
+           // 
+           e->reset();
+           orgC = tlist.size();
+           for( j = 0 ; j < orgC ; j++){
+             e->addTerm(tlist.back()); tlist.pop_back();
+           }           
+         }
+
+         //! 
+         void postVisitConjunction(iegenlib::Conjunction * c){
+           int j=0, orgC = newEqualities.size();
+           for( j = 0 ; j < orgC ; j++){
+             c->addEquality( newEqualities.back() ); newEqualities.pop_back();
+           }
+         }
+
+         std::map<string, Exp> returnRevMap() {return revMap;}
+         int returnVarCounter(){return varC;}
+};
+
+/* FIXME Mahdi: Add explanation for this function
+
+   Check unsatisfiability of the set/relation using datalog (souffle)
+*/
+void SparseConstraints::checkUnsatHelper(){
+
+    VisitorPurification vt;
+    acceptVisitor(&vt);
+}
+
+// This function tries to determine if the set is unsatisfiable utilizing
+// available universially quantified constraints in the environment
+// about this sets's UFCs, the function uses datalog for this purpose.
+Set* Set::checkUnsat() {
+  Set* retval = new Set(*this);
+  retval->checkUnsatHelper();
+  return retval;
+}
+
+// This function tries to determine if the set is unsatisfiable utilizing
+// available universially quantified constraints in the environment
+// about this sets's UFCs, the function uses datalog for this purpose.
+Relation* Relation::checkUnsat() {
+  Relation* retval = new Relation(*this);
+  retval->checkUnsatHelper();
+  return retval;
+}
+
 
 }//end namespace iegenlib
