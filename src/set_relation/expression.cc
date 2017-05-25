@@ -332,11 +332,16 @@ void UFCallTerm::setParamExp(unsigned int i, Exp* param_exp) {
     if (i>=mNumArgs) {
         throw assert_exception("UFCallTerm::setParamExp: i is out of bounds");
     }
-    if (mArgs[i]) { 
-        throw assert_exception("UFCallTerm::setParamExp: param exp being set "
-                                "twice");
+    if (mArgs[i]) {
+        //FIXME Mahdi: I changed how this function handles setting an argument 
+        // for a scond time, would that create a problem? It does not seem so.
+        //throw assert_exception("UFCallTerm::setParamExp: param exp being set "
+        //                        "twice");
+        (mArgs[i])->reset();
+        mArgs[i] = param_exp;
+    } else {
+      mArgs[i] = param_exp;
     }
-    mArgs[i] = param_exp;
 }
 
 //! Returns a pointer to the ith parameter expression.

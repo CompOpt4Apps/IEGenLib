@@ -4231,7 +4231,130 @@ class VisitorPurification : public Visitor {
            variables, e.g.:
               diag(ip+j+1)  ->  diag(v1) and v1=ip+j+1
               row(col(i+1)+j) ->  row(v2) and v2=col(v1)+j and col(v1) and v1=i+1
-         /
+         */
+         void postVisitUFCallTerm(iegenlib::UFCallTerm * ut) {
+           // If UFC's argumet is not another UFC, no need to do anything 
+           if ( !(((ut->getParamExp(0))->getTerm())->type()=="UFCallTerm") )
+             return;
+
+           Exp *te = new Exp();  // var_N = UF(arg)
+           te->addTerm((((ut->getParamExp(0))->getTerm()))->clone());
+           std::string varN = uniVarName( *te );
+           te->addTerm(new VarTerm(-1,varN)); 
+
+           newEqualities.push_front(te); // Record new eq.
+ 
+           Exp *newArg = new Exp();  // var_N 
+           newArg->addTerm(new VarTerm(1,varN));   // Update argument exp.
+           ut->setParamExp(0,newArg);
+         }
+
+         /*!
+         This function does 2 things:
+           (1) Turns complicated arguments of UFCs into single variables, e.g.:
+              diag(ip+j+1)  ->  diag(v1) and v1=ip+j+1
+              row(col(i+1)) ->  row(col(v1)) and v1=i+1 
+           (2)
+          
+         */ 
+         void postVisitExp(iegenlib::Exp * e){
+           const std::list<Term*> olist = e->getTermList();
+           if( olist.size() <= 1) return; // No need to do anything
+           std::list<Term*> tlist;
+           for (std::list<Term*>::const_iterator i=olist.begin(); 
+                i != olist.end(); ++i) {
+             tlist.push_front((*i)->clone());
+           }
+           int j=0, orgC = tlist.size();
+           for( j = 0 ; j < orgC ; j++){
+             if( e->isExpression() && tlist.size() <= 1) break;
+             else if( e->isInequality() && tlist.size() <= 2) break;
+             else if( e->isEquality() && tlist.size() <= 3) break;
+
+             Term* tt1 = tlist.front(); tlist.pop_front();
+             Term* tt2 = tlist.front(); tlist.pop_front();
+             Exp *te = new Exp();  // var_N = tt2 + tt1
+             te->addTerm(tt1); te->addTerm(tt2);
+             std::string varN = uniVarName( *te );
+             te->addTerm(new VarTerm(-1,varN)); 
+
+             newEqualities.push_front(te); // Record new eq.
+             tlist.push_front(new VarTerm(varN));  // Update current exp.
+           }
+
+           // 
+           for (std::list<Term*>::iterator i=tlist.begin(); 
+                i != tlist.end(); ++i) {
+             if ((*i)->type()=="UFCallTerm") {
+               //char varN[20];
+               //sprintf(varN, "var_%d", (varC++));
+               Exp *te = new Exp();  // var_N = UF(arg)
+               te->addTerm((*i)->clone());
+               std::string varN = uniVarName( *te );
+               te->addTerm(new VarTerm(-1,varN)); 
+  
+               newEqualities.push_front(te); // Record new eq.
+               i = tlist.erase(i); i++;
+               tlist.push_front(new VarTerm(varN));  // Update current exp.
+             }
+           }
+
+           // 
+           e->reset();
+           orgC = tlist.size();
+           for( j = 0 ; j < orgC ; j++){
+             e->addTerm(tlist.back()); tlist.pop_back();
+           }           
+         }
+
+         //! 
+         void postVisitConjunction(iegenlib::Conjunction * c){
+           int j=0, orgC = newEqualities.size();
+           for( j = 0 ; j < orgC ; j++){
+             c->addEquality( newEqualities.back() ); newEqualities.pop_back();
+           }
+         }
+
+         std::map<string, Exp> returnRevMap() {return revMap;}
+         int returnVarCounter(){return varC;}
+};
+
+#if 0
+/*! Vistor Class used in creating datalog programs from a preprocessed relation
+*/
+class VisitorDataLogConvert : public Visitor {
+  private:
+         std::list<Exp*> newEqualities;
+         int varC;
+         std::map<UFCallTerm, string> uniqueVars; 
+         std::map<string, Exp> revMap;   //
+
+  public:
+         VisitorDataLogConvert(std::map<string, Exp> mRevMap, int mVarC){
+           varC = mVarC;
+           RevMap = mRevMap;
+         }
+
+         // This function helps to use the same variable for an UFC
+         // that exists mutiple times in the conjunction, e.g.:
+         //   rwo(v1)>0 && row(v1)<n => v1>0 && v1<n && v2=row(v1)
+         std::string uniVarName(UFCallTerm ut){
+           string varN;
+           if (uniqueVars.count( ut ) > 0){
+             varN = uniqueVars[ ut ];
+           } else { // Expression does not exist.
+             char varNc[20];
+             sprintf(varNc, "var_%d", (varC++));
+             varN = varNc;
+             uniqueVars[ ut ] = varN;
+             revMap[varN] = ut; // Record keeping
+           }
+           return varN;
+         }
+
+         /*
+
+         */
          void postVisitUFCallTerm(iegenlib::UFCallTerm * ut) {
            // If UFC has argumet with only 1 term. e.g row(i), no need to do anything 
            if ( (ut->getParamExp(0))->getTerm() ) return;
@@ -4257,7 +4380,6 @@ class VisitorPurification : public Visitor {
            uExp->addTerm(new VarTerm(varN));
            ut->setParamExp(0,uExp);
          }
-         */
 
          /*! 
          */ 
@@ -4322,6 +4444,7 @@ class VisitorPurification : public Visitor {
          std::map<string, Exp> returnRevMap() {return revMap;}
          int returnVarCounter(){return varC;}
 };
+#endif
 
 /* FIXME Mahdi: Add explanation for this function
 
