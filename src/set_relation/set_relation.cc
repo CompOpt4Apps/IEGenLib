@@ -4199,15 +4199,14 @@ Relation* Relation::determineUnsat() {
 
 /*! Vistor Class used in 
 */
-class VisitorPurification : public Visitor {
+class VisitorDataLogReduction : public Visitor {
   private:
          std::list<Exp*> newEqualities;
          int varC;
          std::map<Exp, string> uniqueVars; 
-         std::map<string, Exp> revMap;     //Reverse of uniqueVars
 
   public:
-         VisitorPurification(){varC = 0;}
+         VisitorDataLogReduction(){varC = 0;}
 
          // This function helps to use the same variable for an expression
          // that exists mutiple times in the conjunction, e.g.:
@@ -4217,45 +4216,21 @@ class VisitorPurification : public Visitor {
            if (uniqueVars.count( te ) > 0){
              varN = uniqueVars[ te ];
            } else { // Expression does not exist.
-             char varNc[20];
-             sprintf(varNc, "var_%d", (varC++));
-             varN = varNc;
+             char varNc[20]; sprintf(varNc, "var_%d", (varC++)); varN = varNc;
              uniqueVars[ te ] = varN;
-             revMap[varN] = te; // Record keeping
            }
            return varN;
-         }
-
-         /*
-           This function turns complicated arguments of UFCs into single
-           variables, e.g.:
-              diag(ip+j+1)  ->  diag(v1) and v1=ip+j+1
-              row(col(i+1)+j) ->  row(v2) and v2=col(v1)+j and col(v1) and v1=i+1
-         */
-         void postVisitUFCallTerm(iegenlib::UFCallTerm * ut) {
-           // If UFC's argumet is not another UFC, no need to do anything 
-           if ( !(((ut->getParamExp(0))->getTerm())->type()=="UFCallTerm") )
-             return;
-
-           Exp *te = new Exp();  // var_N = UF(arg)
-           te->addTerm((((ut->getParamExp(0))->getTerm()))->clone());
-           std::string varN = uniVarName( *te );
-           te->addTerm(new VarTerm(-1,varN)); 
-
-           newEqualities.push_front(te); // Record new eq.
- 
-           Exp *newArg = new Exp();  // var_N 
-           newArg->addTerm(new VarTerm(1,varN));   // Update argument exp.
-           ut->setParamExp(0,newArg);
          }
 
          /*!
          This function does 2 things:
            (1) Turns complicated arguments of UFCs into single variables, e.g.:
-              diag(ip+j+1)  ->  diag(v1) and v1=ip+j+1
-              row(col(i+1)) ->  row(col(v1)) and v1=i+1 
-           (2)
-          
+              diag(ip+j+1)  ->  diag(v1) && v1=ip+j+1
+              row(col(i+1)) ->  row(col(v1)) && v1=i+1 
+           (2) Redices number of terms for all equlaiites and inequalities
+               to 3 and 2 respectively, e.g.:
+                 a+b+c >= 0 ->  a+v1 >= 0 && v1 = b+c
+                 a+b+c+d = 0 -> a+b+v2 && v2 = c+d          
          */ 
          void postVisitExp(iegenlib::Exp * e){
            const std::list<Term*> olist = e->getTermList();
@@ -4283,23 +4258,6 @@ class VisitorPurification : public Visitor {
            }
 
            // 
-           for (std::list<Term*>::iterator i=tlist.begin(); 
-                i != tlist.end(); ++i) {
-             if ((*i)->type()=="UFCallTerm") {
-               //char varN[20];
-               //sprintf(varN, "var_%d", (varC++));
-               Exp *te = new Exp();  // var_N = UF(arg)
-               te->addTerm((*i)->clone());
-               std::string varN = uniVarName( *te );
-               te->addTerm(new VarTerm(-1,varN)); 
-  
-               newEqualities.push_front(te); // Record new eq.
-               i = tlist.erase(i); i++;
-               tlist.push_front(new VarTerm(varN));  // Update current exp.
-             }
-           }
-
-           // 
            e->reset();
            orgC = tlist.size();
            for( j = 0 ; j < orgC ; j++){
@@ -4315,136 +4273,93 @@ class VisitorPurification : public Visitor {
            }
          }
 
-         std::map<string, Exp> returnRevMap() {return revMap;}
          int returnVarCounter(){return varC;}
 };
 
-#if 0
+
 /*! Vistor Class used in creating datalog programs from a preprocessed relation
 */
-class VisitorDataLogConvert : public Visitor {
+class VisitorPurification : public Visitor {
   private:
-         std::list<Exp*> newEqualities;
+//         std::list<Exp*> newEqualities;
          int varC;
-         std::map<UFCallTerm, string> uniqueVars; 
-         std::map<string, Exp> revMap;   //
+         std::map<UFCallTerm, string> uniqueVars;
 
   public:
-         VisitorDataLogConvert(std::map<string, Exp> mRevMap, int mVarC){
-           varC = mVarC;
-           RevMap = mRevMap;
-         }
+         VisitorPurification(int mVarC){varC = mVarC;}
 
          // This function helps to use the same variable for an UFC
          // that exists mutiple times in the conjunction, e.g.:
          //   rwo(v1)>0 && row(v1)<n => v1>0 && v1<n && v2=row(v1)
-         std::string uniVarName(UFCallTerm ut){
+         std::string uniVarName(Term* t){
+           UFCallTerm* ut = dynamic_cast<UFCallTerm*>(t->clone());
+           ut->setCoefficient(1);
+
            string varN;
-           if (uniqueVars.count( ut ) > 0){
-             varN = uniqueVars[ ut ];
-           } else { // Expression does not exist.
-             char varNc[20];
-             sprintf(varNc, "var_%d", (varC++));
-             varN = varNc;
-             uniqueVars[ ut ] = varN;
-             revMap[varN] = ut; // Record keeping
+           if (uniqueVars.count( *ut ) > 0){
+             varN = uniqueVars[ *ut ];
+           } else { // UFC does not exist.
+             char varNc[20]; sprintf(varNc, "var_%d", (varC++)); varN = varNc;
+             uniqueVars[ *ut ] = varN;
            }
            return varN;
-         }
-
-         /*
-
-         */
-         void postVisitUFCallTerm(iegenlib::UFCallTerm * ut) {
-           // If UFC has argumet with only 1 term. e.g row(i), no need to do anything 
-           if ( (ut->getParamExp(0))->getTerm() ) return;
-
-           string varN;
-           if (uniqueVars.count( *(ut->getParamExp(0)) )>0){
-             varN = uniqueVars[ *(ut->getParamExp(0)) ];
-           } else { // Expression does not exist.
-             char varNc[20];
-             sprintf(varNc, "var_%d", (varC++));
-             varN = varNc;
-             uniqueVars[ *(ut->getParamExp(0)) ] = varN;
-           }
-
-           Exp *te = new Exp();  // var_N = argExp
-           te->addTerm(new VarTerm(-1,varN));
-           te->addExp( (ut->getParamExp(0))->clone() );
-
-           newEqualities.push_front(te); // Record new eq.
-
-           // Update the parameter of the UFC
-           Exp *uExp = new Exp();  // var_N 
-           uExp->addTerm(new VarTerm(varN));
-           ut->setParamExp(0,uExp);
          }
 
          /*! 
          */ 
          void postVisitExp(iegenlib::Exp * e){
            const std::list<Term*> olist = e->getTermList();
-           if( olist.size() <= 1) return; // No need to do anything
            std::list<Term*> tlist;
            for (std::list<Term*>::const_iterator i=olist.begin(); 
                 i != olist.end(); ++i) {
              tlist.push_front((*i)->clone());
            }
-           int j=0, orgC = tlist.size();
-           for( j = 0 ; j < orgC ; j++){
-             if( e->isExpression() && tlist.size() <= 1) break;
-             else if( e->isInequality() && tlist.size() <= 2) break;
-             else if( e->isEquality() && tlist.size() <= 3) break;
 
-             Term* tt1 = tlist.front(); tlist.pop_front();
-             Term* tt2 = tlist.front(); tlist.pop_front();
-             Exp *te = new Exp();  // var_N = tt2 + tt1
-             te->addTerm(tt1); te->addTerm(tt2);
-             std::string varN = uniVarName( *te );
-             te->addTerm(new VarTerm(-1,varN)); 
-
-             newEqualities.push_front(te); // Record new eq.
-             tlist.push_front(new VarTerm(varN));  // Update current exp.
-           }
-/*
            // 
            for (std::list<Term*>::iterator i=tlist.begin(); 
                 i != tlist.end(); ++i) {
              if ((*i)->type()=="UFCallTerm") {
-               //char varN[20];
-               //sprintf(varN, "var_%d", (varC++));
+
+               std::string varN = uniVarName( (*i) );
+/*
                Exp *te = new Exp();  // var_N = UF(arg)
                te->addTerm((*i)->clone());
-               std::string varN = uniVarName( *te );
-               te->addTerm(new VarTerm(-1,varN)); 
-  
+               if((*i)->coefficient()>=0){
+                 te->addTerm(new VarTerm(-1,varN));
+               } else {
+                 te->addTerm(new VarTerm(1,varN));
+               }  
                newEqualities.push_front(te); // Record new eq.
+*/
+               // Update current exp.
+               if((*i)->coefficient()>=0){
+                 tlist.push_front(new VarTerm(1,varN));
+               } else {
+                 tlist.push_front(new VarTerm(-1,varN));
+               }
+
                i = tlist.erase(i); i++;
-               tlist.push_front(new VarTerm(varN));  // Update current exp.
              }
            }
-*/
+
            // 
            e->reset();
-           orgC = tlist.size();
+           int j=0, orgC = tlist.size();
            for( j = 0 ; j < orgC ; j++){
              e->addTerm(tlist.back()); tlist.pop_back();
            }           
          }
 
-         //! 
+/*
          void postVisitConjunction(iegenlib::Conjunction * c){
            int j=0, orgC = newEqualities.size();
            for( j = 0 ; j < orgC ; j++){
              c->addEquality( newEqualities.back() ); newEqualities.pop_back();
            }
          }
-
-         std::map<string, Exp> returnRevMap() {return revMap;}
-         int returnVarCounter(){return varC;}
+*/
+         std::map<UFCallTerm, string> returnUFCVarMap() {return uniqueVars;}
 };
-#endif
 
 /* FIXME Mahdi: Add explanation for this function
 
@@ -4452,8 +4367,28 @@ class VisitorDataLogConvert : public Visitor {
 */
 void SparseConstraints::checkUnsatHelper(){
 
-    VisitorPurification vt;
-    acceptVisitor(&vt);
+  VisitorDataLogReduction vdr;
+  acceptVisitor(&vdr);
+
+  VisitorPurification vp(vdr.returnVarCounter());
+  acceptVisitor(&vp);
+
+  std::map<UFCallTerm, string> ufcVarMap = vp.returnUFCVarMap();
+ 
+  std::ofstream dlOut("data/sample.dl", std::ofstream::out);
+
+  std::map<UFCallTerm, string>::iterator mapIter;
+  for (mapIter = ufcVarMap.begin(); mapIter != ufcVarMap.end(); mapIter++) {
+    
+    string ufName = (mapIter->first).name(), ufArg;
+    Term* argT = ((mapIter->first).getParamExp(0))->getTerm();
+    if( argT->type()=="VarTerm" )  ufArg = argT->toString();
+    else   ufArg = argT->prettyPrintString(getTupleDecl() );
+
+    // If we have var_0=col(i) then we print: UFC_col("var_0","i").
+    dlOut<<"\n"<<"UFC_"<<ufName<<"(\""<<mapIter->second<<"\",\""<<ufArg<<"\").";
+  }
+
 }
 
 // This function tries to determine if the set is unsatisfiable utilizing
