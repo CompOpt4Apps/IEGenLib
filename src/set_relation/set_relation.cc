@@ -4191,8 +4191,6 @@ Relation* Relation::determineUnsat() {
 }
 
 
-
-
 /******************************************************************************/
 #pragma mark checkUnsat
 /*************** checkUnsat ******************************/
@@ -4234,7 +4232,7 @@ class VisitorDataLogReduction : public Visitor {
          */ 
          void postVisitExp(iegenlib::Exp * e){
            const std::list<Term*> olist = e->getTermList();
-           if( olist.size() <= 1) return; // No need to do anything
+           if( olist.size() <= 1 && !(e->isExpression()) ) return;
            std::list<Term*> tlist;
            for (std::list<Term*>::const_iterator i=olist.begin(); 
                 i != olist.end(); ++i) {
@@ -4242,7 +4240,18 @@ class VisitorDataLogReduction : public Visitor {
            }
            int j=0, orgC = tlist.size();
            for( j = 0 ; j < orgC ; j++){
-             if( e->isExpression() && tlist.size() <= 1) break;
+             if( e->isExpression() && tlist.size() <= 1){
+               Term* tt1 = tlist.front();
+               if( tt1->coefficient() >= 0 ) break;
+               tlist.pop_front();
+               Exp *te = new Exp();  // var_N = -tt1
+               te->addTerm(tt1);
+               std::string varN = uniVarName( *te );
+               te->addTerm(new VarTerm(-1,varN)); 
+               newEqualities.push_front(te); // Record new eq.
+               tlist.push_front(new VarTerm(varN));  // Update current exp.
+               break;
+             }
              else if( e->isInequality() && tlist.size() <= 2) break;
              else if( e->isEquality() && tlist.size() <= 3) break;
 
@@ -4281,12 +4290,10 @@ class VisitorDataLogReduction : public Visitor {
 */
 class VisitorPurification : public Visitor {
   private:
-//         std::list<Exp*> newEqualities;
          int varC;
          std::map<UFCallTerm, string> uniqueVars;
-
   public:
-         VisitorPurification(int mVarC){varC = mVarC;}
+         VisitorPurification(int mVarC){varC = mVarC; }
 
          // This function helps to use the same variable for an UFC
          // that exists mutiple times in the conjunction, e.g.:
@@ -4319,24 +4326,11 @@ class VisitorPurification : public Visitor {
            for (std::list<Term*>::iterator i=tlist.begin(); 
                 i != tlist.end(); ++i) {
              if ((*i)->type()=="UFCallTerm") {
-
                std::string varN = uniVarName( (*i) );
-/*
-               Exp *te = new Exp();  // var_N = UF(arg)
-               te->addTerm((*i)->clone());
-               if((*i)->coefficient()>=0){
-                 te->addTerm(new VarTerm(-1,varN));
-               } else {
-                 te->addTerm(new VarTerm(1,varN));
-               }  
-               newEqualities.push_front(te); // Record new eq.
-*/
+
                // Update current exp.
-               if((*i)->coefficient()>=0){
-                 tlist.push_front(new VarTerm(1,varN));
-               } else {
-                 tlist.push_front(new VarTerm(-1,varN));
-               }
+               if((*i)->coefficient()>=0){  tlist.push_front(new VarTerm(1,varN));
+               } else { tlist.push_front(new VarTerm(-1,varN)); }
 
                i = tlist.erase(i); i++;
              }
@@ -4347,19 +4341,147 @@ class VisitorPurification : public Visitor {
            int j=0, orgC = tlist.size();
            for( j = 0 ; j < orgC ; j++){
              e->addTerm(tlist.back()); tlist.pop_back();
-           }           
-         }
-
-/*
-         void postVisitConjunction(iegenlib::Conjunction * c){
-           int j=0, orgC = newEqualities.size();
-           for( j = 0 ; j < orgC ; j++){
-             c->addEquality( newEqualities.back() ); newEqualities.pop_back();
            }
          }
-*/
-         std::map<UFCallTerm, string> returnUFCVarMap() {return uniqueVars;}
+
+         std::map<UFCallTerm, string> getUFCVarMap() {return uniqueVars;}
 };
+
+/*! Vistor Class used in
+*/
+class VisitorDataLog : public Visitor {
+  private:
+         TupleDecl tdecl;
+         std::ofstream dlOut;
+         std::map<int, bool> uniqueConstants;
+
+         string terms[3];
+         bool termIsConst[3];
+         int coeffs[3];
+         int termC;
+  public:
+         VisitorDataLog(TupleDecl mTdecl, string outputFile){ 
+           tdecl = mTdecl;
+           dlOut.open(outputFile.c_str(), std::ofstream::out | std::ofstream::app);
+           termC = 0;
+         }
+
+         // Declaring positive and negative constants
+         void postVisitTerm(Term * t) {
+           coeffs[ termC ] = t->coefficient(); 
+           t->setCoefficient(std::abs( t->coefficient() ) );
+           termIsConst[ termC ] = true;
+           terms[ termC++ ] = t->toString();
+
+           if (uniqueConstants.count( t->coefficient() ) > 0) return;
+           
+           if( t->coefficient() >= 0 ){
+             dlOut<<"\n"<<"NonNeg"<<"(\""<<t->toString()<<"\").";
+           }
+           uniqueConstants[ t->coefficient() ] = true;
+         }
+
+         void postVisitVarTerm(iegenlib::VarTerm *t) {
+           coeffs[ termC ] = t->coefficient();
+           termIsConst[ termC ] = false;
+           terms[ termC++ ] = t->toString(true);
+         }
+
+         void postVisitTupleVarTerm(iegenlib::TupleVarTerm * t) {
+           coeffs[ termC ] = t->coefficient();
+           termIsConst[ termC ] = false;
+           terms[ termC++ ] = t->prettyPrintString(tdecl, true);
+         }
+
+         void preVisitExp(iegenlib::Exp * e){ termC = 0; }
+
+         /*! 
+         */ 
+         void postVisitExp(iegenlib::Exp * e){
+
+           if( e->isInequality() ){
+             // if we have a constraints like a >= 0 then we treat it like: a - "0" >= 0
+             if( termC <= 1 ){  
+               coeffs[ termC ] = -1;
+               terms[ termC++ ] = string("0");
+             }
+
+             if( coeffs[0] >= 0 && coeffs[1] >= 0 ){
+               dlOut<<"\n"<<"LTENegPos(\""<<terms[0]<<"\",\""<<terms[1]<<"\").";
+             } else if( coeffs[0] >= 0 && coeffs[1] < 0 ){
+               dlOut<<"\n"<<"LTEPosPos(\""<<terms[1]<<"\",\""<<terms[0]<<"\").";
+             } else if( coeffs[0] < 0 && coeffs[1] >= 0 ){
+               dlOut<<"\n"<<"LTEPosPos(\""<<terms[0]<<"\",\""<<terms[1]<<"\").";
+             } else if( coeffs[0] < 0 && coeffs[1] < 0 ){
+               dlOut<<"\n"<<"LTEPosNeg(\""<<terms[1]<<"\",\""<<terms[0]<<"\").";
+             }
+           } else if( e->isEquality() ){
+
+             // Performes number of steps to make sure equality constraint is
+             // in the form that is ready for conversion to datalog atoms
+             conEQ();
+
+             if( termIsConst[2] ){
+               if( coeffs[1] >= 0){
+                 dlOut<<"\n"<<"EQNegCon(\""<<terms[0]<<"\",\""
+                      <<terms[1]<<"\","<<terms[2]<<").";
+               } else if( coeffs[1] < 0 ){
+                 dlOut<<"\n"<<"EQPosCon(\""<<terms[0]<<"\",\""
+                      <<terms[1]<<"\","<<terms[2]<<").";
+               }
+             } else {
+               if( coeffs[1] >= 0 && coeffs[2] >= 0 ){
+                 dlOut<<"\n"<<"EQNegNeg(\""<<terms[0]<<"\",\""
+                      <<terms[1]<<"\",\""<<terms[2]<<"\").";
+               } else if( coeffs[1] >= 0 && coeffs[2] < 0 ){
+                 dlOut<<"\n"<<"EQNegPos(\""<<terms[0]<<"\",\""
+                      <<terms[1]<<"\",\""<<terms[2]<<"\").";
+               } else if( coeffs[1] < 0 && coeffs[2] >= 0 ){
+                 dlOut<<"\n"<<"EQPosNeg(\""<<terms[0]<<"\",\""
+                      <<terms[1]<<"\",\""<<terms[2]<<"\").";
+               } else if( coeffs[1] < 0 && coeffs[2] < 0 ){
+                 dlOut<<"\n"<<"EQPosPos(\""<<terms[0]<<"\",\""
+                      <<terms[1]<<"\",\""<<terms[2]<<"\").";
+               }
+             }
+
+           }
+         }
+
+         // Performes number of steps to make sure equality constraint is
+         // in the form that is ready for conversion to datalog atoms
+         void conEQ(){
+           // if we have: a = 0, we treat it like: a - "0" - 0 = 0
+           if( termC <= 1 ){  
+             coeffs[ termC ] = -1;
+             termIsConst[ termC ] = false;
+             terms[ termC++ ] = string("0");
+           }
+           // if we have: a + b = 0, we treat it like: a + b - 0 = 0
+           if( termC <= 2 ){  
+             coeffs[ termC ] = 0;
+             termIsConst[ termC ] = true;
+             terms[ termC++ ] = string("0");
+           }
+           // We want to have constraints of form:
+           //     Var + Var + Contant = 0 or Var + Var + Var = 0
+           // Where, Var is a Symbolic Constant or Tuple Variable
+           //        and Constant is a constant value like 1
+           for(int i = 0 ; i < 2 ; i++){
+             if( termIsConst[i] ){
+               std::swap( coeffs[ i ] , coeffs[ 2 ] );
+               std::swap( termIsConst[ i ] , termIsConst[ 2 ] );
+               std::swap( terms[ i ] , terms[ 2 ] );
+             }
+           }
+           // For convenience, we want first term's coefficient to be positive 
+           if( coeffs[0] < 0 ){
+             coeffs[0] *= -1; coeffs[1] *= -1; coeffs[2] *= -1;
+           }
+         }
+};
+
+
 
 /* FIXME Mahdi: Add explanation for this function
 
@@ -4367,16 +4489,19 @@ class VisitorPurification : public Visitor {
 */
 void SparseConstraints::checkUnsatHelper(){
 
+  string dataLogOutputfile = "data/sample.dl";
+
+  //
   VisitorDataLogReduction vdr;
   acceptVisitor(&vdr);
 
+  //
   VisitorPurification vp(vdr.returnVarCounter());
   acceptVisitor(&vp);
 
-  std::map<UFCallTerm, string> ufcVarMap = vp.returnUFCVarMap();
+  std::map<UFCallTerm, string> ufcVarMap = vp.getUFCVarMap();
  
-  std::ofstream dlOut("data/sample.dl", std::ofstream::out);
-
+  std::ofstream dlOut(dataLogOutputfile, std::ofstream::out | std::ofstream::app);
   std::map<UFCallTerm, string>::iterator mapIter;
   for (mapIter = ufcVarMap.begin(); mapIter != ufcVarMap.end(); mapIter++) {
     
@@ -4388,6 +4513,9 @@ void SparseConstraints::checkUnsatHelper(){
     // If we have var_0=col(i) then we print: UFC_col("var_0","i").
     dlOut<<"\n"<<"UFC_"<<ufName<<"(\""<<mapIter->second<<"\",\""<<ufArg<<"\").";
   }
+
+  VisitorDataLog vdl( getTupleDecl() , dataLogOutputfile);
+  acceptVisitor(&vdl);
 
 }
 
