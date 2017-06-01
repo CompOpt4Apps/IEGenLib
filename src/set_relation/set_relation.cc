@@ -4444,7 +4444,6 @@ class VisitorDataLog : public Visitor {
                       <<terms[1]<<"\",\""<<terms[2]<<"\").";
                }
              }
-
            }
          }
 
@@ -4481,17 +4480,28 @@ class VisitorDataLog : public Visitor {
          }
 };
 
-/*
-string compOpFunc(string compOp){
 
-  string compOpF = "EQPosPos";
+// Helper function for creating datalog comparation relation like:
+//   e1 < e2 => LTPosPos(e1,e2)
+char* compOpFunc(string compOpStr, string var1, string var2, bool leftSide){
 
-  if( compOp == "<"){
+  char *buffer = new char[200];
 
+  if( compOpStr == "<"){
+    sprintf(buffer, "LTPosPos(%s,%s)", var1.c_str(), var2.c_str());
+  } else if( compOpStr == "<="){
+    sprintf(buffer, "LTEPosPos(%s,%s)", var1.c_str(), var2.c_str());
+  } else if( compOpStr == ">"){
+    sprintf(buffer, "LTPosPos(%s,%s)", var2.c_str(), var1.c_str());
+  } else if( compOpStr == ">="){
+    sprintf(buffer, "LTEPosPos(%s,%s)", var2.c_str(), var1.c_str());
+  } else if( compOpStr == "="){
+    if(leftSide) sprintf(buffer, "EQPosCon(%s,%s,0)", var1.c_str(), var2.c_str());
+    else  sprintf(buffer, "EQPosCon(%s,%s,Z), Z = 0", var1.c_str(), var2.c_str());
   }
 
+  return buffer;
 }
-*/
 
 /* FIXME Mahdi: Add explanation for this function
 
@@ -4509,18 +4519,13 @@ void SparseConstraints::checkUnsatHelper(string dataLogOutputfile){
   std::map<UFCallTerm, string> ufcVarMap = vp.getUFCVarMap();
  
 
-  std::ofstream dlOut(dataLogOutputfile, std::ofstream::out );//| std::ofstream::app
-
+  //
+  std::ofstream dlOut(dataLogOutputfile, std::ofstream::out | std::ofstream::app);//
   std::map<string, int> declUFSs;
   std::map<UFCallTerm, string>::iterator mapIter;
   for (mapIter = ufcVarMap.begin(); mapIter != ufcVarMap.end(); mapIter++) {
     
     string ufName = (mapIter->first).name(), ufArg;
-
-//    if (declUFSs.count( ufName ) == 0){
-//      declUFSs[ ufName ] = 1;
-//      dlOut<<"\n"<<".decl UFC_"<<ufName<<"(t:Var, e:Var)";
-//    }
 
     Term* argT = ((mapIter->first).getParamExp(0))->getTerm();
     if( argT->type()=="VarTerm" )  ufArg = argT->toString();
@@ -4531,13 +4536,16 @@ void SparseConstraints::checkUnsatHelper(string dataLogOutputfile){
   }
   dlOut.close();
 
+  //
   VisitorDataLog vdl( getTupleDecl() , dataLogOutputfile);
   acceptVisitor(&vdl);
 
 
+  //
   dlOut.open(dataLogOutputfile.c_str(), std::ofstream::out | std::ofstream::app);
   int noUQConst = queryNoUniQuantConstraintEnv();
   uniQuantConstraint uqConst;
+  char buffer[200]; int cx=0;
   for (int j = 0; j < noUQConst; j++){
 
     uqConst = queryUniQuantConstraintEnv(j);
@@ -4546,6 +4554,7 @@ void SparseConstraints::checkUnsatHelper(string dataLogOutputfile){
     std::string ufOpStr = uqConst.getUfCompOp();
     std::string uf2Str = uqConst.getUfSymbol2();
 
+    // Add UF symbol declaration to datalog program
     if (declUFSs.count( uf1Str ) == 0){
       declUFSs[ uf1Str ] = 1;
       dlOut<<"\n"<<".decl UFC_"<<uf1Str<<"(t:Var, e:Var)";
@@ -4555,78 +4564,24 @@ void SparseConstraints::checkUnsatHelper(string dataLogOutputfile){
       dlOut<<"\n"<<".decl UFC_"<<uf2Str<<"(t:Var, e:Var)";
     }
 
-    // (2) Read user defined constraints based on universally quantified
-    // expressions: Forall e1, e2: if ( e1 <> e2 ) => ( UF1(e1) <> UF2(e2) )
+    // Add user defined info based on universally quantified expressions:
+    //   Forall e1, e2: if e1 <> e2 => UF1(e1) <> UF2(e2)
     if( uqConst.getType() == "1"){
-
-      char buffer[200];
-      int cx=0;
-
-      if( ufOpStr == "<"){
-        cx = sprintf(buffer+cx, "LTPosPos(x,y) :- ");
-      } else if( expOpStr == "<="){
-        cx = sprintf(buffer+cx, "LTEPosPos(x,y) :- ");
-      } else if( expOpStr == ">"){
-        cx = sprintf(buffer+cx, "LTPosPos(y,x) :- ");
-      } else if( expOpStr == ">="){
-        cx = sprintf(buffer+cx, "LTEPosPos(y,x) :- ");
-      } else if( expOpStr == "="){
-        cx = sprintf(buffer+cx, "EQPosCon(x,y,0) :- ");
-      }
-
-      if( expOpStr == "<"){
-        cx += sprintf(buffer+cx, "LTPosPos(e1,e2), ");
-      } else if( expOpStr == "<="){
-        cx += sprintf(buffer+cx, "LTEPosPos(e1,e2), ");
-      } else if( expOpStr == ">"){
-        cx += sprintf(buffer+cx, "LTPosPos(e2,e1), ");
-      } else if( expOpStr == ">="){
-        cx += sprintf(buffer+cx, "LTEPosPos(e2,e1), ");
-      } else if( expOpStr == "="){
-        cx += sprintf(buffer+cx, "EQPosCon(e1,e2,Z), Z = 0, ");
-      }
-
-      cx += sprintf(buffer+cx, "UFC_%s(x,e1), UFC_%s(y,e2).",
-                   uf1Str.c_str(), uf2Str.c_str() );
-
-      dlOut<<"\n"<<buffer;
+      cx = sprintf(buffer, "%s :- %s", compOpFunc(ufOpStr, "x","y",true), 
+                   compOpFunc(expOpStr, "e1","e2",false) );
     }
 
-    // (3) read user defined relations between UFCs:
-    //    Forall e1, e2: if ( UF1(e1) <> UF2(e2) ) => ( e1 <> e2 ) 
+    // Add user defined info based on universally quantified expressions:
+    //   Forall e1, e2: if UF1(e1) <> UF2(e2) =>  e1 <> e2  
     else if( uqConst.getType() == "2" ){
-      char buffer[200];
-      int cx=0;
-
-      if( ufOpStr == "<"){
-        cx = sprintf(buffer+cx, "LTPosPos(e1,e2) :- ");
-      } else if( expOpStr == "<="){
-        cx = sprintf(buffer+cx, "LTEPosPos(e1,e2) :- ");
-      } else if( expOpStr == ">"){
-        cx = sprintf(buffer+cx, "LTPosPos(e2,e1) :- ");
-      } else if( expOpStr == ">="){
-        cx = sprintf(buffer+cx, "LTEPosPos(e2,e1) :- ");
-      } else if( expOpStr == "="){
-        cx = sprintf(buffer+cx, "EQPosCon(e1,e2,0) :- ");
-      }
-
-      if( expOpStr == "<"){
-        cx += sprintf(buffer+cx, "LTPosPos(x,y), ");
-      } else if( expOpStr == "<="){
-        cx += sprintf(buffer+cx, "LTEPosPos(x,y), ");
-      } else if( expOpStr == ">"){
-        cx += sprintf(buffer+cx, "LTPosPos(y,x), ");
-      } else if( expOpStr == ">="){
-        cx += sprintf(buffer+cx, "LTEPosPos(y,x), ");
-      } else if( expOpStr == "="){
-        cx += sprintf(buffer+cx, "EQPosCon(x,y,Z), Z = 0, ");
-      }
-
-      cx += sprintf(buffer+cx, "UFC_%s(x,e1), UFC_%s(y,e2).",
-                   uf1Str.c_str(), uf2Str.c_str() );
-
-      dlOut<<"\n"<<buffer;
+      cx = sprintf(buffer, "%s :- %s", compOpFunc(expOpStr, "e1","e2",true), 
+                   compOpFunc(ufOpStr, "x","y",false) );
     }
+
+    cx += sprintf(buffer+cx, ", UFC_%s(x,e1), UFC_%s(y,e2).",
+                  uf1Str.c_str(), uf2Str.c_str() );
+
+    dlOut<<"\n"<<buffer;
   }
 
 }
