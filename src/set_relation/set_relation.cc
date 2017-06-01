@@ -4424,10 +4424,10 @@ class VisitorDataLog : public Visitor {
              if( termIsConst[2] ){
                if( coeffs[1] >= 0){
                  dlOut<<"\n"<<"EQNegCon(\""<<terms[0]<<"\",\""
-                      <<terms[1]<<"\","<<terms[2]<<").";
+                      <<terms[1]<<"\","<<(coeffs[2]*-1)<<").";
                } else if( coeffs[1] < 0 ){
                  dlOut<<"\n"<<"EQPosCon(\""<<terms[0]<<"\",\""
-                      <<terms[1]<<"\","<<terms[2]<<").";
+                      <<terms[1]<<"\","<<(coeffs[2]*-1)<<").";
                }
              } else {
                if( coeffs[1] >= 0 && coeffs[2] >= 0 ){
@@ -4481,15 +4481,23 @@ class VisitorDataLog : public Visitor {
          }
 };
 
+/*
+string compOpFunc(string compOp){
 
+  string compOpF = "EQPosPos";
+
+  if( compOp == "<"){
+
+  }
+
+}
+*/
 
 /* FIXME Mahdi: Add explanation for this function
 
    Check unsatisfiability of the set/relation using datalog (souffle)
 */
-void SparseConstraints::checkUnsatHelper(){
-
-  string dataLogOutputfile = "data/sample.dl";
+void SparseConstraints::checkUnsatHelper(string dataLogOutputfile){
 
   //
   VisitorDataLogReduction vdr;
@@ -4498,14 +4506,22 @@ void SparseConstraints::checkUnsatHelper(){
   //
   VisitorPurification vp(vdr.returnVarCounter());
   acceptVisitor(&vp);
-
   std::map<UFCallTerm, string> ufcVarMap = vp.getUFCVarMap();
  
-  std::ofstream dlOut(dataLogOutputfile, std::ofstream::out | std::ofstream::app);
+
+  std::ofstream dlOut(dataLogOutputfile, std::ofstream::out );//| std::ofstream::app
+
+  std::map<string, int> declUFSs;
   std::map<UFCallTerm, string>::iterator mapIter;
   for (mapIter = ufcVarMap.begin(); mapIter != ufcVarMap.end(); mapIter++) {
     
     string ufName = (mapIter->first).name(), ufArg;
+
+//    if (declUFSs.count( ufName ) == 0){
+//      declUFSs[ ufName ] = 1;
+//      dlOut<<"\n"<<".decl UFC_"<<ufName<<"(t:Var, e:Var)";
+//    }
+
     Term* argT = ((mapIter->first).getParamExp(0))->getTerm();
     if( argT->type()=="VarTerm" )  ufArg = argT->toString();
     else   ufArg = argT->prettyPrintString(getTupleDecl() );
@@ -4513,27 +4529,123 @@ void SparseConstraints::checkUnsatHelper(){
     // If we have var_0=col(i) then we print: UFC_col("var_0","i").
     dlOut<<"\n"<<"UFC_"<<ufName<<"(\""<<mapIter->second<<"\",\""<<ufArg<<"\").";
   }
+  dlOut.close();
 
   VisitorDataLog vdl( getTupleDecl() , dataLogOutputfile);
   acceptVisitor(&vdl);
+
+
+  dlOut.open(dataLogOutputfile.c_str(), std::ofstream::out | std::ofstream::app);
+  int noUQConst = queryNoUniQuantConstraintEnv();
+  uniQuantConstraint uqConst;
+  for (int j = 0; j < noUQConst; j++){
+
+    uqConst = queryUniQuantConstraintEnv(j);
+    std::string expOpStr = uqConst.getExpCompOp();
+    std::string uf1Str = uqConst.getUfSymbol1();
+    std::string ufOpStr = uqConst.getUfCompOp();
+    std::string uf2Str = uqConst.getUfSymbol2();
+
+    if (declUFSs.count( uf1Str ) == 0){
+      declUFSs[ uf1Str ] = 1;
+      dlOut<<"\n"<<".decl UFC_"<<uf1Str<<"(t:Var, e:Var)";
+    }
+    if (declUFSs.count( uf2Str ) == 0){
+      declUFSs[ uf2Str ] = 1;
+      dlOut<<"\n"<<".decl UFC_"<<uf2Str<<"(t:Var, e:Var)";
+    }
+
+    // (2) Read user defined constraints based on universally quantified
+    // expressions: Forall e1, e2: if ( e1 <> e2 ) => ( UF1(e1) <> UF2(e2) )
+    if( uqConst.getType() == "1"){
+
+      char buffer[200];
+      int cx=0;
+
+      if( ufOpStr == "<"){
+        cx = sprintf(buffer+cx, "LTPosPos(x,y) :- ");
+      } else if( expOpStr == "<="){
+        cx = sprintf(buffer+cx, "LTEPosPos(x,y) :- ");
+      } else if( expOpStr == ">"){
+        cx = sprintf(buffer+cx, "LTPosPos(y,x) :- ");
+      } else if( expOpStr == ">="){
+        cx = sprintf(buffer+cx, "LTEPosPos(y,x) :- ");
+      } else if( expOpStr == "="){
+        cx = sprintf(buffer+cx, "EQPosCon(x,y,0) :- ");
+      }
+
+      if( expOpStr == "<"){
+        cx += sprintf(buffer+cx, "LTPosPos(e1,e2), ");
+      } else if( expOpStr == "<="){
+        cx += sprintf(buffer+cx, "LTEPosPos(e1,e2), ");
+      } else if( expOpStr == ">"){
+        cx += sprintf(buffer+cx, "LTPosPos(e2,e1), ");
+      } else if( expOpStr == ">="){
+        cx += sprintf(buffer+cx, "LTEPosPos(e2,e1), ");
+      } else if( expOpStr == "="){
+        cx += sprintf(buffer+cx, "EQPosCon(e1,e2,Z), Z = 0, ");
+      }
+
+      cx += sprintf(buffer+cx, "UFC_%s(x,e1), UFC_%s(y,e2).",
+                   uf1Str.c_str(), uf2Str.c_str() );
+
+      dlOut<<"\n"<<buffer;
+    }
+
+    // (3) read user defined relations between UFCs:
+    //    Forall e1, e2: if ( UF1(e1) <> UF2(e2) ) => ( e1 <> e2 ) 
+    else if( uqConst.getType() == "2" ){
+      char buffer[200];
+      int cx=0;
+
+      if( ufOpStr == "<"){
+        cx = sprintf(buffer+cx, "LTPosPos(e1,e2) :- ");
+      } else if( expOpStr == "<="){
+        cx = sprintf(buffer+cx, "LTEPosPos(e1,e2) :- ");
+      } else if( expOpStr == ">"){
+        cx = sprintf(buffer+cx, "LTPosPos(e2,e1) :- ");
+      } else if( expOpStr == ">="){
+        cx = sprintf(buffer+cx, "LTEPosPos(e2,e1) :- ");
+      } else if( expOpStr == "="){
+        cx = sprintf(buffer+cx, "EQPosCon(e1,e2,0) :- ");
+      }
+
+      if( expOpStr == "<"){
+        cx += sprintf(buffer+cx, "LTPosPos(x,y), ");
+      } else if( expOpStr == "<="){
+        cx += sprintf(buffer+cx, "LTEPosPos(x,y), ");
+      } else if( expOpStr == ">"){
+        cx += sprintf(buffer+cx, "LTPosPos(y,x), ");
+      } else if( expOpStr == ">="){
+        cx += sprintf(buffer+cx, "LTEPosPos(y,x), ");
+      } else if( expOpStr == "="){
+        cx += sprintf(buffer+cx, "EQPosCon(x,y,Z), Z = 0, ");
+      }
+
+      cx += sprintf(buffer+cx, "UFC_%s(x,e1), UFC_%s(y,e2).",
+                   uf1Str.c_str(), uf2Str.c_str() );
+
+      dlOut<<"\n"<<buffer;
+    }
+  }
 
 }
 
 // This function tries to determine if the set is unsatisfiable utilizing
 // available universially quantified constraints in the environment
 // about this sets's UFCs, the function uses datalog for this purpose.
-Set* Set::checkUnsat() {
+Set* Set::checkUnsat(string dataLogOutputfile) {
   Set* retval = new Set(*this);
-  retval->checkUnsatHelper();
+  retval->checkUnsatHelper(dataLogOutputfile);
   return retval;
 }
 
 // This function tries to determine if the set is unsatisfiable utilizing
 // available universially quantified constraints in the environment
 // about this sets's UFCs, the function uses datalog for this purpose.
-Relation* Relation::checkUnsat() {
+Relation* Relation::checkUnsat(string dataLogOutputfile) {
   Relation* retval = new Relation(*this);
-  retval->checkUnsatHelper();
+  retval->checkUnsatHelper(dataLogOutputfile);
   return retval;
 }
 

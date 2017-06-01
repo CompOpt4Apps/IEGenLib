@@ -449,7 +449,7 @@ public:
     void determineUnsatHelper();
 
     // Check unsatisfiability of the set/relation using datalog (souffle)
-    void checkUnsatHelper();
+    void checkUnsatHelper(string dataLogOutputfile);
 };
 
 /*!
@@ -603,7 +603,7 @@ public:
     // This function tries to determine if the set is unsatisfiable utilizing
     // available universially quantified constraints in the environment
     // about this sets's UFCs, the function uses datalog for this purpose.
-    Set* checkUnsat();
+    Set* checkUnsat(string dataLogOutputfile);
 
 private:
     int mArity;
@@ -794,7 +794,7 @@ public:
     // This function tries to determine if the set is unsatisfiable utilizing
     // available universially quantified constraints in the environment
     // about this sets's UFCs, the function uses datalog for this purpose.
-    Relation* checkUnsat();
+    Relation* checkUnsat(string dataLogOutputfile);
 private:
     int mInArity;
     int mOutArity;

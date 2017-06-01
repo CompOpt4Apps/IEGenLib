@@ -111,9 +111,6 @@ CompareEnum PartOrdGraph::update(CompareEnum from, CompareEnum to) {
     else if (from==to)                          { return to; }
     else {
         return Illegal;
-        // FIXME Mahdi: Should I consider this assertion as a case of unsat?!
-        //std::cerr << "Illegal update: from = " << from << ", to = " << to 
-        //         << std::endl;
         //assert(0); 
     }
 }
