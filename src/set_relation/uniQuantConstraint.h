@@ -77,6 +77,19 @@ public:
   std::string getUfSymbol2(){ return ufSymbol2; }
 
 private:
+
+/*
+5 different types that can exist
+  Monotonicity
+    Parameters to UFCs: MonoPar2UFC
+    UFCs to Parameters: MonoUFC2Par
+  User Defined
+    Parameters to UFCs: UserDefPar2UFC
+    UFCs to Parameters: UserDefUFC2Par
+  Functional Consistency
+    Parameters to UFCs: FuncConsistPar2UFC
+*/
+
   std::string type;
   std::string expCompOp;
   std::string ufCompOp;

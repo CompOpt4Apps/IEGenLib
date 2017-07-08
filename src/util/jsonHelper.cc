@@ -58,8 +58,8 @@ void adduniQuantConstraints(json &uqCons){
     // Read user defined constraints based on universally quantified
     // expressions, then call addConsForUniversQuantExp to add them:
     //    Forall e1, e2: if ( e1 exOP e2 ) => ( UF1(e1) ufOP UF2(e2) )
-    if( uqCons[j]["Type"].as<string>() == "1"){
-      uqConst.setType("1");
+    if( uqCons[j]["Type"].as<string>() == "UserDefPar2UFC"){
+      uqConst.setType("UserDefPar2UFC");
       uqConst.setExpCompOp(uqCons[j]["Forall e1, e2: if e1 is? e2"].as<string>());
       uqConst.setUfCompOp(uqCons[j][" is? "].as<string>());
       uqConst.setUfSymbol1(uqCons[j]["then add: UFSymbol1?(e1)"].as<string>());
@@ -70,8 +70,8 @@ void adduniQuantConstraints(json &uqCons){
     // read user defined relations between UFCs, then call 
     // addConsForUFCallRel to add related constraints:
     //    Forall e1, e2: if ( UF1(e1) ufOP UF2(e2) ) => ( e1 exOP e2 ) 
-    else if( uqCons[j]["Type"].as<string>() == "2"){
-      uqConst.setType("2");
+    else if( uqCons[j]["Type"].as<string>() == "UserDefUFC2Par"){
+      uqConst.setType("UserDefUFC2Par");
       uqConst.setExpCompOp(uqCons[j]["then add: e1 is? e2"].as<string>());
       uqConst.setUfCompOp(uqCons[j][" is? "].as<string>() );
       uqConst.setUfSymbol1(uqCons[j]["Forall e1, e2: if UFSymbol1?(e1)"].as<string>());

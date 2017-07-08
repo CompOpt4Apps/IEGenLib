@@ -189,7 +189,7 @@ void simplify(string inputFile)
     } else {
       std::cout<<"\nMight be satisfiable!!\n";      
     }
-
+/*
     //sprintf(msg, "@@@ Relation No. %d After: ", int(i+1) );
     //printRelation( string(msg) , relAf);
 
@@ -213,10 +213,10 @@ void simplify(string inputFile)
     // (6) Print out results: if not satisfiable returns NULL
     sprintf(msg, "@@@ Simplified relation No. %d: ", int(i+1) );
     printRelation( string(msg) , rel_sim);
-
+*/
     delete rel;   
-    delete relWithDR;
-    delete rel_sim;
+//    delete relWithDR;
+//    delete rel_sim;
     delete relAf;
   }
 

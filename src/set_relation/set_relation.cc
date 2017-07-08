@@ -4149,13 +4149,16 @@ void SparseConstraints::determineUnsatHelper(){
     for(int i=0 ; i < 2 ; i++){
       for (int j = 0; j < noUQConst; j++){
 
-        uqConst = queryUniQuantConstraintEnv(j);
+       uqConst = queryUniQuantConstraintEnv(j);
+       std::string ty = uqConst.getType();
 
         // (2)
         // Read user defined constraints based on universally quantified
         // expressions, then call addConsForUniversQuantExp to add them:
         //    Forall e1, e2: if ( e1 exOP e2 ) => ( UF1(e1) ufOP UF2(e2) )
-        if( uqConst.getType() == "1"){
+        
+        if( ty == "MonoPar2UFC" || ty == "UserDefPar2UFC"
+            || ty == "FuncConsistPar2UFC" ){
 
           conjunct->addConsForUniversQuantExp(uqConst, partOrd, ufsMap);
         }
@@ -4165,7 +4168,7 @@ void SparseConstraints::determineUnsatHelper(){
         // read user defined relations between UFCs, then call 
         // addConsForUFCallRel to add related constraints:
         //    Forall e1, e2: if ( UF1(e1) ufOP UF2(e2) ) => ( e1 exOP e2 ) 
-        else if( uqConst.getType() == "2" ){
+        else if( ty == "MonoUFC2Par" || ty == "UserDefUFC2Par" ){
           conjunct->addConsForUFCallRel(uqConst, partOrd, ufsMap);
         }
         if( isUnsat() ){ return; }
@@ -4517,7 +4520,6 @@ void SparseConstraints::checkUnsatHelper(string dataLogOutputfile){
   VisitorPurification vp(vdr.returnVarCounter());
   acceptVisitor(&vp);
   std::map<UFCallTerm, string> ufcVarMap = vp.getUFCVarMap();
- 
 
   //
   std::ofstream dlOut(dataLogOutputfile, std::ofstream::out | std::ofstream::app);//
@@ -4553,37 +4555,52 @@ void SparseConstraints::checkUnsatHelper(string dataLogOutputfile){
     std::string uf1Str = uqConst.getUfSymbol1();
     std::string ufOpStr = uqConst.getUfCompOp();
     std::string uf2Str = uqConst.getUfSymbol2();
+    std::string ty = uqConst.getType();
 
     // Add UF symbol declaration to datalog program
     if (declUFSs.count( uf1Str ) == 0){
       declUFSs[ uf1Str ] = 1;
       dlOut<<"\n"<<".decl UFC_"<<uf1Str<<"(t:Var, e:Var)";
+      dlOut<<"\n"<<".output UFC_"<<uf1Str<<"(IO=stdout)";
     }
     if (declUFSs.count( uf2Str ) == 0){
       declUFSs[ uf2Str ] = 1;
       dlOut<<"\n"<<".decl UFC_"<<uf2Str<<"(t:Var, e:Var)";
+      dlOut<<"\n"<<".output UFC_"<<uf2Str<<"(IO=stdout)";
     }
 
     // Add user defined info based on universally quantified expressions:
     //   Forall e1, e2: if e1 <> e2 => UF1(e1) <> UF2(e2)
-    if( uqConst.getType() == "1"){
+    if( ty == "MonoPar2UFC" || ty == "UserDefPar2UFC" ||
+             ty == "FuncConsistPar2UFC" ){
       cx = sprintf(buffer, "%s :- %s", compOpFunc(ufOpStr, "x","y",true), 
                    compOpFunc(expOpStr, "e1","e2",false) );
-    }
-
-    // Add user defined info based on universally quantified expressions:
-    //   Forall e1, e2: if UF1(e1) <> UF2(e2) =>  e1 <> e2  
-    else if( uqConst.getType() == "2" ){
-      cx = sprintf(buffer, "%s :- %s", compOpFunc(expOpStr, "e1","e2",true), 
-                   compOpFunc(ufOpStr, "x","y",false) );
-    }
 
     cx += sprintf(buffer+cx, ", UFC_%s(x,e1), UFC_%s(y,e2).",
                   uf1Str.c_str(), uf2Str.c_str() );
 
     dlOut<<"\n"<<buffer;
-  }
+    }
 
+    // Add user defined info based on universally quantified expressions:
+    //   Forall e1, e2: if UF1(e1) <> UF2(e2) =>  e1 <> e2  
+    else if( ty == "MonoUFC2Par" || ty == "UserDefUFC2Par" ){
+      cx = sprintf(buffer, "%s :- %s", compOpFunc(expOpStr, "e1","e2",true), 
+                   compOpFunc(ufOpStr, "x","y",false) );
+
+    cx += sprintf(buffer+cx, ", UFC_%s(x,e1), UFC_%s(y,e2).",
+                  uf1Str.c_str(), uf2Str.c_str() );
+
+    dlOut<<"\n"<<buffer;
+    }
+/*
+    cx += sprintf(buffer+cx, ", UFC_%s(x,e1), UFC_%s(y,e2).",
+                  uf1Str.c_str(), uf2Str.c_str() );
+
+    dlOut<<"\n"<<buffer;
+*/
+  }
+  dlOut.close();
 }
 
 // This function tries to determine if the set is unsatisfiable utilizing
