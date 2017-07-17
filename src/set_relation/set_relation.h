@@ -447,6 +447,9 @@ public:
     void addConstraintsDueToMonotonicityHelper();
 
     void determineUnsatHelper();
+
+    // Check unsatisfiability of the set/relation using datalog (souffle)
+    void checkUnsatHelper(string dataLogOutputfile);
 };
 
 /*!
@@ -596,6 +599,11 @@ public:
     // utilizing available universially quantified constraints in 
     // the environment about this sets's UFCs
     Set* determineUnsat();
+
+    // This function tries to determine if the set is unsatisfiable utilizing
+    // available universially quantified constraints in the environment
+    // about this sets's UFCs, the function uses datalog for this purpose.
+    Set* checkUnsat(string dataLogOutputfile);
 
 private:
     int mArity;
@@ -778,19 +786,15 @@ public:
         }
     }
  
-    // The high level interface for adding all domain information about UFCs
-    // to constraints, including Monotonicity and other userdefined information
-    // The function first creates a partial ordering between terms in the original
-    // constraints set. Then, it adds constraints based on partial ordering
-    // pertaining to different domain information recursively untill it converges. 
-    // Relation* domainInfo(std::vector<struct domainInformation>  domainInfoVec); 
-
-    // This function tries to determine if the set is unsatisfiable 
+    // This function tries to determine if the relation is unsatisfiable 
     // utilizing available universially quantified constraints in 
     // the environment about this sets's UFCs
     Relation* determineUnsat();
 
-
+    // This function tries to determine if the set is unsatisfiable utilizing
+    // available universially quantified constraints in the environment
+    // about this sets's UFCs, the function uses datalog for this purpose.
+    Relation* checkUnsat(string dataLogOutputfile);
 private:
     int mInArity;
     int mOutArity;

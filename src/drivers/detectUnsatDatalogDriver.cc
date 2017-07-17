@@ -27,7 +27,7 @@
    For example if you are compiling this file in its original location that is 
    IEGENLIB_HOME/src/drivers, FROM IEGENLIB_HOME run following to compile:
 
-     g++ -o src/drivers/simplifyDriver_IE src/drivers/simplifyDriver_IE.cc -I src build/src/libiegenlib.a -lisl -std=c++11
+     g++ -o src/drivers/simplifyDriver_DL src/drivers/simplifyDriver_DL.cc -I src build/src/libiegenlib.a -lisl -std=c++11
 
  * Now to run the driver, you should put your dependence relations inside
  * JSON files and give them as inputs to the driver, one or more files
@@ -117,7 +117,8 @@ int main(int argc, char **argv)
 {
 
   if (argc == 1){
-    cout<<"\n\nYou need to specify the input JSON files (one or more) that contain dependence relations:"
+    cout<<"\n\nYou need to specify the input JSON files (one or more) "
+          "that contain dependence relations:"
           "\n./simplifyDriver file1.json file2.json\n\n";
   } else if (argc >= 2){
     // Parsing command line arguments and reading given files.
@@ -128,6 +129,7 @@ int main(int argc, char **argv)
 
   return 0;
 }
+
 
 // Reads information from a JSON file (inputFile), and applies
 // the simplification algorithm to the sets found in the file. 
@@ -141,21 +143,24 @@ void simplify(string inputFile)
   json data;
   in >> data;
 
- for(size_t p = 0; p < data.size(); ++p){    // Dependence relations (DR) found in the file
+  string dataLogOutputfile = inputFile.erase(inputFile.length()-5,5);
+  string resultFile = dataLogOutputfile;
+  dataLogOutputfile.append(".dl");
+  resultFile.append(".result");;
+  char buffer[200];
+  sprintf(buffer, "rm -f %s", resultFile.c_str() );
+  system(buffer);
 
-  cout<<"\n\n"<<data[p][0]["Name"].as<string>()<<"\n\n";
-
+  int p = 0;
+  //cout<<data[p][0]["Name"].as<string>()<<"\n\n";
   for (size_t i = 0; i < data[p].size(); ++i){// Conjunctions found for one DR in the file
+
+    sprintf(buffer, "cp data/genRules.dl %s", dataLogOutputfile.c_str() );
+    system(buffer);
 
     // (1) Putting constraints in an iegenlib::Relation
     // Reading original set.
     Relation* rel = new Relation(data[p][i]["Relation"].as<string>());
-    // Reading expected outputs
-    Relation *ex_rel = NULL;
-    string expected_str = data[p][i]["Expected"].as<string>();
-    if ( expected_str != string("Not Satisfiable") ){
-      ex_rel = new Relation(expected_str);
-    }
 
     // (2) Introduce the uninterpreted function symbols to environment, and 
     // indicate their domain, range, whether they are bijective, or monotonic.
@@ -175,27 +180,45 @@ void simplify(string inputFile)
       notProjectIters( rel, parallelTvs, npJ);
     }
 
-    // (3) Determining unsatisfiability
-    Relation* copyRelation = rel->boundDomainRange();
-    Relation* relAf = copyRelation->determineUnsat();
+    Relation* relWithDR = rel->boundDomainRange();
 
-    char msg[100];
-    sprintf(msg, "@@@ Relation No. %d: ", int(i+1) );
-    printRelation( string(msg) , rel);
- 
-    if(  relAf->isUnsat() ){
-      std::cout<<"\nIs unsatisfiable!\n";
-      continue;    
-    } else {
-      std::cout<<"\nMight be satisfiable!!\n";      
+//if(i==0) printRelation(string("Orig? = "), rel);
+
+    //Relation *datalog_rel = rel->checkUnsat(dataLogOutputfile);
+    Relation *datalog_rel = relWithDR->checkUnsat(dataLogOutputfile);
+
+    ofstream rOut(resultFile.c_str(), std::ofstream::out | std::ofstream::app);
+    rOut<<"\n\n####### Relation "<<i<<":"<<rel->toISLString()<<"\n\n";
+    rOut.close();
+
+    // Reading datalog rules that are drectly put in the Json files
+    std::ofstream dlOut(dataLogOutputfile, std::ofstream::out | std::ofstream::app);//
+    json uqCons = data[p][0]["User Defined"];
+    for (size_t j = 0; j < uqCons.size(); ++j){
+
+      // Read user defined Datalog rulesconstraints based on universally quantified
+      if( uqCons[j]["Type"].as<string>() == "UserDefDataLogRule"){
+
+        dlOut<<"\n"<<uqCons[j]["Rule:"].as<string>();
+      }
     }
+    dlOut.close();
 
-    delete rel;   
-    delete relAf;
+    sprintf(buffer, "souffle %s >> out", dataLogOutputfile.c_str());//resultFile.c_str());
+    system(buffer);
+//    printRelation(string("Orig = "), rel);
+//    printRelation(string("Purf = "), datalog_rel);
   }
 
- } // End of p loop
+// } // End of p loop
 }
+
+
+
+
+
+
+
 
 void printRelation(string msg, Relation *rel){
 

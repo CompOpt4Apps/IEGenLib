@@ -3993,7 +3993,6 @@ void Conjunction::addConsForUniversQuantExp( uniQuantConstraint uqConst,
 // FIXME Mahdi: explain how function works esp what exp we consider 
 
 */
-bool debu = false;
 void Conjunction::addConsForUFCallRel(uniQuantConstraint uqConst,
                                       TermPartOrdGraph &partOrd,
           std::map< std::string , std::set<UFCallTerm> > &ufsMap){
@@ -4150,13 +4149,16 @@ void SparseConstraints::determineUnsatHelper(){
     for(int i=0 ; i < 2 ; i++){
       for (int j = 0; j < noUQConst; j++){
 
-        uqConst = queryUniQuantConstraintEnv(j);
+       uqConst = queryUniQuantConstraintEnv(j);
+       std::string ty = uqConst.getType();
 
         // (2)
         // Read user defined constraints based on universally quantified
         // expressions, then call addConsForUniversQuantExp to add them:
         //    Forall e1, e2: if ( e1 exOP e2 ) => ( UF1(e1) ufOP UF2(e2) )
-        if( uqConst.getType() == "1"){
+        
+        if( ty == "MonoPar2UFC" || ty == "UserDefPar2UFC"
+            || ty == "FuncConsistPar2UFC" ){
 
           conjunct->addConsForUniversQuantExp(uqConst, partOrd, ufsMap);
         }
@@ -4166,7 +4168,7 @@ void SparseConstraints::determineUnsatHelper(){
         // read user defined relations between UFCs, then call 
         // addConsForUFCallRel to add related constraints:
         //    Forall e1, e2: if ( UF1(e1) ufOP UF2(e2) ) => ( e1 exOP e2 ) 
-        else if( uqConst.getType() == "2" ){
+        else if( ty == "MonoUFC2Par" || ty == "UserDefUFC2Par" ){
           conjunct->addConsForUFCallRel(uqConst, partOrd, ufsMap);
         }
         if( isUnsat() ){ return; }
@@ -4190,5 +4192,434 @@ Relation* Relation::determineUnsat() {
   retval->determineUnsatHelper();
   return retval;
 }
+
+
+/******************************************************************************/
+#pragma mark checkUnsat
+/*************** checkUnsat ******************************/
+
+/*! Vistor Class used in 
+*/
+class VisitorDataLogReduction : public Visitor {
+  private:
+         std::list<Exp*> newEqualities;
+         int varC;
+         std::map<Exp, string> uniqueVars; 
+
+  public:
+         VisitorDataLogReduction(){varC = 0;}
+
+         // This function helps to use the same variable for an expression
+         // that exists mutiple times in the conjunction, e.g.:
+         //   rwo(ip+1)>0 && i+ip+1>0 => row(v1)>0 && i+v1>0 && v1=ip+1
+         std::string uniVarName(Exp te){
+           string varN;
+           if (uniqueVars.count( te ) > 0){
+             varN = uniqueVars[ te ];
+           } else { // Expression does not exist.
+             char varNc[20]; sprintf(varNc, "var_%d", (varC++)); varN = varNc;
+             uniqueVars[ te ] = varN;
+           }
+           return varN;
+         }
+
+         /*!
+         This function does 2 things:
+           (1) Turns complicated arguments of UFCs into single variables, e.g.:
+              diag(ip+j+1)  ->  diag(v1) && v1=ip+j+1
+              row(col(i+1)) ->  row(col(v1)) && v1=i+1 
+           (2) Redices number of terms for all equlaiites and inequalities
+               to 3 and 2 respectively, e.g.:
+                 a+b+c >= 0 ->  a+v1 >= 0 && v1 = b+c
+                 a+b+c+d = 0 -> a+b+v2 && v2 = c+d          
+         */ 
+         void postVisitExp(iegenlib::Exp * e){
+           const std::list<Term*> olist = e->getTermList();
+           if( olist.size() <= 1 && !(e->isExpression()) ) return;
+           std::list<Term*> tlist;
+           for (std::list<Term*>::const_iterator i=olist.begin(); 
+                i != olist.end(); ++i) {
+             tlist.push_front((*i)->clone());
+           }
+           int j=0, orgC = tlist.size();
+           for( j = 0 ; j < orgC ; j++){
+             if( e->isExpression() && tlist.size() <= 1){
+               Term* tt1 = tlist.front();
+               if( tt1->coefficient() >= 0 ) break;
+               tlist.pop_front();
+               Exp *te = new Exp();  // var_N = -tt1
+               te->addTerm(tt1);
+               std::string varN = uniVarName( *te );
+               te->addTerm(new VarTerm(-1,varN)); 
+               newEqualities.push_front(te); // Record new eq.
+               tlist.push_front(new VarTerm(varN));  // Update current exp.
+               break;
+             }
+             else if( e->isInequality() && tlist.size() <= 2) break;
+             else if( e->isEquality() && tlist.size() <= 3) break;
+
+             Term* tt1 = tlist.front(); tlist.pop_front();
+             Term* tt2 = tlist.front(); tlist.pop_front();
+             Exp *te = new Exp();  // var_N = tt2 + tt1
+             te->addTerm(tt1); te->addTerm(tt2);
+             std::string varN = uniVarName( *te );
+             te->addTerm(new VarTerm(-1,varN)); 
+
+             newEqualities.push_front(te); // Record new eq.
+             tlist.push_front(new VarTerm(varN));  // Update current exp.
+           }
+
+           // 
+           e->reset();
+           orgC = tlist.size();
+           for( j = 0 ; j < orgC ; j++){
+             e->addTerm(tlist.back()); tlist.pop_back();
+           }           
+         }
+
+         //! 
+         void postVisitConjunction(iegenlib::Conjunction * c){
+           int j=0, orgC = newEqualities.size();
+           for( j = 0 ; j < orgC ; j++){
+             c->addEquality( newEqualities.back() ); newEqualities.pop_back();
+           }
+         }
+
+         int returnVarCounter(){return varC;}
+};
+
+
+/*! Vistor Class used in creating datalog programs from a preprocessed relation
+*/
+class VisitorPurification : public Visitor {
+  private:
+         int varC;
+         std::map<UFCallTerm, string> uniqueVars;
+  public:
+         VisitorPurification(int mVarC){varC = mVarC; }
+
+         // This function helps to use the same variable for an UFC
+         // that exists mutiple times in the conjunction, e.g.:
+         //   rwo(v1)>0 && row(v1)<n => v1>0 && v1<n && v2=row(v1)
+         std::string uniVarName(Term* t){
+           UFCallTerm* ut = dynamic_cast<UFCallTerm*>(t->clone());
+           ut->setCoefficient(1);
+
+           string varN;
+           if (uniqueVars.count( *ut ) > 0){
+             varN = uniqueVars[ *ut ];
+           } else { // UFC does not exist.
+             char varNc[20]; sprintf(varNc, "var_%d", (varC++)); varN = varNc;
+             uniqueVars[ *ut ] = varN;
+           }
+           return varN;
+         }
+
+         /*! 
+         */ 
+         void postVisitExp(iegenlib::Exp * e){
+           const std::list<Term*> olist = e->getTermList();
+           std::list<Term*> tlist;
+           for (std::list<Term*>::const_iterator i=olist.begin(); 
+                i != olist.end(); ++i) {
+             tlist.push_front((*i)->clone());
+           }
+
+           // 
+           for (std::list<Term*>::iterator i=tlist.begin(); 
+                i != tlist.end(); ++i) {
+             if ((*i)->type()=="UFCallTerm") {
+               std::string varN = uniVarName( (*i) );
+
+               // Update current exp.
+               if((*i)->coefficient()>=0){  tlist.push_front(new VarTerm(1,varN));
+               } else { tlist.push_front(new VarTerm(-1,varN)); }
+
+               i = tlist.erase(i); i++;
+             }
+           }
+
+           // 
+           e->reset();
+           int j=0, orgC = tlist.size();
+           for( j = 0 ; j < orgC ; j++){
+             e->addTerm(tlist.back()); tlist.pop_back();
+           }
+         }
+
+         std::map<UFCallTerm, string> getUFCVarMap() {return uniqueVars;}
+};
+
+/*! Vistor Class used in
+*/
+class VisitorDataLog : public Visitor {
+  private:
+         TupleDecl tdecl;
+         std::ofstream dlOut;
+         std::map<int, bool> uniqueConstants;
+
+         string terms[3];
+         bool termIsConst[3];
+         int coeffs[3];
+         int termC;
+  public:
+         VisitorDataLog(TupleDecl mTdecl, string outputFile){ 
+           tdecl = mTdecl;
+           dlOut.open(outputFile.c_str(), std::ofstream::out | std::ofstream::app);
+           termC = 0;
+         }
+
+         // Declaring positive and negative constants
+         void postVisitTerm(Term * t) {
+           coeffs[ termC ] = t->coefficient(); 
+           t->setCoefficient(std::abs( t->coefficient() ) );
+           termIsConst[ termC ] = true;
+           terms[ termC++ ] = t->toString();
+
+           if (uniqueConstants.count( t->coefficient() ) > 0) return;
+           
+           if( t->coefficient() >= 0 ){
+             dlOut<<"\n"<<"NonNeg"<<"(\""<<t->toString()<<"\").";
+           }
+           uniqueConstants[ t->coefficient() ] = true;
+         }
+
+         void postVisitVarTerm(iegenlib::VarTerm *t) {
+           coeffs[ termC ] = t->coefficient();
+           termIsConst[ termC ] = false;
+           terms[ termC++ ] = t->toString(true);
+         }
+
+         void postVisitTupleVarTerm(iegenlib::TupleVarTerm * t) {
+           coeffs[ termC ] = t->coefficient();
+           termIsConst[ termC ] = false;
+           terms[ termC++ ] = t->prettyPrintString(tdecl, true);
+         }
+
+         void preVisitExp(iegenlib::Exp * e){ termC = 0; }
+
+         /*! 
+         */ 
+         void postVisitExp(iegenlib::Exp * e){
+
+           if( e->isInequality() ){
+             // if we have a constraints like a >= 0 then we treat it like: a - "0" >= 0
+             if( termC <= 1 ){  
+               coeffs[ termC ] = -1;
+               terms[ termC++ ] = string("0");
+             }
+
+             if( coeffs[0] >= 0 && coeffs[1] >= 0 ){
+               dlOut<<"\n"<<"LTENegPos(\""<<terms[0]<<"\",\""<<terms[1]<<"\").";
+             } else if( coeffs[0] >= 0 && coeffs[1] < 0 ){
+               dlOut<<"\n"<<"LTEPosPos(\""<<terms[1]<<"\",\""<<terms[0]<<"\").";
+             } else if( coeffs[0] < 0 && coeffs[1] >= 0 ){
+               dlOut<<"\n"<<"LTEPosPos(\""<<terms[0]<<"\",\""<<terms[1]<<"\").";
+             } else if( coeffs[0] < 0 && coeffs[1] < 0 ){
+               dlOut<<"\n"<<"LTEPosNeg(\""<<terms[1]<<"\",\""<<terms[0]<<"\").";
+             }
+           } else if( e->isEquality() ){
+
+             // Performes number of steps to make sure equality constraint is
+             // in the form that is ready for conversion to datalog atoms
+             conEQ();
+
+             if( termIsConst[2] ){
+               if( coeffs[1] >= 0){
+                 dlOut<<"\n"<<"EQNegCon(\""<<terms[0]<<"\",\""
+                      <<terms[1]<<"\","<<(coeffs[2]*-1)<<").";
+               } else if( coeffs[1] < 0 ){
+                 dlOut<<"\n"<<"EQPosCon(\""<<terms[0]<<"\",\""
+                      <<terms[1]<<"\","<<(coeffs[2]*-1)<<").";
+               }
+             } else {
+               if( coeffs[1] >= 0 && coeffs[2] >= 0 ){
+                 dlOut<<"\n"<<"EQNegNeg(\""<<terms[0]<<"\",\""
+                      <<terms[1]<<"\",\""<<terms[2]<<"\").";
+               } else if( coeffs[1] >= 0 && coeffs[2] < 0 ){
+                 dlOut<<"\n"<<"EQNegPos(\""<<terms[0]<<"\",\""
+                      <<terms[1]<<"\",\""<<terms[2]<<"\").";
+               } else if( coeffs[1] < 0 && coeffs[2] >= 0 ){
+                 dlOut<<"\n"<<"EQPosNeg(\""<<terms[0]<<"\",\""
+                      <<terms[1]<<"\",\""<<terms[2]<<"\").";
+               } else if( coeffs[1] < 0 && coeffs[2] < 0 ){
+                 dlOut<<"\n"<<"EQPosPos(\""<<terms[0]<<"\",\""
+                      <<terms[1]<<"\",\""<<terms[2]<<"\").";
+               }
+             }
+           }
+         }
+
+         // Performes number of steps to make sure equality constraint is
+         // in the form that is ready for conversion to datalog atoms
+         void conEQ(){
+           // if we have: a = 0, we treat it like: a - "0" - 0 = 0
+           if( termC <= 1 ){  
+             coeffs[ termC ] = -1;
+             termIsConst[ termC ] = false;
+             terms[ termC++ ] = string("0");
+           }
+           // if we have: a + b = 0, we treat it like: a + b - 0 = 0
+           if( termC <= 2 ){  
+             coeffs[ termC ] = 0;
+             termIsConst[ termC ] = true;
+             terms[ termC++ ] = string("0");
+           }
+           // We want to have constraints of form:
+           //     Var + Var + Contant = 0 or Var + Var + Var = 0
+           // Where, Var is a Symbolic Constant or Tuple Variable
+           //        and Constant is a constant value like 1
+           for(int i = 0 ; i < 2 ; i++){
+             if( termIsConst[i] ){
+               std::swap( coeffs[ i ] , coeffs[ 2 ] );
+               std::swap( termIsConst[ i ] , termIsConst[ 2 ] );
+               std::swap( terms[ i ] , terms[ 2 ] );
+             }
+           }
+           // For convenience, we want first term's coefficient to be positive 
+           if( coeffs[0] < 0 ){
+             coeffs[0] *= -1; coeffs[1] *= -1; coeffs[2] *= -1;
+           }
+         }
+};
+
+
+// Helper function for creating datalog comparation relation like:
+//   e1 < e2 => LTPosPos(e1,e2)
+char* compOpFunc(string compOpStr, string var1, string var2, bool leftSide){
+
+  char *buffer = new char[200];
+
+  if( compOpStr == "<"){
+    sprintf(buffer, "LTPosPos(%s,%s)", var1.c_str(), var2.c_str());
+  } else if( compOpStr == "<="){
+    sprintf(buffer, "LTEPosPos(%s,%s)", var1.c_str(), var2.c_str());
+  } else if( compOpStr == ">"){
+    sprintf(buffer, "LTPosPos(%s,%s)", var2.c_str(), var1.c_str());
+  } else if( compOpStr == ">="){
+    sprintf(buffer, "LTEPosPos(%s,%s)", var2.c_str(), var1.c_str());
+  } else if( compOpStr == "="){
+    if(leftSide) sprintf(buffer, "EQPosCon(%s,%s,0)", var1.c_str(), var2.c_str());
+    else  sprintf(buffer, "EQPosCon(%s,%s,Z), Z = 0", var1.c_str(), var2.c_str());
+  }
+
+  return buffer;
+}
+
+/* FIXME Mahdi: Add explanation for this function
+
+   Check unsatisfiability of the set/relation using datalog (souffle)
+*/
+void SparseConstraints::checkUnsatHelper(string dataLogOutputfile){
+
+  //
+  VisitorDataLogReduction vdr;
+  acceptVisitor(&vdr);
+
+  //
+  VisitorPurification vp(vdr.returnVarCounter());
+  acceptVisitor(&vp);
+  std::map<UFCallTerm, string> ufcVarMap = vp.getUFCVarMap();
+
+  //
+  std::ofstream dlOut(dataLogOutputfile, std::ofstream::out | std::ofstream::app);//
+  std::map<string, int> declUFSs;
+  std::map<UFCallTerm, string>::iterator mapIter;
+  for (mapIter = ufcVarMap.begin(); mapIter != ufcVarMap.end(); mapIter++) {
+    
+    string ufName = (mapIter->first).name(), ufArg;
+
+    Term* argT = ((mapIter->first).getParamExp(0))->getTerm();
+    if( argT->type()=="VarTerm" )  ufArg = argT->toString();
+    else   ufArg = argT->prettyPrintString(getTupleDecl() );
+
+    // If we have var_0=col(i) then we print: UFC_col("var_0","i").
+    dlOut<<"\n"<<"UFC_"<<ufName<<"(\""<<mapIter->second<<"\",\""<<ufArg<<"\").";
+  }
+  dlOut.close();
+
+  //
+  VisitorDataLog vdl( getTupleDecl() , dataLogOutputfile);
+  acceptVisitor(&vdl);
+
+
+  //
+  dlOut.open(dataLogOutputfile.c_str(), std::ofstream::out | std::ofstream::app);
+  int noUQConst = queryNoUniQuantConstraintEnv();
+  uniQuantConstraint uqConst;
+  char buffer[200]; int cx=0;
+  for (int j = 0; j < noUQConst; j++){
+
+    uqConst = queryUniQuantConstraintEnv(j);
+    std::string expOpStr = uqConst.getExpCompOp();
+    std::string uf1Str = uqConst.getUfSymbol1();
+    std::string ufOpStr = uqConst.getUfCompOp();
+    std::string uf2Str = uqConst.getUfSymbol2();
+    std::string ty = uqConst.getType();
+
+    // Add UF symbol declaration to datalog program
+    if (declUFSs.count( uf1Str ) == 0){
+      declUFSs[ uf1Str ] = 1;
+      dlOut<<"\n"<<".decl UFC_"<<uf1Str<<"(t:Var, e:Var)";
+      dlOut<<"\n"<<".output UFC_"<<uf1Str<<"(IO=stdout)";
+    }
+    if (declUFSs.count( uf2Str ) == 0){
+      declUFSs[ uf2Str ] = 1;
+      dlOut<<"\n"<<".decl UFC_"<<uf2Str<<"(t:Var, e:Var)";
+      dlOut<<"\n"<<".output UFC_"<<uf2Str<<"(IO=stdout)";
+    }
+
+    // Add user defined info based on universally quantified expressions:
+    //   Forall e1, e2: if e1 <> e2 => UF1(e1) <> UF2(e2)
+    if( ty == "MonoPar2UFC" || ty == "UserDefPar2UFC" ||
+             ty == "FuncConsistPar2UFC" ){
+      cx = sprintf(buffer, "%s :- %s", compOpFunc(ufOpStr, "x","y",true), 
+                   compOpFunc(expOpStr, "e1","e2",false) );
+
+    cx += sprintf(buffer+cx, ", UFC_%s(x,e1), UFC_%s(y,e2).",
+                  uf1Str.c_str(), uf2Str.c_str() );
+
+    dlOut<<"\n"<<buffer;
+    }
+
+    // Add user defined info based on universally quantified expressions:
+    //   Forall e1, e2: if UF1(e1) <> UF2(e2) =>  e1 <> e2  
+    else if( ty == "MonoUFC2Par" || ty == "UserDefUFC2Par" ){
+      cx = sprintf(buffer, "%s :- %s", compOpFunc(expOpStr, "e1","e2",true), 
+                   compOpFunc(ufOpStr, "x","y",false) );
+
+    cx += sprintf(buffer+cx, ", UFC_%s(x,e1), UFC_%s(y,e2).",
+                  uf1Str.c_str(), uf2Str.c_str() );
+
+    dlOut<<"\n"<<buffer;
+    }
+/*
+    cx += sprintf(buffer+cx, ", UFC_%s(x,e1), UFC_%s(y,e2).",
+                  uf1Str.c_str(), uf2Str.c_str() );
+
+    dlOut<<"\n"<<buffer;
+*/
+  }
+  dlOut.close();
+}
+
+// This function tries to determine if the set is unsatisfiable utilizing
+// available universially quantified constraints in the environment
+// about this sets's UFCs, the function uses datalog for this purpose.
+Set* Set::checkUnsat(string dataLogOutputfile) {
+  Set* retval = new Set(*this);
+  retval->checkUnsatHelper(dataLogOutputfile);
+  return retval;
+}
+
+// This function tries to determine if the set is unsatisfiable utilizing
+// available universially quantified constraints in the environment
+// about this sets's UFCs, the function uses datalog for this purpose.
+Relation* Relation::checkUnsat(string dataLogOutputfile) {
+  Relation* retval = new Relation(*this);
+  retval->checkUnsatHelper(dataLogOutputfile);
+  return retval;
+}
+
 
 }//end namespace iegenlib
