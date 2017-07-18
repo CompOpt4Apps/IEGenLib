@@ -3461,7 +3461,7 @@ TEST_F(SetRelationTest, VisitorDebugTest){
     delete r;
     delete s;
 }
-
+#if 0
 #pragma mark addUFConstraintsTest
 TEST_F(SetRelationTest, addUFConstraintsTest){
   {
@@ -3577,7 +3577,7 @@ TEST_F(SetRelationTest, addConstraintsDueToMonotonicity){
   }
 
 }
-
+#endif 
 
 //*********************** Testing isUFCallParam  ***************************
 
@@ -3999,85 +3999,6 @@ TEST_F(SetRelationTest, projectOut) {
    delete s1;
    delete ex_r1;
    delete ex_s1;
-}
-
-#pragma mark debugingForILU
-TEST_F(SetRelationTest, debugingForILU){
-
-    iegenlib::setCurrEnv();
-    iegenlib::appendCurrEnv("colidx",
-            new Set("{[i]:0<=i &&i<nnz}"),         // Domain 
-            new Set("{[j]:0<=j &&j<m}"),           // Range
-            false,                                 // Not bijective.
-            iegenlib::Monotonic_NONE               // no monotonicity
-            );
-    iegenlib::appendCurrEnv("rowptr",
-        new Set("{[i]:0<=i &&i<m}"), 
-        new Set("{[j]:0<=j &&j<nnz}"), false, iegenlib::Monotonic_Increasing);
-    iegenlib::appendCurrEnv("diagptr",
-        new Set("{[i]:0<=i &&i<m}"), 
-        new Set("{[j]:0<=j &&j<nnz}"), false, iegenlib::Monotonic_Increasing);
-
-   Set *islEqSet = new Set("{[i,ip,k,kp]: "
-                                  "i < 1+colidx(kp) && colidx(kp) < i+1}");
-
-   // ISL should find that i=colidx(kp).
-   // Also normalization adds in the domain and range bounds for UF.
-   Set *ex_islEqSet = new Set("{[i,ip,k,kp]:  i = colidx(kp) "
-                                "&& 0<=kp && kp<nnz "
-                                "&& 0<=colidx(kp) && colidx(kp)<m}"); 
-
-   // Check and see if ISL library adds equality when we pass a set through it
-   // with a < b+1 and b < a+1 constraints. Results should have a = b.   
-   islEqSet->normalize();
-   EXPECT_EQ( ex_islEqSet->toISLString() , islEqSet->toISLString() );
-
-   // Check addConstraintsDueToMonotonicity when partial ordering is
-   // given explicitly.  From Figure 5 in paper draft.
-   Set *partOrd = new Set("{[i,ip,k,kp,j1,j1p,j2,j2p]: "
-                          "rowptr(i) <= k && k < j1 && "
-                          "j1 < rowptr(i+1) && j1 = j2p && "
-                          "rowptr(colidx(kp)) <= diagptr(colidx(kp)) && "
-                          "diagptr(colidx(kp)) < j2p && "
-                          "j2p < rowptr(colidx(kp)+1) }");
-
-   // The constraints i<1+colidx(kp) and colidx(kp)<i+1 should be added.
-   // Also will have domain and range bounds.
-   Set *ex_partOrd = new Set("{[i,ip,k,kp,j1,j1p,j2,j2p]: "
-                             "rowptr(i) <= k && k < j1 && "
-                             "j1 < rowptr(i+1) && j1 = j2p && "
-                             "rowptr(colidx(kp)) <= diagptr(colidx(kp)) && "
-                             "diagptr(colidx(kp)) < j2p && "
-                             "j2p < rowptr(colidx(kp)+1) && "
-                             "i<1+colidx(kp) && colidx(kp)<i+1 && "
-                             "0<=kp && kp<nnz && "
-                             "0<=colidx(kp) && colidx(kp)<m && "
-                             "0<=i && i<m && "
-                             "0<=colidx(kp) && colidx(kp)<m && "
-                             "0<=colidx(kp)+1 && colidx(kp)+1<m &&"
-                             "0<=rowptr(i) && rowptr(i)<nnz && "
-                             "0<=rowptr(colidx(kp)) && "
-                             "rowptr(colidx(kp))<nnz && "
-                             "0<=rowptr(i+1) && rowptr(i+1)<nnz && "
-                             "0<=i+1 && i+1<m && "
-                             "0<=diagptr(colidx(kp)) && "
-                             "diagptr(colidx(kp))<nnz && "
-                             "0<=rowptr(colidx(kp)+1) && "
-                             "rowptr(colidx(kp)+1)<nnz }");
-
-
-   // Adding constraints due to monotonicity. This also considers constraints
-   // that should be added based on partial ordering.
-
-   Set* extendedPartOrd = partOrd->boundDomainRange();
-   Set* partOrdMont = extendedPartOrd->addConstraintsDueToMonotonicity();
-
-   EXPECT_EQ( ex_partOrd->toISLString() , partOrdMont->toISLString() );
-
-   delete islEqSet;
-   delete partOrd;
-   delete extendedPartOrd;
-   delete partOrdMont;
 }
 
 
