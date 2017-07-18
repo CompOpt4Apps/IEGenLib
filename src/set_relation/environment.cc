@@ -73,7 +73,7 @@ void appendCurrEnv(std::string funcName, Set* domain, Set* range,
 
   // 3.1.1 adding Functional consistency constraints:
   //   forall e1, e2 : if e1 = e2 then f(e1) == f(e2)
-  uqConst.setType("1");
+  uqConst.setType("FuncConsistPar2UFC");
   uqConst.setExpCompOp( "=" );
   uqConst.setUfCompOp( "=" );
   uqConst.setUfSymbol1( funcName );
@@ -85,7 +85,7 @@ void appendCurrEnv(std::string funcName, Set* domain, Set* range,
   if ( Monotonic_Increasing == monoType ){
 
     // forall e1, e2 : e1 < e2 => UF(e1) < UF(e2)
-    uqConst.setType("1");
+    uqConst.setType("MonoPar2UFC");
     uqConst.setExpCompOp( "<" );
     uqConst.setUfCompOp( "<" );
     uqConst.setUfSymbol1( funcName );
@@ -93,7 +93,7 @@ void appendCurrEnv(std::string funcName, Set* domain, Set* range,
     currentEnv.addUniQuantConstraint( uqConst );
 
     // forall e1, e2 : UF(e1) = UF(e2) => e1 = e2
-    uqConst.setType("2");
+    uqConst.setType("MonoUFC2Par");
     uqConst.setExpCompOp( "=" );
     uqConst.setUfCompOp( "=" );
     uqConst.setUfSymbol1( funcName );
@@ -101,7 +101,7 @@ void appendCurrEnv(std::string funcName, Set* domain, Set* range,
     currentEnv.addUniQuantConstraint( uqConst );
 
     // forall e1, e2 : UF(e1) < UF(e2) => e1 < e2
-    uqConst.setType("2");
+    uqConst.setType("MonoUFC2Par");
     uqConst.setExpCompOp( "<" );
     uqConst.setUfCompOp( "<" );
     uqConst.setUfSymbol1( funcName );
@@ -109,7 +109,7 @@ void appendCurrEnv(std::string funcName, Set* domain, Set* range,
     currentEnv.addUniQuantConstraint( uqConst );
 
     // forall e1, e2 : UF(e1) <= UF(e2) => e1 <= e2
-    uqConst.setType("2");
+    uqConst.setType("MonoUFC2Par");
     uqConst.setExpCompOp( "<=" );
     uqConst.setUfCompOp( "<=" );
     uqConst.setUfSymbol1( funcName );
@@ -120,7 +120,7 @@ void appendCurrEnv(std::string funcName, Set* domain, Set* range,
   } else  if ( Monotonic_Nondecreasing == monoType ){
 
     // forall e1, e2 : UF(e1) < UF(e2) => e1 < e2
-    uqConst.setType("2");
+    uqConst.setType("MonoUFC2Par");
     uqConst.setExpCompOp( "<" );
     uqConst.setUfCompOp( "<" );
     uqConst.setUfSymbol1( funcName );
@@ -131,7 +131,7 @@ void appendCurrEnv(std::string funcName, Set* domain, Set* range,
   } else if ( Monotonic_Decreasing == monoType ){
 
     // forall e1, e2 : e1 < e2 => UF(e1) > UF(e2)
-    uqConst.setType("1");
+    uqConst.setType("MonoPar2UFC");
     uqConst.setExpCompOp( "<" );
     uqConst.setUfCompOp( ">" );
     uqConst.setUfSymbol1( funcName );
@@ -139,7 +139,7 @@ void appendCurrEnv(std::string funcName, Set* domain, Set* range,
     currentEnv.addUniQuantConstraint( uqConst );
 
     // forall e1, e2 : UF(e1) = UF(e2) => e1 = e2
-    uqConst.setType("2");
+    uqConst.setType("MonoUFC2Par");
     uqConst.setExpCompOp( "=" );
     uqConst.setUfCompOp( "=" );
     uqConst.setUfSymbol1( funcName );
@@ -147,7 +147,7 @@ void appendCurrEnv(std::string funcName, Set* domain, Set* range,
     currentEnv.addUniQuantConstraint( uqConst );
 
     // forall e1, e2 : UF(e1) < UF(e2) => e1 > e2
-    uqConst.setType("2");
+    uqConst.setType("MonoUFC2Par");
     uqConst.setExpCompOp( ">" );
     uqConst.setUfCompOp( "<" );
     uqConst.setUfSymbol1( funcName );
@@ -155,7 +155,7 @@ void appendCurrEnv(std::string funcName, Set* domain, Set* range,
     currentEnv.addUniQuantConstraint( uqConst );
 
     // forall e1, e2 : UF(e1) <= UF(e2) => e1 >= e2
-    uqConst.setType("2");
+    uqConst.setType("MonoUFC2Par");
     uqConst.setExpCompOp( ">=" );
     uqConst.setUfCompOp( "<=" );
     uqConst.setUfSymbol1( funcName );
@@ -166,7 +166,7 @@ void appendCurrEnv(std::string funcName, Set* domain, Set* range,
   } else  if ( Monotonic_Nonincreasing == monoType ){
 
     // forall e1, e2 : UF(e1) < UF(e2) => e1 > e2
-    uqConst.setType("2");
+    uqConst.setType("MonoUFC2Par");
     uqConst.setExpCompOp( ">" );
     uqConst.setUfCompOp( "<" );
     uqConst.setUfSymbol1( funcName );

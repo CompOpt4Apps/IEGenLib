@@ -24,6 +24,6 @@
 #include <parser/parser.h>
 #include <set_relation/UninterpFunc.h>
 #include <set_relation/TupleDecl.h>
-
+#include "util/jsonHelper.h"
 
 #endif /* IEGENLIB_H_ */

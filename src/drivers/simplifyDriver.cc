@@ -155,79 +155,30 @@ void simplify(string inputFile)
 
   for (size_t i = 0; i < data[p].size(); ++i){// Conjunctions found for one DR in the file
 
-    // (1)
-    // Introduce the uninterpreted function symbols to environment, and indicate
-    // their domain, range, whether they are bijective, or monotonic.
-    if( i == 0 ){  // Read these data only once. 
-                   // They are stored in the first conjunction.
-      for (size_t j = 0; j < data[p][i]["UFS"].size(); ++j){
-
-        bool bijective = false;
-        if( data[p][i]["UFS"][j]["Bijective"].as<string>() == string("true") ){
-          bijective = true;
-        }
-        iegenlib::MonotonicType monotonicity = iegenlib::Monotonic_NONE;
-        if(data[p][i]["UFS"][j]["Monotonicity"].as<string>() == 
-                                     string("Monotonic_Nondecreasing")){
-          monotonicity = iegenlib::Monotonic_Nondecreasing;
-        } else if(data[p][i]["UFS"][j]["Monotonicity"].as<string>() == 
-                                        string("Monotonic_Increasing")){
-          monotonicity = iegenlib::Monotonic_Increasing;
-        }
-
-        iegenlib::appendCurrEnv(data[p][i]["UFS"][j]["Name"].as<string>(),// Name
-            new Set(data[p][i]["UFS"][j]["Domain"].as<string>()),   // Domain 
-            new Set(data[p][i]["UFS"][j]["Range"].as<string>()),    // Range
-            bijective,                                              // Bijective?
-            monotonicity                                            // Monotonicity?
-                                );
-      }
-
-      // (3.1) Loop over user defined domain information, 
-      //       and add them to environment
-      uniQuantConstraint uqConst;
-      for (size_t j = 0; j < data[p][0]["User Defined"].size(); ++j){
-
-        json ud = data[p][0]["User Defined"][j];
-        // 
-        // Read user defined constraints based on universally quantified
-        // expressions, then call addConsForUniversQuantExp to add them:
-        //    Forall e1, e2: if ( e1 exOP e2 ) => ( UF1(e1) ufOP UF2(e2) )
-        if( ud["Type"].as<string>() == "1"){
-          uqConst.setType("1");
-          uqConst.setExpCompOp(ud["Forall e1, e2: if e1 is? e2"].as<string>());
-          uqConst.setUfCompOp(ud[" is? "].as<string>());
-          uqConst.setUfSymbol1(ud["then add: UFSymbol1?(e1)"].as<string>());
-          uqConst.setUfSymbol2(ud["UFSymbol2?(e2)"].as<string>() );
-          iegenlib::addUniQuantConstraint(uqConst);
-        }
-
-        // (3.3)
-        // read user defined relations between UFCs, then call 
-        // addConsForUFCallRel to add related constraints:
-        //    Forall e1, e2: if ( UF1(e1) ufOP UF2(e2) ) => ( e1 exOP e2 ) 
-        else if( data[0][0]["User Defined"][j]["Type"].as<string>() == "2"){
-          uqConst.setType("2");
-          uqConst.setExpCompOp(ud["then add: e1 is? e2"].as<string>());
-          uqConst.setUfCompOp(ud[" is? "].as<string>() );
-          uqConst.setUfSymbol1(ud["Forall e1, e2: if UFSymbol1?(e1)"].as<string>());
-          uqConst.setUfSymbol2(ud["UFSymbol2?(e2)"].as<string>() );
-          iegenlib::addUniQuantConstraint(uqConst);
-        }
-      }
-    }
-
-    // (2)
-    // Putting constraints in an iegenlib::Relation
+    // (1) Putting constraints in an iegenlib::Relation
     // Reading original set.
     Relation* rel = new Relation(data[p][i]["Relation"].as<string>());
 
-    // Reading expected outputs
-    Relation *ex_rel = NULL;
-    string expected_str = data[p][i]["Expected"].as<string>();
-    if ( expected_str != string("Not Satisfiable") ){
-      ex_rel = new Relation(expected_str);
+    // (2) Introduce the uninterpreted function symbols to environment, and 
+    // indicate their domain, range, whether they are bijective, or monotonic.
+    if( i == 0 ){  // Read these data only once. 
+                   // They are stored in the first conjunction.
+
+      json ufcs = data[p][i];
+      // Read UFCs' data for code No. p, from ith relation
+      addUFCs(ufcs);
+
+      // Add defined domain information to environment
+      json uqCons = data[p][0]["User Defined"];
+      adduniQuantConstraints(uqCons);
     }
+
+//    // Reading expected outputs
+//    Relation *ex_rel = NULL;
+//    string expected_str = data[p][i]["Expected"].as<string>();
+//    if ( expected_str != string("Not Satisfiable") ){
+//      ex_rel = new Relation(expected_str);
+//    }
 
 //  Commenting out these until we implement adding domain info based on
 //  rule instantiation
@@ -251,24 +202,15 @@ void simplify(string inputFile)
 
     // If conjunction is satisfiable at compile time try to simplify it
 
-    // (4)
+    // (4) 
     // Specify loops that are going to be parallelized, 
     // so we are not going to project them out.
+    json npJ = data[p][0]["Do Not Project Out"];
     parallelTvs.clear();
-    iegenlib::TupleDecl td = rel->getTupleDecl();
-    for (size_t j = 0; j < data[p][0]["Do Not Project Out"].size(); ++j){
-      string tvS = data[p][0]["Do Not Project Out"][j].as<string>();
-      int tvN = 0;
-      for (unsigned int c = 0 ; c < td.getSize() ; c++){
-        if( tvS == td.elemToString(c) ){
-          tvN = c;
-          break;
-        }
-      }
-        parallelTvs.insert( tvN );
-    }
- 
-    // (5)
+    notProjectIters( rel, parallelTvs, npJ);
+
+
+    // (5) 
     // Applying heuristic for removing expensive iterators
     int numConstToRemove = str2int(data[p][0]["Remove Constraints"].as<string>());
     Relation* relWithDR = rel->boundDomainRange();
