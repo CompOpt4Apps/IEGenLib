@@ -3295,7 +3295,7 @@ Set* Set::simplifyForPartialParallel(std::set<int> parallelTvs )
     int lastTV = this->arity()-1;
     Set* result = new Set(*this);
 
-//  Commenting out these untill we implement adding domain info based on
+//  Commenting out these until we implement adding domain info based on
 //  rule instantiation
 //    Set* copySet = new Set(*this);
 //    // Adding constraints dut to Monotonicity of UFCs (if any exists)
@@ -3340,7 +3340,7 @@ Relation* Relation::simplifyForPartialParallel(std::set<int> parallelTvs)
     int lastTV = this->arity()-1;
     Relation* result = new Relation(*this);
 
-//  Commenting out these untill we implement adding domain info based on
+//  Commenting out these until we implement adding domain info based on
 //  rule instantiation
 //    Relation* copyRelation = new Relation(*this);
 //    // Adding constraints dut to Monotonicity of UFCs (if any exists)

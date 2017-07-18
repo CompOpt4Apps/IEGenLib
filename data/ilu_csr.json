@@ -70,7 +70,7 @@
       ],
       "Do Not Project Out" :
       [
-        "i", "ip", "k", "kp"
+        "i", "ip"
       ],
       "Remove Constraints" : "2",
       "Comment: Code" : [

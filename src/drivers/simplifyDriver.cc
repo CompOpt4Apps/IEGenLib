@@ -27,7 +27,7 @@
    For example if you are compiling this file in its original location that is 
    IEGENLIB_HOME/src/drivers, FROM IEGENLIB_HOME run following to compile:
 
-     g++ -o simplifyDriver simplifyDriver.cc -I src build/src/libiegenlib.a -lisl -std=c++11
+     g++ -o simplifyDriver src/drivers/simplifyDriver.cc -I src build/src/libiegenlib.a -lisl -std=c++11
 
  * Now to run the driver, you should put your dependence relations inside
  * JSON files and give them as inputs to the driver, one or more files
@@ -229,43 +229,43 @@ void simplify(string inputFile)
       ex_rel = new Relation(expected_str);
     }
 
-    // (3) Determining unsatisfiability
-    Relation* copyRelation = rel->boundDomainRange();
-    Relation* relAf = copyRelation->determineUnsat();
+//  Commenting out these until we implement adding domain info based on
+//  rule instantiation
+//    // (3) Determining unsatisfiability
+//    Relation* copyRelation = rel->boundDomainRange();
+//    Relation* relAf = copyRelation->determineUnsat();
 
     char msg[100];
-    sprintf(msg, "@@@ Relation No. %d: ", int(i+1) );
-    printRelation( string(msg) , rel);
+//    sprintf(msg, "@@@ Relation No. %d: ", int(i+1) );
+//    printRelation( string(msg) , rel);
  
-    if(  relAf->isUnsat() ){
-      std::cout<<"\nIs unsatisfiable!\n";
-      continue;    
-    } else {
-      std::cout<<"\nMight be satisfiable!!\n";      
-    }
+//    if(  relAf->isUnsat() ){
+//      std::cout<<"\nIs unsatisfiable!\n";
+//      continue;    
+//    } else {
+//      std::cout<<"\nMight be satisfiable!!\n";      
+//    }
 
-    //sprintf(msg, "@@@ Relation No. %d After: ", int(i+1) );
-    //printRelation( string(msg) , relAf);
+//    //sprintf(msg, "@@@ Relation No. %d After: ", int(i+1) );
+//    //printRelation( string(msg) , relAf);
 
     // If conjunction is satisfiable at compile time try to simplify it
 
     // (4)
     // Specify loops that are going to be parallelized, 
     // so we are not going to project them out.
-    if( i == 0 ){  // Read these data only once. 
-                   // They are stored in the first conjunction.
-      for (size_t j = 0; j < data[p][0]["Do Not Project Out"].size(); ++j){
-        string tvS = data[p][0]["Do Not Project Out"][j].as<string>();
-        int tvN = 0;
-        iegenlib::TupleDecl td = rel->getTupleDecl();
-        for (unsigned int c = 0 ; c < td.getSize() ; c++){
-          if( tvS == td.elemToString(c) ){
-            tvN = c;
-            break;
-          }
+    parallelTvs.clear();
+    iegenlib::TupleDecl td = rel->getTupleDecl();
+    for (size_t j = 0; j < data[p][0]["Do Not Project Out"].size(); ++j){
+      string tvS = data[p][0]["Do Not Project Out"][j].as<string>();
+      int tvN = 0;
+      for (unsigned int c = 0 ; c < td.getSize() ; c++){
+        if( tvS == td.elemToString(c) ){
+          tvN = c;
+          break;
         }
-        parallelTvs.insert( tvN );
       }
+        parallelTvs.insert( tvN );
     }
  
     // (5)
@@ -275,11 +275,13 @@ void simplify(string inputFile)
     std::set<iegenlib::Exp> ignore = relWithDR->constraintsDifference(rel);
     relWithDR->removeExpensiveConstraints(parallelTvs, numConstToRemove, ignore);
 
-    // Adding extra domain information
-    delete copyRelation;
-    copyRelation = relWithDR->determineUnsat();
-    delete relWithDR;
-    relWithDR = copyRelation;
+//  Commenting out these until we implement adding domain info based on
+//  rule instantiation
+//    // Adding extra domain information
+//    delete copyRelation;
+//    copyRelation = relWithDR->determineUnsat();
+//    delete relWithDR;
+//    relWithDR = copyRelation;
 
     // (6)
     // Simplifyng the constraints relation
@@ -292,9 +294,9 @@ void simplify(string inputFile)
 
 //    delete copyRelation;
     delete rel;   
-//    delete relWithDR;
-//    delete rel_sim;
-    delete relAf;
+    delete relWithDR;
+    delete rel_sim;
+//    delete relAf;
   }
 
  } // End of p loop
