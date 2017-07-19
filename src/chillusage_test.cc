@@ -212,7 +212,7 @@ TEST_F(ChillUsageTest, LoopCoalescingKequalJ)
     delete T_coalesce;
     delete T_coalesce_inv;
 }
-
+#if 0
 /*! Tests adding constraints between UFCalls such as
     forall e, index(e) <= diagptr(e).
 */
@@ -1502,5 +1502,5 @@ S2:     v[j1] -= tmp*v[j2];
 
 }
 
-//#endif
+#endif
 

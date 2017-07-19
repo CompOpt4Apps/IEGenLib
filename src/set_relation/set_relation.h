@@ -25,7 +25,6 @@
 #include <util/util.h>
 #include "expression.h"
 #include "SubMap.h"
-#include "TermPartOrdGraph.h"
 class Visitor;
 
 #include <set>
@@ -253,16 +252,6 @@ public:
     // inside the conjuction.
     int termCount();
 
-    void addConsForUniversQuantExp(uniQuantConstraint uqConst,
-                                    TermPartOrdGraph &partOrd,
-        std::map< std::string , std::set<UFCallTerm> > &ufsMap);
-
-    void addConsForUFCallRel(uniQuantConstraint uqConst,
-                                    TermPartOrdGraph &partOrd,
-        std::map< std::string , std::set<UFCallTerm> > &ufsMap);
-
-
-
     void setUnsat(){ unsat = true;}
     bool isUnsat(){return unsat;}
 
@@ -438,15 +427,6 @@ public:
     std::list<Conjunction*> mConjunctions;
 
 
-  protected:
-
-    // FIXME: can't we incorporate these into visitor?
-    void addUFConstraintsHelper(std::string uf1str, 
-                                std::string opstr, std::string uf2str);
-
-    void addConstraintsDueToMonotonicityHelper();
-
-    void determineUnsatHelper();
 };
 
 /*!
@@ -591,11 +571,6 @@ public:
             return false;
         }
     }
-
-    // This function tries to determine if the set is unsatisfiable 
-    // utilizing available universially quantified constraints in 
-    // the environment about this sets's UFCs
-    Set* determineUnsat();
 
 private:
     int mArity;
@@ -777,19 +752,6 @@ public:
             return false;
         }
     }
- 
-    // The high level interface for adding all domain information about UFCs
-    // to constraints, including Monotonicity and other userdefined information
-    // The function first creates a partial ordering between terms in the original
-    // constraints set. Then, it adds constraints based on partial ordering
-    // pertaining to different domain information recursively untill it converges. 
-    // Relation* domainInfo(std::vector<struct domainInformation>  domainInfoVec); 
-
-    // This function tries to determine if the set is unsatisfiable 
-    // utilizing available universially quantified constraints in 
-    // the environment about this sets's UFCs
-    Relation* determineUnsat();
-
 
 private:
     int mInArity;

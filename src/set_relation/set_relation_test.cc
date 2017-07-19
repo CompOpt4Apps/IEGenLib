@@ -3461,7 +3461,7 @@ TEST_F(SetRelationTest, VisitorDebugTest){
     delete r;
     delete s;
 }
-
+#if 0
 #pragma mark addUFConstraintsTest
 TEST_F(SetRelationTest, addUFConstraintsTest){
   {
@@ -3577,7 +3577,7 @@ TEST_F(SetRelationTest, addConstraintsDueToMonotonicity){
   }
 
 }
-
+#endif 
 
 //*********************** Testing isUFCallParam  ***************************
 
@@ -4000,9 +4000,9 @@ TEST_F(SetRelationTest, projectOut) {
    delete ex_r1;
    delete ex_s1;
 }
-
-#pragma mark debugingForILU
-TEST_F(SetRelationTest, debugingForILU){
+#if 0
+#pragma mark debuggingForILU
+TEST_F(SetRelationTest, debuggingForILU){
 
     iegenlib::setCurrEnv();
     iegenlib::appendCurrEnv("colidx",
@@ -4079,7 +4079,7 @@ TEST_F(SetRelationTest, debugingForILU){
    delete extendedPartOrd;
    delete partOrdMont;
 }
-
+#endif
 
 #pragma mark numUFCallConstsMustRemove
 TEST_F(SetRelationTest, numUFCallConstsMustRemove){
