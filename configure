@@ -57,6 +57,9 @@ then
   install_prefix="../$install_prefix"
 fi
 
+cd lib/isl 
+autoreconf -i
+cd ../..
 
 #Generate the build system using cmake and the specified configuration options
 mkdir -p build
