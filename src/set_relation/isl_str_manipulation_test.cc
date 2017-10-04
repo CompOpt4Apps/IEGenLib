@@ -46,7 +46,7 @@ TEST(revertISLTupDeclToOrigTest, revertISLTupDeclToOrig) {
        " i4 = tstep and i4 = theta_0__tv1_ + 1 and i1 >= 0 and i2 <= 10}");
     std::string s_islStr(" {[col_i_ , i2, tstep, theta_0__tv1_ + 1] : "
                                                           " i2 <= 10 }");
-    string s_exp(" {[ i1, i2 , i3, i4] :  i2 <= 10  and"
+    string s_exp(" {[ i1, i2 , i3, i4] :  i2 <= 10  and "
                  " i1 = col_i_ and i3 = tstep and i4 = theta_0__tv1_ + 1}");
 
     inArity = 4;outArity = 0;

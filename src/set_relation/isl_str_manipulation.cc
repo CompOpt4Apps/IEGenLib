@@ -75,11 +75,9 @@ std::queue<std::string> tupVarsExtract(std::string tupDecl, int inArity, int out
 **      origTupDecl: [i1, i2] -> [1, i4]
 **      islTupDecl : [col_tv1_, i2] -> [1, i2]
 **      output:      i1 = col_tv1_ and i4 = i2
-**  Note: noFirstAnd determines whether we should put "and" at the beginning of
-**  the output string, which depends on original constraints being empty or not. 
 */
 std::string missingEqs(std::string origTupDecl, std::string islTupDecl,
-                              int inArity, int outArity, bool noFirstAnd){
+                              int inArity, int outArity){
     std::string eqs("");
     int arity = inArity + outArity;
     bool firstEq = true;
@@ -93,15 +91,12 @@ std::string missingEqs(std::string origTupDecl, std::string islTupDecl,
         std::string isl = islTupVars.front();
         islTupVars.pop();
         if( orig != isl ){
-            if(noFirstAnd && firstEq){
-                eqs +=  " " + orig +
-                        " = " + isl;
+            if(firstEq){
+                eqs +=  " " + orig + " = " + isl;
                 firstEq = false;
             } else {
-                eqs +=  " and " + orig +
-                        " = " + isl;
+                eqs +=  " and " + orig + " = " + isl;
             }
-        
         }
     }
 
@@ -155,24 +150,23 @@ srParts getPartsFromStr(std::string str){
 std::string revertISLTupDeclToOrig(std::string origStr, std::string islStr,
                               int inArity, int outArity){
     std::string correctedStr, eqsStr;
-    bool noFirstAnd = false;
     
     srParts origParts = getPartsFromStr(origStr);
     srParts islParts = getPartsFromStr(islStr);
 
-    if( islParts.constraints.length() == 0 ){
-        noFirstAnd = true;
-    }
     eqsStr = missingEqs( origParts.tupDecl , islParts.tupDecl ,
-                                inArity, outArity, noFirstAnd );
+                         inArity, outArity );
     
-    if( islParts.constraints.length() == 0 && eqsStr.length() == 0){
+    if( islParts.constraints.length() == 0){
         correctedStr = islParts.symVars + islParts.sC +
-                       origParts.tupDecl + islParts.eC;
+                       origParts.tupDecl + islParts.sepC + eqsStr + islParts.eC;
+    } else if( eqsStr.length() == 0){
+        correctedStr = islParts.symVars + islParts.sC + origParts.tupDecl + 
+                       islParts.sepC + islParts.constraints + islParts.eC;
     } else {
-        correctedStr = islParts.symVars + islParts.sC +
-                       origParts.tupDecl + islParts.sepC + 
-                       islParts.constraints + eqsStr +islParts.eC;
+        correctedStr = islParts.symVars + islParts.sC + origParts.tupDecl + 
+                       islParts.sepC + islParts.constraints + 
+                       " and " + eqsStr + islParts.eC;
     }
 
     return correctedStr;

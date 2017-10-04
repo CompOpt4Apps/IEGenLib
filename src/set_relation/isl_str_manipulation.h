@@ -28,7 +28,7 @@
 
 namespace iegenlib{
 
-
+struct srParts;
 //****** ISL tuple correction functions
 
 /*! trim function trims spacing from left and right of a string
