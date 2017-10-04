@@ -472,3 +472,20 @@ TEST(Parser, ExpressionsFromISL) {
 //                     "and i >= -1 and x <= -1 + M }");
 //    EXPECT_EQ("", s->toString());
 }
+
+
+// Parsing constraints like:  0 <= x < n and 0 < x <= n and 
+//                            0 < x < n and 0 <= x <= n
+TEST(Parser, ConstraintRange) {
+
+   Relation* r1 = new Relation("{[i] -> [j] : 0 < i < n and 0 <= j < m }");
+   EXPECT_EQ("[ m, n ] -> { [i] -> [j] : j >= 0 && i - 1 >= 0 && "
+             "-i + n - 1 >= 0 && -j + m - 1 >= 0 }", r1->toISLString());
+   delete r1;
+
+   Set* s1 = new Set("{[i,j] : 0 < i <= n and 0 <= j <= m }");
+   EXPECT_EQ("[ m, n ] -> { [i, j] : j >= 0 && -i + n >= 0 && i - 1 >= 0 "
+             "&& -j + m >= 0 }", s1->toISLString());
+   delete s1;
+}
+
