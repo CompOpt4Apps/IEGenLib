@@ -50,51 +50,6 @@ void addUFCs(json &ufcs){
 
 // Reads a list of universially quantified constraints from a json structure
 // and stores them in the environment
-void adduniQuantConstraints(json &uqCons){
-
-  uniQuantConstraint uqConst;
-  for (size_t j = 0; j < uqCons.size(); ++j){
-
-    // Read user defined constraints based on universally quantified
-    // expressions, then call addConsForUniversQuantExp to add them:
-    //    Forall e1, e2: if ( e1 exOP e2 ) => ( UF1(e1) ufOP UF2(e2) )
-    if( uqCons[j]["Type"].as<string>() == "UserDefPar2UFC"){
-      uqConst.setType("UserDefPar2UFC");
-      uqConst.setExpCompOp(uqCons[j]["Forall e1, e2: if e1 is? e2"].as<string>());
-      uqConst.setUfCompOp(uqCons[j][" is? "].as<string>());
-      uqConst.setUfSymbol1(uqCons[j]["then add: UFSymbol1?(e1)"].as<string>());
-      uqConst.setUfSymbol2(uqCons[j]["UFSymbol2?(e2)"].as<string>() );
-      iegenlib::addUniQuantConstraint(uqConst);
-    }
-
-    // read user defined relations between UFCs, then call 
-    // addConsForUFCallRel to add related constraints:
-    //    Forall e1, e2: if ( UF1(e1) ufOP UF2(e2) ) => ( e1 exOP e2 ) 
-    else if( uqCons[j]["Type"].as<string>() == "UserDefUFC2Par"){
-      uqConst.setType("UserDefUFC2Par");
-      uqConst.setExpCompOp(uqCons[j]["then add: e1 is? e2"].as<string>());
-      uqConst.setUfCompOp(uqCons[j][" is? "].as<string>() );
-      uqConst.setUfSymbol1(uqCons[j]["Forall e1, e2: if UFSymbol1?(e1)"].as<string>());
-      uqConst.setUfSymbol2(uqCons[j]["UFSymbol2?(e2)"].as<string>() );
-      iegenlib::addUniQuantConstraint(uqConst);
-    }
-  }
-}
-
+void addUniQuantRules(json &uqCons);
 // Reads iterators that we should not project from a json sructure
-void notProjectIters(Relation* rel, std::set<int> &parallelTvs, json &np){
-
-  iegenlib::TupleDecl td = rel->getTupleDecl();
-  for (size_t j = 0; j < np.size(); ++j){
-    string tvS = np[j].as<string>();
-    int tvN = -1;
-    for (unsigned int c = 0 ; c < td.getSize() ; c++){
-      if( tvS == td.elemToString(c) ){
-        tvN = c;
-        break;
-      }
-    }
-    parallelTvs.insert( tvN );
-  }
-}
-
+void notProjectIters(Relation* rel, std::set<int> &parallelTvs, json &np);

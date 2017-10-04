@@ -29,10 +29,9 @@ using namespace iegenlib;
 // Reads a list of UFCs from a json structure and stores them in the environment  
 void addUFCs(json &ufcs);
 
-
 // Reads a list of universially quantified constraints from a json structure
 // and stores them in the environment
-void adduniQuantConstraints(json &uqCons);
+void addUniQuantRules(json &uqCons);
 
 // Reads iterators that we should not project from a json sructure
 void notProjectIters(Relation* rel, std::set<int> &parallelTvs, json &np);
