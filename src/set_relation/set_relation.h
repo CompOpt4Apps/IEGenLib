@@ -572,6 +572,8 @@ public:
         }
     }
 
+    int getArity(){ return mArity;}
+
 private:
     int mArity;
 };

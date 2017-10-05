@@ -32,15 +32,7 @@ void setCurrEnv() {
 void setCurrEnv(std::string funcName, Set* domain, Set* range,
                 bool bijective, MonotonicType monoType) {
     currentEnv.reset();
-    // create a new uninterpreted function description
-    UninterpFunc* ufunc 
-        = new UninterpFunc(funcName, domain, range, bijective, monoType);
-    // create new environment
-    Environment* env = new Environment(ufunc);
-    // copy the contents of the map over to our map
-    currentEnv = *env;
-    //delete the Environment
-    delete env;
+    appendCurrEnv(funcName, domain, range, bijective, monoType);
 }
 
 /*
@@ -68,6 +60,116 @@ void appendCurrEnv(std::string funcName, Set* domain, Set* range,
   Environment* env = new Environment(ufunc);
   currentEnv.append(env);
 
+/* Adding quantified rules for functional consistency and monotonicity */
+  if( domain->getArity() == 1 && range->getArity() == 1 ){
+
+    UniQuantRule *uqRule;
+    string type, tupleDecl, leftSide, rightSide;
+
+    // 3.1.1 adding Functional consistency rules:
+    //   forall e1, e2 : if e1 = e2 then f(e1) = f(e2)
+    type = ("FuncConsistency");
+    tupleDecl = ("[e1,e2]");
+    leftSide = ( "e1 = e2" );
+    rightSide = ( funcName + "(e1) = " + funcName + "(e2)" );
+    uqRule = new UniQuantRule(type, tupleDecl, leftSide, rightSide);
+    currentEnv.addUniQuantRule( uqRule );
+
+    // 3.1.2 Adding Monotonicity rules based on:
+    //   If UF monotonically strictly increasing then:
+    if ( Monotonic_Increasing == monoType ){
+  
+      // forall e1, e2 : e1 < e2 => UF(e1) < UF(e2)
+      type = ("Monotonicity");
+      tupleDecl = ("[e1,e2]");
+      leftSide = ( "e1 < e2" );
+      rightSide = ( funcName + "(e1) < " + funcName + "(e2)" );
+      uqRule = new UniQuantRule(type, tupleDecl, leftSide, rightSide);
+      currentEnv.addUniQuantRule( uqRule );
+  
+      // forall e1, e2 : UF(e1) = UF(e2) => e1 = e2
+      type = ("Monotonicity");
+      tupleDecl = ("[e1,e2]");
+      leftSide = ( funcName + "(e1) = " + funcName + "(e2)" );
+      rightSide = ( "e1 = e2" );
+      uqRule = new UniQuantRule(type, tupleDecl, leftSide, rightSide);
+      currentEnv.addUniQuantRule( uqRule );
+
+      // forall e1, e2 : UF(e1) < UF(e2) => e1 < e2
+      type = ("Monotonicity");
+      tupleDecl = ("[e1,e2]");
+      leftSide = ( funcName + "(e1) < " + funcName + "(e2)" );
+      rightSide = ( "e1 < e2" );
+      uqRule = new UniQuantRule(type, tupleDecl, leftSide, rightSide);
+      currentEnv.addUniQuantRule( uqRule );
+  
+      // forall e1, e2 : UF(e1) <= UF(e2) => e1 <= e2
+      type = ("Monotonicity");
+      tupleDecl = ("[e1,e2]");
+      leftSide = ( funcName + "(e1) <= " + funcName + "(e2)" );
+      rightSide = ( "e1 <= e2" );
+      uqRule = new UniQuantRule(type, tupleDecl, leftSide, rightSide);
+      currentEnv.addUniQuantRule( uqRule );
+
+    //   If UF monotonically increasing then:
+    } else  if ( Monotonic_Nondecreasing == monoType ){
+ 
+      // forall e1, e2 : UF(e1) < UF(e2) => e1 < e2
+      type = ("Monotonicity");
+      tupleDecl = ("[e1,e2]");
+      leftSide = ( funcName + "(e1) < " + funcName + "(e2)" );
+      rightSide = ( "e1 < e2" );
+      uqRule = new UniQuantRule(type, tupleDecl, leftSide, rightSide);
+      currentEnv.addUniQuantRule( uqRule );
+  
+    // If UF monotonically strictly decreasing then
+    } else if ( Monotonic_Decreasing == monoType ){
+  
+      // forall e1, e2 : e1 < e2 => UF(e1) > UF(e2)
+      type = ("Monotonicity");
+      tupleDecl = ("[e1,e2]");
+      leftSide = ( "e1 < e2" );
+      rightSide = ( funcName + "(e1) > " + funcName + "(e2)" );
+      uqRule = new UniQuantRule(type, tupleDecl, leftSide, rightSide);
+      currentEnv.addUniQuantRule( uqRule );
+
+      // forall e1, e2 : UF(e1) = UF(e2) => e1 = e2
+      type = ("Monotonicity");
+      tupleDecl = ("[e1,e2]");
+      leftSide = ( funcName + "(e1) = " + funcName + "(e2)" );
+      rightSide = ( "e1 = e2" ); 
+      uqRule = new UniQuantRule(type, tupleDecl, leftSide, rightSide);
+      currentEnv.addUniQuantRule( uqRule );
+ 
+      // forall e1, e2 : UF(e1) < UF(e2) => e1 > e2
+      type = ("Monotonicity");
+      tupleDecl = ("[e1,e2]");
+      leftSide = ( funcName + "(e1) < " + funcName + "(e2)" );
+      rightSide = ( "e1 > e2" );
+      uqRule = new UniQuantRule(type, tupleDecl, leftSide, rightSide);
+      currentEnv.addUniQuantRule( uqRule );
+
+      // forall e1, e2 : UF(e1) <= UF(e2) => e1 >= e2
+      type = ("Monotonicity");
+      tupleDecl = ("[e1,e2]");
+      leftSide = ( funcName + "(e1) <= " + funcName + "(e2)" );
+      rightSide = ( "e1 >= e2" );
+      uqRule = new UniQuantRule(type, tupleDecl, leftSide, rightSide);
+      currentEnv.addUniQuantRule( uqRule );
+
+      // If UF monotonically decreasing then:
+    } else  if ( Monotonic_Nonincreasing == monoType ){
+
+      // forall e1, e2 : UF(e1) < UF(e2) => e1 > e2
+      type = ("Monotonicity");
+      tupleDecl = ("[e1,e2]");
+      leftSide = ( funcName + "(e1) < " + funcName + "(e2)" );
+      rightSide = ( "e1 > e2" );
+      uqRule = new UniQuantRule(type, tupleDecl, leftSide, rightSide);
+      currentEnv.addUniQuantRule( uqRule );
+    }
+  }
+/////////////////////////////////////////////////////////////////
 }
 /*
 void appendCurrEnv(std::string str) {
@@ -120,6 +222,23 @@ unsigned int queryRangeArityCurrEnv(const std::string funcName) {
     unsigned int retval = range->arity();
     delete range;
     return retval;
+}
+
+
+//! add an universially quantified Rule to environment
+void addUniQuantRule(UniQuantRule *uqRule){
+    currentEnv.addUniQuantRule(uqRule);
+}
+
+// Return the number of available universially quantified Rules
+int queryNoUniQuantRules(){
+  return currentEnv.getNoUniQuantRules();
+}
+
+// Returns the universially quantified Rule No. idx stored in the enviroment
+//! The environment still owns returned object (user should not delete it)
+UniQuantRule* queryUniQuantRuleEnv(int idx){
+  return currentEnv.getUniQuantRule(idx);
 }
 
 void Environment::append(Environment *other){
@@ -255,5 +374,91 @@ std::string Environment::toString() const {
     return ss.str();
 }
 
+
+
+//! Add an universially quantified Rule to the environment
+void Environment::addUniQuantRule(UniQuantRule *uqRule){
+    uniQuantRules.push_back (uqRule);
+}
+
+//! Get the No. of universially quantified Rules
+// available in the environment
+int Environment::getNoUniQuantRules(){
+    return uniQuantRules.size();
+}
+
+//! Get the universially quantified Rule No. idx from 
+// the environment
+UniQuantRule* Environment::getUniQuantRule(int idx){
+    return uniQuantRules[idx];
+}
+
+
+//! UniQuantRule class member functions:
+
+UniQuantRule::UniQuantRule(string type, string tupleDecl, 
+                           string leftSide, string rightSide){
+    string leftSideSet, rightSideSet;
+
+    leftSideSet = "{" + tupleDecl + " : " + leftSide + " }";
+    rightSideSet = "{" + tupleDecl + " : " + rightSide + " }";
+
+    mLeftSide = new Set (leftSideSet);
+    mRightSide = new Set (rightSideSet);
+
+    if(type == "Monotonicity")         mUniQuantRuleType = Monotonicity;
+    else if (type == "CoMonotonicity") mUniQuantRuleType = CoMonotonicity;
+    else if (type == "Triangular")     mUniQuantRuleType = Triangular;
+    else if (type == "FuncConsistency")mUniQuantRuleType = FuncConsistency;
+    else                               mUniQuantRuleType = TheOthers;
+}
+
+//! Copy constructor.  Performs a deep copy.
+UniQuantRule::UniQuantRule(const UniQuantRule& other) {
+
+    mUniQuantRuleType = other.mUniQuantRuleType;
+    this->mLeftSide = new Set( *(other.mLeftSide) );
+    this->mRightSide = new Set( *(other.mRightSide) );
+}
+
+//! Copy assignment.
+UniQuantRule& UniQuantRule::operator=(const UniQuantRule& other) {
+
+    UniQuantRule temp(other);
+    temp.swap (*this); // Non-throwing swap
+    return *this;
+}
+
+//! helper function for implementing copy-and-swap
+void UniQuantRule::swap(UniQuantRule& second) throw() {
+    std::swap(mUniQuantRuleType, second.mUniQuantRuleType);
+    std::swap(mLeftSide, second.mLeftSide);
+    std::swap(mRightSide, second.mRightSide);
+}
+
+UniQuantRule::~UniQuantRule(){
+  delete mLeftSide;
+  delete mRightSide;
+}
+
+//! prints the content of the map into a std::string, and returns it
+std::string UniQuantRule::toString(){
+    std::stringstream ss;
+
+    // Functionalities in isl_str_manipulation.h/cc for breaking different 
+    // parts of an IEGenLib Set/Relation (for details refer to those files):
+    srParts RulesLParts,RulesRParts;
+    RulesLParts = getPartsFromStr(mLeftSide->prettyPrintString());
+    RulesRParts = getPartsFromStr(mRightSide->prettyPrintString());
+
+    ss <<"Forall " + (mLeftSide->getTupleDecl()).toString()+ "  "
+          + RulesLParts.constraints + " => " + RulesRParts.constraints;
+
+    return ss.str();
+}
+
+UniQuantRuleType UniQuantRule::getType(){return mUniQuantRuleType;}
+Set* UniQuantRule::getLeftSide(){ return mLeftSide; }
+Set* UniQuantRule::getRightSide(){ return mRightSide; }
 
 }//end namespace iegenlib
