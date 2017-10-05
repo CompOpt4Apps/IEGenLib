@@ -50,6 +50,32 @@ void addUFCs(json &ufcs){
 
 // Reads a list of universially quantified constraints from a json structure
 // and stores them in the environment
-void addUniQuantRules(json &uqCons);
+void addUniQuantRules(json &uqCons){
+
+  UniQuantRule *uqRule;
+  for (size_t j = 0; j < uqCons.size(); ++j){
+
+    // forall e1, e2, ... : p => q
+    uqRule = new UniQuantRule(uqCons[j]["Type"].as<string>(), 
+                uqCons[j]["UniQuantVar"].as<string>(), 
+                uqCons[j]["p"].as<string>(), uqCons[j]["q"].as<string>());
+    currentEnv.addUniQuantRule( uqRule );
+  }
+}
+
 // Reads iterators that we should not project from a json sructure
-void notProjectIters(Relation* rel, std::set<int> &parallelTvs, json &np);
+void notProjectIters(Relation* rel, std::set<int> &parallelTvs, json &np){
+
+  iegenlib::TupleDecl td = rel->getTupleDecl();
+  for (size_t j = 0; j < np.size(); ++j){
+    string tvS = np[j].as<string>();
+    int tvN = -1;
+    for (unsigned int c = 0 ; c < td.getSize() ; c++){
+      if( tvS == td.elemToString(c) ){
+        tvN = c;
+        break;
+      }
+    }
+    parallelTvs.insert( tvN );
+  }
+}
