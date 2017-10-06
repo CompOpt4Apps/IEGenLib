@@ -2712,14 +2712,22 @@ class VisitorSuperAffineSet : public Visitor {
 **    (2) We replace all UFCalls with symbolic constants found in the ufc map.
 **  The function does not own the ufcmap.
 */
-Set* Set::superAffineSet(UFCallMap* ufcmap)
+Set* Set::superAffineSet(UFCallMap* ufcmap, bool boundUFCs)
 {
-    Set* copySet = this->boundDomainRange();
+    Set *copySet, *result;
+
+    if( !noConjuncts() ){  // There is no conjunction, so nothing to do
+       result = new Set (*this);
+       return result;   // Just return a copy of the Set
+    }
+
+    if( boundUFCs ) copySet = this->boundDomainRange();
+    else          copySet = new Set (*this);
 
     VisitorSuperAffineSet* v = new VisitorSuperAffineSet(ufcmap);
     copySet->acceptVisitor( v );
     
-    Set* result = (v->getSet());
+    result = (v->getSet());
     
     delete copySet;
     delete v;
@@ -2728,14 +2736,22 @@ Set* Set::superAffineSet(UFCallMap* ufcmap)
 }
 
 //! Same as Set
-Relation* Relation::superAffineRelation(UFCallMap* ufcmap)
+Relation* Relation::superAffineRelation(UFCallMap* ufcmap, bool boundUFCs)
 {
-    Relation* copyRelation = this->boundDomainRange();
+    Relation *copyRelation, *result;
+
+    if( !noConjuncts() ){  // There is no conjunction, so nothing to do
+       result = new Relation (*this);
+       return result;   // Just return a copy of the Set
+    }
+
+    if( boundUFCs ) copyRelation = this->boundDomainRange();
+    else          copyRelation = new Relation (*this);
 
     VisitorSuperAffineSet* v = new VisitorSuperAffineSet(ufcmap);
     copyRelation->acceptVisitor( v );
 
-    Relation* result = (v->getRelation());
+    result = (v->getRelation());
 
     delete copyRelation;
     delete v;
