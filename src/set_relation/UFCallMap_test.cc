@@ -64,26 +64,21 @@ TEST(UFCallMapTest, UFCallMap) {
 
     EXPECT_EQ( ufcall->toString() , r_ufcall->toString() );
 
-
-//////// Checking: The UFC is not in the map! So, we get NULL.
+// Checking: The UFC is not in the map! So, we get NULL.
+// ufcMap has 2 find function 1 searches based on UFCallTerm
+// the other one based on VarTerm. The one based on UFCcallTerm adds the 
+// ufc passed to it if it is not already in the map, so we always
+// get back equivalant VarTerm. The VarTerm based one returns NULL
+// if UFCallTerm is not in the map.
     UFCallTerm *ufcallFoo = new UFCallTerm("Foo", 0);
-    
-    VarTerm* symConsFoo = map.find(ufcallFoo);
-    
-    if(symConsFoo){
-        delete symConsFoo;
-        symConsFoo = new VarTerm( 1,std::string("Found") );
-    }
-    else{
-        symConsFoo = new VarTerm( 1,std::string("notFound") );
-    }
+    string symConsStr = iegenlib::UFCallMap::symUFC(ufcallFoo->toString());
+    VarTerm vt( 1 , symConsStr );
+    UFCallTerm* ufcF = map.find(&vt);
 
-    EXPECT_EQ( "notFound" , symConsFoo->toString() ); 
+    EXPECT_EQ( NULL , ufcF ); 
 
-//    std::cout<<std::endl<<map.toString()<<std::endl;
     delete ufcall;
     delete ufcallFoo;
     delete r_ufcall;
     delete symCons;
-    delete symConsFoo;
 }

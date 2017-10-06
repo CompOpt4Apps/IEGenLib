@@ -33,7 +33,7 @@ UFCallMap& UFCallMap::operator=( const UFCallMap& other) {
 // It is going to look like:
 // Original:    row( col(tv2 + 1) - 2 ) ->
 // ConsSymbol:  row_col_tv2P1_M2_
-string UFCallMap::symUFC( std::string &ufcName )
+string UFCallMap::symUFC( std::string ufcName )
 {
     int len = ufcName.length();
     std::stringstream ss;
@@ -43,17 +43,13 @@ string UFCallMap::symUFC( std::string &ufcName )
         if( c != ' ' && c != ','){
             if( c == '(' || c == ')'){
                 ss <<'_';
-            }
-            else if( c == '[' || c == ']'){
+            } else if( c == '[' || c == ']'){
                 ss <<'B';
-            }
-            else if( c == '+' ){
+            } else if( c == '+' ){
                 ss <<'P';
-            }
-            else if( c == '-' ){
+            } else if( c == '-' ){
                 ss <<'M';
-            }
-            else{
+            } else{
                 ss <<c;
             }
         }
@@ -65,33 +61,36 @@ string UFCallMap::symUFC( std::string &ufcName )
 /*! Use this to insert a UFCallTerm to map.
 **  The function creates an VarTerm representing the UFC then,
 **  adds (ufc,vt) to mUFC2VarParam & adds (vt,str) to mVarParam2UFC
-**  The class does not own the object pointed by ufcterm,
+**  The class does not own the object pointed by ufc,
 **  and it is left unchanged.
 **
 **  NOTE: The function ignores coefficient of the UFCallTerm.
 **        So, -2*row(i)  is considered as just row(i)
 */
-void UFCallMap::insert( UFCallTerm *ufc )
+VarTerm UFCallMap::insert( UFCallTerm *ufc )
 {
     UFCallTerm* ufcterm = new UFCallTerm (*ufc);
     ufcterm->setCoefficient(1);
-    if( find(ufcterm) ){
-        return;
-    }
-
     std::string symCons = ufcterm->toString();
-    symCons = symUFC(symCons);
+
+    symCons = UFCallMap::symUFC(symCons);
     VarTerm vt( 1 , symCons );
+
+    if( find(&vt) ){
+        return vt;
+    }
 
     mUFC2VarParam.insert ( std::pair<UFCallTerm,VarTerm>(*ufcterm,vt) );
     mVarParam2UFC.insert ( std::pair<VarTerm,UFCallTerm>(vt,*ufcterm) );
 
     delete ufcterm;
+
+    return vt;
 }
 
-/*! Searches for ufcterm in the map. If ufcterm exists, it returns
-**  a pointer to equ. VarTerm, otherwise returns NULL.
-**  The class does not own the object pointed by ufcterm,
+/*! Searches for ufcterm in the map. If ufcterm exists, it returns a pointer 
+**  to equ. VarTerm, otherwise it adds the ufcterm to the map, then returns
+**  the equ. VarTerm. The class does not own the object pointed by ufcterm,
 **  and it is left unchanged.
 **
 **  NOTE: The function ignores coefficient of the UFCallTerm.
@@ -99,19 +98,19 @@ void UFCallMap::insert( UFCallTerm *ufc )
 */
 VarTerm* UFCallMap::find( UFCallTerm* ufc )
 {
+    VarTerm* result;
     UFCallTerm* ufcterm = new UFCallTerm(*ufc);
     ufcterm->setCoefficient(1);
-
     std::map<UFCallTerm,VarTerm>::iterator it;
     
     it = mUFC2VarParam.find(*ufcterm);
-
-    delete ufcterm;
     if (it == mUFC2VarParam.end()){
-        return NULL;
+        result = new VarTerm(  (insert(ufcterm)).symbol() );
+    } else {
+        result = new VarTerm(it->second);
     }
 
-    VarTerm* result = new VarTerm(it->second);
+    delete ufcterm;
     return result;
 }
 
@@ -148,6 +147,20 @@ std::string UFCallMap::toString()
     for (it=mUFC2VarParam.begin(); it!=mUFC2VarParam.end(); it++) {
         ss << "\tUFC = " << it->first.toString() 
            << "  ,  sym = " << it->second.toString() << std::endl;
+    }
+    return ss.str();
+}
+
+
+// Outputs list of variable terms created for UFCs, 
+// used in rule instantiation functionality.
+std::string UFCallMap::varTermStrList()
+{
+    std::stringstream ss;
+    std::map<UFCallTerm,VarTerm>::iterator it;
+    for (it=mUFC2VarParam.begin(); it!=mUFC2VarParam.end(); it++) {
+        if( it != mUFC2VarParam.begin() ) ss << ", ";
+        ss << it->second.toString();
     }
     return ss.str();
 }

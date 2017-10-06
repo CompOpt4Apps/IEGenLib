@@ -379,12 +379,6 @@ public:
     //! Is tuple variable tupleID argument to an UFS?
     bool isUFCallParam(int tupleID);
 
-    //! The function traverses all conjunctions to find UFcalls.
-    //! For every distinct UGCall, it creates a equ. symbolic constant (string)
-    //! and stores the (UFC, Sym) pair in a UFCallMap. The function returns
-    //! a pointer to final UFCallMap that the user is responsible for deleting.
-    UFCallMap* mapUFCtoSym();
-
     /*! This function considers tuple variable i; and counts the number of
     **  constraints in the set where this tuple variable is argument to an UFC.
     **  However, it excludes constraints that are in the domainRangeConsts set.
