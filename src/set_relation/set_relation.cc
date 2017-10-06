@@ -24,6 +24,50 @@ namespace iegenlib{
 
 /************************ ISL helper routines ****************************/
 
+//! Runs an Affine Set (string) through ISL and returns the resulting set
+//  as a string
+string passSetStrThruISL(string sstr){
+
+  isl_ctx *ctx = isl_ctx_alloc();
+  string islStr =  islSetToString ( islStringToSet(sstr,ctx), ctx );
+  isl_ctx_free(ctx);
+
+  return islStr;
+}
+
+//! Runs an Affine Union Set* (string) through ISL 
+//  and returns the resulting set as a string
+//  * Union Set is a set of polyhedrals that may live in different space 
+//    (may have different tuple declaration)
+string passUnionSetStrThruISL(string sstr){
+
+  isl_ctx *ctx = isl_ctx_alloc();
+  string islStr =  islUnionSetToString ( islStringToUnionSet(sstr,ctx), ctx );
+  isl_ctx_free(ctx);
+
+  return islStr;
+}
+
+//! Runs an Affine Relation through ISL and returns the normalized result
+string passRelationStrThruISL(string rstr){
+
+  isl_ctx *ctx = isl_ctx_alloc();
+  string islStr =  islMapToString ( islStringToMap(rstr,ctx), ctx );
+  isl_ctx_free(ctx);
+
+  return islStr;
+}
+
+//! Runs an Affine Union Relation through ISL and returns the normalized result
+string passUnionRelationStrThruISL(string rstr){
+
+  isl_ctx *ctx = isl_ctx_alloc();
+  string islStr =  islUnionMapToString ( islStringToUnionMap(rstr,ctx), ctx );
+  isl_ctx_free(ctx);
+
+  return islStr;
+}
+
 //! Runs an Affine Set through ISL and returns the resulting normalized set
 Set* passSetThruISL(Set* s){
 

@@ -217,10 +217,14 @@ std::string projectOutStrCorrection(std::string str, int poTv,
 //****** ISL tuple correction End
 
 //! This function takes a Set string and returns equivalent isl_set*
-isl_set* islStringToSet( std::string relstr , isl_ctx *ctx )
+isl_set* islStringToSet( std::string relstr , isl_ctx *ctx, bool doCoalesce )
 {
   // load Relation r into ISL map
   isl_set* iset = isl_set_read_from_str(ctx, relstr.c_str());
+
+  if( doCoalesce ){
+    iset = isl_set_coalesce(iset);
+  }
 
   return iset;
 }
@@ -249,13 +253,18 @@ std::string islSetToString ( isl_set* iset , isl_ctx *ctx ) {
 }
 
 //! This function takes a Relation string and returns pointer to equ. isl_map
-isl_map* islStringToMap( std::string relstr , isl_ctx *ctx )
+isl_map* islStringToMap( std::string relstr , isl_ctx *ctx, bool doCoalesce )
 {
   // load Relation r into ISL map
   isl_map* imap = isl_map_read_from_str(ctx, relstr.c_str());
 
+  if( doCoalesce ){
+    imap = isl_map_coalesce(imap);
+  }
+
   return imap;
 }
+
 
 /*! This function takes an isl_map* and returns pointer to equ. Relation string
 ** The function takes ownership of input argument 'imap'
@@ -279,6 +288,87 @@ std::string islMapToString ( isl_map* imap , isl_ctx *ctx )
   free(i_str);
 
   return stringFromISL;
+}
+
+//! This function takes a Set string and returns equivalent isl_union_set*
+isl_union_set* islStringToUnionSet( std::string relstr , isl_ctx *ctx, bool doCoalesce )
+{
+  // load Relation r into ISL map
+  isl_union_set* iset = isl_union_set_read_from_str(ctx, relstr.c_str());
+
+  if( doCoalesce ){
+    iset = isl_union_set_coalesce(iset);
+  }
+
+  return iset;
+}
+
+/*! This function takes an isl_union_set* and returns equivalent Set string
+** The function takes ownership of input argument 'iset'
+*/
+std::string islUnionSetToString ( isl_union_set* iset , isl_ctx *ctx ) {
+  // Get an isl printer and associate to an isl context
+  isl_printer * ip = isl_printer_to_str(ctx);
+
+  // get string back from ISL map
+  isl_printer_set_output_format(ip, ISL_FORMAT_ISL);
+  isl_printer_print_union_set(ip, iset);
+  char *i_str = isl_printer_get_str(ip);
+  std::string stringFromISL (i_str); 
+  
+  // clean-up
+  isl_printer_flush(ip);
+  isl_printer_free(ip);
+  isl_union_set_free(iset);
+  iset= NULL;
+  free(i_str);
+
+  return stringFromISL;
+}
+
+//! This function takes a Relation string and returns pointer to equ. isl_union_map
+isl_union_map* islStringToUnionMap( std::string relstr , isl_ctx *ctx, bool doCoalesce )
+{
+  // load Relation r into ISL map
+  isl_union_map* imap = isl_union_map_read_from_str(ctx, relstr.c_str());
+
+  if( doCoalesce ){
+    imap = isl_union_map_coalesce(imap);
+    imap = isl_union_map_coalesce(imap);
+  }
+
+  return imap;
+}
+
+/*! This function takes an isl_union_map* and returns pointer to equ. Relation string
+** The function takes ownership of input argument 'imap'
+*/
+std::string islUnionMapToString ( isl_union_map* imap , isl_ctx *ctx )
+{
+  // Get an isl printer and associate to an isl context
+  isl_printer * ip = isl_printer_to_str(ctx);
+
+  // get string back from ISL map
+  isl_printer_set_output_format(ip , ISL_FORMAT_ISL);
+  isl_printer_print_union_map(ip ,imap);
+  char *i_str = isl_printer_get_str(ip);
+  std::string stringFromISL (i_str); 
+  
+  // clean-up
+  isl_printer_flush(ip);
+  isl_printer_free(ip);
+  isl_union_map_free(imap);
+  imap= NULL;
+  free(i_str);
+
+  return stringFromISL;
+}
+
+/*! This function buils and returns a full string from parts
+*/
+std::string getFullStrFromParts (srParts  parts){
+  return (parts.symVars + "\n" + parts.sC + parts.tupDecl +
+          parts.sepC + "\n" + parts.constraints + "\n" + parts.eC);
 }
 
 }// iegenlib namespace

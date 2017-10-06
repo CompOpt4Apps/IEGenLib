@@ -25,6 +25,8 @@
 
 #include <isl/set.h>   // ISL Sets
 #include <isl/map.h>   // ISL Relations
+#include <isl/union_set.h>   // ISL Union_Sets
+#include <isl/union_map.h>   // ISL Union_Relations
 
 namespace iegenlib{
 
@@ -105,7 +107,7 @@ std::string projectOutStrCorrection(std::string str, int poTv,
 //****** ISL tuple correction End
 
 //! This function takes a Set string and returns equivalent isl_set*
-isl_set* islStringToSet( std::string relstr , isl_ctx *ctx );
+isl_set* islStringToSet( std::string relstr , isl_ctx *ctx, bool doCoalesce = true );
 
 /*! This function takes an isl_set* and returns equivalent Set string
 ** The function takes ownership of input argument 'iset'
@@ -113,14 +115,32 @@ isl_set* islStringToSet( std::string relstr , isl_ctx *ctx );
 std::string islSetToString ( isl_set* iset , isl_ctx *ctx );
 
 //! This function takes a Relation string and returns pointer to equ. isl_map
-isl_map* islStringToMap( std::string relstr , isl_ctx *ctx );
+isl_map* islStringToMap( std::string relstr , isl_ctx *ctx, bool doCoalesce = true );
 
 /*! This function takes an isl_map* and returns pointer to equ. Relation string
 ** The function takes ownership of input argument 'imap'
 */
 std::string islMapToString ( isl_map* imap , isl_ctx *ctx );
 
+//! This function takes a Set string and returns equivalent isl_union_set*
+isl_union_set* islStringToUnionSet( std::string relstr , isl_ctx *ctx, bool doCoalesce = true );
+
+/*! This function takes an isl_union_set* and returns equivalent Set string
+** The function takes ownership of input argument 'iset'
+*/
+std::string islUnionSetToString ( isl_union_set* iset , isl_ctx *ctx);
+
+//! This function takes a Relation string and returns pointer to equ. isl_union_map
+isl_union_map* islStringToUnionMap( std::string relstr , isl_ctx *ctx, bool doCoalesce = true );
+
+/*! This function takes an isl_union_map* and returns pointer to equ. Relation string
+** The function takes ownership of input argument 'imap'
+*/
+std::string islUnionMapToString ( isl_union_map* imap , isl_ctx *ctx );
+
+/*! This function buils and returns a full string from parts
+*/
+std::string getFullStrFromParts (srParts  parts);
 
 }// iegenlib namespace
-
 #endif

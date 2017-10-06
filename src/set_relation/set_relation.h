@@ -771,6 +771,10 @@ private:
 };
 
 
+string passSetStrThruISL(string sstr);
+string passUnionSetStrThruISL(string sstr);
+string passRelationStrThruISL(string rstr);
+string passUnionRelationStrThruISL(string rstr);
 Set* passSetThruISL(Set* s);
 Relation* passRelationThruISL(Relation* r);
 
