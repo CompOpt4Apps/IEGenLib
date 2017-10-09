@@ -75,11 +75,9 @@ std::queue<std::string> tupVarsExtract(std::string tupDecl, int inArity, int out
 **      origTupDecl: [i1, i2] -> [1, i4]
 **      islTupDecl : [col_tv1_, i2] -> [1, i2]
 **      output:      i1 = col_tv1_ and i4 = i2
-**  Note: noFirstAnd determines whether we should put "and" at the beginning of
-**  the output string, which depends on original constraints being empty or not. 
 */
 std::string missingEqs(std::string origTupDecl, std::string islTupDecl,
-                              int inArity, int outArity, bool noFirstAnd){
+                              int inArity, int outArity){
     std::string eqs("");
     int arity = inArity + outArity;
     bool firstEq = true;
@@ -93,15 +91,12 @@ std::string missingEqs(std::string origTupDecl, std::string islTupDecl,
         std::string isl = islTupVars.front();
         islTupVars.pop();
         if( orig != isl ){
-            if(noFirstAnd && firstEq){
-                eqs +=  " " + orig +
-                        " = " + isl;
+            if(firstEq){
+                eqs +=  " " + orig + " = " + isl;
                 firstEq = false;
             } else {
-                eqs +=  " and " + orig +
-                        " = " + isl;
+                eqs +=  " and " + orig + " = " + isl;
             }
-        
         }
     }
 
@@ -155,24 +150,23 @@ srParts getPartsFromStr(std::string str){
 std::string revertISLTupDeclToOrig(std::string origStr, std::string islStr,
                               int inArity, int outArity){
     std::string correctedStr, eqsStr;
-    bool noFirstAnd = false;
     
     srParts origParts = getPartsFromStr(origStr);
     srParts islParts = getPartsFromStr(islStr);
 
-    if( islParts.constraints.length() == 0 ){
-        noFirstAnd = true;
-    }
     eqsStr = missingEqs( origParts.tupDecl , islParts.tupDecl ,
-                                inArity, outArity, noFirstAnd );
+                         inArity, outArity );
     
-    if( islParts.constraints.length() == 0 && eqsStr.length() == 0){
+    if( islParts.constraints.length() == 0){
         correctedStr = islParts.symVars + islParts.sC +
-                       origParts.tupDecl + islParts.eC;
+                       origParts.tupDecl + islParts.sepC + eqsStr + islParts.eC;
+    } else if( eqsStr.length() == 0){
+        correctedStr = islParts.symVars + islParts.sC + origParts.tupDecl + 
+                       islParts.sepC + islParts.constraints + islParts.eC;
     } else {
-        correctedStr = islParts.symVars + islParts.sC +
-                       origParts.tupDecl + islParts.sepC + 
-                       islParts.constraints + eqsStr +islParts.eC;
+        correctedStr = islParts.symVars + islParts.sC + origParts.tupDecl + 
+                       islParts.sepC + islParts.constraints + 
+                       " and " + eqsStr + islParts.eC;
     }
 
     return correctedStr;
@@ -223,10 +217,14 @@ std::string projectOutStrCorrection(std::string str, int poTv,
 //****** ISL tuple correction End
 
 //! This function takes a Set string and returns equivalent isl_set*
-isl_set* islStringToSet( std::string relstr , isl_ctx *ctx )
+isl_set* islStringToSet( std::string relstr , isl_ctx *ctx, bool doCoalesce )
 {
   // load Relation r into ISL map
   isl_set* iset = isl_set_read_from_str(ctx, relstr.c_str());
+
+  if( doCoalesce ){
+    iset = isl_set_coalesce(iset);
+  }
 
   return iset;
 }
@@ -255,13 +253,18 @@ std::string islSetToString ( isl_set* iset , isl_ctx *ctx ) {
 }
 
 //! This function takes a Relation string and returns pointer to equ. isl_map
-isl_map* islStringToMap( std::string relstr , isl_ctx *ctx )
+isl_map* islStringToMap( std::string relstr , isl_ctx *ctx, bool doCoalesce )
 {
   // load Relation r into ISL map
   isl_map* imap = isl_map_read_from_str(ctx, relstr.c_str());
 
+  if( doCoalesce ){
+    imap = isl_map_coalesce(imap);
+  }
+
   return imap;
 }
+
 
 /*! This function takes an isl_map* and returns pointer to equ. Relation string
 ** The function takes ownership of input argument 'imap'
@@ -285,6 +288,87 @@ std::string islMapToString ( isl_map* imap , isl_ctx *ctx )
   free(i_str);
 
   return stringFromISL;
+}
+
+//! This function takes a Set string and returns equivalent isl_union_set*
+isl_union_set* islStringToUnionSet( std::string relstr , isl_ctx *ctx, bool doCoalesce )
+{
+  // load Relation r into ISL map
+  isl_union_set* iset = isl_union_set_read_from_str(ctx, relstr.c_str());
+
+  if( doCoalesce ){
+    iset = isl_union_set_coalesce(iset);
+  }
+
+  return iset;
+}
+
+/*! This function takes an isl_union_set* and returns equivalent Set string
+** The function takes ownership of input argument 'iset'
+*/
+std::string islUnionSetToString ( isl_union_set* iset , isl_ctx *ctx ) {
+  // Get an isl printer and associate to an isl context
+  isl_printer * ip = isl_printer_to_str(ctx);
+
+  // get string back from ISL map
+  isl_printer_set_output_format(ip, ISL_FORMAT_ISL);
+  isl_printer_print_union_set(ip, iset);
+  char *i_str = isl_printer_get_str(ip);
+  std::string stringFromISL (i_str); 
+  
+  // clean-up
+  isl_printer_flush(ip);
+  isl_printer_free(ip);
+  isl_union_set_free(iset);
+  iset= NULL;
+  free(i_str);
+
+  return stringFromISL;
+}
+
+//! This function takes a Relation string and returns pointer to equ. isl_union_map
+isl_union_map* islStringToUnionMap( std::string relstr , isl_ctx *ctx, bool doCoalesce )
+{
+  // load Relation r into ISL map
+  isl_union_map* imap = isl_union_map_read_from_str(ctx, relstr.c_str());
+
+  if( doCoalesce ){
+    imap = isl_union_map_coalesce(imap);
+    imap = isl_union_map_coalesce(imap);
+  }
+
+  return imap;
+}
+
+/*! This function takes an isl_union_map* and returns pointer to equ. Relation string
+** The function takes ownership of input argument 'imap'
+*/
+std::string islUnionMapToString ( isl_union_map* imap , isl_ctx *ctx )
+{
+  // Get an isl printer and associate to an isl context
+  isl_printer * ip = isl_printer_to_str(ctx);
+
+  // get string back from ISL map
+  isl_printer_set_output_format(ip , ISL_FORMAT_ISL);
+  isl_printer_print_union_map(ip ,imap);
+  char *i_str = isl_printer_get_str(ip);
+  std::string stringFromISL (i_str); 
+  
+  // clean-up
+  isl_printer_flush(ip);
+  isl_printer_free(ip);
+  isl_union_map_free(imap);
+  imap= NULL;
+  free(i_str);
+
+  return stringFromISL;
+}
+
+/*! This function buils and returns a full string from parts
+*/
+std::string getFullStrFromParts (srParts  parts){
+  return (parts.symVars + "\n" + parts.sC + parts.tupDecl +
+          parts.sepC + "\n" + parts.constraints + "\n" + parts.eC);
 }
 
 }// iegenlib namespace

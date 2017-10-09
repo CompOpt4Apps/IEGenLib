@@ -20,10 +20,10 @@
 
 #ifndef ENVIRONMENT_H_
 #define ENVIRONMENT_H_
-#include "uniQuantConstraint.h"
 #include <string>
 #include <map>
 #include <set>
+#include <vector>
 #include <sstream>
 #include <iostream>
 
@@ -32,6 +32,7 @@
 
 namespace iegenlib{
 
+class UniQuantRule;
 class Environment;
 
 /*  FIXME: Might want to resurrect this to parse Symbolic declarations
@@ -75,15 +76,16 @@ MonotonicType queryMonoTypeEnv(const std::string funcName);
 //! search this environment for a function range arity
 unsigned int queryRangeArityCurrEnv(const std::string funcName);
 
-//! add an universially quantified constraint to environment
-void addUniQuantConstraint(uniQuantConstraint uqCon);
+//! add an universially quantified Rule to environment
+//! The environment is going to own uqRule object (user should not delete it)
+void addUniQuantRule(UniQuantRule *uqRule);
 
-// Return the number of available universially quantified constraints
-int queryNoUniQuantConstraintEnv();
+// Return the number of available universially quantified Rules
+int queryNoUniQuantRules();
 
-// Returns the universially quantified constraint No. j stored in the enviroment
-uniQuantConstraint queryUniQuantConstraintEnv(int idx);
-
+// Returns the universially quantified Rule No. idx stored in the enviroment
+//! The environment still owns returned object (user should not delete it)
+UniQuantRule* queryUniQuantRuleEnv(int idx);
 
 class Environment {
 public:
@@ -132,30 +134,68 @@ public:
 
     std::string toString() const;
 
+    //! Add a universially quantified Rule to the environment.
+    //! The environment is going to own uqRule object (user should not delete it
+    void addUniQuantRule(UniQuantRule *uqRule);
 
-    //! Add a universially quantified constraint to the environment
-    void addUniQuantConstraint(uniQuantConstraint con){
-        uniQuantConstraintVec.push_back (con);
-    }
-
-    //! Get the No. of universially quantified constraints
+    //! Get the No. of universially quantified Rules
     // available in the environment
-    int getNoUniQuantConstraint(){
-        return uniQuantConstraintVec.size();
-    }
-    //! Get the universially quantified constraint No. idx from 
+    int getNoUniQuantRules();
+
+    //! Get the universially quantified Rule No. idx from 
     // the environment
-    uniQuantConstraint getUniQuantConstraint(int idx){
-        return uniQuantConstraintVec[idx];
-    }
+    UniQuantRule* getUniQuantRule(int idx);
 
 private:
     std::map<std::string, UninterpFunc*> mUninterpFuncMap;
     std::map<std::string, std::string> mInverseMap;
-    std::vector<uniQuantConstraint>  uniQuantConstraintVec;
+    std::vector<UniQuantRule*>  uniQuantRules;
 };
 
 extern Environment currentEnv;
+
+// Monotonicity should always be the first and TheOthers the last type
+// This convention is used inside drivers 
+typedef enum {Monotonicity, CoMonotonicity, Triangular, 
+              FuncConsistency, TheOthers} UniQuantRuleType;
+
+/*!
+** This is the basic structure for storing different domain information
+** about uninterpreted function symbols in the environment, these 
+** information can be of the types:
+
+    Forall e1, e2, ...   Set => Set
+    * Set: can be a conjunction of equality and inequality expressions
+
+ * \class UniQuantRule
+ */
+class UniQuantRule {
+public:
+  UniQuantRule(string type, string tupleDecl, string leftSide, string rightSide);
+  ~UniQuantRule();
+  //! Copy constructor.
+  UniQuantRule( const UniQuantRule& other );//{ *this = other; }
+  //! Assignment operator.
+  UniQuantRule& operator=( const UniQuantRule& other );
+  //! helper function for implementing copy-and-swap
+  void swap(UniQuantRule& second) throw();
+
+  //! prints the content of the map into a std::string, and returns it
+  std::string toString();
+  UniQuantRuleType getType();
+  // Get left side of the rule as a Set:
+  //     Forall e1, e2,  p => q ( this functions returns { [e1, e2] : p } )
+  Set* getLeftSide();
+  // Get right side of the rule as a Set:
+  //     Forall e1, e2,  p => q ( this functions returns { [e1, e2] : q } )
+  Set* getRightSide();
+
+private:
+
+  UniQuantRuleType mUniQuantRuleType; 
+  Set *mLeftSide;
+  Set *mRightSide;
+};
 
 }//end namespace iegenlib
 

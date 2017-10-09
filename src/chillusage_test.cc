@@ -1504,3 +1504,128 @@ S2:     v[j1] -= tmp*v[j2];
 
 #endif
 
+
+
+/*! How to insert and retrieve universially quantified rules
+    to and from environment.
+*/
+TEST_F(ChillUsageTest, InsertRetrieveUniQuantRule)
+{
+    string type, tupleDecl, leftSide, rightSide;
+    int NoRules;
+    iegenlib::setCurrEnv(); // Clears out the environment
+
+    // #1 How to universially quantified rules to environment:
+
+    // ##1.1 The environment function appendCurrEnv will add
+    // functional consistency rule for all 
+    // uninterpreted function symbol (UFSs) and some other 
+    // universally quantified rules depending on  the type of 
+    // monotonicity (if any) for each UFS using addUniQuantRule function. 
+    // For instance for the following since we declare rowPtr
+    // as monotonically increasing following rules will get added 
+    // to environment automatically:
+    //  
+    // Functional consistency: 
+    //   forall e1, e2 : if e1 = e2 then rowPtr(e1) = rowPtr(e2)   // #0
+    // Strictlly increasing monotonocity:
+    //   forall e1, e2 : e1 < e2 => rowPtr(e1) < rowPtr(e2)        // #1
+    //   forall e1, e2 : rowPtr(e1) = rowPtr(e2) => e1 = e2        // #2
+    //   forall e1, e2 : rowPtr(e1) < rowPtr(e2) => e1 < e2        // #3
+    //   forall e1, e2 : rowPtr(e1) <= rowPtr(e2) => e1 <= e2      // #4
+
+    iegenlib::appendCurrEnv("rowPtr", // UF name
+        // rowPtr domain
+        new Set("{[i]: 0 <= i && i < n}"),
+        // rowPtr range
+        new Set("{[j]: 0 <= j && j < nnz}"),
+        // rowPtr function is bijective
+        true,
+        // monotonicially strictlly increasing
+        Monotonic_Increasing );
+
+    // Following will also add a functional consistency rule for colIdx:
+    //   forall e1, e2 : if e1 = e2 then colIdx(e1) = colIdx(e2)   // #5
+    iegenlib::appendCurrEnv("colIdx", new Set("{[i]: 0 <= i && i < nnz}"),
+        new Set("{[j]: 0 <= j && j < n}"), true, Monotonic_NONE );
+
+
+    // ##1.2 We could also add general universially quantfied rules between
+    //  any UFS that is defined in the environment of the form:
+    //   forall [e1, e2, ...]  conjunction([ei, ...]) => conjunction([ej, ...])
+    //  * conjunction can be any IEGenLib acceptable conjunction of equalities
+    //    and inequalities with subset of unversially quantified rules being 
+    //    used in the constraints in either side 
+    // Following is an example rule:
+    //   forall e1, e2,  rowPtr(e1) <= e2 < rowPtr(e1+1) => colIdx(e2) <= e1 // #6
+    // And, following demonstrates how we could encode it:
+
+    // A pointer to an instance of the class that 
+    // defines universially quantified rules
+    UniQuantRule *uqRule;
+    // An optional type predefined types are: 
+    //  Monotonicity, CoMonotonicity, Triangular, FuncConsistency, TheOthers
+    type = ("Triangular");
+    // List of universially quantifed variables: forall e1, e2, ...                       
+    tupleDecl = ("[e1,e2]");
+    // Left side of the rule (p part): p => q
+    leftSide = ( "rowPtr(e1) <= e2 and e2 < rowPtr(e1+1)" );
+    // Right side of the rule (q part): p => q
+    rightSide = ( "colIdx(e2) <= e1" );
+    // Definign the rule:
+    uqRule = new UniQuantRule(type, tupleDecl, leftSide, rightSide);
+    // Adding the rule to environment:
+    currentEnv.addUniQuantRule( uqRule );
+    // *** Do not delete uqRule since environment owns it.
+
+
+    // #2 Now, following demonstrates how we query rules and related info:
+
+    // ##2.1 Query the number of available universially quantified Rules:
+    NoRules = queryNoUniQuantRules();
+    // Currently there are 7 rules are available in the environment:
+    // 2 functional consistency rules one for rowPtr and one for colIdx
+    // 4 monotonicity related rules for rowPtr (shown above in the example)
+    // 1 general rule added in the above example
+    EXPECT_EQ( NoRules , 7 );
+
+    // ##2.2 Query the universially quantified Rule No. 3 stored in 
+    // the enviroment. The environment still owns returned object:
+    //   The rule is a monotonoicty related rule for rowPtr:
+    //   forall e1, e2 : rowPtr(e1) < rowPtr(e2) => e1 < e2 
+    UniQuantRule* uqRule3 = queryUniQuantRuleEnv(3);  // Indexes start from 0
+
+    // ##2.3 We could query different parts of a rule:
+
+    UniQuantRuleType rt = uqRule3->getType();   // Type
+    EXPECT_EQ( rt , iegenlib::Monotonicity );
+
+    // Get left side of the implication in the rule (p part): p => q
+    Set* leftSideOfTheRule = uqRule3->getLeftSide();
+    // However the left/right hand side are stored as normal IEGenLib Sets:
+    Set ex_left_side("{[e1,e2] : rowPtr(e1) < rowPtr(e2) }");
+    EXPECT_EQ( *leftSideOfTheRule , ex_left_side );
+
+    // If you want to access just the constraints in the left/right hand sides
+    // you could use functionalities in isl_str_manipulation.h/cc for breaking 
+    // different parts of a Set/Relation (for details refer to those files):
+    srParts RulesLParts;
+    RulesLParts = getPartsFromStr(leftSideOfTheRule->prettyPrintString());
+    EXPECT_EQ( RulesLParts.constraints , 
+               std::string(" -rowPtr(e1) + rowPtr(e2) - 1 >= 0 ") );
+    // ** Please note inqualities are stored in the follwoing way in IEGEnLib:
+    //    rowPtr(e1) < rowPtr(e2)   ==  -rowPtr(e1) + rowPtr(e2) - 1 >= 0
+
+    //  ##2.4 Query the universially quantified Rule No. 6
+    UniQuantRule* uqRule6 = queryUniQuantRuleEnv(6);
+
+    // toString function could be used to get a string representation of a rule:
+    string expected_rule_str = "Forall e1, e2   e2 - rowPtr(e1) >= 0 "
+                               "&& -e2 + rowPtr(e1 + 1) - 1 >= 0  => "
+                               " e1 - colIdx(e2) >= 0 ";
+    EXPECT_EQ( uqRule6->toString() , expected_rule_str);
+
+    // Do not delete the defined rules' objects (added or queried) 
+    // since environment still owns them.
+}
+

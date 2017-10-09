@@ -24,6 +24,50 @@ namespace iegenlib{
 
 /************************ ISL helper routines ****************************/
 
+//! Runs an Affine Set (string) through ISL and returns the resulting set
+//  as a string
+string passSetStrThruISL(string sstr){
+
+  isl_ctx *ctx = isl_ctx_alloc();
+  string islStr =  islSetToString ( islStringToSet(sstr,ctx), ctx );
+  isl_ctx_free(ctx);
+
+  return islStr;
+}
+
+//! Runs an Affine Union Set* (string) through ISL 
+//  and returns the resulting set as a string
+//  * Union Set is a set of polyhedrals that may live in different space 
+//    (may have different tuple declaration)
+string passUnionSetStrThruISL(string sstr){
+
+  isl_ctx *ctx = isl_ctx_alloc();
+  string islStr =  islUnionSetToString ( islStringToUnionSet(sstr,ctx), ctx );
+  isl_ctx_free(ctx);
+
+  return islStr;
+}
+
+//! Runs an Affine Relation through ISL and returns the normalized result
+string passRelationStrThruISL(string rstr){
+
+  isl_ctx *ctx = isl_ctx_alloc();
+  string islStr =  islMapToString ( islStringToMap(rstr,ctx), ctx );
+  isl_ctx_free(ctx);
+
+  return islStr;
+}
+
+//! Runs an Affine Union Relation through ISL and returns the normalized result
+string passUnionRelationStrThruISL(string rstr){
+
+  isl_ctx *ctx = isl_ctx_alloc();
+  string islStr =  islUnionMapToString ( islStringToUnionMap(rstr,ctx), ctx );
+  isl_ctx_free(ctx);
+
+  return islStr;
+}
+
 //! Runs an Affine Set through ISL and returns the resulting normalized set
 Set* passSetThruISL(Set* s){
 
@@ -1927,7 +1971,7 @@ void Set::normalize() {
     indexUFCs();
 
     // Create variable names for UF calls.
-    UFCallMap* uf_call_map = mapUFCtoSym();
+    UFCallMap* uf_call_map = new UFCallMap();
     
     // Replace uf calls with the variables to create an affine superset.
     Set* superset_copy = superAffineSet(uf_call_map);
@@ -2270,7 +2314,7 @@ void Relation::normalize() {
     indexUFCs();
 
     // Create variable names for UF calls.
-    UFCallMap* uf_call_map = mapUFCtoSym();
+    UFCallMap* uf_call_map = new UFCallMap();
     
     // Replace uf calls with the variables to create an affine superset.
     Relation* superset_copy = superAffineRelation(uf_call_map);
@@ -2443,43 +2487,6 @@ bool SparseConstraints::isUFCallParam(int tupleID) {
     delete v;
 
     return result;
-}
-
-////////////////////////////////////
-
-/*****************************************************************************/
-#pragma mark -
-/*************** VisitorUFCtoParamVar *****************************/
-// Vistor Class used in traversing conjunctions for finding UFCalls
-class VisitorUFCtoParamVar : public Visitor {
-  private:
-         UFCallMap* map;
-  public:
-         VisitorUFCtoParamVar() { map = new UFCallMap(); }
-         inline UFCallMap* getMap() { return map; }
-         void preVisitUFCallTerm(iegenlib::UFCallTerm * t);
-};
-
-void VisitorUFCtoParamVar::preVisitUFCallTerm(iegenlib::UFCallTerm * t){
-
-    UFCallTerm clone = *t;
-    clone.setCoefficient(1);
-    map->insert(&clone);
-}
-
-// The function traverses all conjunctions to find UFcalls.
-// For every distinct UFCall, it creates a equ. symbolic constant (string)
-// and stores the (UFC, Sym) pair in a UFCallMap. The function returns
-// a pointer to final UFCallMap that the user is responsible for deleting.
-UFCallMap* SparseConstraints::mapUFCtoSym()
-{
-    VisitorUFCtoParamVar * v = new VisitorUFCtoParamVar();
-    this->acceptVisitor(v);
-    UFCallMap* ufcmap = v->getMap();
-
-    delete v;
-
-    return ufcmap;
 }
 
 /*****************************************************************************/
@@ -2749,14 +2756,22 @@ class VisitorSuperAffineSet : public Visitor {
 **    (2) We replace all UFCalls with symbolic constants found in the ufc map.
 **  The function does not own the ufcmap.
 */
-Set* Set::superAffineSet(UFCallMap* ufcmap)
+Set* Set::superAffineSet(UFCallMap* ufcmap, bool boundUFCs)
 {
-    Set* copySet = this->boundDomainRange();
+    Set *copySet, *result;
+
+    if( !noConjuncts() ){  // There is no conjunction, so nothing to do
+       result = new Set (*this);
+       return result;   // Just return a copy of the Set
+    }
+
+    if( boundUFCs ) copySet = this->boundDomainRange();
+    else          copySet = new Set (*this);
 
     VisitorSuperAffineSet* v = new VisitorSuperAffineSet(ufcmap);
     copySet->acceptVisitor( v );
     
-    Set* result = (v->getSet());
+    result = (v->getSet());
     
     delete copySet;
     delete v;
@@ -2765,14 +2780,22 @@ Set* Set::superAffineSet(UFCallMap* ufcmap)
 }
 
 //! Same as Set
-Relation* Relation::superAffineRelation(UFCallMap* ufcmap)
+Relation* Relation::superAffineRelation(UFCallMap* ufcmap, bool boundUFCs)
 {
-    Relation* copyRelation = this->boundDomainRange();
+    Relation *copyRelation, *result;
+
+    if( !noConjuncts() ){  // There is no conjunction, so nothing to do
+       result = new Relation (*this);
+       return result;   // Just return a copy of the Set
+    }
+
+    if( boundUFCs ) copyRelation = this->boundDomainRange();
+    else          copyRelation = new Relation (*this);
 
     VisitorSuperAffineSet* v = new VisitorSuperAffineSet(ufcmap);
     copyRelation->acceptVisitor( v );
 
-    Relation* result = (v->getRelation());
+    result = (v->getRelation());
 
     delete copyRelation;
     delete v;
@@ -3039,8 +3062,7 @@ Set* Set::projectOut(int tvar)
     }
     
     // Geting a map of UFCalls 
-    iegenlib::UFCallMap *ufcmap;
-    ufcmap = this->mapUFCtoSym();
+    iegenlib::UFCallMap *ufcmap = new UFCallMap();;
     // Getting the super affine set of constraints with no UFCallTerms
     Set* sup_s = this->superAffineSet(ufcmap);
 
@@ -3080,8 +3102,7 @@ Relation* Relation::projectOut(int tvar)
     }
     
     // Geting a map of UFCalls 
-    iegenlib::UFCallMap *ufcmap;
-    ufcmap = this->mapUFCtoSym();
+    iegenlib::UFCallMap *ufcmap = new UFCallMap();
     // Getting the super affine set of constraints with no UFCallTerms
     Relation* sup_r = this->superAffineRelation(ufcmap);
 

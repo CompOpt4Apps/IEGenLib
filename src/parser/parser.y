@@ -111,6 +111,11 @@
 %type <exp> constraint_gte
 %type <exp> constraint_lt
 %type <exp> constraint_lte
+%type <explist> constraint_range
+%type <explist> constraint_range_lte_lt
+%type <explist> constraint_range_lt_lte
+%type <explist> constraint_range_lte_lte
+%type <explist> constraint_range_lt_lt
 %type <explist> constraint_list
 %type <explist> optional_constraints
 
@@ -463,6 +468,9 @@
             yyclearin;
          }
       
+      | COLON //epsilon
+         {$$ = new std::list<Exp*>();} 
+     
       | //epsilon
          {$$ = new std::list<Exp*>();}
 
@@ -483,6 +491,25 @@
       | constraint_list WAND constraint
          {
             $1->push_back($3);
+            $$ = $1;
+         }
+
+     | constraint_range
+         {
+            std::list<Exp*>* clist = new std::list<Exp*>();
+            clist->splice(clist->end(), *($1) );
+            $$ = clist;
+         }
+
+      | constraint_list AND constraint_range
+         {
+            $1->splice ($1->end(), *($3) );
+            $$ = $1;
+         }
+
+      | constraint_list WAND constraint_range
+         {
+            $1->splice ($1->end(), *($3) );
             $$ = $1;
          }
 
@@ -543,6 +570,94 @@
             $$ = $1;
          }
       
+   constraint_range: constraint_range_lte_lt
+         {$$ = $1;}
+            
+      | constraint_range_lt_lte
+         {$$ = $1;}
+
+      | constraint_range_lte_lte
+         {$$ = $1;}
+
+      | constraint_range_lt_lt
+         {$$ = $1;}
+
+   constraint_range_lte_lt: expression LTE expression LT expression
+         {
+            Exp* tExp = $3->clone();
+
+            $3->setInequality();
+            $1->multiplyBy(-1);
+            $3->addExp($1);
+
+            $5->setInequality();
+            tExp->addTerm(new Term(1));
+            tExp->multiplyBy(-1);
+            $5->addExp(tExp);
+
+            std::list<Exp*>* clist = new std::list<Exp*>();
+            clist->push_back($3);
+            clist->push_back($5);
+            $$ = clist;
+         }
+
+   constraint_range_lt_lte: expression LT expression LTE expression
+         {
+            Exp* tExp = $3->clone();
+
+            $3->setInequality();
+            $1->addTerm(new Term(1));
+            $1->multiplyBy(-1);
+            $3->addExp($1);
+
+            $5->setInequality();
+            tExp->multiplyBy(-1);
+            $5->addExp(tExp);
+
+            std::list<Exp*>* clist = new std::list<Exp*>();
+            clist->push_back($3);
+            clist->push_back($5);
+            $$ = clist;
+         }
+
+   constraint_range_lte_lte: expression LTE expression LTE expression
+         {
+            Exp* tExp = $3->clone();
+
+            $3->setInequality();
+            $1->multiplyBy(-1);
+            $3->addExp($1);
+
+            $5->setInequality();
+            tExp->multiplyBy(-1);
+            $5->addExp(tExp);
+
+            std::list<Exp*>* clist = new std::list<Exp*>();
+            clist->push_back($3);
+            clist->push_back($5);
+            $$ = clist;
+         }
+
+   constraint_range_lt_lt: expression LT expression LT expression
+         {
+            Exp* tExp = $3->clone();
+
+            $3->setInequality();
+            $1->addTerm(new Term(1));
+            $1->multiplyBy(-1);
+            $3->addExp($1);
+
+            $5->setInequality();
+            tExp->addTerm(new Term(1));
+            tExp->multiplyBy(-1);
+            $5->addExp(tExp);
+
+            std::list<Exp*>* clist = new std::list<Exp*>();
+            clist->push_back($3);
+            clist->push_back($5);
+            $$ = clist;
+         }
+
    expression: expression_int
          { $$ = $1; }
       

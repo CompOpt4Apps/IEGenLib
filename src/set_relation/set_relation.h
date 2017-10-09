@@ -379,12 +379,6 @@ public:
     //! Is tuple variable tupleID argument to an UFS?
     bool isUFCallParam(int tupleID);
 
-    //! The function traverses all conjunctions to find UFcalls.
-    //! For every distinct UGCall, it creates a equ. symbolic constant (string)
-    //! and stores the (UFC, Sym) pair in a UFCallMap. The function returns
-    //! a pointer to final UFCallMap that the user is responsible for deleting.
-    UFCallMap* mapUFCtoSym();
-
     /*! This function considers tuple variable i; and counts the number of
     **  constraints in the set where this tuple variable is argument to an UFC.
     **  However, it excludes constraints that are in the domainRangeConsts set.
@@ -419,6 +413,9 @@ public:
            i != mConjunctions.end(); i++)  if((*i)->isUnsat()) return true;
       return false;
     }
+
+    //! Return the number of conjunction
+    int noConjuncts(){ return mConjunctions.size(); } 
 
 
 // FIXME: what methods should we have to iterate over conjunctions so
@@ -536,11 +533,18 @@ public:
 
     /*! Creates a super affine set from a non-affine set.
     **  To do this:
-    **    (1) We add constraints due to all UFCalls' domain and range
+    **    (1) OPTIONAL: We add constraints due to all UFCalls' domain and range
     **    (2) We replace all UFCalls with symbolic constants in the ufc map.
+    **  ufcmap: is going to pupulated with UFCs and their eq. symbolic constants
+    **          it can be later used to replace back the UFCs with
+    **          reverseAffineSubstitution
+    **  boundUFCs: for most purposes we probably want to bound domain and range  
+    **             of UFCalls in a set before turning it into a super affine set.
+    **             However, sometimes it might be desiarable not to do that, 
+    **             e.g in rule instantiation 
     **  The function does not own the ufcmap.
     */
-    Set* superAffineSet(UFCallMap* ufcmap);
+    Set* superAffineSet(UFCallMap* ufcmap, bool boundUFCs = true);
 
     /*! Creates a sub non-affine set from an affine set.
     **  By replacing symbolic constants that are representative of UFCalls
@@ -571,6 +575,8 @@ public:
             return false;
         }
     }
+
+    int getArity(){ return mArity;}
 
 private:
     int mArity;
@@ -714,12 +720,18 @@ public:
 
     /*! Creates a super affine Relation from a non-affine Relation.
     **  To do this:
-    **   (1) We add constraints due to all UFCalls' domain and range
-    **   (2) Replace all UFCalls with symbolic constants found in the ufc map.
-    **  The function does not own the ufcmap.  Caller must cleanup returned
-    **  Relation.
+    **    (1) OPTIONAL: We add constraints due to all UFCalls' domain and range
+    **    (2) We replace all UFCalls with symbolic constants in the ufc map.
+    **  ufcmap: is going to pupulated with UFCs and their eq. symbolic constants
+    **          it can be later used to replace back the UFCs with
+    **          reverseAffineSubstitution
+    **  boundUFCs: for most purposes we probably want to bound domain and range  
+    **             of UFCalls in a set before turning it into a super affine set.
+    **             However, sometimes it might be desiarable not to do that, 
+    **             e.g in rule instantiation 
+    **  The function does not own the ufcmap.
     */
-    Relation* superAffineRelation(UFCallMap* ufcmap);
+    Relation* superAffineRelation(UFCallMap* ufcmap, bool boundUFCs = true);
 
     /*! Creates a sub non-affine set from an affine Relation.
     **  By replacing symbolic constants that are representative of UFCalls
@@ -759,6 +771,10 @@ private:
 };
 
 
+string passSetStrThruISL(string sstr);
+string passUnionSetStrThruISL(string sstr);
+string passRelationStrThruISL(string rstr);
+string passUnionRelationStrThruISL(string rstr);
 Set* passSetThruISL(Set* s);
 Relation* passRelationThruISL(Relation* r);
 
