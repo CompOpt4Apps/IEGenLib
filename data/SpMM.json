@@ -1,0 +1,121 @@
+[
+  [
+    {
+      "Name" : "SpMM for CSC",
+      "Input Type" : "IEgenLIB Relation",
+      "Index" : "1",
+      "Relation" : "{ [j,p1,p2,nz] -> [jp,pp,nzp]: nz = pp && jp < j && 0 <= j && j < n && 0 <= jp && jp < n && Bp(j) <= p1 && p1 < Bp(j+1) && Ap(Bp(j)) <= p2 && p2 < Ap(Bp(j+1)) && Cp(j) <= nz && nz < Cp(j+1) && Cp(jp) <= nzp && nzp < Cp(jp+1) && Cp(jp) <= pp && pp < nzp }",
+
+      "Efficient Inspector complexity:" : "O( n^2 )",
+
+      "Expected" : "Not Satisfaible",
+      "UFS" :
+      [
+        { 
+           "Name" : "Ai",
+           "Domain" : "{[i]:0<=i &&i<nnz_A}",
+           "Range" : "{[j]:0<=j &&j<n}",
+           "Bijective" : "false",
+           "Monotonicity" : "Monotonic_NONE"
+        },
+        { 
+           "Name" : "Ap",
+           "Domain" : "{[j]:0<=j &&j<n}",
+           "Range" : "{[i]:0<=i &&i<nnz_A}",
+           "Bijective" : "false",
+           "Monotonicity" : "Monotonic_Increasing"
+        },
+        { 
+           "Name" : "Bi",
+           "Domain" : "{[i]:0<=i &&i<nnz_B}",
+           "Range" : "{[j]:0<=j &&j<n}",
+           "Bijective" : "false",
+           "Monotonicity" : "Monotonic_NONE"
+        },
+        { 
+           "Name" : "Bp",
+           "Domain" : "{[j]:0<=j &&j<n}",
+           "Range" : "{[i]:0<=i &&i<nnz_B}",
+           "Bijective" : "false",
+           "Monotonicity" : "Monotonic_Increasing"
+        },
+        { 
+           "Name" : "Ci",
+           "Domain" : "{[i]:0<=i &&i<nnz_C}",
+           "Range" : "{[j]:0<=j &&j<n}",
+           "Bijective" : "false",
+           "Monotonicity" : "Monotonic_NONE"
+        },
+        { 
+           "Name" : "Cp",
+           "Domain" : "{[j]:0<=j &&j<n}",
+           "Range" : "{[i]:0<=i &&i<nnz_C}",
+           "Bijective" : "false",
+           "Monotonicity" : "Monotonic_Increasing"
+        }
+      ],
+      "User Defined" :
+      [
+      ],
+      "Do Not Project Out" :
+      [
+        "i", "ip"
+      ],
+      "Remove Constraints" : "0",
+      "Comment: Code" : [
+                  "Following is the SpMM for CSC.",
+                  "",
+                  "",
+                  "",
+                  "",
+                  ""
+                  ],
+      "Comment: Source of data access in the code for this relation" : [
+                    " ",
+                    ""
+                  ]
+    },
+    {
+      "Name" : "SpMM CSC",
+      "Input Type" : "IEgenLIB Relation",
+      "Index" : "2",
+      "Relation" : "{ [j,p1,p2,nz] -> [jp,pp,nzp]: nz = pp && j < jp && 0 <= j && j < n && 0 <= jp && jp < n && Bp(j) <= p1 && p1 < Bp(j+1) && Ap(Bp(j)) <= p2 && p2 < Ap(Bp(j+1)) && Cp(j) <= nz && nz < Cp(j+1) && Cp(jp) <= nzp && nzp < Cp(jp+1) && Cp(jp) <= pp && pp < nzp }",
+
+      "Efficient Inspector complexity:" : "O( n^2 )",
+
+      "Expected" : "Not Satisfiable",
+      "Comment: Source of data access in the code for this relation" : [
+                    " ",
+                    ""
+                  ]
+    },
+    {
+      "Name" : "SpMM CSC",
+      "Input Type" : "IEgenLIB Relation",
+      "Index" : "3",
+      "Relation" : "{ [j,p,nz] -> [jp,pp,nzp]: nz = pp && jp < j && 0 <= j && j < n && 0 <= jp && jp < n && Cp(j) <= nz && nz < Cp(j+1) && Cp(j) <= p && p < nz && Cp(jp) <= nzp && nzp < Cp(jp+1) && Cp(jp) <= pp && pp < nzp }",
+
+      "Efficient Inspector complexity:" : "O( n^2 )",
+
+      "Expected" : "Not Satisfiable",
+      "Comment: Source of data access in the code for this relation" : [
+                    " ",
+                    ""
+                  ]
+    },
+    {
+      "Name" : "SpMM CSC",
+      "Input Type" : "IEgenLIB Relation",
+      "Index" : "4",
+      "Relation" : "{ [j,p,nz] -> [jp,pp,nzp]: nz = pp && jp < j && 0 <= j && j < n && 0 <= jp && jp < n && Cp(j) <= nz && nz < Cp(j+1) && Cp(j) <= p && p < nz && Cp(jp) <= nzp && nzp < Cp(jp+1) && Cp(jp) <= pp && pp < nzp }",
+
+      "Efficient Inspector complexity:" : "O( n^2 )",
+
+      "Expected" : "Not Satisfiable",
+      "Comment: Source of data access in the code for this relation" : [
+                    " ",
+                    ""
+                  ]
+    }
+  ]
+]

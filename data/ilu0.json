@@ -6,11 +6,9 @@
       "Index" : "1",
       "Relation" : "[m] -> {[i,k] -> [ip,kp]: i < ip && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && k = kp }",
 
-      "Efficient Inspector complexity:" : "O( n*n )",
+      "Efficient Inspector complexity:" : "O( nnz )",
 
-      "What helps to detect unsat 1:" : "Correlated Mono",
-
-      "Expected" : "Not Satisfiable",
+      "Expected" : "{ [i] -> [ip,jp] : i = colidx(jp) && colidx(jp) < ip && ip < m-1 && rowptr(i) < rowptr(i+1) && rowptr(ip) <= jp && jp < rowptr(ip+1) && colidx(jp) >= 0 && rowptr(i) >= 0 && rowptr(ip) >= 0 && rowptr(i+1) < nnz && rowptr(ip+1) < nnz}",
       "UFS" :
       [
         { 
@@ -38,71 +36,43 @@
       "User Defined" :
       [
         {
-          "Type" : "Comment",
-          "Forall e1, e2: if e1 is? e2" : "expCompOp",
-          "then add: UFSymbol1?(e1)" : "UF1",
-          " is? " : "ufCompOp",
-          "UFSymbol2?(e2)" : "UF2"
+          "Type" : "CoMonotonicity",
+          "UniQuantVar" : "[e1,e2]",
+          "Rule (comment)" : "Forall e1,e2,  e1 = e2 => rowptr(e1) <= diagptr(e2)",
+          "p" : "e1 = e2",
+          "q" : "rowptr(e1) <= diagptr(e2)"
         },
         {
-          "Type" : "Comment",
-          "Forall e1, e2: if UFSymbol1?(e1)" : "UFSymbol1",
-          " is? " : "OP",
-          "UFSymbol2?(e2)" : "UFSymbol2",
-          "then add: e1 is? e2" : "OP"
-        },
-        {
-          "Type" : "UserDefPar2UFC",
-          "Forall e1, e2: if e1 is? e2" : "=",
-          "then add: UFSymbol1?(e1)" : "rowptr",
-          " is? " : "<=",
-          "UFSymbol2?(e2)" : "diagptr"
-        },
-        {
-          "Type" : "UserDefPar2UFC",
-          "Forall e1, e2: if e1 is? e2" : "<",
-          "then add: UFSymbol1?(e1)" : "diagptr",
-          " is? " : "<",
-          "UFSymbol2?(e2)" : "rowptr"
-        },
-        {
-          "Type" : "UserDefUFC2Par",
-          "Forall e1, e2: if UFSymbol1?(e1)" : "diagptr",
-          " is? " : "<",
-          "UFSymbol2?(e2)" : "rowptr",
-          "then add: e1 is? e2" : "<"
+          "Type" : "CoMonotonicity",
+          "UniQuantVar" : "[e1,e2]",
+          "Rule (comment)" : "Forall e1,e2,  e1 < e2 => diagptr(e1) < rowptr(e2)",
+          "p" : "e1 < e2",
+          "q" : "diagptr(e1) < rowptr(e2)"
         }
       ],
       "Do Not Project Out" :
       [
-        "i", "ip", "k", "kp"
+        "i", "ip"
       ],
-      "Remove Constraints" : "2",
+      "Remove Constraints" : "0",
       "Comment: Code" : [
-                  "Following is the CSR ILU0 code. Dependence analysis of this",
-                  "code would identify 8 pairs of read/write data accesses",
-                  "(in or between S1 and S2) that may produce data dependences.",
-                  "Each of these pairs produces two conjunctions considering",
-                  "the ordering of accesses (Flow and Anti dependence).",
-                  "Overall, there are 16 distinct conjunctions for",
-                  "the complete dependence relation.",
-                  " ",
-                  "for(int i=0; i < n; i++){",
-                  "  for(int k= row[i]; k < diag[i]; k++){",
-                  "S1: v[k] = v[k] / v[diag[col[k]]];",
-                  "    int j1 = k + 1, j2 = diag[col[k]] + 1;",
-                  " ",
-                  "    while (j1 < row[i + 1] && j2 < row[col[k] + 1]){",
-                  "      if(colidx[j1] == colidx[j2]) {",
-                  "S2:     v[j1] -= v[k]*v[j2];", 
-                  "        ++j1; ++j2;",
-                  "      else if (col[j1] < col[j2]) ++j1;",
-                  "      else                        ++j2;",
-                  "} } } }"
+                  "Following is the Gauss-Seidel code. Dependence analysis of",
+                  "this code would identify 1 pair of read/write data accesses",
+                  "(in S1) that may produce data dependences. This pair produces",
+                  "two distinct conjunctions considering the ordering of accesses",
+                  "(Flow and Anti dependence). Overall, there are 2 distinct",
+                  "conjunctions for the complete dependence relation.",
+                  "  for (i=0; i < N; i++) {",
+                  "    double sum = b[i];",
+                  "    for (j=rowptr[i];j<rowptr[i + 1];j++) {",
+                  "S1:   sum -= values[j]*y[colidx[j]];",
+                  "    }",
+                  "S2: y[i] = sum*idiag[i];",
+                  "  }"
                   ],
       "Comment: Source of data access in the code for this relation" : [
                     " ",
-                    "a read in S1 (v[k]);  a write in S1 (v[k]);"
+                    "a read in S1 (y[colidx[j]]);  a write in S2 (y[i]); "
                   ]
     },
     {

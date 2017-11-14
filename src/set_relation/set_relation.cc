@@ -1280,6 +1280,7 @@ bool Conjunction::satisfiable() const {
 */
 
 void Conjunction::cleanUp() {
+/*
     // Remove zero equalities, normalize, and remove nested inverse funcs
     for (std::list<Exp*>::iterator i=mEqualities.begin();
             i != mEqualities.end(); ) {
@@ -1335,7 +1336,7 @@ void Conjunction::cleanUp() {
             i != inequalityListCopy.end(); i++) {
         this->addInequality(*i);
     }
-
+*/
 }
 
 /*!
@@ -1712,7 +1713,7 @@ bool _compareConjunctions( Conjunction* first, Conjunction* second ) {
 // make the conjunction unsatisfiable.  Should deal with this in release 2
 // and use ISL.
 void SparseConstraints::cleanUp(){
-    // removes duplicate constraints, FIXME: does it also resort constraints?
+/*    // removes duplicate constraints, FIXME: does it also resort constraints?
     for (std::list<Conjunction*>::const_iterator i=mConjunctions.begin();
                 i != mConjunctions.end(); i++) {
         (*i)->cleanUp();
@@ -1730,7 +1731,7 @@ void SparseConstraints::cleanUp(){
 
     //sort the list of conjunctions
     mConjunctions.sort(_compareConjunctions);
-
+*/
 }
 
 /*! Find any TupleVarTerms in this expression (and subexpressions)
@@ -3424,69 +3425,6 @@ class VisitorGatherAllParameters : public Visitor {
 };
 
 
-const char* param = "[ m, diagptr_ip_, diagptr_i_, diagptr_colidx_k__, diagptr_colidx_kp__, colidx_j1_, colidx_j2_, colidx_j1p_, colidx_j2p_, colidx_k_, colidx_k_P1, colidx_k_P2, colidx_kp_, colidx_kp_P1, colidx_kp_P2, rowptr_colidx_k_P1_, rowptr_colidx_k_P2_, rowptr_colidx_k__, rowptr_colidx_kp_P1_, rowptr_colidx_kp_P2_, rowptr_colidx_kp__, rowptr_iM1_, rowptr_iP1_, rowptr_iP2_, rowptr_i_, rowptr_ipM1_, rowptr_ipP1_, rowptr_ipP2_, rowptr_ip_, diagptr_colidx_k_M1_, diagptr_colidx_k_P1_,  diagptr_colidx_kp_M1_, diagptr_colidx_kp_P1_, diagptr_iM1_, diagptr_iP1_,  diagptr_ipM1_, diagptr_ipP1_]  -> ";
-
-
-
-
-
-const char* relstr = "[i,k,j1,j2] -> [ip,kp,j1p,j2p]: ";
-
-
-isl_map* read_instantiation(isl_ctx* ctx, const char* constraints) {
-
-  char* str = (char*) malloc(strlen(param) + strlen(relstr) + strlen(constraints) + 3);
-  strcpy(str, param);
-  strcat(str, "{");
-  strcat(str, relstr);
-  strcat(str, constraints);
-  strcat(str, "}");
-
-  return isl_map_read_from_str(ctx, str);
-}
-
-isl_map* add_instantiation(isl_ctx* ctx, isl_map* map, const char* antecedent, 
-                           const char* consequent) {
-  static long count = 0;
-  
-  int added = 0;
-  {
-    isl_map* ant_map = read_instantiation(ctx, antecedent);
-    ant_map = isl_map_gist(ant_map, isl_map_copy(map));
-    if (isl_map_plain_is_universe(ant_map)) {
-      isl_map* con_map = read_instantiation(ctx, consequent);
-      map = isl_map_intersect(map, con_map);
-      map = isl_map_coalesce(map);
-      printf("C");
-      added = 1;
-    }
-    isl_map_free(ant_map);
-  }
-  if (!added) {
-    isl_map* con_map = read_instantiation(ctx, consequent);
-    con_map = isl_map_complement(con_map);
-    con_map = isl_map_gist(con_map, isl_map_copy(map));
-    if (isl_map_plain_is_universe(con_map)) {
-      isl_map* ant_map = read_instantiation(ctx, antecedent);
-      ant_map = isl_map_complement(ant_map);
-      map = isl_map_intersect(map, ant_map);
-      map = isl_map_coalesce(map);
-      printf("A");
-      added = 1;
-    }
-    isl_map_free(con_map);
-  }
-  if (!added) {
-    printf("_");
-  }
-  
-  count++;
-  if (count % 50 == 0) printf("\n");
-
-  return map;
-}
-
-
 Relation* Relation::detectUnsatOrFindEqualities(){//bool *useRule){
 
   // Gather all UFCall Parameters for Expression Set (E) for rule instantiation
@@ -3499,11 +3437,13 @@ Relation* Relation::detectUnsatOrFindEqualities(){//bool *useRule){
   Set *leftSideOfTheRule, *rightSideOfTheRule;
   TupleDecl origTupleDecl = getTupleDecl();
   std::set<std::pair <std::string,std::string>> instantiations;
+//  std::vector<Set *>antecedents;
+//  std::vector<Set *>consequents;
 
   UFCallMap *ufcmap = new UFCallMap();
   Relation *supAffRel = superAffineRelation(ufcmap);
 
-  // Instantiation the universially quantified rules available 
+  // Instantiating the universially quantified rules available 
   // in the environment one by one
   for(int i = 0 ; i < noAvalRules ; i++ ){
 
@@ -3537,12 +3477,14 @@ Relation* Relation::detectUnsatOrFindEqualities(){//bool *useRule){
         rightSideOfTheRule->setTupleDecl(origTupleDecl);
 
         Set *supAffLeft, *supAffRight;
-        std::string leftStr = "false", rightStr = "false";
-        srParts subLeftSideParts, subRightSideParts;
-
         // create superAffine sets of left/right sides
         supAffLeft  = leftSideOfTheRule->superAffineSet(ufcmap, false);
         supAffRight = rightSideOfTheRule->superAffineSet(ufcmap, false);
+        delete leftSideOfTheRule;
+        delete rightSideOfTheRule;
+
+        std::string leftStr = "false", rightStr = "false";
+        srParts subLeftSideParts, subRightSideParts;
 
         subLeftSideParts = getPartsFromStr(supAffLeft->prettyPrintString());
         subRightSideParts = getPartsFromStr(supAffRight->prettyPrintString());
@@ -3565,11 +3507,18 @@ Relation* Relation::detectUnsatOrFindEqualities(){//bool *useRule){
           rightStr = subRightSideParts.constraints;
         }
 
-        if( leftStr=="false" || rightStr == "true") continue;
+        //if( leftStr=="false" || rightStr == "true") continue;
 //        instantiations.insert(  string("&& ( not(" + leftStr + ") || (" + rightStr + ") )"));
           instantiations.insert( std::make_pair( leftStr, rightStr) );
 
- 
+//if(leftStr == "-1 >= 0" && rightStr == "-1 >= 0")
+//  std::cout<<"\n\nWhat1: "<<(*it1).toString()<<"   W2:  "<<(*it1).toString()<<"\n\n";
+
+//        if( leftSideOfTheRule->mConjunctions.size() == 0 || 
+//            !( (rightSideOfTheRule->mConjunctions.front())->hasConstraints() )
+//          ) continue;
+//          antecedents.push_back ( leftSideOfTheRule );
+//          consequents.push_back ( rightSideOfTheRule );
       }
     }
 
@@ -3591,15 +3540,14 @@ Relation* Relation::detectUnsatOrFindEqualities(){//bool *useRule){
 
 /*
   std::cout<<"\n\n"<<syms<<"\n\n";
-
   std::cout<<"\n\n"<<supAffRel->prettyPrintString()<<"\n\n";
-
-  for (std::set<std::pair <std::string,std::string>>::iterator it=instantiations.begin(); 
+*/
+/*  for (std::set<std::pair <std::string,std::string>>::iterator it=instantiations.begin(); 
              it!=instantiations.end(); it++) 
         { 
           std::cout<<"\n"<<(*it).first<<"  "<<(*it).second;
         }
-
+*/
 /*
   for (std::set<Exp>::iterator it=instExps.begin(); 
              it!=instExps.end(); it++) 
@@ -3611,7 +3559,7 @@ Relation* Relation::detectUnsatOrFindEqualities(){//bool *useRule){
 
   srParts supRelationParts;
   supRelationParts = getPartsFromStr(supAffRel->prettyPrintString());
-  string origRel = syms + "{" + supRelationParts.constraints + "}";
+  string origRel = syms + "{" + supRelationParts.tupDecl + " : " + supRelationParts.constraints + "}";
   //char* origConstraints = constStr.c_str();
   //char* param = syms.c_str()
   isl_ctx* ctx = isl_ctx_alloc();
@@ -3619,6 +3567,91 @@ Relation* Relation::detectUnsatOrFindEqualities(){//bool *useRule){
   //strcpy(str, param);
   //strcat(str, constraints);
   isl_map* map = isl_map_read_from_str(ctx, origRel.c_str() );
+  //int inA = inArity();
+  //std::cout<<"\n\n\n"<<origRel;
+
+
+  for (int i =0; i < 2; i++) {
+    for (std::set<std::pair <std::string,std::string>>::iterator it=instantiations.begin(); 
+             it!=instantiations.end(); it++){ 
+      string antecedentStr = syms + "{" + supRelationParts.tupDecl + " : " + (*it).first + "}";
+      string consequentStr = syms + "{" + supRelationParts.tupDecl + " : " + (*it).second + "}";
+      //std::cout<<"\n"<<antecedentStr<<"\n"<<consequentStr<<"\n";
+
+    //  static long count = 0;
+      int added = 0;
+      {
+        isl_map* ant_map = isl_map_read_from_str(ctx, antecedentStr.c_str());
+        ant_map = isl_map_gist(ant_map, isl_map_copy(map));
+        if (isl_map_plain_is_universe(ant_map)) {
+          isl_map* con_map = isl_map_read_from_str(ctx, consequentStr.c_str());
+          map = isl_map_intersect(map, con_map);
+          map = isl_map_coalesce(map);
+         // printf("C");
+          added = 1;
+        }
+        isl_map_free(ant_map);
+      }
+      if (!added) {
+        isl_map* con_map = isl_map_read_from_str(ctx, consequentStr.c_str());
+        con_map = isl_map_complement(con_map);
+        con_map = isl_map_gist(con_map, isl_map_copy(map));
+        if (isl_map_plain_is_universe(con_map)) {
+          isl_map* ant_map = isl_map_read_from_str(ctx, antecedentStr.c_str());
+          ant_map = isl_map_complement(ant_map);
+          map = isl_map_intersect(map, ant_map);
+          map = isl_map_coalesce(map);
+         // printf("A");
+          added = 1;
+        }
+        isl_map_free(con_map);
+      }
+    //  if (!added) {
+    //  printf("_");
+    //  }
+    //  count++;
+    //  if (count % 50 == 0) printf("\n");
+
+
+    }
+    if( isl_map_is_empty(map) ) break;
+  }
+
+	//printf("\n");
+	
+	//printf("%s\n", isl_map_to_str(map));
+	//printf("%d\n", isl_map_is_empty(map));
+  std::cout<<"\n\n"<<prettyPrintString()<<"\n";
+
+  if( isl_map_is_empty(map) ){
+    std::cout<<"\nUnsat!\n\n";
+  } else {
+    isl_basic_map *bmap = isl_map_affine_hull(map);
+    // Get an isl printer and associate to an isl context
+    isl_printer * ip = isl_printer_to_str(ctx);
+
+    // get string back from ISL map
+    isl_printer_set_output_format(ip , ISL_FORMAT_ISL);
+    isl_printer_print_basic_map(ip ,bmap);
+    char *i_str = isl_printer_get_str(ip);
+    //std::string stringFromISL (i_str); 
+  
+    // clean-up
+    isl_printer_flush(ip);
+    isl_printer_free(ip);
+    isl_basic_map_free(bmap);
+    //free(i_str);
+  
+    Relation* affineResult = new Relation(i_str);
+
+    Relation* result = affineResult->reverseAffineSubstitution(ufcmap);
+    std::cout<<"\nEqualities: "<<result->prettyPrintString()<<"\n";
+    //        char *out = isl_basic_map_to_str(bmap);
+    //printf("%s\n", out);
+    delete affineResult;
+  }
+	isl_ctx_free(ctx);
+
 
 }
 

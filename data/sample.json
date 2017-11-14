@@ -1,0 +1,79 @@
+[
+  [
+    {
+      "Name" : "Incomplete LU",
+      "Input Type" : "IEgenLIB Relation",
+      "Index" : "1",
+      "Relation" : "[m] -> {[i,k] -> [ip,kp]: i < ip && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && k = diagptr(colidx(kp)) }",
+
+      "Efficient Inspector complexity:" : "O( nnz )",
+
+      "Expected" : "{ [i] -> [ip,jp] : i = colidx(jp) && colidx(jp) < ip && ip < m-1 && rowptr(i) < rowptr(i+1) && rowptr(ip) <= jp && jp < rowptr(ip+1) && colidx(jp) >= 0 && rowptr(i) >= 0 && rowptr(ip) >= 0 && rowptr(i+1) < nnz && rowptr(ip+1) < nnz}",
+      "UFS" :
+      [
+        { 
+           "Name" : "colidx",
+           "Domain" : "{[i]:0<=i &&i<nnz}",
+           "Range" : "{[j]:0<=j &&j<m}",
+           "Bijective" : "false",
+           "Monotonicity" : "Monotonic_NONE"
+        },
+        { 
+           "Name" : "rowptr",
+           "Domain" : "{[j]:0<=j &&j<m}",
+           "Range" : "{[i]:0<=i &&i<nnz}",
+           "Bijective" : "false",
+           "Monotonicity" : "Monotonic_Increasing"
+        },
+        { 
+           "Name" : "diagptr",
+           "Domain" : "{[j]:0<=j &&j<m}",
+           "Range" : "{[i]:0<=i &&i<nnz}",
+           "Bijective" : "false",
+           "Monotonicity" : "Monotonic_Increasing"
+        }
+      ],
+      "User Defined" :
+      [
+        {
+          "Type" : "CoMonotonicity",
+          "UniQuantVar" : "[e1,e2]",
+          "Rule (comment)" : "Forall e1,e2,  e1 = e2 => rowptr(e1) <= diagptr(e2)",
+          "p" : "e1 = e2",
+          "q" : "rowptr(e1) <= diagptr(e2)"
+        },
+        {
+          "Type" : "CoMonotonicity",
+          "UniQuantVar" : "[e1,e2]",
+          "Rule (comment)" : "Forall e1,e2,  e1 < e2 => diagptr(e1) < rowptr(e2)",
+          "p" : "e1 < e2",
+          "q" : "diagptr(e1) < rowptr(e2)"
+        }
+      ],
+      "Do Not Project Out" :
+      [
+        "i", "ip"
+      ],
+      "Remove Constraints" : "0",
+      "Comment: Code" : [
+                  "Following is the Gauss-Seidel code. Dependence analysis of",
+                  "this code would identify 1 pair of read/write data accesses",
+                  "(in S1) that may produce data dependences. This pair produces",
+                  "two distinct conjunctions considering the ordering of accesses",
+                  "(Flow and Anti dependence). Overall, there are 2 distinct",
+                  "conjunctions for the complete dependence relation.",
+                  "  for (i=0; i < N; i++) {",
+                  "    double sum = b[i];",
+                  "    for (j=rowptr[i];j<rowptr[i + 1];j++) {",
+                  "S1:   sum -= values[j]*y[colidx[j]];",
+                  "    }",
+                  "S2: y[i] = sum*idiag[i];",
+                  "  }"
+                  ],
+      "Comment: Source of data access in the code for this relation" : [
+                    " ",
+                    "a read in S1 (y[colidx[j]]);  a write in S2 (y[i]); "
+                  ]
+    }
+  ]
+]
