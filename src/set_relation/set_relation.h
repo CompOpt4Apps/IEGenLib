@@ -765,6 +765,8 @@ public:
         }
     }
 
+    Relation* detectUnsatOrFindEqualities();//bool *useRule);
+
 private:
     int mInArity;
     int mOutArity;

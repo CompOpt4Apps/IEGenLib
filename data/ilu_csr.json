@@ -38,14 +38,14 @@
       "User Defined" :
       [
         {
-          "Type" : "Comment: UserDefPar2UFC",
+          "Type" : "Comment",
           "Forall e1, e2: if e1 is? e2" : "expCompOp",
           "then add: UFSymbol1?(e1)" : "UF1",
           " is? " : "ufCompOp",
           "UFSymbol2?(e2)" : "UF2"
         },
         {
-          "Type" : "Comment: UserDefUFC2Par",
+          "Type" : "Comment",
           "Forall e1, e2: if UFSymbol1?(e1)" : "UFSymbol1",
           " is? " : "OP",
           "UFSymbol2?(e2)" : "UFSymbol2",

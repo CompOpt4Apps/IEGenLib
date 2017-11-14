@@ -3395,4 +3395,229 @@ Relation* Relation::simplifyForPartialParallel(std::set<int> parallelTvs)
 }
 
 
+
+
+/*****************************************************************************/
+#pragma mark -
+/*****************************************************************************/
+/*! Vistor Class used in VisitorGatherAllTerms
+**  The visitor class to gather all (unique) terms so they
+**  can be used in rule instantiation.
+*/
+class VisitorGatherAllParameters : public Visitor {
+  private:
+
+    std::set<Exp> instExps; 
+
+  public:
+    VisitorGatherAllParameters(){}
+    virtual ~VisitorGatherAllParameters(){}
+
+    void preVisitUFCallTerm(UFCallTerm * t){
+        
+        instExps.insert( *(t->getParamExp(0)) );
+    }
+
+    std::set<Exp> getExps() { 
+        return instExps;
+    }
+};
+
+
+const char* param = "[ m, diagptr_ip_, diagptr_i_, diagptr_colidx_k__, diagptr_colidx_kp__, colidx_j1_, colidx_j2_, colidx_j1p_, colidx_j2p_, colidx_k_, colidx_k_P1, colidx_k_P2, colidx_kp_, colidx_kp_P1, colidx_kp_P2, rowptr_colidx_k_P1_, rowptr_colidx_k_P2_, rowptr_colidx_k__, rowptr_colidx_kp_P1_, rowptr_colidx_kp_P2_, rowptr_colidx_kp__, rowptr_iM1_, rowptr_iP1_, rowptr_iP2_, rowptr_i_, rowptr_ipM1_, rowptr_ipP1_, rowptr_ipP2_, rowptr_ip_, diagptr_colidx_k_M1_, diagptr_colidx_k_P1_,  diagptr_colidx_kp_M1_, diagptr_colidx_kp_P1_, diagptr_iM1_, diagptr_iP1_,  diagptr_ipM1_, diagptr_ipP1_]  -> ";
+
+
+
+
+
+const char* relstr = "[i,k,j1,j2] -> [ip,kp,j1p,j2p]: ";
+
+
+isl_map* read_map(isl_ctx* ctx, const char* constraints) {
+
+	char* str = (char*) malloc(strlen(param) + strlen(constraints) + 1);
+	strcpy(str, param);
+	strcat(str, constraints);
+
+	return isl_map_read_from_str(ctx, str);
+}
+
+isl_map* read_instantiation(isl_ctx* ctx, const char* constraints) {
+
+	char* str = (char*) malloc(strlen(param) + strlen(relstr) + strlen(constraints) + 3);
+	strcpy(str, param);
+	strcat(str, "{");
+	strcat(str, relstr);
+	strcat(str, constraints);
+	strcat(str, "}");
+
+	return isl_map_read_from_str(ctx, str);
+}
+
+isl_map* add_instantiation(isl_ctx* ctx, isl_map* map, const char* antecedent, const char* consequent) {
+	static long count = 0;
+	
+	int added = 0;
+	{
+		isl_map* ant_map = read_instantiation(ctx, antecedent);
+		ant_map = isl_map_gist(ant_map, isl_map_copy(map));
+		if (isl_map_plain_is_universe(ant_map)) {
+			isl_map* con_map = read_instantiation(ctx, consequent);
+			map = isl_map_intersect(map, con_map);
+			map = isl_map_coalesce(map);
+			printf("C");
+			added = 1;
+		}
+		isl_map_free(ant_map);
+	}
+	if (!added) {
+		isl_map* con_map = read_instantiation(ctx, consequent);
+		con_map = isl_map_complement(con_map);
+		con_map = isl_map_gist(con_map, isl_map_copy(map));
+		if (isl_map_plain_is_universe(con_map)) {
+			isl_map* ant_map = read_instantiation(ctx, antecedent);
+			ant_map = isl_map_complement(ant_map);
+			map = isl_map_intersect(map, ant_map);
+			map = isl_map_coalesce(map);
+			printf("A");
+			added = 1;
+		}
+		isl_map_free(con_map);
+	}
+	if (!added) {
+		printf("_");
+	}
+	
+	count++;
+	if (count % 50 == 0) printf("\n");
+
+	return map;
+}
+
+
+
+
+
+
+
+Relation* Relation::detectUnsatOrFindEqualities(){//bool *useRule){
+
+  // Gather all UFCall Parameters for Expression Set (E) for rule instantiation
+  VisitorGatherAllParameters *vGE = new VisitorGatherAllParameters;
+  this->acceptVisitor(vGE);
+  std::set<Exp> instExps = vGE->getExps();
+
+  int noAvalRules = queryNoUniQuantRules();
+  UniQuantRule* uqRule;
+  Set *leftSideOfTheRule, *rightSideOfTheRule;
+  TupleDecl origTupleDecl = getTupleDecl();
+  std::set<std::string> instantiations;
+
+  UFCallMap *ufcmap = new UFCallMap();
+  Relation *supAffRel = superAffineRelation(ufcmap);
+
+  // Instantiation the universially quantified rules available 
+  // in the environment one by one
+  for(int i = 0 ; i < noAvalRules ; i++ ){
+
+    // Query rule No. i from environment
+    uqRule = queryUniQuantRuleEnv(i);
+//    std::cout<<"\n"<<i<<"  "<<uqRule->toString( )<<"\n";
+
+    for (std::set<Exp>::iterator it1=instExps.begin(); 
+             it1!=instExps.end(); it1++){
+      for (std::set<Exp>::iterator it2=instExps.begin(); 
+               it2!=instExps.end(); it2++){
+
+        SubMap subMap;
+        leftSideOfTheRule = new Set ( *(uqRule->getLeftSide()) );
+        rightSideOfTheRule = new Set ( *(uqRule->getRightSide()) );
+
+        TupleVarTerm *uQV = new TupleVarTerm( 0 );
+        Exp *subExp = new Exp( *it1 ); 
+        subMap.insertPair( uQV , subExp );
+        uQV = new TupleVarTerm( 1 );
+        subExp = new Exp( *it2 ); 
+        subMap.insertPair( uQV , subExp );
+
+        // Substitute universially quantified variables 
+        // with terms from list of terms
+        leftSideOfTheRule->substituteInConstraints( subMap );
+        rightSideOfTheRule->substituteInConstraints( subMap );
+
+        // make rule's tuple declaration to match original constraints 
+        leftSideOfTheRule->setTupleDecl(origTupleDecl); 
+        rightSideOfTheRule->setTupleDecl(origTupleDecl);
+
+        Set *supAffLeft, *supAffRight;
+        std::string leftStr = "false", rightStr = "false";
+        srParts subLeftSideParts, subRightSideParts;
+
+        // create superAffine sets of left/right sides
+        supAffLeft  = leftSideOfTheRule->superAffineSet(ufcmap, false);
+        supAffRight = rightSideOfTheRule->superAffineSet(ufcmap, false);
+
+        subLeftSideParts = getPartsFromStr(supAffLeft->prettyPrintString());
+        subRightSideParts = getPartsFromStr(supAffRight->prettyPrintString());
+
+        subLeftSideParts.constraints = trim(subLeftSideParts.constraints);
+        subRightSideParts.constraints = trim(subRightSideParts.constraints);
+
+        if(subLeftSideParts.constraints == ""){
+          leftStr = "true";
+        } else if(subLeftSideParts.constraints == "FALSE"){
+          leftStr = "false";
+        } else {
+          leftStr = subLeftSideParts.constraints;
+        }
+        if(subRightSideParts.constraints == ""){
+          rightStr = "true";
+        } else if(subRightSideParts.constraints == "FALSE"){
+          rightStr = "false";
+        } else {
+          rightStr = subRightSideParts.constraints;
+        }
+
+        if( leftStr=="false" || rightStr == "true") continue;
+        instantiations.insert( string("&& ( not(" + leftStr + ") || (" + rightStr + ") )"));
+
+      }
+    }
+
+  }
+
+  Relation * drOrigSet = boundDomainRange();
+  std::stringstream ss;
+  StringIterator * symIter;
+  bool foundSymbols = false;
+  symIter = (*(drOrigSet->mConjunctions.begin()))->getSymbolIterator();
+  while (symIter->hasNext()) {
+    if (foundSymbols == false) {
+      foundSymbols = true;
+      ss << "[ "<< symIter->next();
+    } else { ss << ", " << symIter->next(); }
+  }
+  delete drOrigSet;
+  std::string syms = ss.str() + ", " + ufcmap->varTermStrList() + " ] -> ";
+  std::cout<<"\n\n"<<syms<<"\n\n";
+  
+
+  std::cout<<"\n\n"<<supAffRel->prettyPrintString()<<"\n\n";
+
+  for (std::set<std::string>::iterator it=instantiations.begin(); 
+             it!=instantiations.end(); it++) 
+        { 
+          std::cout<<"\n"<<(*it);
+        }
+
+/*
+  for (std::set<Exp>::iterator it=instExps.begin(); 
+             it!=instExps.end(); it++) 
+        { 
+          std::cout<<"\n"<<(*it).prettyPrintString( getTupleDecl() )<<"\n";
+        }
+*/
+
+}
+
 }//end namespace iegenlib
