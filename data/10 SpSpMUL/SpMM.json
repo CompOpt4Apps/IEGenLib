@@ -7,8 +7,10 @@
       "Relation" : "{ [j,p1,p2,nz] -> [jp,pp,nzp]: nz = pp && jp < j && 0 <= j && j < n && 0 <= jp && jp < n && Bp(j) <= p1 && p1 < Bp(j+1) && Ap(Bp(j)) <= p2 && p2 < Ap(Bp(j+1)) && Cp(j) <= nz && nz < Cp(j+1) && Cp(jp) <= nzp && nzp < Cp(jp+1) && Cp(jp) <= pp && pp < nzp }",
 
       "Efficient Inspector complexity:" : "O( n^2 )",
+      "Efficient Inspector complexity after adding domain info:" : "0",
+      "Expected" : "Not Satisfiable",
+      "What helps to detect unsat 1:" : "Mono",
 
-      "Expected" : "Not Satisfaible",
       "UFS" :
       [
         { 
@@ -82,8 +84,10 @@
       "Relation" : "{ [j,p1,p2,nz] -> [jp,pp,nzp]: nz = pp && j < jp && 0 <= j && j < n && 0 <= jp && jp < n && Bp(j) <= p1 && p1 < Bp(j+1) && Ap(Bp(j)) <= p2 && p2 < Ap(Bp(j+1)) && Cp(j) <= nz && nz < Cp(j+1) && Cp(jp) <= nzp && nzp < Cp(jp+1) && Cp(jp) <= pp && pp < nzp }",
 
       "Efficient Inspector complexity:" : "O( n^2 )",
-
+      "Efficient Inspector complexity after adding domain info:" : "0",
       "Expected" : "Not Satisfiable",
+      "What helps to detect unsat 1:" : "Mono",
+
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     ""
@@ -96,8 +100,10 @@
       "Relation" : "{ [j,p,nz] -> [jp,pp,nzp]: nz = pp && jp < j && 0 <= j && j < n && 0 <= jp && jp < n && Cp(j) <= nz && nz < Cp(j+1) && Cp(j) <= p && p < nz && Cp(jp) <= nzp && nzp < Cp(jp+1) && Cp(jp) <= pp && pp < nzp }",
 
       "Efficient Inspector complexity:" : "O( n^2 )",
-
+      "Efficient Inspector complexity after adding domain info:" : "0",
       "Expected" : "Not Satisfiable",
+      "What helps to detect unsat 1:" : "Mono",
+
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     ""
@@ -110,8 +116,10 @@
       "Relation" : "{ [j,p,nz] -> [jp,pp,nzp]: nz = pp && jp < j && 0 <= j && j < n && 0 <= jp && jp < n && Cp(j) <= nz && nz < Cp(j+1) && Cp(j) <= p && p < nz && Cp(jp) <= nzp && nzp < Cp(jp+1) && Cp(jp) <= pp && pp < nzp }",
 
       "Efficient Inspector complexity:" : "O( n^2 )",
-
+      "Efficient Inspector complexity after adding domain info:" : "0",
       "Expected" : "Not Satisfiable",
+      "What helps to detect unsat 1:" : "Mono",
+
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     ""

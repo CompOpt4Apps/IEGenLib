@@ -7,10 +7,10 @@
       "Relation" : "{ [i] -> [ip] : row(i) = row(ip) && i < ip && 0 <= i && i < n-1 && 0 <= ip && ip < n-1 }",
 
       "Efficient Inspector complexity:" : "O( n*n )",
-
+      "Efficient Inspector complexity after adding domain info:" : "0",
+      "Expected" : "Not Satisfiable",
       "What helps to detect unsat 1:" : "Mono",
 
-      "Expected" : "Not Satisfiable",
       "UFS" :
       [
         { 
@@ -74,10 +74,10 @@
       "Relation" : "{ [i] -> [ip] : row(i) = row(ip) && ip < i && 0 <= i && i < n-1 && 0 <= ip && ip < n-1 }",
 
       "Efficient Inspector complexity:" : "O( n*n )",
-
+      "Efficient Inspector complexity after adding domain info:" : "0",
+      "Expected" : "Not Satisfiable",
       "What helps to detect unsat 1:" : "Mono",
 
-      "Expected" : "Not Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     "a write in S1 (val[row[i]]);  a read in S1 (val[row[i]]);"
@@ -106,10 +106,10 @@
       "Relation" : "{ [i] -> [ip,mp] : row(i) = row(ip) && ip < i && 0 <= i && i < n-1 && 0 <= ip && ip < n-1 && row(ip)+1 <= mp && mp < row(ip+1) }",
 
       "Efficient Inspector complexity:" : "O( n*n )",
-
+      "Efficient Inspector complexity after adding domain info:" : "0",
+      "Expected" : "Not Satisfiable",
       "What helps to detect unsat 1:" : "Mono",
 
-      "Expected" : "Not Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     "a write in S1 (val[row[i]]);  a read in S2 (val[row[i]]);"
@@ -122,10 +122,10 @@
       "Relation" : "{ [i] -> [ip,mp] : row(i) = mp && i < ip && 0 <= i && i < n-1 && 0 <= ip && ip < n-1 && row(ip)+1 <= mp && mp < row(ip+1) }",
 
       "Efficient Inspector complexity:" : "O( n*n )",
-
+      "Efficient Inspector complexity after adding domain info:" : "0",
+      "Expected" : "Not Satisfiable",
       "What helps to detect unsat 1:" : "Mono",
 
-      "Expected" : "Not Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     "a write in S1 (val[row[i]]);  a read in S2 (val[m]);"
@@ -138,8 +138,10 @@
       "Relation" : "{ [i] -> [ip,mp] : row(i) = mp && ip < i && 0 <= i && i < n-1 && 0 <= ip && ip < n-1 && row(ip)+1 <= mp && mp < row(ip+1) }",
 
       "Efficient Inspector complexity:" : "O( n*n )",
-
+      "Efficient Inspector complexity after adding domain info:" : "0",
       "Expected" : "Not Satisfiable",
+      "What helps to detect unsat 1:" : "Mono",
+
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     "a write in S1 (val[row[i]]);  a read in S2 (val[m]);"
@@ -152,10 +154,10 @@
       "Relation" : "{ [i] -> [ip,mp,kp,lp] : row(i) = mp && i < ip && 0 <= i && i < n-1 && 0 <= ip && ip < n-1 && row(ip)+1 <= mp && mp < row(ip+1) && row(col(mp)) <= kp && kp < row(col(mp)+1) && mp <= lp && lp < row(ip+1) && col(lp+1) <= col(kp) && col(lp) = col(kp)}",
 
       "Efficient Inspector complexity:" : " n*n*(nnz/n)*(nnz/n) = O( nnz^2 )",
-
+      "Efficient Inspector complexity after adding domain info:" : "0",
+      "Expected" : "Not Satisfiable",
       "What helps to detect unsat 1:" : "Mono",
 
-      "Expected" : "Not Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     "a write in S1 (val[row[i]]);  a read in S3 (val[m]);"
@@ -168,10 +170,10 @@
       "Relation" : "{ [i] -> [ip,mp,kp,lp] : row(i) = mp && ip < i && 0 <= i && i < n-1 && 0 <= ip && ip < n-1 && row(ip)+1 <= mp && mp < row(ip+1) && row(col(mp)) <= kp && kp < row(col(mp)+1) && mp <= lp && lp < row(ip+1) && col(lp+1) <= col(kp) && col(lp) = col(kp)}",
 
       "Efficient Inspector complexity:" : " n*n*(nnz/n)*(nnz/n) = O( nnz^2 )",
-
+      "Efficient Inspector complexity after adding domain info:" : "0",
+      "Expected" : "Not Satisfiable",
       "What helps to detect unsat 1:" : "Mono",
 
-      "Expected" : "Not Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     "a write in S1 (val[row[i]]);  a read in S3 (val[m]);"
@@ -184,10 +186,10 @@
       "Relation" : "{ [i] -> [ip,mp,kp,lp] : row(i) = lp && i < ip && 0 <= i && i < n-1 && 0 <= ip && ip < n-1 && row(ip)+1 <= mp && mp < row(ip+1) && row(col(mp)) <= kp && kp < row(col(mp)+1) && mp <= lp && lp < row(ip+1) && col(lp+1) <= col(kp) && col(lp) = col(kp)}",
 
       "Efficient Inspector complexity:" : " n*n*(nnz/n)*(nnz/n) = O( nnz^2 )",
-
+      "Efficient Inspector complexity after adding domain info:" : "0",
+      "Expected" : "Not Satisfiable",
       "What helps to detect unsat 1:" : "Mono",
 
-      "Expected" : "Not Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     "a write in S1 (val[row[i]]);  a read in S3 (val[l]);"
@@ -200,10 +202,10 @@
       "Relation" : "{ [i] -> [ip,mp,kp,lp] : row(i) = lp && ip < i && 0 <= i && i < n-1 && 0 <= ip && ip < n-1 && row(ip)+1 <= mp && mp < row(ip+1) && row(col(mp)) <= kp && kp < row(col(mp)+1) && mp <= lp && lp < row(ip+1) && col(lp+1) <= col(kp) && col(lp) = col(kp)}",
 
       "Efficient Inspector complexity:" : " n*n*(nnz/n)*(nnz/n) = O( nnz^2 )",
-
+      "Efficient Inspector complexity after adding domain info:" : "0",
+      "Expected" : "Not Satisfiable",
       "What helps to detect unsat 1:" : "Mono",
 
-      "Expected" : "Not Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     "a write in S1 (val[row[i]]);  a read in S3 (val[l]);"
@@ -216,10 +218,8 @@
       "Relation" : "{ [i,m,k,l] -> [ip] : k = row(ip) && i < ip && 0 <= i && i < n-1 && 0 <= ip && ip < n-1 && row(i)+1 <= m && m < row(i+1) && row(col(m)) <= k && k < row(col(m)+1) && m <= l && l < row(i+1) && col(l+1) <= col(k) && col(l) = col(k)}",
 
       "Efficient Inspector complexity:" : " n*n*(nnz/n)*(nnz/n) = O( nnz^2 )",
-
-      "Efficient Inspector complexity after domain info (mono adds an useful equlaity: ip = col(m) ):" : " (nnz^2)*(1/n) = O( (nnz^2)/n )",
-
-      "Expected" : "Maybe Satisfiable",
+      "Efficient Inspector complexity after adding domain info (mono adds an useful equlaity: ip = col(m) ):" : " (nnz^2)*(1/n) = O( (nnz^2)/n )",
+      "Expected" : "{ [i,m,k,l] -> [ip] : ip = col(m) && row(ip) = row(col(m)) && k = row(ip) && i < ip && 0 <= i && i < n-1 && 0 <= ip && ip < n-1 && row(i)+1 <= m && m < row(i+1) && row(col(m)) <= k && k < row(col(m)+1) && m <= l && l < row(i+1) && col(l+1) <= col(k) && col(l) = col(k)}",
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     "a read in S1 (val[row[i]]);  a write in S3 (val[k]);"
@@ -232,10 +232,8 @@
       "Relation" : "{ [i,m,k,l] -> [ip] : k = row(ip) && ip < i && 0 <= i && i < n-1 && 0 <= ip && ip < n-1 && row(i)+1 <= m && m < row(i+1) && row(col(m)) <= k && k < row(col(m)+1) && m <= l && l < row(i+1) && col(l+1) <= col(k) && col(l) = col(k)}",
 
       "Efficient Inspector complexity:" : "O( n*n*(nnz/n)*(nnz/n) = O( nnz^2 ))",
-
-      "Efficient Inspector complexity after domain info (mono adds an useful equlaity: ip = col(m) ):" : " (nnz^2)*(1/n) = O( (nnz^2)/n )",
-
-      "Expected" : "Maybe Satisfiable",
+      "Efficient Inspector complexity after adding domain info (mono adds an useful equlaity: ip = col(m) ):" : " (nnz^2)*(1/n) = O( (nnz^2)/n )",
+      "Expected" : "{ [i,m,k,l] -> [ip] : ip = col(m) && row(ip) = row(col(m)) && k = row(ip) && ip < i && 0 <= i && i < n-1 && 0 <= ip && ip < n-1 && row(i)+1 <= m && m < row(i+1) && row(col(m)) <= k && k < row(col(m)+1) && m <= l && l < row(i+1) && col(l+1) <= col(k) && col(l) = col(k)}",
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     "a read in S1 (val[row[i]]);  a write in S3 (val[k]);"
@@ -248,10 +246,10 @@
       "Relation" : "{ [i,m] -> [ip,mp] : m = mp && i < ip && 0 <= i && i < n-1 && 0 <= ip && ip < n-1  && row(i)+1 <= m && m < row(i+1) && row(ip)+1 <= mp && mp < row(ip+1) }",
 
       "Efficient Inspector complexity:" : "O( n*n )",
-
+      "Efficient Inspector complexity after adding domain info:" : "0",
+      "Expected" : "Not Satisfiable",
       "What helps to detect unsat 1:" : "Mono",
 
-      "Expected" : "Not Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     "a write in S2 (val[m]);  a read in S2 (val[m]);"
@@ -264,10 +262,10 @@
       "Relation" : "{ [i,m] -> [ip,mp] : m = mp && ip < i && 0 <= i && i < n-1 && 0 <= ip && ip < n-1  && row(i)+1 <= m && m < row(i+1) && row(ip)+1 <= mp && mp < row(ip+1) }",
 
       "Efficient Inspector complexity:" : "O( n*n )",
-
+      "Efficient Inspector complexity after adding domain info:" : "0",
+      "Expected" : "Not Satisfiable",
       "What helps to detect unsat 1:" : "Mono",
 
-      "Expected" : "Not Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     "a write in S2 (val[m]);  a read in S2 (val[m]);"
@@ -281,10 +279,10 @@
       "Relation" : "{ [i,m] -> [ip,mp] : m = row(ip) && i < ip && 0 <= i && i < n-1 && 0 <= ip && ip < n-1  && row(i)+1 <= m && m < row(i+1) && row(ip)+1 <= mp && mp < row(ip+1) }",
 
       "Efficient Inspector complexity:" : "O( n*n )",
-
+      "Efficient Inspector complexity after adding domain info:" : "0",
+      "Expected" : "Not Satisfiable",
       "What helps to detect unsat 1:" : "Mono",
 
-      "Expected" : "Not Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     "a write in S2 (val[m]);  a read in S2 (val[row[i]]);"
@@ -297,10 +295,10 @@
       "Relation" : "{ [i,m] -> [ip,mp] : m = row(ip) && ip < i && 0 <= i && i < n-1 && 0 <= ip && ip < n-1  && row(i)+1 <= m && m < row(i+1) && row(ip)+1 <= mp && mp < row(ip+1) }",
 
       "Efficient Inspector complexity:" : "O( n*n )",
-
+      "Efficient Inspector complexity after adding domain info:" : "0",
+      "Expected" : "Not Satisfiable",
       "What helps to detect unsat 1:" : "Mono",
 
-      "Expected" : "Not Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     "a write in S2 (val[m]);  a read in S2 (val[row[i]]);"
@@ -313,10 +311,9 @@
       "Relation" : "{ [i,m,k,l] -> [ip,mp] : k = row(ip) && i < ip && 0 <= i && i < n-1 && 0 <= ip && ip < n-1  && row(i)+1 <= m && m < row(i+1) && row(ip)+1 <= mp && mp < row(ip+1) && row(col(m)) <= k && k < row(col(m)+1) && m <= l && l < row(i+1) && col(l+1) <= col(k) && col(l) = col(k)}",
 
       "Efficient Inspector complexity:" : " n*n*(nnz/n)*(nnz/n) = O( nnz^2 )",
+      "Efficient Inspector complexity after adding domain info (mono adds an useful equlaity: ip = col(m) ):" : " (nnz^2)*(1/n) = O( (nnz^2)/n )",
+      "Expected" : "{ [i,m,k,l] -> [ip,mp] : ip = col(m) && row(ip) = row(col(m)) && row(ip + 1) = row(col(m) + 1) && k = row(ip) && i < ip && 0 <= i && i < n-1 && 0 <= ip && ip < n-1  && row(i)+1 <= m && m < row(i+1) && row(ip)+1 <= mp && mp < row(ip+1) && row(col(m)) <= k && k < row(col(m)+1) && m <= l && l < row(i+1) && col(l+1) <= col(k) && col(l) = col(k)}",
 
-      "Efficient Inspector complexity after domain info (mono adds an useful equlaity: ip = col(m) ):" : " (nnz^2)*(1/n) = O( (nnz^2)/n )",
-
-      "Expected" : "Maybe Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     "a read in S2 (val[row[i]]);  a write in S3 (val[k]);"
@@ -329,10 +326,9 @@
       "Relation" : "{ [i,m,k,l] -> [ip,mp] : k = row(ip) && ip < i && 0 <= i && i < n-1 && 0 <= ip && ip < n-1  && row(i)+1 <= m && m < row(i+1) && row(ip)+1 <= mp && mp < row(ip+1) && row(col(m)) <= k && k < row(col(m)+1) && m <= l && l < row(i+1) && col(l+1) <= col(k) && col(l) = col(k)}",
 
       "Efficient Inspector complexity:" : " n*n*(nnz/n)*(nnz/n) = O( nnz^2 )",
+      "Efficient Inspector complexity after adding domain info (mono adds an useful equlaity: ip = col(m) ):" : " (nnz^2)*(1/n) = O( (nnz^2)/n )",
+      "Expected" : "{ [i,m,k,l] -> [ip,mp] : ip = col(m) && row(ip) = row(col(m)) && row(ip + 1) = row(col(m) + 1) && k = row(ip) && ip < i && 0 <= i && i < n-1 && 0 <= ip && ip < n-1  && row(i)+1 <= m && m < row(i+1) && row(ip)+1 <= mp && mp < row(ip+1) && row(col(m)) <= k && k < row(col(m)+1) && m <= l && l < row(i+1) && col(l+1) <= col(k) && col(l) = col(k)}",
 
-      "Efficient Inspector complexity after domain info (mono adds an useful equlaity: ip = col(m) ):" : " (nnz^2)*(1/n) = O( (nnz^2)/n )",
-
-      "Expected" : "Maybe Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     "a read in S2 (val[row[i]]);  a write in S3 (val[k]);"
@@ -345,11 +341,9 @@
       "Relation" : "{ [i,m,k,l] -> [ip,mp] : k = mp && i < ip && 0 <= i && i < n-1 && 0 <= ip && ip < n-1  && row(i)+1 <= m && m < row(i+1) && row(ip)+1 <= mp && mp < row(ip+1) && row(col(m)) <= k && k < row(col(m)+1) && m <= l && l < row(i+1) && col(l+1) <= col(k) && col(l) = col(k)}",
 
       "Efficient Inspector complexity:" : "n*n*(nnz/n)*(nnz/n)*(nnz/n) = O( nnz^3/n )",
-      "Tricky!":"Please note that we remove useful equlity with projection as a bad side effect, however, since we are not considering an oracle process, we always assume we apply projection first then use equalities.",
+      "Efficient Inspector complexity after adding domain info (mono adds an useful equlaity: ip = col(m) ):" : " (nnz^3)*(1/n) = O( (nnz^3)/n^2 )",
+      "Expected" : "{ [i,m,k,l] -> [ip,mp] : ip = col(m) && row(ip) = row(col(m)) && row(ip + 1) = row(col(m) + 1) && k = mp && i < ip && 0 <= i && i < n-1 && 0 <= ip && ip < n-1  && row(i)+1 <= m && m < row(i+1) && row(ip)+1 <= mp && mp < row(ip+1) && row(col(m)) <= k && k < row(col(m)+1) && m <= l && l < row(i+1) && col(l+1) <= col(k) && col(l) = col(k)}",
 
-      "Efficient Inspector complexity after domain info (mono adds an useful equlaity: ip = col(m) ):" : " (nnz^3)*(1/n) = O( (nnz^3)/n^2 )",
-
-      "Expected" : "Maybe Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     "a read in S2 (val[m]);  a write in S3 (val[k]);"
@@ -362,11 +356,9 @@
       "Relation" : "{ [i,m,k,l] -> [ip,mp] : k = mp && ip < i && 0 <= i && i < n-1 && 0 <= ip && ip < n-1  && row(i)+1 <= m && m < row(i+1) && row(ip)+1 <= mp && mp < row(ip+1) && row(col(m)) <= k && k < row(col(m)+1) && m <= l && l < row(i+1) && col(l+1) <= col(k) && col(l) = col(k)}",
 
       "Efficient Inspector complexity:" : "n*n*(nnz/n)*(nnz/n)*(nnz/n) = O( nnz^3/n )",
-      "Tricky!":"Please note that we remove useful equlity with projection as a bad side effect, however, since we are not considering an oracle process, we always assume we apply projection first then use equalities.",
+      "Efficient Inspector complexity after adding domain info (mono adds an useful equlaity: ip = col(m) ):" : " (nnz^3)*(1/n) = O( (nnz^3)/n^2 )",
+      "Expected" : "{ [i,m,k,l] -> [ip,mp] : ip = col(m) && row(ip) = row(col(m)) && row(ip + 1) = row(col(m) + 1) && k = mp && ip < i && 0 <= i && i < n-1 && 0 <= ip && ip < n-1  && row(i)+1 <= m && m < row(i+1) && row(ip)+1 <= mp && mp < row(ip+1) && row(col(m)) <= k && k < row(col(m)+1) && m <= l && l < row(i+1) && col(l+1) <= col(k) && col(l) = col(k)}",
 
-      "Efficient Inspector complexity after domain info (mono adds an useful equlaity: ip = col(m) ):" : " (nnz^3)*(1/n) = O( (nnz^3)/n^2 )",
-
-      "Expected" : "Maybe Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     "a read in S2 (val[m]);  a write in S3 (val[k]);"
@@ -379,10 +371,10 @@
       "Relation" : "{ [i,m] -> [ip,mp,kp,lp] : m = mp && i < ip && 0 <= i && i < n-1 && 0 <= ip && ip < n-1  && row(i)+1 <= m && m < row(i+1) && row(ip)+1 <= mp && mp < row(ip+1) && row(col(mp)) <= kp && kp < row(col(mp)+1) && mp <= lp && lp < row(ip+1) && col(lp+1) <= col(kp) && col(lp) = col(kp)}",
 
       "Efficient Inspector complexity:" : "n*n*(nnz/n)*(nnz/n)*(nnz/n) = O( nnz^3/n )",
-
+      "Efficient Inspector complexity after adding domain info:" : "0",
+      "Expected" : "Not Satisfiable",
       "What helps to detect unsat 1:" : "Mono",
 
-      "Expected" : "Not Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     "a write in S2 (val[m]);  a read in S3 (val[m]);"
@@ -395,10 +387,10 @@
       "Relation" : "{ [i,m] -> [ip,mp,kp,lp] : m = mp && ip < i && 0 <= i && i < n-1 && 0 <= ip && ip < n-1  && row(i)+1 <= m && m < row(i+1) && row(ip)+1 <= mp && mp < row(ip+1) && row(col(mp)) <= kp && kp < row(col(mp)+1) && mp <= lp && lp < row(ip+1) && col(lp+1) <= col(kp) && col(lp) = col(kp)}",
 
       "Efficient Inspector complexity:" : " n*n*(nnz/n)*(nnz/n)*(nnz/n) = O( nnz^3/n ) )",
-
+      "Efficient Inspector complexity after adding domain info:" : "0",
+      "Expected" : "Not Satisfiable",
       "What helps to detect unsat 1:" : "Mono",
 
-      "Expected" : "Not Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     "a write in S2 (val[m]);  a read in S3 (val[m]);"
@@ -411,10 +403,10 @@
       "Relation" : "{ [i,m] -> [ip,mp,kp,lp] : m = lp && i < ip && 0 <= i && i < n-1 && 0 <= ip && ip < n-1  && row(i)+1 <= m && m < row(i+1) && row(ip)+1 <= mp && mp < row(ip+1) && row(col(mp)) <= kp && kp < row(col(mp)+1) && mp <= lp && lp < row(ip+1) && col(lp+1) <= col(kp) && col(lp) = col(kp)}",
 
       "Efficient Inspector complexity:" : "n*n*(nnz/n)*(nnz/n)*(nnz/n) = O( nnz^3/n ) )",
-
+      "Efficient Inspector complexity after adding domain info:" : "0",
+      "Expected" : "Not Satisfiable",
       "What helps to detect unsat 1:" : "Mono",
 
-      "Expected" : "Not Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     "a write in S2 (val[m]);  a read in S3 (val[l]);"
@@ -427,10 +419,10 @@
       "Relation" : "{ [i,m] -> [ip,mp,kp,lp] : m = lp && ip < i && 0 <= i && i < n-1 && 0 <= ip && ip < n-1  && row(i)+1 <= m && m < row(i+1) && row(ip)+1 <= mp && mp < row(ip+1) && row(col(mp)) <= kp && kp < row(col(mp)+1) && mp <= lp && lp < row(ip+1) && col(lp+1) <= col(kp) && col(lp) = col(kp)}",
 
       "Efficient Inspector complexity:" : "n*n*(nnz/n)*(nnz/n)*(nnz/n) = O( nnz^3/n ) )",
-
+      "Efficient Inspector complexity after adding domain info:" : "0",
+      "Expected" : "Not Satisfiable",
       "What helps to detect unsat 1:" : "Mono",
 
-      "Expected" : "Not Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     "a write in S2 (val[m]);  a read in S3 (val[l]);"
@@ -443,10 +435,9 @@
       "Relation" : "{ [i,m,k,l] -> [ip,mp,kp,lp] : k = kp && i < ip  && 0 <= i && i < n-1 && 0 <= ip && ip < n-1  && row(i)+1 <= m && m < row(i+1) && row(ip)+1 <= mp && mp < row(ip+1) && row(col(m)) <= k && k < row(col(m)+1) && row(col(mp)) <= kp && kp < row(col(mp)+1) && m <= l && l < row(i+1) && mp <= lp && lp < row(ip+1) && col(lp+1) <= col(kp) && col(l+1) <= col(k) && col(l) = col(k) && col(lp) = col(kp)}",
 
       "Efficient Inspector complexity:" : "n*(nnz/n)*(nnz/n)*(nnz/n)*n*(nnz/n)*(nnz/n) = O( nnz^5/n^3 )",
+      "Efficient Inspector complexity after adding domain info (mono adds an useful equlaity: col(m) - col(mp) ):" : "     n*(nnz/n)*(nnz/n)*(nnz/n)*(nnz/n)*(nnz/n) = O( nnz^5/n^4 )",
+      "Expected" : "{ [i,m,k,l] -> [ip,mp,kp,lp] : col(m) = col(mp) && row(k) = row(kp) && row(col(m)) = row(col(mp)) && row(col(m) + 1) = row(col(mp) + 1) && k = kp && i < ip  && 0 <= i && i < n-1 && 0 <= ip && ip < n-1  && row(i)+1 <= m && m < row(i+1) && row(ip)+1 <= mp && mp < row(ip+1) && row(col(m)) <= k && k < row(col(m)+1) && row(col(mp)) <= kp && kp < row(col(mp)+1) && m <= l && l < row(i+1) && mp <= lp && lp < row(ip+1) && col(lp+1) <= col(kp) && col(l+1) <= col(k) && col(l) = col(k) && col(lp) = col(kp)}",
 
-      "Efficient Inspector complexity after domain info (mono adds an useful equlaity: ip = col(m) ):" : "     n*(nnz/n)*(nnz/n)*(nnz/n)*(nnz/n)*(nnz/n) = O( nnz^5/n^4 )",
-
-      "Expected" : "Maybe Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     "a write in S3 (val[k]);  a write in S3 (val[k]);"
@@ -459,10 +450,9 @@
       "Relation" : "{ [i,m,k,l] -> [ip,mp,kp,lp] : k = kp && ip < i  && 0 <= i && i < n-1 && 0 <= ip && ip < n-1  && row(i)+1 <= m && m < row(i+1) && row(ip)+1 <= mp && mp < row(ip+1) && row(col(m)) <= k && k < row(col(m)+1) && row(col(mp)) <= kp && kp < row(col(mp)+1) && m <= l && l < row(i+1) && mp <= lp && lp < row(ip+1) && col(lp+1) <= col(kp) && col(l+1) <= col(k) && col(l) = col(k) && col(lp) = col(kp)}",
 
       "Efficient Inspector complexity:" : "n*(nnz/n)*(nnz/n)*(nnz/n)*n*(nnz/n)*(nnz/n) = O( nnz^5/n^3 )",
+      "Efficient Inspector complexity after adding domain info (mono adds an useful equlaity: col(m) - col(mp) ):" : "     n*(nnz/n)*(nnz/n)*(nnz/n)*(nnz/n)*(nnz/n) = O( nnz^5/n^4 )",
+      "Expected" : "{ [i,m,k,l] -> [ip,mp,kp,lp] : col(m) = col(mp) && row(k) = row(kp) && row(col(m)) = row(col(mp)) && row(col(m) + 1) = row(col(mp) + 1) && k = kp && ip < i  && 0 <= i && i < n-1 && 0 <= ip && ip < n-1  && row(i)+1 <= m && m < row(i+1) && row(ip)+1 <= mp && mp < row(ip+1) && row(col(m)) <= k && k < row(col(m)+1) && row(col(mp)) <= kp && kp < row(col(mp)+1) && m <= l && l < row(i+1) && mp <= lp && lp < row(ip+1) && col(lp+1) <= col(kp) && col(l+1) <= col(k) && col(l) = col(k) && col(lp) = col(kp)}",
 
-      "Efficient Inspector complexity after domain info (mono adds an useful equlaity: ip = col(m) ):" : "     n*(nnz/n)*(nnz/n)*(nnz/n)*(nnz/n)*(nnz/n) = O( nnz^5/n^4 )",
-
-      "Expected" : "Maybe Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     "a write in S3 (val[k]);  a write in S3 (val[k]);"
@@ -475,10 +465,9 @@
       "Relation" : "{ [i,m,k,l] -> [ip,mp,kp,lp] : k = lp && i < ip  && 0 <= i && i < n-1 && 0 <= ip && ip < n-1  && row(i)+1 <= m && m < row(i+1) && row(ip)+1 <= mp && mp < row(ip+1) && row(col(m)) <= k && k < row(col(m)+1) && row(col(mp)) <= kp && kp < row(col(mp)+1) && m <= l && l < row(i+1) && mp <= lp && lp < row(ip+1) && col(lp+1) <= col(kp) && col(l+1) <= col(k) && col(l) = col(k) && col(lp) = col(kp)}",
 
      "Efficient Inspector complexity:" : "n*(nnz/n)*(nnz/n)*(nnz/n)*n*(nnz/n)*(nnz/n) = O( nnz^5/n^3 )",
+     "Efficient Inspector complexity after adding domain info (mono adds an useful equlaity: ip = col(m) ):" : "     n*(nnz/n)*(nnz/n)*(nnz/n)*(nnz/n)*(nnz/n) = O( nnz^5/n^4 )",
+      "Expected" : "{ [i,m,k,l] -> [ip,mp,kp,lp] : ip = col(m) && row(k) = row(lp) && row(ip) = row(col(m)) && row(ip + 1) = row(col(m) + 1) && k = lp && i < ip  && 0 <= i && i < n-1 && 0 <= ip && ip < n-1  && row(i)+1 <= m && m < row(i+1) && row(ip)+1 <= mp && mp < row(ip+1) && row(col(m)) <= k && k < row(col(m)+1) && row(col(mp)) <= kp && kp < row(col(mp)+1) && m <= l && l < row(i+1) && mp <= lp && lp < row(ip+1) && col(lp+1) <= col(kp) && col(l+1) <= col(k) && col(l) = col(k) && col(lp) = col(kp)}",
 
-      "Efficient Inspector complexity after domain info (mono adds an useful equlaity: ip = col(m) ):" : "     n*(nnz/n)*(nnz/n)*(nnz/n)*(nnz/n)*(nnz/n) = O( nnz^5/n^4 )",
-
-      "Expected" : "Maybe Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     "a write in S3 (val[k]);  a read in S3 (val[l]);"
@@ -491,10 +480,9 @@
       "Relation" : "{ [i,m,k,l] -> [ip,mp,kp,lp] : k = lp && ip < i  && 0 <= i && i < n-1 && 0 <= ip && ip < n-1  && row(i)+1 <= m && m < row(i+1) && row(ip)+1 <= mp && mp < row(ip+1) && row(col(m)) <= k && k < row(col(m)+1) && row(col(mp)) <= kp && kp < row(col(mp)+1) && m <= l && l < row(i+1) && mp <= lp && lp < row(ip+1) && col(lp+1) <= col(kp) && col(l+1) <= col(k) && col(l) = col(k) && col(lp) = col(kp)}",
 
      "Efficient Inspector complexity:" : "n*(nnz/n)*(nnz/n)*(nnz/n)*n*(nnz/n)*(nnz/n) = O( nnz^5/n^3 )",
+     "Efficient Inspector complexity after adding domain info (mono adds an useful equlaity: ip = col(m) ):" : "     n*(nnz/n)*(nnz/n)*(nnz/n)*(nnz/n)*(nnz/n) = O( nnz^5/n^4 )",
+      "Expected" : "{ [i,m,k,l] -> [ip,mp,kp,lp] : ip = col(m) && row(k) = row(lp) && row(ip) = row(col(m)) && row(ip + 1) = row(col(m) + 1) && k = lp && ip < i  && 0 <= i && i < n-1 && 0 <= ip && ip < n-1  && row(i)+1 <= m && m < row(i+1) && row(ip)+1 <= mp && mp < row(ip+1) && row(col(m)) <= k && k < row(col(m)+1) && row(col(mp)) <= kp && kp < row(col(mp)+1) && m <= l && l < row(i+1) && mp <= lp && lp < row(ip+1) && col(lp+1) <= col(kp) && col(l+1) <= col(k) && col(l) = col(k) && col(lp) = col(kp)}",
 
-      "Efficient Inspector complexity after domain info (mono adds an useful equlaity: ip = col(m) ):" : "     n*(nnz/n)*(nnz/n)*(nnz/n)*(nnz/n)*(nnz/n) = O( nnz^5/n^4 )",
-
-      "Expected" : "Maybe Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     "a write in S3 (k]);  a read in S3 (val[l]);"
@@ -507,11 +495,9 @@
       "Relation" : "{ [i,m,k,l] -> [ip,mp,kp,lp] : k = mp && i < ip  && 0 <= i && i < n-1 && 0 <= ip && ip < n-1  && row(i)+1 <= m && m < row(i+1) && row(ip)+1 <= mp && mp < row(ip+1) && row(col(m)) <= k && k < row(col(m)+1) && row(col(mp)) <= kp && kp < row(col(mp)+1) && m <= l && l < row(i+1) && mp <= lp && lp < row(ip+1) && col(lp+1) <= col(kp) && col(l+1) <= col(k) && col(l) = col(k) && col(lp) = col(kp)}",
 
      "Efficient Inspector complexity:" : "n*(nnz/n)*(nnz/n)*(nnz/n)*n*(nnz/n)*(nnz/n) = O( nnz^5/n^3 )",
+     "Efficient Inspector complexity after adding domain info (mono adds an useful equlaity: ip = col(m) ):" : "     n*(nnz/n)*(nnz/n)*(nnz/n)*(nnz/n)*(nnz/n) = O( nnz^5/n^4 )",
+      "Expected" : "{ [i,m,k,l] -> [ip,mp,kp,lp] : ip = col(m) && row(k) = row(mp) && row(ip) = row(col(m)) && row(ip + 1) = row(col(m) + 1) && k = mp && i < ip  && 0 <= i && i < n-1 && 0 <= ip && ip < n-1  && row(i)+1 <= m && m < row(i+1) && row(ip)+1 <= mp && mp < row(ip+1) && row(col(m)) <= k && k < row(col(m)+1) && row(col(mp)) <= kp && kp < row(col(mp)+1) && m <= l && l < row(i+1) && mp <= lp && lp < row(ip+1) && col(lp+1) <= col(kp) && col(l+1) <= col(k) && col(l) = col(k) && col(lp) = col(kp)}",
 
-      "Efficient Inspector complexity after domain info (mono adds an useful equlaity: ip = col(m) ):" : "     n*(nnz/n)*(nnz/n)*(nnz/n)*(nnz/n)*(nnz/n) = O( nnz^5/n^4 )",
-
-
-      "Expected" : "Maybe Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     "a write in S3 (val[k]);  a write in S3 (val[m]);"
@@ -524,11 +510,9 @@
       "Relation" : "{ [i,m,k,l] -> [ip,mp,kp,lp] : k = mp && ip < i  && 0 <= i && i < n-1 && 0 <= ip && ip < n-1  && row(i)+1 <= m && m < row(i+1) && row(ip)+1 <= mp && mp < row(ip+1) && row(col(m)) <= k && k < row(col(m)+1) && row(col(mp)) <= kp && kp < row(col(mp)+1) && m <= l && l < row(i+1) && mp <= lp && lp < row(ip+1) && col(lp+1) <= col(kp) && col(l+1) <= col(k) && col(l) = col(k) && col(lp) = col(kp)}",
 
      "Efficient Inspector complexity:" : "n*(nnz/n)*(nnz/n)*(nnz/n)*n*(nnz/n)*(nnz/n) = O( nnz^5/n^3 )",
+     "Efficient Inspector complexity after adding domain info (mono adds an useful equlaity: ip = col(m) ):" : "     n*(nnz/n)*(nnz/n)*(nnz/n)*(nnz/n)*(nnz/n) = O( nnz^5/n^4 )",
+      "Expected" : "{ [i,m,k,l] -> [ip,mp,kp,lp] : ip = col(m) && row(k) = row(mp) && row(ip) = row(col(m)) && row(ip + 1) = row(col(m) + 1) && k = mp && ip < i  && 0 <= i && i < n-1 && 0 <= ip && ip < n-1  && row(i)+1 <= m && m < row(i+1) && row(ip)+1 <= mp && mp < row(ip+1) && row(col(m)) <= k && k < row(col(m)+1) && row(col(mp)) <= kp && kp < row(col(mp)+1) && m <= l && l < row(i+1) && mp <= lp && lp < row(ip+1) && col(lp+1) <= col(kp) && col(l+1) <= col(k) && col(l) = col(k) && col(lp) = col(kp)}",
 
-      "Efficient Inspector complexity after domain info (mono adds an useful equlaity: ip = col(m) ):" : "     n*(nnz/n)*(nnz/n)*(nnz/n)*(nnz/n)*(nnz/n) = O( nnz^5/n^4 )",
-
-
-      "Expected" : "Maybe Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     "a write in S3 (val[k]);  a read in S3 (val[m]);"

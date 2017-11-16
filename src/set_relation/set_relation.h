@@ -732,7 +732,7 @@ public:
     **  The function does not own the ufcmap.
     */
     Relation* superAffineRelation(UFCallMap* ufcmap, bool boundUFCs = true);
-
+    Relation* superAffineRelation();
     /*! Creates a sub non-affine set from an affine Relation.
     **  By replacing symbolic constants that are representative of UFCalls
     **  with their respective UFCalls.

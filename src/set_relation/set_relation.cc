@@ -2804,6 +2804,13 @@ Relation* Relation::superAffineRelation(UFCallMap* ufcmap, bool boundUFCs)
     return result;
 }
 
+Relation* Relation::superAffineRelation()
+{
+      // Create variable names for UF calls.
+      iegenlib::UFCallMap* uf_call_map = new UFCallMap();
+    return superAffineRelation(uf_call_map);
+}
+
 /*****************************************************************************/
 #pragma mark -
 /*************** VisitorReverseAffineSubstitution *****************************/
@@ -3538,47 +3545,20 @@ Relation* Relation::detectUnsatOrFindEqualities(){//bool *useRule){
   delete drOrigSet;
   std::string syms = ss.str() + ", " + ufcmap->varTermStrList() + " ] -> ";
 
-/*
-  std::cout<<"\n\n"<<syms<<"\n\n";
-  std::cout<<"\n\n"<<supAffRel->prettyPrintString()<<"\n\n";
-*/
-/*  for (std::set<std::pair <std::string,std::string>>::iterator it=instantiations.begin(); 
-             it!=instantiations.end(); it++) 
-        { 
-          std::cout<<"\n"<<(*it).first<<"  "<<(*it).second;
-        }
-*/
-/*
-  for (std::set<Exp>::iterator it=instExps.begin(); 
-             it!=instExps.end(); it++) 
-        { 
-          std::cout<<"\n"<<(*it).prettyPrintString( getTupleDecl() )<<"\n";
-        }
-*/
-
-
   srParts supRelationParts;
   supRelationParts = getPartsFromStr(supAffRel->prettyPrintString());
   string origRel = syms + "{" + supRelationParts.tupDecl + " : " + supRelationParts.constraints + "}";
-  //char* origConstraints = constStr.c_str();
-  //char* param = syms.c_str()
-  isl_ctx* ctx = isl_ctx_alloc();
-  //char* str = (char*) malloc(origRel.size() + 1);
-  //strcpy(str, param);
-  //strcat(str, constraints);
-  isl_map* map = isl_map_read_from_str(ctx, origRel.c_str() );
-  //int inA = inArity();
-  //std::cout<<"\n\n\n"<<origRel;
 
+  isl_ctx* ctx = isl_ctx_alloc();
+  isl_map* map = isl_map_read_from_str(ctx, origRel.c_str() );
 
   for (int i =0; i < 2; i++) {
     for (std::set<std::pair <std::string,std::string>>::iterator it=instantiations.begin(); 
              it!=instantiations.end(); it++){ 
       string antecedentStr = syms + "{" + supRelationParts.tupDecl + " : " + (*it).first + "}";
       string consequentStr = syms + "{" + supRelationParts.tupDecl + " : " + (*it).second + "}";
-      //std::cout<<"\n"<<antecedentStr<<"\n"<<consequentStr<<"\n";
 
-    //  static long count = 0;
+
       int added = 0;
       {
         isl_map* ant_map = isl_map_read_from_str(ctx, antecedentStr.c_str());
@@ -3587,7 +3567,6 @@ Relation* Relation::detectUnsatOrFindEqualities(){//bool *useRule){
           isl_map* con_map = isl_map_read_from_str(ctx, consequentStr.c_str());
           map = isl_map_intersect(map, con_map);
           map = isl_map_coalesce(map);
-         // printf("C");
           added = 1;
         }
         isl_map_free(ant_map);
@@ -3601,30 +3580,22 @@ Relation* Relation::detectUnsatOrFindEqualities(){//bool *useRule){
           ant_map = isl_map_complement(ant_map);
           map = isl_map_intersect(map, ant_map);
           map = isl_map_coalesce(map);
-         // printf("A");
           added = 1;
         }
         isl_map_free(con_map);
       }
-    //  if (!added) {
-    //  printf("_");
-    //  }
-    //  count++;
-    //  if (count % 50 == 0) printf("\n");
-
 
     }
     if( isl_map_is_empty(map) ) break;
   }
 
-	//printf("\n");
-	
-	//printf("%s\n", isl_map_to_str(map));
-	//printf("%d\n", isl_map_is_empty(map));
-  std::cout<<"\n\n"<<prettyPrintString()<<"\n";
+
+  Relation *result = NULL;
 
   if( isl_map_is_empty(map) ){
-    std::cout<<"\nUnsat!\n\n";
+//    std::cout<<"\nUnsat!\n\n";
+    result = NULL;
+
   } else {
     isl_basic_map *bmap = isl_map_affine_hull(map);
     // Get an isl printer and associate to an isl context
@@ -3642,17 +3613,22 @@ Relation* Relation::detectUnsatOrFindEqualities(){//bool *useRule){
     isl_basic_map_free(bmap);
     //free(i_str);
   
-    Relation* affineResult = new Relation(i_str);
+    Relation* affineEqs = new Relation(i_str);
 
-    Relation* result = affineResult->reverseAffineSubstitution(ufcmap);
-    std::cout<<"\nEqualities: "<<result->prettyPrintString()<<"\n";
+    Relation* eQs = affineEqs->reverseAffineSubstitution(ufcmap);
+
+    // Puting the newly found equalities into original constraint set.
+    result = this->Intersect(eQs);
+
+    //std::cout<<"\nEqualities: "<<result->prettyPrintString()<<"\n";
     //        char *out = isl_basic_map_to_str(bmap);
     //printf("%s\n", out);
-    delete affineResult;
+    delete affineEqs;
+    delete eQs;
   }
-	isl_ctx_free(ctx);
+//	isl_ctx_free(ctx);
 
-
+  return result;
 }
 
 }//end namespace iegenlib

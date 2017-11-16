@@ -1,6 +1,30 @@
 /*!
-     g++ -o simplifyDriver src/drivers/simplifyDriver.cc -I src build/src/libiegenlib.a -lisl -std=c++11
 
+>> clone the branch
+
+git clone -b IslIns --single-branch https://github.com/king-mahdi/IEGenLib IslIns
+
+>> Build IEGenLib (run in the root directory):
+
+./configure
+make
+
+
+>> Build the driver (in root directory run):
+
+g++ -O3 -o simplifyDriver drivers/simplification.cc -I src build/src/libiegenlib.a -lisl -std=c++11
+
+
+>> Run the driver (in root directory):
+
+./simplifyDriver data/sample.json
+
+  From root directory of IEGenLib, you can build this driver using:
+     g++ -O3 -o simplifyDriver drivers/simplification.cc -I src build/src/libiegenlib.a -lisl -std=c++11
+
+  Then, use it (in the root directory) using:
+
+     ./simplifyDriver data/sample.json
  */
 
 
@@ -55,6 +79,8 @@ int main(int argc, char **argv)
 void simplify(string inputFile)
 {
 
+  int unSatFound = 0, maySatFound = 0;
+
   iegenlib::setCurrEnv();
   std::set<int> parallelTvs;
   // (0)
@@ -87,89 +113,80 @@ void simplify(string inputFile)
       addUniQuantRules(uqCons);
     }
 
-    rel->detectUnsatOrFindEqualities();
+    Relation* result = rel->detectUnsatOrFindEqualities();
 
+    // Reading expected outputs
+    Relation *ex_rel = NULL;
+    string expected_str = data[p][i]["Expected"].as<string>();
+    if ( expected_str != string("Not Satisfiable") ){
+      ex_rel = new Relation(expected_str);
+    }
+
+    cout<<"\n>>> Relation No. "<<i<<": "<<rel->toISLString();
+
+    EXPECT_EQ( result , ex_rel);
+
+    if( !result ) unSatFound++;
+    else          maySatFound++;
 
   }
 
  } // End of p loop
 
+  cout<<"\n\n UnSat found = "<<unSatFound<<"\n MaySat found = "<<maySatFound;
+  
+
 }
 
-const char* param = "[ m, diagptr_ip_, diagptr_i_, diagptr_colidx_k__, diagptr_colidx_kp__, colidx_j1_, colidx_j2_, colidx_j1p_, colidx_j2p_, colidx_k_, colidx_k_P1, colidx_k_P2, colidx_kp_, colidx_kp_P1, colidx_kp_P2, rowptr_colidx_k_P1_, rowptr_colidx_k_P2_, rowptr_colidx_k__, rowptr_colidx_kp_P1_, rowptr_colidx_kp_P2_, rowptr_colidx_kp__, rowptr_iM1_, rowptr_iP1_, rowptr_iP2_, rowptr_i_, rowptr_ipM1_, rowptr_ipP1_, rowptr_ipP2_, rowptr_ip_, diagptr_colidx_k_M1_, diagptr_colidx_k_P1_,  diagptr_colidx_kp_M1_, diagptr_colidx_kp_P1_, diagptr_iM1_, diagptr_iP1_,  diagptr_ipM1_, diagptr_ipP1_]  -> ";
+void EXPECT_EQ(Relation *result, Relation *expected){
+
+    if( result == NULL && expected == NULL ){
+        cout<<"\n\nResult MATCH Expected: Not Satisfiable.\n\n";
+    }
+
+    else if( result != NULL && expected == NULL ){
+        cout<<"\n\nResult DOES NOT MATCH Expected:\n"
+              "Expected: Not Satisfiable\nResult:\n"<<result->toISLString()<<"\n\n";
+    }
+
+    else if( result == NULL && expected != NULL ){
+        cout<<"\n\nResult DOES NOT MATCH Expected:\n"
+              "Expected:\n"<<expected->toISLString()<<"\nResult: Not Satisfiable\n\n";
+    }
 
 
+    else if( result != NULL && expected != NULL ){
+      // Replace uf calls with the variables to create an affine superset.
+      Relation * supAffRes = result->superAffineRelation();
+      Relation * supAffExp = expected->superAffineRelation();
 
+      isl_ctx* ctx = isl_ctx_alloc();
+      isl_map* resISL =  isl_map_read_from_str(ctx, (supAffRes->toISLString().c_str()));
+      isl_map* expISL =  isl_map_read_from_str(ctx, (supAffExp->toISLString().c_str()));
 
-const char* relstr = "[i,k,j1,j2] -> [ip,kp,j1p,j2p]: ";
+      //if( result->toISLString() == expected->toISLString() ){
+      if( isl_map_plain_is_equal( resISL , expISL ) ){
+        cout<<"\n\nResult MATCH Expected: Which is:\n"<<result->toISLString()<<"\n\n";
+      }
+      else {
+        cout<<"\n\nResult DOES NOT MATCH Expected:\n"
+            "Expected:\n"<<expected->toISLString()<<
+             "\nResult:\n"<<result->toISLString()<<"\n\n";
+      }
+    }
 
-
-isl_map* read_map(isl_ctx* ctx, const char* constraints) {
-
-	char* str = (char*) malloc(strlen(param) + strlen(constraints) + 1);
-	strcpy(str, param);
-	strcat(str, constraints);
-
-	return isl_map_read_from_str(ctx, str);
-}
-
-isl_map* read_instantiation(isl_ctx* ctx, const char* constraints) {
-
-	char* str = (char*) malloc(strlen(param) + strlen(relstr) + strlen(constraints) + 3);
-	strcpy(str, param);
-	strcat(str, "{");
-	strcat(str, relstr);
-	strcat(str, constraints);
-	strcat(str, "}");
-
-	return isl_map_read_from_str(ctx, str);
-}
-
-
-isl_map* add_instantiation(isl_ctx* ctx, isl_map* map, const char* antecedent, const char* consequent) {
-	static long count = 0;
-	
-	int added = 0;
-	{
-		isl_map* ant_map = read_instantiation(ctx, antecedent);
-		ant_map = isl_map_gist(ant_map, isl_map_copy(map));
-		if (isl_map_plain_is_universe(ant_map)) {
-			isl_map* con_map = read_instantiation(ctx, consequent);
-			map = isl_map_intersect(map, con_map);
-			map = isl_map_coalesce(map);
-			printf("C");
-			added = 1;
-		}
-		isl_map_free(ant_map);
-	}
-	if (!added) {
-		isl_map* con_map = read_instantiation(ctx, consequent);
-		con_map = isl_map_complement(con_map);
-		con_map = isl_map_gist(con_map, isl_map_copy(map));
-		if (isl_map_plain_is_universe(con_map)) {
-			isl_map* ant_map = read_instantiation(ctx, antecedent);
-			ant_map = isl_map_complement(ant_map);
-			map = isl_map_intersect(map, ant_map);
-			map = isl_map_coalesce(map);
-			printf("A");
-			added = 1;
-		}
-		isl_map_free(con_map);
-	}
-	if (!added) {
-		printf("_");
-	}
-	
-	count++;
-	if (count % 50 == 0) printf("\n");
-
-	return map;
 }
 
 
 
+void EXPECT_EQ(string a, string b){
 
+    if( a != b ){
 
+        cout<<"\n\nExpected: "<<a;
+        cout<<"\n\nActual:"<< b <<"\n\n";
+    }
+}
 
 bool printRelation(string msg, Relation *rel){
 
@@ -182,22 +199,6 @@ bool printRelation(string msg, Relation *rel){
     }
 
     return true;
-}
-
-void EXPECT_EQ(string a, string b){
-
-    if( a != b ){
-
-        cout<<"\n\nExpected: "<<a;
-        cout<<"\n\nActual:"<< b <<"\n\n";
-    }
-}
-
-void EXPECT_EQ(Relation *a, Relation *b){
-
-    if( a != b ){
-        cout<<"\n\nIncorrect results: Expected or Actual is NULL.\n\n";
-    }
 }
 
 int str2int(string str){

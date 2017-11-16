@@ -7,8 +7,10 @@
       "Relation" : "[m] -> {[i,k] -> [ip,kp]: i < ip && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && k = kp }",
 
       "Efficient Inspector complexity:" : "O( nnz )",
+      "Efficient Inspector complexity after adding domain info:" : "0",
+      "Expected" : "Not Satisfiable",
+      "What helps to detect unsat 1:" : "Correlated Mono",
 
-      "Expected" : "{ [i] -> [ip,jp] : i = colidx(jp) && colidx(jp) < ip && ip < m-1 && rowptr(i) < rowptr(i+1) && rowptr(ip) <= jp && jp < rowptr(ip+1) && colidx(jp) >= 0 && rowptr(i) >= 0 && rowptr(ip) >= 0 && rowptr(i+1) < nnz && rowptr(ip+1) < nnz}",
       "UFS" :
       [
         { 
@@ -82,10 +84,10 @@
       "Relation" : "[m] -> {[i,k] -> [ip,kp]: ip < i && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && k = kp }",
 
       "Efficient Inspector complexity:" : "O( n*n )",
-
+      "Efficient Inspector complexity after adding domain info:" : "0",
+      "Expected" : "Not Satisfiable",
       "What helps to detect unsat 1:" : "Correlated Mono",
 
-      "Expected" : "Not Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     "a read in S1 (v[k]);  a write in S1 (v[k]);"
@@ -98,10 +100,10 @@
       "Relation" : "[m] -> {[i,k] -> [ip,kp]: i < ip && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && k = diagptr(colidx(kp)) }",
 
       "Efficient Inspector complexity:" : "n*n*(nnz/n) = O( nnz*n )",
-
+      "Efficient Inspector complexity after adding domain info:" : "0",
+      "Expected" : "Not Satisfiable",
       "What helps to detect unsat 1:" : "Combination of Mono and Correlated Mono",
 
-      "Expected" : "Not Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     "a read in S1 (v[diag[col[k]]]);  a write in S1 (v[k]);"
@@ -114,10 +116,10 @@
       "Relation" : "[m] -> {[i,k] -> [ip,kp]: ip < i && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && k = diagptr(colidx(kp)) }",
 
       "Efficient Inspector complexity:" : "n*n*(nnz/n) = O( nnz*n )",
-
+      "Efficient Inspector complexity after adding domain info:" : "0",
+      "Expected" : "Not Satisfiable",
       "What helps to detect unsat 1:" : "Combination of Mono and Correlated Mono",
 
-      "Expected" : "Not Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     "a read in S1 (v[diag[col[k]]]);  a write in S1 (v[k]);"
@@ -130,10 +132,10 @@
       "Relation" : "[m] -> {[i,k] -> [ip,kp,j1p,j2p]: i < ip && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && kp < j1p && j1p < rowptr(1+ip) && diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp)) && colidx(j1p) = colidx(j2p) && k = kp}",
 
       "Efficient Inspector complexity:" : "n*n*(nnz/n)*(nnz/n)*(nnz/n) = O( nnz^3/n) ",
-
+      "Efficient Inspector complexity after adding domain info:" : "0",
+      "Expected" : "Not Satisfiable",
       "What helps to detect unsat 1:" : "Correlated Mono",
 
-      "Expected" : "Not Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     "a write in S1 (v[k]);  a read in S2 (v[k]);"
@@ -146,11 +148,11 @@
       "Relation" : "[m] -> {[i,k] -> [ip,kp,j1p,j2p]: ip < i && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && kp < j1p && j1p < rowptr(1+ip) && diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp)) && colidx(j1p) = colidx(j2p) && k = kp}",
 
       "Efficient Inspector complexity:" : "n*n*(nnz/n)*(nnz/n)*(nnz/n) = O( nnz^3/n)",
-
+      "Efficient Inspector complexity after adding domain info:" : "0",
+      "Expected" : "Not Satisfiable",
       "What helps to detect unsat 1:" : "Correlated Mono",
       "What helps to detect unsat 2:" : "Mono",
 
-      "Expected" : "Not Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     "a write in S1 (v[k]);  a read in S2 (v[k]);"
@@ -163,10 +165,10 @@
       "Relation" : "[m] -> {[i,k,j1,j2] -> [ip,kp]: i < ip && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && k < j1 && j1 < rowptr(1+i) && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k)) && colidx(j1) = colidx(j2) && j1 = kp}",
 
       "Efficient Inspector complexity:" : "n*n*(nnz/n)*(nnz/n)*(nnz/n) = O( nnz^3/n)",
-
+      "Efficient Inspector complexity after adding domain info:" : "0",
+      "Expected" : "Not Satisfiable",
       "What helps to detect unsat 1:" : "Mono",
 
-      "Expected" : "Not Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     "a read in S1 (v[k]);  a write in S2 (v[j1]);"
@@ -179,10 +181,10 @@
       "Relation" : "[m] -> {[i,k,j1,j2] -> [ip,kp]: ip < i && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && k < j1 && j1 < rowptr(1+i) && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k)) && colidx(j1) = colidx(j2) && j1 = kp}",
 
       "Efficient Inspector complexity:" : "n*n*(nnz/n)*(nnz/n)*(nnz/n) = O( nnz^3/n)",
-
+      "Efficient Inspector complexity after adding domain info:" : "0",
+      "Expected" : "Not Satisfiable",
       "What helps to detect unsat 1:" : "Correlated Mono",
 
-      "Expected" : "Not Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     "a read in S1 (v[k]);  a write in S2 (v[j1]);"
@@ -195,10 +197,10 @@
       "Relation" : "[m] -> {[i,k] -> [ip,kp,j1p,j2p]: i < ip && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && kp < j1p && j1p < rowptr(1+ip) && diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp)) && colidx(j1p) = colidx(j2p) && k = j2p}",
 
       "Efficient Inspector complexity:" : "n*n*(nnz/n)*(nnz/n)*(nnz/n) = O( nnz^3/n)",
-
+      "Efficient Inspector complexity after adding domain info:" : "0",
+      "Expected" : "Not Satisfiable",
       "What helps to detect unsat 1:" : "Mono",
 
-      "Expected" : "Not Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     "a write in S1 (v[k]);  a read in S2 (v[j2]);"
@@ -211,10 +213,10 @@
       "Relation" : "[m] -> {[i,k] -> [ip,kp,j1p,j2p]: ip < i && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && kp < j1p && j1p < rowptr(1+ip) && diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp)) && colidx(j1p) = colidx(j2p) && k = j2p}",
 
       "Efficient Inspector complexity:" : "n*n*(nnz/n)*(nnz/n)*(nnz/n) = O( nnz^3/n)",
-
+      "Efficient Inspector complexity after adding domain info:" : "0",
+      "Expected" : "Not Satisfiable",
       "What helps to detect unsat 1:" : "Mono",
 
-      "Expected" : "Not Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     "a write in S1 (v[k]);  a read in S2 (v[j2]);"
@@ -227,10 +229,9 @@
       "Relation" : "[m] -> {[i,k,j1,j2] -> [ip,kp]: i < ip && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && k < j1 && j1 < rowptr(1+i) && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k)) && colidx(j1) = colidx(j2) && j1 = diagptr(colidx(kp))}",
 
       "Efficient Inspector complexity:" : "n*(nnz/n)*n*(nnz/n)*(nnz/n) = O(nnz^3/n)",
+      "Efficient Inspector complexity after adding domain info (combination of correlated mono and mono add an useful equlaity: i = colidx(kp) ):" : "n*(nnz/n)*(nnz/n)*(nnz/n) = O( nnz^3 / n^2)",
+      "Expected" : "[m] -> {[i,k,j1,j2] -> [ip,kp]: i = colidx(kp) && rowptr(colidx(kp)) = rowptr(i) && i < ip && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && k < j1 && j1 < rowptr(1+i) && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k)) && colidx(j1) = colidx(j2) && j1 = diagptr(colidx(kp))}",
 
-      "Efficient Inspector complexity after domain info (combination of correlated mono and mono add an useful equlaity: i = colidx(kp) ):" : "n*(nnz/n)*(nnz/n)*(nnz/n) = O( nnz^3 / n^2)",
-
-      "Expected" : "Maybe Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     "a read in S1 (v[diag[col[k]]]);  a write in S2 (v[j1]);"
@@ -243,10 +244,8 @@
       "Relation" : "[m] -> {[i,k,j1,j2] -> [ip,kp]: ip < i && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && k < j1 && j1 < rowptr(1+i) && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k)) && colidx(j1) = colidx(j2) && j1 = diagptr(colidx(kp))}",
 
       "Efficient Inspector complexity:" : "n*(nnz/n)*n*(nnz/n)*(nnz/n) = O(nnz^3/n)",
-
-      "Efficient Inspector complexity after domain info (combination of correlated mono and mono add an useful equlaity: i = colidx(kp) ):" : "n*(nnz/n)*(nnz/n)*(nnz/n) = O( nnz^3 / n^2)",
-
-      "Expected" : "Maybe Satisfiable",
+      "Efficient Inspector complexity after adding domain info (combination of correlated mono and mono add an useful equlaity: i = colidx(kp) ):" : "n*(nnz/n)*(nnz/n)*(nnz/n) = O( nnz^3 / n^2)",
+      "Expected" : "[m] -> {[i,k,j1,j2] -> [ip,kp]: i = colidx(kp) && rowptr(i) = rowptr(colidx(kp))&& ip < i && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && k < j1 && j1 < rowptr(1+i) && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k)) && colidx(j1) = colidx(j2) && j1 = diagptr(colidx(kp))}",
 
       "Comment: Source of data access in the code for this relation" : [
                     " ",
@@ -260,13 +259,9 @@
       "Relation" : "[m] -> {[i,k,j1,j2] -> [ip,kp,j1p,j2p]: i < ip && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && k < j1 && j1 < rowptr(1+i) && kp < j1p && j1p < rowptr(1+ip) && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k)) && diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp)) && colidx(j1) = colidx(j2) && colidx(j1p) = colidx(j2p) && j1 = j1p}",
 
       "Efficient Inspector complexity:" : "n*(nnz/n)*(nnz/n)*(nnz/n)*n*(nnz/n)*(nnz/n) = O( nnz^5 / n^3)",
-
-      "What helps to detect unsat 1:" : "Mono",
-
+      "Efficient Inspector complexity after adding domain info:" : "0",
       "Expected" : "Not Satisfiable",
-
-      "Inspector complexity: completely Naive" : "O( nnz^6 )",
-      "Inspector complexity: considering equalities in original constraints " : "O( nnz^5 / n )",
+      "What helps to detect unsat 1:" : "Mono",
 
       "Comment: Source of data access in the code for this relation" : [
                     " ",
@@ -280,10 +275,9 @@
       "Relation" : "[m] -> {[i,k,j1,j2] -> [ip,kp,j1p,j2p]: ip < i && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && k < j1 && j1 < rowptr(1+i) && kp < j1p && j1p < rowptr(1+ip) && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k)) && diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp)) && colidx(j1) = colidx(j2) && colidx(j1p) = colidx(j2p) && j1 = j1p}",
 
       "Efficient Inspector complexity:" : "n*(nnz/n)*(nnz/n)*(nnz/n)*n*(nnz/n)*(nnz/n) = O( nnz^5 / n^3)",
-
-      "What helps to detect unsat 1:" : "Mono",
-
+      "Efficient Inspector complexity after adding domain info:" : "0",
       "Expected" : "Not Satisfiable",
+      "What helps to detect unsat 1:" : "Mono",
 
 
       "Comment: Source of data access in the code for this relation" : [
@@ -298,10 +292,9 @@
       "Relation" : "[m] -> {[i,k,j1,j2] -> [ip,kp,j1p,j2p]: i < ip && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && k < j1 && j1 < rowptr(1+i) && kp < j1p && j1p < rowptr(1+ip) && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k)) && diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp)) && colidx(j1) = colidx(j2) && colidx(j1p) = colidx(j2p) && j1 = kp}",
 
       "Efficient Inspector complexity:" : "n*(nnz/n)*(nnz/n)*(nnz/n)*n*(nnz/n)*(nnz/n) = O( nnz^5 / n^3)",
-
-      "What helps to detect unsat 1:" : "Mono",
-
+      "Efficient Inspector complexity after adding domain info:" : "0",
       "Expected" : "Not Satisfiable",
+      "What helps to detect unsat 1:" : "Mono",
 
       "Comment: Source of data access in the code for this relation" : [
                     " ",
@@ -315,11 +308,11 @@
       "Relation" : "[m] -> {[i,k,j1,j2] -> [ip,kp,j1p,j2p]: ip < i && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && k < j1 && j1 < rowptr(1+i) && kp < j1p && j1p < rowptr(1+ip) && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k)) && diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp)) && colidx(j1) = colidx(j2) && colidx(j1p) = colidx(j2p) && j1 = kp}",
 
       "Efficient Inspector complexity:" : "n*(nnz/n)*(nnz/n)*(nnz/n)*n*(nnz/n)*(nnz/n) = O( nnz^5 / n^3)",
-
+      "Efficient Inspector complexity after adding domain info:" : "0",
+      "Expected" : "Not Satisfiable",
       "What helps to detect unsat 1:" : "Mono",
       "What helps to detect unsat 2:" : "Correlated Mono",
 
-      "Expected" : "Not Satisfiable",
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     "a read in S2 (v[k]);  a write in S2 (v[j1]);"
@@ -332,10 +325,8 @@
       "Relation" : "[m] -> {[i,k,j1,j2] -> [ip,kp,j1p,j2p]: i < ip && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && k < j1 && j1 < rowptr(1+i) && kp < j1p && j1p < rowptr(1+ip) && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k)) && diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp)) && colidx(j1) = colidx(j2) && colidx(j1p) = colidx(j2p) && j1 = j2p}",
 
       "Efficient Inspector complexity:" : "n*(nnz/n)*(nnz/n)*(nnz/n)*n*(nnz/n)*(nnz/n) = O( nnz^5 / n^3)",
-
-      "Efficient Inspector complexity after domain info (combination of correlated mono and mono add an useful equlaity: i = colidx(kp) ):" : "n*(nnz/n)*(nnz/n)*(nnz/n)*(nnz/n)*(nnz/n) = O( nnz^5 / n^4)",
-
-      "Expected" : "[ m, nnz ] -> { [i, k] -> [ip, kp] : i - colidx(kp) = 0 && colidx(k) >= 0 && colidx(kp) >= 0 && rowptr(i) >= 0 && rowptr(ip) >= 0 && rowptr(colidx(k)) >= 0 && rowptr(colidx(kp)) >= 0 && k - rowptr(i) >= 0 && kp - rowptr(ip) >= 0 && diagptr(i + 1) - rowptr(i + 1) >= 0 && diagptr(ip + 1) - rowptr(ip + 1) >= 0 && diagptr(colidx(k)) - rowptr(colidx(k)) >= 0 && diagptr(colidx(k) + 1) - rowptr(colidx(k) + 1) >= 0 && diagptr(colidx(kp)) - rowptr(colidx(kp)) >= 0 && diagptr(colidx(kp) + 1) - rowptr(colidx(kp) + 1) >= 0 && -k + diagptr(i) - 1 >= 0 && -k + rowptr(i + 1) - 2 >= 0 && -k + rowptr(colidx(kp) + 1) - 2 >= 0 && -ip + m - 2 >= 0 && ip - colidx(kp) - 1 >= 0 && -kp + diagptr(ip) - 1 >= 0 && -kp + rowptr(ip + 1) - 2 >= 0 && m - colidx(k) - 2 >= 0 && nnz - diagptr(i) - 1 >= 0 && nnz - diagptr(i + 1) - 1 >= 0 && nnz - diagptr(ip) - 1 >= 0 && nnz - diagptr(ip + 1) - 1 >= 0 && nnz - diagptr(colidx(k) + 1) - 1 >= 0 && nnz - diagptr(colidx(kp) + 1) - 1 >= 0 && -diagptr(colidx(k)) + rowptr(colidx(k) + 1) - 2 >= 0 && -diagptr(colidx(kp)) + rowptr(i + 1) - 2 >= 0 && -diagptr(colidx(kp)) + rowptr(colidx(kp) + 1) - 2 >= 0 }",
+      "Efficient Inspector complexity after adding domain info (combination of correlated mono and mono add an useful equlaity: i = colidx(kp) ):" : "n*(nnz/n)*(nnz/n)*(nnz/n)*(nnz/n)*(nnz/n) = O( nnz^5 / n^4)",
+      "Expected" : "[m] -> {[i,k,j1,j2] -> [ip,kp,j1p,j2p]: i = colidx(kp) && diagptr(j1) = diagptr(j2p) && rowptr(i) = rowptr(colidx(kp)) && rowptr(i + 1) = rowptr(colidx(kp) + 1) && rowptr(j1) = rowptr(j2p) && i < ip && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && k < j1 && j1 < rowptr(1+i) && kp < j1p && j1p < rowptr(1+ip) && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k)) && diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp)) && colidx(j1) = colidx(j2) && colidx(j1p) = colidx(j2p) && j1 = j2p}",
 
       "Comment: Source of data access in the code for this relation" : [
                     " ",
@@ -349,10 +340,8 @@
       "Relation" : "[m] -> {[i,k,j1,j2] -> [ip,kp,j1p,j2p]: ip < i && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && k < j1 && j1 < rowptr(1+i) && kp < j1p && j1p < rowptr(1+ip) && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k)) && diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp)) && colidx(j1) = colidx(j2) && colidx(j1p) = colidx(j2p) && j1 = j2p}",
 
       "Efficient Inspector complexity:" : "n*(nnz/n)*(nnz/n)*(nnz/n)*n*(nnz/n)*(nnz/n) = O( nnz^5 / n^3)",
-
       "Efficient Inspector complexity after domain info (combination of correlated mono and mono add an useful equlaity: i = colidx(kp) ):" : "n*(nnz/n)*(nnz/n)*(nnz/n)*(nnz/n)*(nnz/n) = O( nnz^5 / n^4)",
-
-      "Expected" : "[ m, nnz ] -> { [i, k] -> [ip, kp] : i - colidx(kp) = 0 && ip >= 0 && colidx(k) >= 0 && rowptr(i) >= 0 && rowptr(ip) >= 0 && rowptr(colidx(k)) >= 0 && rowptr(colidx(kp)) >= 0 && k - rowptr(i) >= 0 && kp - rowptr(ip) >= 0 && diagptr(i + 1) - rowptr(i + 1) >= 0 && diagptr(ip + 1) - rowptr(ip + 1) >= 0 && diagptr(colidx(k)) - rowptr(colidx(k)) >= 0 && diagptr(colidx(k) + 1) - rowptr(colidx(k) + 1) >= 0 && diagptr(colidx(kp)) - rowptr(colidx(kp)) >= 0 && diagptr(colidx(kp) + 1) - rowptr(colidx(kp) + 1) >= 0 && -k + diagptr(i) - 1 >= 0 && -k + rowptr(i + 1) - 2 >= 0 && -k + rowptr(colidx(kp) + 1) - 2 >= 0 && -ip + colidx(kp) - 1 >= 0 && -kp + diagptr(ip) - 1 >= 0 && -kp + rowptr(ip + 1) - 2 >= 0 && m - colidx(k) - 2 >= 0 && m - colidx(kp) - 2 >= 0 && nnz - diagptr(i) - 1 >= 0 && nnz - diagptr(i + 1) - 1 >= 0 && nnz - diagptr(ip) - 1 >= 0 && nnz - diagptr(ip + 1) - 1 >= 0 && nnz - diagptr(colidx(k) + 1) - 1 >= 0 && nnz - diagptr(colidx(kp) + 1) - 1 >= 0 && -diagptr(colidx(k)) + rowptr(colidx(k) + 1) - 2 >= 0 && -diagptr(colidx(kp)) + rowptr(i + 1) - 2 >= 0 && -diagptr(colidx(kp)) + rowptr(colidx(kp) + 1) - 2 >= 0 }",
+      "Expected" : "[m] -> {[i,k,j1,j2] -> [ip,kp,j1p,j2p]: i = colidx(kp) && diagptr(j1) = diagptr(j2p) && rowptr(i) = rowptr(colidx(kp)) && rowptr(i + 1) = rowptr(colidx(kp) + 1) && rowptr(j1) = rowptr(j2p) && ip < i && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(i) <= k && k < diagptr(i) && rowptr(ip) <= kp && kp < diagptr(ip) && k < j1 && j1 < rowptr(1+i) && kp < j1p && j1p < rowptr(1+ip) && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k)) && diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp)) && colidx(j1) = colidx(j2) && colidx(j1p) = colidx(j2p) && j1 = j2p}",
 
       "Comment: Source of data access in the code for this relation" : [
                     " ",
