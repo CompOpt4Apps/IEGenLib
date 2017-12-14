@@ -113,7 +113,10 @@ void simplify(string inputFile)
       addUniQuantRules(uqCons);
     }
 
-    Relation* result = rel->detectUnsatOrFindEqualities();
+    bool* useRule = new bool[ TheOthers ];
+    for(int i = 0 ; i < TheOthers ; i++ ){ useRule[i] = 0; }
+
+    Relation* result = rel->detectUnsatOrFindEqualities(useRule);
 
     // Reading expected outputs
     Relation *ex_rel = NULL;
@@ -133,7 +136,7 @@ void simplify(string inputFile)
 
  } // End of p loop
 
-  cout<<"\n\n UnSat found = "<<unSatFound<<"\n MaySat found = "<<maySatFound;
+  cout<<"\n\n UnSat found = "<<unSatFound<<"\n MaySat found = "<<maySatFound<<"\n\n";
   
 
 }
