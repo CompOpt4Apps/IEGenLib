@@ -3660,4 +3660,147 @@ Relation* Relation::detectUnsatOrFindEqualities(bool *useRule){
   return result;
 }
 
+
+/*****************************************************************************/
+#pragma mark -
+/*****************************************************************************/
+/*! Vistor Class used in VisitorCalculateComplexity
+**  The visitor class calculates complexity for TupleVarTerms
+*/
+class VisitorCalculateComplexity : public Visitor {
+  private:
+    std::set<int> parallelTvs;
+    int *complexity; // -1 = has not been determined, 
+                        // 0 = 0
+                        // 1 = nnz/n
+                        // 2 = n
+    Exp *curr;
+    TupleVarTerm *tv1;  // First TupleVar that we see in an in/equality
+    TupleVarTerm *tv2;  // Second (possible) TupleVar that we see
+    UFCallTerm *ufcUB;
+    VarTerm *varUB;
+    bool nestedness;
+
+  public:
+    VisitorCalculateComplexity(std::set<int> iParallelTvs){
+        parallelTvs = iParallelTvs;
+        complexity = new int[20];
+        for(int i=0;i<20;i++) {complexity[i] = -1;}
+        curr = NULL; tv1 = NULL; tv2 = NULL; ufcUB = NULL; varUB = NULL;
+        nestedness = false;
+    }
+    virtual ~VisitorCalculateComplexity(){}
+//t->coefficient() t->tvloc()  if( complexity[tv1] == -1 && complexity[tv2] > 0){
+    void postVisitUFCallTerm(UFCallTerm * t){
+        if( nestedness ) return;
+        ufcUB = t;
+    }
+    void postVisitVarTerm(VarTerm * t){
+        if( nestedness ) return;
+        varUB = t;
+    }
+    void postVisitTupleVarTerm(TupleVarTerm *t) {
+        if( nestedness ) return;
+        if( !tv1 ){ tv1 = t;
+        } else { tv2 = t; } 
+    }
+
+    void preVisitExp(iegenlib::Exp * e) {
+        if( nestedness ) return;
+        // Record if our current expression is a constraint or param to an UFC
+        if( e->isEquality() || e->isInequality() ){ curr = e; }
+        else if( e->isExpression() ){ nestedness = true; }
+    }
+    void postVisitExp(iegenlib::Exp * e) {
+        if( nestedness ){ return; }
+        if( !tv1 ) {
+            nestedness = false;
+            curr = NULL; tv1 = NULL; tv2 = NULL; ufcUB = NULL; varUB = NULL;
+            return;
+        }
+        
+        if( curr->isEquality() ){ // An equlity constraint
+            // Do we have something like i = jp
+            if( tv2 ) { 
+                if( parallelTvs.find(tv1->tvloc()) != parallelTvs.end() ){
+                    complexity[tv1->tvloc()] = 0;
+                } else if( parallelTvs.find(tv2->tvloc()) != parallelTvs.end() ){
+                    complexity[tv2->tvloc()] = 0;
+                } else if( complexity[tv1->tvloc()] > 0 && 
+                           complexity[tv2->tvloc()] > 0){
+                    complexity[tv1->tvloc()] = 0;
+                } else if( complexity[tv1->tvloc()] == -1){
+                    complexity[tv1->tvloc()] = 0;
+                } else if( complexity[tv2->tvloc()] == -1){
+                    complexity[tv2->tvloc()] = 0;
+                }
+            } else {
+                complexity[tv1->tvloc()] = 0;
+            }
+        } else {                  // An inequlity constraint
+            if( !tv2 ){
+                if(tv1->coefficient() > 0 || complexity[tv1->tvloc()] > -1 ){
+                    nestedness = false;
+                    curr = NULL; tv1 = NULL; tv2 = NULL; ufcUB = NULL; varUB = NULL;
+                    return;
+                } else if( varUB ){
+                    if(varUB->symbol() == "n" || varUB->symbol() == "m"){
+                        complexity[tv1->tvloc()] = 2;
+                    } else {
+                        complexity[tv1->tvloc()] = 1;
+                    }
+                    nestedness = false;
+                    curr = NULL; tv1 = NULL; tv2 = NULL; ufcUB = NULL; varUB = NULL;
+                    return;
+                } else if ( ufcUB ) {
+                    // ...
+                }
+            } else if( tv2 ){ 
+                if(tv1->coefficient() > 0 && tv2->coefficient() > 0 ) {
+                    nestedness = false;
+                    curr = NULL; tv1 = NULL; tv2 = NULL; ufcUB = NULL; varUB = NULL;
+                    return;
+                } else if ( complexity[tv1->tvloc()] > -1 && 
+                            complexity[tv2->tvloc()] > -1) {
+                    nestedness = false;
+                    curr = NULL; tv1 = NULL; tv2 = NULL; ufcUB = NULL; varUB = NULL;
+                    return;
+                } else if ( tv1->coefficient() < 0 && tv2->coefficient() > 0
+                            && complexity[tv2->tvloc()] > 0) {
+                    complexity[tv1->tvloc()] = complexity[tv2->tvloc()];
+                } else if ( tv2->coefficient() < 0 && tv1->coefficient() > 0
+                            && complexity[tv1->tvloc()] > 0) {
+                    complexity[tv2->tvloc()] = complexity[tv1->tvloc()];
+                } else if ( varUB ) {
+                    if(varUB->symbol() == "n" || varUB->symbol() == "m"){
+                        if(tv1->coefficient()<0 && complexity[tv1->tvloc()]==-1){
+                            complexity[tv1->tvloc()] = 2;
+                        } else if(tv2->coefficient()<0 && complexity[tv2->tvloc()]==-1){
+                            complexity[tv2->tvloc()] = 2;
+                        }
+                    } else {
+                        if(tv1->coefficient()<0 && complexity[tv1->tvloc()]==-1){
+                            complexity[tv1->tvloc()] = 1;
+                        } else if(tv2->coefficient()<0 && complexity[tv2->tvloc()]==-1){
+                            complexity[tv2->tvloc()] = 1;
+                        }
+                    }
+                } else if ( ufcUB ) {
+                    // ...
+                }
+                nestedness = false;
+                curr = NULL; tv1 = NULL; tv2 = NULL; ufcUB = NULL; varUB = NULL;
+                return;
+            }  
+        }
+    }
+
+    int* getComplexity() { 
+        return complexity;
+    }
+};
+
+//Relation* Relation::complexity(std::set<int> parallelTvs){
+//}
+
 }//end namespace iegenlib
