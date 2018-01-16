@@ -766,6 +766,7 @@ public:
     }
 
     Relation* detectUnsatOrFindEqualities(bool *useRule=NULL);
+    std::string complexity(std::set<int> parallelTvs);
 
 private:
     int mInArity;

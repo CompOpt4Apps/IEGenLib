@@ -220,6 +220,8 @@ TEST(Parser, RelationConstraintsGTE) {
 TEST(Parser, RelationConstraintsEQandEQandLTE) {
     std::string temp = "{[x,y,z]->[a,b,c]: a=5 and z=6 and c<=z}";
     Relation* r = parser::parse_relation(temp);
+
+std::cout<<"\n\nR = "<<r->toString()<<"\n\n";
     EXPECT_EQ("{ [x, y, z] -> [a, b, c] : __tv2 - 6 = 0 && __tv3 - 5 = 0 &&"
        " __tv2 - __tv5 >= 0 }", r->toString());
     delete r;

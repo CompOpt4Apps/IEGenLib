@@ -3524,12 +3524,15 @@ isl_map* instantiationMap(Relation *drOrigSet, srParts supRelationParts,
 
   // Iteratively add useful instantiation utilizing isl functions
   isl_map* map = isl_map_read_from_str(ctx, origRel.c_str() );
+  // FIXME: following loop must iterate until there is no useful 
+  // instantiation to add, so 2 should change to ... 
   for (int i =0; i < 2; i++) {
     for (std::set<std::pair <std::string,std::string>>::iterator 
           it=instantiations.begin(); it!=instantiations.end(); it++){ 
       string antecedentStr = syms + "{" + supRelationParts.tupDecl + " : " + (*it).first + "}";
       string consequentStr = syms + "{" + supRelationParts.tupDecl + " : " + (*it).second + "}";
 
+      // We want have test cases showing waht some of these isl funcs does
       int added = 0;
       {
         isl_map* ant_map = isl_map_read_from_str(ctx, antecedentStr.c_str());
@@ -3598,13 +3601,13 @@ Relation* checkIslMap(isl_map* map, isl_ctx* ctx,
 }
 
 // Detect UnSat or MaySat for the relation utilizing domain information 
-// that are stored as universially quantified rules in the environment.
+// that are stored as universally quantified rules in the environment.
 // To utilize the domain information, the function first gathers all 
 // the parameter expression to all UFCs in the relation, then it uses 
 // those expression to instantiate the quantified rules. Next, it creates 
 // a isl map out of original relation and the instantiate rules. 
-// Finally, it chcks to see whither the isl map empty or not, 
-// in case it is not empty it extract the newly found equailities, 
+// Finally, it checks to see whither the isl map is empty or not, 
+// in case it is not empty it extract the newly found equalities, 
 // adds them the original relation and returns the result.
 Relation* Relation::detectUnsatOrFindEqualities(bool *useRule){
 
@@ -3686,113 +3689,109 @@ class VisitorCalculateComplexity : public Visitor {
         parallelTvs = iParallelTvs;
         complexity = new int[20];
         for(int i=0;i<20;i++) {complexity[i] = -1;}
-        curr = NULL; tv1 = NULL; tv2 = NULL; ufcUB = NULL; varUB = NULL;
         nestedness = false;
     }
     virtual ~VisitorCalculateComplexity(){}
-//t->coefficient() t->tvloc()  if( complexity[tv1] == -1 && complexity[tv2] > 0){
     void postVisitUFCallTerm(UFCallTerm * t){
-        if( nestedness ) return;
-        ufcUB = t;
+      if( nestedness ) return;
+      ufcUB = t;
     }
     void postVisitVarTerm(VarTerm * t){
-        if( nestedness ) return;
-        varUB = t;
+      if( nestedness ) return;
+      varUB = t;
     }
     void postVisitTupleVarTerm(TupleVarTerm *t) {
-        if( nestedness ) return;
-        if( !tv1 ){ tv1 = t;
-        } else { tv2 = t; } 
+      if( nestedness ) return;
+      if( !tv1 ){ tv1 = t;
+      } else { tv2 = t; } 
     }
 
     void preVisitExp(iegenlib::Exp * e) {
-        if( nestedness ) return;
-        // Record if our current expression is a constraint or param to an UFC
-        if( e->isEquality() || e->isInequality() ){ curr = e; }
-        else if( e->isExpression() ){ nestedness = true; }
+      if( nestedness ) return;
+      // Record if our current expression is a constraint or param to an UFC
+      if( e->isEquality() || e->isInequality() ){ 
+        curr = e; 
+        nestedness = false;
+        tv1 = NULL; tv2 = NULL; ufcUB = NULL; varUB = NULL;
+      }
+      else if( e->isExpression() ){ nestedness = true; }
     }
     void postVisitExp(iegenlib::Exp * e) {
-        if( nestedness ){ return; }
-        if( !tv1 ) {
-            nestedness = false;
-            curr = NULL; tv1 = NULL; tv2 = NULL; ufcUB = NULL; varUB = NULL;
-            return;
-        }
+      if( nestedness && e->isExpression() ){ return; }
+      if( !tv1 ) {
+        return;
+      }
         
-        if( curr->isEquality() ){ // An equlity constraint
-            // Do we have something like i = jp
-            if( tv2 ) { 
-                if( parallelTvs.find(tv1->tvloc()) != parallelTvs.end() ){
-                    complexity[tv1->tvloc()] = 0;
-                } else if( parallelTvs.find(tv2->tvloc()) != parallelTvs.end() ){
-                    complexity[tv2->tvloc()] = 0;
-                } else if( complexity[tv1->tvloc()] > 0 && 
-                           complexity[tv2->tvloc()] > 0){
-                    complexity[tv1->tvloc()] = 0;
-                } else if( complexity[tv1->tvloc()] == -1){
-                    complexity[tv1->tvloc()] = 0;
-                } else if( complexity[tv2->tvloc()] == -1){
-                    complexity[tv2->tvloc()] = 0;
-                }
-            } else {
-                complexity[tv1->tvloc()] = 0;
-            }
-        } else {                  // An inequlity constraint
-            if( !tv2 ){
-                if(tv1->coefficient() > 0 || complexity[tv1->tvloc()] > -1 ){
-                    nestedness = false;
-                    curr = NULL; tv1 = NULL; tv2 = NULL; ufcUB = NULL; varUB = NULL;
-                    return;
-                } else if( varUB ){
-                    if(varUB->symbol() == "n" || varUB->symbol() == "m"){
-                        complexity[tv1->tvloc()] = 2;
-                    } else {
-                        complexity[tv1->tvloc()] = 1;
-                    }
-                    nestedness = false;
-                    curr = NULL; tv1 = NULL; tv2 = NULL; ufcUB = NULL; varUB = NULL;
-                    return;
-                } else if ( ufcUB ) {
-                    // ...
-                }
-            } else if( tv2 ){ 
-                if(tv1->coefficient() > 0 && tv2->coefficient() > 0 ) {
-                    nestedness = false;
-                    curr = NULL; tv1 = NULL; tv2 = NULL; ufcUB = NULL; varUB = NULL;
-                    return;
-                } else if ( complexity[tv1->tvloc()] > -1 && 
-                            complexity[tv2->tvloc()] > -1) {
-                    nestedness = false;
-                    curr = NULL; tv1 = NULL; tv2 = NULL; ufcUB = NULL; varUB = NULL;
-                    return;
-                } else if ( tv1->coefficient() < 0 && tv2->coefficient() > 0
-                            && complexity[tv2->tvloc()] > 0) {
-                    complexity[tv1->tvloc()] = complexity[tv2->tvloc()];
-                } else if ( tv2->coefficient() < 0 && tv1->coefficient() > 0
-                            && complexity[tv1->tvloc()] > 0) {
-                    complexity[tv2->tvloc()] = complexity[tv1->tvloc()];
-                } else if ( varUB ) {
-                    if(varUB->symbol() == "n" || varUB->symbol() == "m"){
-                        if(tv1->coefficient()<0 && complexity[tv1->tvloc()]==-1){
-                            complexity[tv1->tvloc()] = 2;
-                        } else if(tv2->coefficient()<0 && complexity[tv2->tvloc()]==-1){
-                            complexity[tv2->tvloc()] = 2;
-                        }
-                    } else {
-                        if(tv1->coefficient()<0 && complexity[tv1->tvloc()]==-1){
-                            complexity[tv1->tvloc()] = 1;
-                        } else if(tv2->coefficient()<0 && complexity[tv2->tvloc()]==-1){
-                            complexity[tv2->tvloc()] = 1;
-                        }
-                    }
-                } else if ( ufcUB ) {
-                    // ...
-                }
-                nestedness = false;
-                curr = NULL; tv1 = NULL; tv2 = NULL; ufcUB = NULL; varUB = NULL;
-                return;
-            }  
+      if( curr->isEquality() ){ // An equlity constraint
+
+//std::cout<<"\n\nHi1 Eq = "<<curr->toString()<<"\n\n";
+        // Do we have something like i = jp
+        if( tv2 ) { 
+          if( parallelTvs.find(tv1->tvloc()) != parallelTvs.end() ){
+            complexity[tv1->tvloc()] = 0;
+          } else if( parallelTvs.find(tv2->tvloc()) != parallelTvs.end() ){
+            complexity[tv2->tvloc()] = 0;
+          } else if( complexity[tv1->tvloc()] > 0 && 
+            complexity[tv2->tvloc()] > 0){
+            complexity[tv1->tvloc()] = 0;
+          } else if( complexity[tv1->tvloc()] == -1){
+//std::cout<<"\n\nHi2 Eq = "<<curr->toString()<<"  comp[tv2] = "<<complexity[tv2->tvloc()]<<"\n\n";
+            complexity[tv1->tvloc()] = 0;
+          } else if( complexity[tv2->tvloc()] == -1){
+//std::cout<<"\n\nHi3 Eq = "<<curr->toString()<<"  comp[tv1] = "<<complexity[tv1->tvloc()]<<"\n\n";
+            complexity[tv2->tvloc()] = 0;
+          }
+        } else {
+          complexity[tv1->tvloc()] = 0;
         }
+      } else {                  // An inequlity constraint
+        if( !tv2 ){
+          if(tv1->coefficient() > 0 || complexity[tv1->tvloc()] > -1 ){
+            return;
+          } else if( varUB ){
+            if(varUB->symbol() == "n" || varUB->symbol() == "m"){
+              complexity[tv1->tvloc()] = 2;
+            } else {
+              complexity[tv1->tvloc()] = 1;
+            }
+            return;
+          } else if ( ufcUB ) {
+            // For our current examples does not seems that we need this,
+            // however, there could be examples that might need this 
+            // consideration that is more complicated than other cases.
+          }
+        } else if( tv2 ){ 
+          if(tv1->coefficient() > 0 && tv2->coefficient() > 0 ) {
+            return;
+          } else if ( complexity[tv1->tvloc()] > -1 && 
+                      complexity[tv2->tvloc()] > -1) {
+            return;
+          } else if ( tv1->coefficient() < 0 && tv2->coefficient() > 0
+                      && complexity[tv2->tvloc()] > 0) {
+            complexity[tv1->tvloc()] = complexity[tv2->tvloc()];
+          } else if ( tv2->coefficient() < 0 && tv1->coefficient() > 0
+                      && complexity[tv1->tvloc()] > 0) {
+            complexity[tv2->tvloc()] = complexity[tv1->tvloc()];
+          } else if ( varUB ) {
+            if(varUB->symbol() == "n" || varUB->symbol() == "m"){
+              if(tv1->coefficient()<0 && complexity[tv1->tvloc()]==-1){
+                complexity[tv1->tvloc()] = 2;
+              } else if(tv2->coefficient()<0 && complexity[tv2->tvloc()]==-1){
+                complexity[tv2->tvloc()] = 2;
+              }
+            } else {
+              if(tv1->coefficient()<0 && complexity[tv1->tvloc()]==-1){
+                complexity[tv1->tvloc()] = 1;
+              } else if(tv2->coefficient()<0 && complexity[tv2->tvloc()]==-1){
+                complexity[tv2->tvloc()] = 1;
+              }
+            }
+          } else if ( ufcUB ) {
+            // ...
+          }
+          return;
+        }  
+      }
     }
 
     int* getComplexity() { 
@@ -3800,7 +3799,27 @@ class VisitorCalculateComplexity : public Visitor {
     }
 };
 
-//Relation* Relation::complexity(std::set<int> parallelTvs){
-//}
+std::string Relation::complexity(std::set<int> parallelTvs){
+  
+  std::string result="O( )";
+
+    // Geting a map of UFCalls 
+    iegenlib::UFCallMap *ufcmap = new UFCallMap();
+    // Getting the super affine set of constraints with no UFCallTerms
+    Relation* sup_r = this->superAffineRelation(ufcmap);
+
+    //std::cout<<sup_r->toISLString();
+
+  // 
+  VisitorCalculateComplexity *vComp = new VisitorCalculateComplexity(parallelTvs);
+  sup_r->acceptVisitor(vComp);
+  int* complexities = vComp->getComplexity();
+
+  for(int i=0; i < arity() ; i++){
+    std::cout<<"\n tv"<<i<<" : "<<complexities[i]<<"\n";
+  }
+
+  return result;
+}
 
 }//end namespace iegenlib
