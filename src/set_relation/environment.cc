@@ -408,7 +408,7 @@ UniQuantRule::UniQuantRule(string type, string tupleDecl,
 
     if(type == "Monotonicity")         mUniQuantRuleType = Monotonicity;
     else if (type == "CoMonotonicity") mUniQuantRuleType = CoMonotonicity;
-    else if (type == "Triangular")     mUniQuantRuleType = Triangular;
+    else if (type == "Triangularity")     mUniQuantRuleType = Triangularity;
     else if (type == "FuncConsistency")mUniQuantRuleType = FuncConsistency;
     else                               mUniQuantRuleType = TheOthers;
 }

@@ -156,7 +156,7 @@ extern Environment currentEnv;
 
 // Monotonicity should always be the first and TheOthers the last type
 // This convention is used inside drivers 
-typedef enum {Monotonicity, CoMonotonicity, Triangular, 
+typedef enum {Monotonicity, CoMonotonicity, Triangularity, 
               FuncConsistency, TheOthers} UniQuantRuleType;
 
 /*!

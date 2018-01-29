@@ -114,7 +114,7 @@ void simplify(string inputFile)
     }
 
     bool* useRule = new bool[ TheOthers ];
-    for(int i = 0 ; i < TheOthers ; i++ ){ useRule[i] = 0; }
+    for(int i = 0 ; i < TheOthers ; i++ ){ useRule[i] = 1; }
 
     Relation* result = rel->detectUnsatOrFindEqualities(useRule);
 
