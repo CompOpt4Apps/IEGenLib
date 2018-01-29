@@ -415,7 +415,22 @@ public:
     }
 
     //! Return the number of conjunction
-    int noConjuncts(){ return mConjunctions.size(); } 
+    int getNumConjuncts(){ return mConjunctions.size(); } 
+
+    /**! This function calculates the algorithmic complexity of a Set/Relation
+    **   that is representing a data dependence. Also, it takes into
+    **   account the fact that the set is meant for dependency analysis
+    **   for partial parallelism. Basically, it calculates the complexity of
+    **   efficient inspector that we need to generate for the dependence.  
+    **   Therefore, it considers two things: 
+    **   1) It ignores any tuple variable that we can project out, other 
+    **   than those that we want to parallelize.
+    **   2) It takes into account the useful equalities (e.g i = col(jp), 
+    **   where we can get values of i from col(jp)). Nonetheless, note that 
+    **   it does not consider any sort of approximations that 
+    **   we might be able to do to further optimize the inspector.
+    **/ 
+    std::string complexityForPartialParallel(std::set<int> parallelTvs);
 
 
 // FIXME: what methods should we have to iterate over conjunctions so
@@ -766,7 +781,6 @@ public:
     }
 
     Relation* detectUnsatOrFindEqualities(bool *useRule=NULL);
-    std::string complexity(std::set<int> parallelTvs);
 
 private:
     int mInArity;

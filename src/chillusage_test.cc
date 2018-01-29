@@ -1502,7 +1502,6 @@ S2:     v[j1] -= tmp*v[j2];
 
 }
 
-#endif
 
 
 
@@ -1629,3 +1628,4 @@ TEST_F(ChillUsageTest, InsertRetrieveUniQuantRule)
     // since environment still owns them.
 }
 
+#endif

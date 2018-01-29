@@ -67,7 +67,7 @@
       ],
       "Do Not Project Out" :
       [
-        "i", "ip"
+        "colNo", "colNop"
       ],
       "Remove Constraints" : "0",
       "Comment: Code" : [

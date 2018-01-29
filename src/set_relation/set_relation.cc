@@ -2761,7 +2761,7 @@ Set* Set::superAffineSet(UFCallMap* ufcmap, bool boundUFCs)
 {
     Set *copySet, *result;
 
-    if( !noConjuncts() ){  // There is no conjunction, so nothing to do
+    if( !getNumConjuncts() ){  // There is no conjunction, so nothing to do
        result = new Set (*this);
        return result;   // Just return a copy of the Set
     }
@@ -2785,7 +2785,7 @@ Relation* Relation::superAffineRelation(UFCallMap* ufcmap, bool boundUFCs)
 {
     Relation *copyRelation, *result;
 
-    if( !noConjuncts() ){  // There is no conjunction, so nothing to do
+    if( !getNumConjuncts() ){  // There is no conjunction, so nothing to do
        result = new Relation (*this);
        return result;   // Just return a copy of the Set
     }
@@ -3495,18 +3495,12 @@ std::pair <std::string,std::string> instantiate(
   return (std::make_pair( leftStr, rightStr));
 }
 
-// This function creates a isl map from insatiations. The naive way to 
-// do this would be to put all the instantiation inside one relation 
-// and feed it isl. However, that would create a performance bottleneck,
-// since isl has to try to colasce and simplify 
-// lots of disjunctions at the same time. Instead of the naive way 
-// this function iteratively adds the useful instantiation.
-isl_map* instantiationMap(Relation *drOrigSet, srParts supRelationParts, 
-                          UFCallMap *ufcmap, isl_ctx* ctx, 
-           std::set<std::pair <std::string,std::string>> instantiations){
 
-  // Build original relation with all symbolic constants from
-  // instantiations
+// Builds list of symbolic constants from original constraints,
+// super affine set, and instantiations, so we can use it for isl input. 
+//  drOrigSet = original set with domain/range constraints
+//  ufcmap    = list of UFCs from super super affine set, and instantiations
+string symsForInstantiationMap(Relation *drOrigSet, UFCallMap *ufcmap ){
   std::stringstream ss;
   StringIterator * symIter;
   bool foundSymbols = false;
@@ -3514,11 +3508,34 @@ isl_map* instantiationMap(Relation *drOrigSet, srParts supRelationParts,
   while (symIter->hasNext()) {
     if (foundSymbols == false) {
       foundSymbols = true;
-      ss << "[ "<< symIter->next();
+      ss << symIter->next();
     } else { ss << ", " << symIter->next(); }
   }
   delete drOrigSet;
-  std::string syms = ss.str() + ", " + ufcmap->varTermStrList() + " ] -> ";
+  std::string syms = "";
+  if( !((ss.str()).empty()) && !((ufcmap->varTermStrList()).empty()) ){
+    syms = "[" + ss.str() + ", " 
+                           + ufcmap->varTermStrList() + "] -> ";    
+  } else if ( (ufcmap->varTermStrList()).empty() ) {
+    syms = "[" + ss.str() + "] -> ";   
+  } else if ( (ss.str()).empty() ){
+    syms = "[" + ufcmap->varTermStrList() + "] -> "; 
+  }
+
+  return syms;
+}
+
+// This function creates a isl map from instantiations. The naive way to 
+// do this would be to put all the instantiation inside one relation 
+// and feed it isl. However, that would create a performance bottleneck,
+// since isl has to try to colasce and simplify 
+// lots of disjunctions at the same time. Instead of the naive way 
+// this function iteratively adds the useful instantiation.
+isl_map* instantiationMap( srParts supRelationParts, 
+           std::set<std::pair <std::string,std::string>> instantiations,
+                               string syms , isl_ctx* ctx){
+
+  // Build original relation with all symbolic constants from instantiations
   string origRel = syms + "{" + supRelationParts.tupDecl + " : " + 
                    supRelationParts.constraints + "}";
 
@@ -3526,13 +3543,13 @@ isl_map* instantiationMap(Relation *drOrigSet, srParts supRelationParts,
   isl_map* map = isl_map_read_from_str(ctx, origRel.c_str() );
   // FIXME: following loop must iterate until there is no useful 
   // instantiation to add, so 2 should change to ... 
-  for (int i =0; i < 2; i++) {
+  for (int i = 0; i < 2; i++) {
     for (std::set<std::pair <std::string,std::string>>::iterator 
           it=instantiations.begin(); it!=instantiations.end(); it++){ 
       string antecedentStr = syms + "{" + supRelationParts.tupDecl + " : " + (*it).first + "}";
       string consequentStr = syms + "{" + supRelationParts.tupDecl + " : " + (*it).second + "}";
 
-      // We want have test cases showing waht some of these isl funcs does
+      // FIXME: We want have test cases showing what some of these isl funcs does
       int added = 0;
       {
         isl_map* ant_map = isl_map_read_from_str(ctx, antecedentStr.c_str());
@@ -3653,9 +3670,9 @@ Relation* Relation::detectUnsatOrFindEqualities(bool *useRule){
   srParts supRelationParts = getPartsFromStr(supAffRel->prettyPrintString());
   isl_ctx* ctx = isl_ctx_alloc();
 
+  string syms = symsForInstantiationMap(boundDomainRange(), ufcmap);
   //Relation *drOrigSet = boundDomainRange();
-  isl_map* map = instantiationMap(boundDomainRange(), supRelationParts, 
-                                  ufcmap, ctx, instantiations);
+  isl_map* map = instantiationMap(supRelationParts, instantiations, syms, ctx);
 
   Relation *result = checkIslMap(map, ctx, ufcmap, this);
 //  isl_ctx_free(ctx);
@@ -3672,29 +3689,28 @@ Relation* Relation::detectUnsatOrFindEqualities(bool *useRule){
 */
 class VisitorCalculateComplexity : public Visitor {
   private:
-    std::set<int> parallelTvs;
-    int *complexity; // -1 = has not been determined, 
-                        // 0 = 0
-                        // 1 = nnz/n
-                        // 2 = n
+    int *complexity; 
     Exp *curr;
     TupleVarTerm *tv1;  // First TupleVar that we see in an in/equality
     TupleVarTerm *tv2;  // Second (possible) TupleVar that we see
     UFCallTerm *ufcUB;
     VarTerm *varUB;
-    bool nestedness;
+    int nestedness;
 
   public:
-    VisitorCalculateComplexity(std::set<int> iParallelTvs){
-        parallelTvs = iParallelTvs;
-        complexity = new int[20];
-        for(int i=0;i<20;i++) {complexity[i] = -1;}
-        nestedness = false;
+    VisitorCalculateComplexity(int *iComplexity){
+        complexity = iComplexity;
+        nestedness = 0;
     }
     virtual ~VisitorCalculateComplexity(){}
     void postVisitUFCallTerm(UFCallTerm * t){
       if( nestedness ) return;
+      if( ufcUB ){
+        //throw assert_exception("VisitorCalculateComplexity: "
+        //                   "more than one UFC in a constraint.");
+      }
       ufcUB = t;
+//std::cout<<"\n\nHi UFC!!\n\n";
     }
     void postVisitVarTerm(VarTerm * t){
       if( nestedness ) return;
@@ -3703,94 +3719,77 @@ class VisitorCalculateComplexity : public Visitor {
     void postVisitTupleVarTerm(TupleVarTerm *t) {
       if( nestedness ) return;
       if( !tv1 ){ tv1 = t;
-      } else { tv2 = t; } 
+      } else if( !tv2 ){ 
+        tv2 = t;
+      } else {
+        //throw assert_exception("VisitorCalculateComplexity: "
+        //                   "more than two tuple variable in a constraint.");
+      } 
     }
 
     void preVisitExp(iegenlib::Exp * e) {
-      if( nestedness ) return;
       // Record if our current expression is a constraint or param to an UFC
+      if( e->isExpression() ){ nestedness++; }
       if( e->isEquality() || e->isInequality() ){ 
         curr = e; 
-        nestedness = false;
+        nestedness = 0;
         tv1 = NULL; tv2 = NULL; ufcUB = NULL; varUB = NULL;
       }
-      else if( e->isExpression() ){ nestedness = true; }
     }
     void postVisitExp(iegenlib::Exp * e) {
-      if( nestedness && e->isExpression() ){ return; }
-      if( !tv1 ) {
-        return;
-      }
-        
-      if( curr->isEquality() ){ // An equlity constraint
+      if( e->isExpression() ){ nestedness--; return; }
+      if( !tv1 ) { return; }   // Nothing useful to investigate
+      if(complexity[tv1->tvloc()] == 0 ) { return; }
 
-//std::cout<<"\n\nHi1 Eq = "<<curr->toString()<<"\n\n";
+      if( curr->isEquality() ){ // An equlity constraint
         // Do we have something like i = jp
-        if( tv2 ) { 
-          if( parallelTvs.find(tv1->tvloc()) != parallelTvs.end() ){
-            complexity[tv1->tvloc()] = 0;
-          } else if( parallelTvs.find(tv2->tvloc()) != parallelTvs.end() ){
-            complexity[tv2->tvloc()] = 0;
-          } else if( complexity[tv1->tvloc()] > 0 && 
-            complexity[tv2->tvloc()] > 0){
-            complexity[tv1->tvloc()] = 0;
-          } else if( complexity[tv1->tvloc()] == -1){
-//std::cout<<"\n\nHi2 Eq = "<<curr->toString()<<"  comp[tv2] = "<<complexity[tv2->tvloc()]<<"\n\n";
-            complexity[tv1->tvloc()] = 0;
-          } else if( complexity[tv2->tvloc()] == -1){
-//std::cout<<"\n\nHi3 Eq = "<<curr->toString()<<"  comp[tv1] = "<<complexity[tv1->tvloc()]<<"\n\n";
-            complexity[tv2->tvloc()] = 0;
-          }
-        } else {
-          complexity[tv1->tvloc()] = 0;
+        if( tv2 ) {
+          if(complexity[tv1->tvloc()] == -1 && complexity[tv1->tvloc()] == -1){
+            return;  // We need to know the original range of both iterators 
+          }          // to know that only less expensive one needs a loop.
+          if(complexity[tv1->tvloc()] == 0 || complexity[tv1->tvloc()] == 0){
+            return;  // The equality is useless since at least one the iterators 
+          }          // is going to be projected out. 
+          if(complexity[tv2->tvloc()] <= complexity[tv1->tvloc()] ){
+            complexity[tv1->tvloc()] = 1;
+          } else {
+            complexity[tv2->tvloc()] = 1;
+          } 
+        } else if( ufcUB ){
+          complexity[tv1->tvloc()] = 1;
         }
-      } else {                  // An inequlity constraint
+      } else {                  // An inequlity constraint{
         if( !tv2 ){
           if(tv1->coefficient() > 0 || complexity[tv1->tvloc()] > -1 ){
             return;
-          } else if( varUB ){
+          } else if( varUB ){     // i < n
             if(varUB->symbol() == "n" || varUB->symbol() == "m"){
-              complexity[tv1->tvloc()] = 2;
+              complexity[tv1->tvloc()] = 3;
             } else {
-              complexity[tv1->tvloc()] = 1;
+              //throw assert_exception("VisitorCalculateComplexity: "
+              //                         "unknown symbolic constant.");
             }
-            return;
-          } else if ( ufcUB ) {
-            // For our current examples does not seems that we need this,
-            // however, there could be examples that might need this 
-            // consideration that is more complicated than other cases.
+          } else if ( ufcUB ) {     // i < UFC(XX)
+             complexity[tv1->tvloc()] = 2; //ufcUpBound( ufcUB );
           }
-        } else if( tv2 ){ 
+        }/* else if( tv2 ){ 
           if(tv1->coefficient() > 0 && tv2->coefficient() > 0 ) {
-            return;
-          } else if ( complexity[tv1->tvloc()] > -1 && 
-                      complexity[tv2->tvloc()] > -1) {
+            return;  // Not upper bound: i + j >= 0
+          } else if ( complexity[tv1->tvloc()] > -1 &&    
+                      complexity[tv2->tvloc()] > -1) {    
             return;
           } else if ( tv1->coefficient() < 0 && tv2->coefficient() > 0
-                      && complexity[tv2->tvloc()] > 0) {
-            complexity[tv1->tvloc()] = complexity[tv2->tvloc()];
-          } else if ( tv2->coefficient() < 0 && tv1->coefficient() > 0
-                      && complexity[tv1->tvloc()] > 0) {
-            complexity[tv2->tvloc()] = complexity[tv1->tvloc()];
-          } else if ( varUB ) {
-            if(varUB->symbol() == "n" || varUB->symbol() == "m"){
-              if(tv1->coefficient()<0 && complexity[tv1->tvloc()]==-1){
-                complexity[tv1->tvloc()] = 2;
-              } else if(tv2->coefficient()<0 && complexity[tv2->tvloc()]==-1){
-                complexity[tv2->tvloc()] = 2;
-              }
-            } else {
-              if(tv1->coefficient()<0 && complexity[tv1->tvloc()]==-1){
-                complexity[tv1->tvloc()] = 1;
-              } else if(tv2->coefficient()<0 && complexity[tv2->tvloc()]==-1){
-                complexity[tv2->tvloc()] = 1;
-              }
+                      && complexity[tv2->tvloc()] > 0) {  // -i + j >= 0
+            if( complexity[tv1->tvloc()] < complexity[tv2->tvloc()]){
+              complexity[tv1->tvloc()] = complexity[tv2->tvloc()];
             }
-          } else if ( ufcUB ) {
-            // ...
+          } else if ( tv2->coefficient() < 0 && tv1->coefficient() > 0
+                      && complexity[tv1->tvloc()] > 0) {  // i - j >= 0
+            if(complexity[tv2->tvloc()] < complexity[tv1->tvloc()]){
+              complexity[tv2->tvloc()] = complexity[tv1->tvloc()];
+            }
           }
-          return;
-        }  
+        }  */
       }
     }
 
@@ -3799,25 +3798,82 @@ class VisitorCalculateComplexity : public Visitor {
     }
 };
 
-std::string Relation::complexity(std::set<int> parallelTvs){
+
+/*! Calculates complexity string, e.g O(n^2*nnz*4), based on complexity
+    of individual tuple variables given.
+*/
+string calculateComplexityStr(int *complexities, int arr){
+  std::string result="O(";
+  int numOfNs = 0, numOfNNZdNs = 0, diff;
+  string strNumOfNs, strNumOfNNZdNs, strDiff;
+
+  for(int i=0; i < arr ; i++){
+    if (complexities[i] == 2)      numOfNNZdNs++;
+    else if (complexities[i] == 3) numOfNs++;
+  }
+  diff = numOfNs - numOfNNZdNs;
   
-  std::string result="O( )";
+  char buffer [50];
+  sprintf (buffer, "%d", numOfNs);
+  strNumOfNs = buffer;
+  sprintf (buffer, "%d", numOfNNZdNs);
+  strNumOfNNZdNs = buffer;
+  sprintf (buffer, "%d", abs(diff) );
+  strDiff = buffer;
 
-    // Geting a map of UFCalls 
-    iegenlib::UFCallMap *ufcmap = new UFCallMap();
-    // Getting the super affine set of constraints with no UFCallTerms
-    Relation* sup_r = this->superAffineRelation(ufcmap);
+  if( numOfNNZdNs == 0 ){
+    result = result + "n^" + strNumOfNs + ")";
+  } else if( numOfNs == 0){
+    result = result+"nnz^"+strNumOfNNZdNs +"/"+"n^"+strNumOfNNZdNs+")";
+  } else if( diff < 0 ) {
+    result = result + "nnz^" + strNumOfNNZdNs + "/" + "n^" + strDiff + ")";
+  } else if( diff > 0 ) {
+    result = result + "n^" + strDiff + "*" + "nnz^" + strNumOfNNZdNs + ")";
+  } else {
+    result = result + "nnz^" + strNumOfNNZdNs + ")";
+  }
 
-    //std::cout<<sup_r->toISLString();
+  return result;
+}
 
-  // 
-  VisitorCalculateComplexity *vComp = new VisitorCalculateComplexity(parallelTvs);
-  sup_r->acceptVisitor(vComp);
-  int* complexities = vComp->getComplexity();
+/*!
+*/
+std::string SparseConstraints::
+            complexityForPartialParallel(std::set<int> parallelTvs){
+
+  if( getNumConjuncts() != 1 ){
+    throw assert_exception("SparseConstraints::complexityForPartialParallel:"
+                           "number of conjunctions is not 1.");
+  }
+
+  // What each type of complexity mean for an interator:
+  // -1: has not been determined yet
+  //  0: ignore the iterator since it can be projected out
+  //  1: O(1): the values for the iterator can be generated from another one
+  //  2: O(nnz/n)
+  //  3: O(n)
+  int* complexities = new int[arity()+1];
+  for(int i=0; i < arity() ; i++){
+    if ( parallelTvs.find(i) != parallelTvs.end() ){
+      complexities[i] = -1;     // We do not want to project out the iterator
+    } else if ( isUFCallParam(i) ){
+      complexities[i] = -1;     // We cannot project out the iterator
+    } else {
+      complexities[i] = 0;      // We can project out the iterator
+    }
+  } 
+
+  VisitorCalculateComplexity *vComp = new VisitorCalculateComplexity(complexities);
+  this->acceptVisitor(vComp);
+  this->acceptVisitor(vComp);
 
   for(int i=0; i < arity() ; i++){
     std::cout<<"\n tv"<<i<<" : "<<complexities[i]<<"\n";
   }
+
+  string result = calculateComplexityStr( complexities , arity() );
+
+  std::cout<<"\n Comp = "<<result<<"\n";
 
   return result;
 }
