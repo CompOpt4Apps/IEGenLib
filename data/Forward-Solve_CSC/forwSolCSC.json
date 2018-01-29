@@ -31,7 +31,7 @@
       "User Defined" :
       [
         {
-          "Type" : "Triangulairty",
+          "Type" : "Triangularity",
           "UniQuantVar" : "[e1,e2]",
           "Rule (comment)" : "Forall e1,e2,  Li(e1) < e2 => e1 < Lp(e2)",
           "p" : "Lp(e1) < e2",

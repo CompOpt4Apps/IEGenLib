@@ -51,14 +51,14 @@
       "User Defined" :
       [
         {
-          "Type" : "Triangulairty",
+          "Type" : "Triangularity",
           "UniQuantVar" : "[e1,e2]",
           "Rule (comment)" : "Forall e1,e2,  e1 < prunePtr(e2) => pruneSet(e1) < e2",
           "p" : "e1 < prunePtr(e2)",
           "q" : "pruneSet(e1) < e2"
         },
         {
-          "Type" : "Triangulairty",
+          "Type" : "Triangularity",
           "UniQuantVar" : "[e1,e2]",
           "Rule (comment)" : "Forall e1,e2,  lC(e1) < e2 => e1 < lR(e2)",
           "p" : "lC(e1) < e2",
