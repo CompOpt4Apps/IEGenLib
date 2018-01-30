@@ -1544,6 +1544,17 @@ bool Exp::isConst() const {
     }
 }
 
+//! Returns true if we have something like: 2 = 0
+bool Exp::isContradiction() const {
+    if ( this->mTerms.size()==1 && 
+         (this->mTerms.front()->isConst() && this->mTerms.front()->coefficient() != 0) && (getExpType() == Equality) ) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+
 //! Return Term* if the expression has only one Term.
 //! Otherwise returns NULL.
 //! Still owns Term.

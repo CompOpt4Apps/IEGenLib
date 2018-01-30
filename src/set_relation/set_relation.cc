@@ -1267,10 +1267,11 @@ bool Conjunction::satisfiable() const {
 
     for (std::list<Exp*>::const_iterator i=mEqualities.begin();
             i != mEqualities.end(); i++) {
-        if ( (*i)->isConst() ) {
+        if ( (*i)->isContradiction() ) {
             return false;
         }
     }
+
     return true;
 }
 
@@ -1280,7 +1281,7 @@ bool Conjunction::satisfiable() const {
 */
 
 void Conjunction::cleanUp() {
-/*
+
     // Remove zero equalities, normalize, and remove nested inverse funcs
     for (std::list<Exp*>::iterator i=mEqualities.begin();
             i != mEqualities.end(); ) {
@@ -1336,7 +1337,7 @@ void Conjunction::cleanUp() {
             i != inequalityListCopy.end(); i++) {
         this->addInequality(*i);
     }
-*/
+
 }
 
 /*!
@@ -1713,7 +1714,7 @@ bool _compareConjunctions( Conjunction* first, Conjunction* second ) {
 // make the conjunction unsatisfiable.  Should deal with this in release 2
 // and use ISL.
 void SparseConstraints::cleanUp(){
-/*    // removes duplicate constraints, FIXME: does it also resort constraints?
+    // removes duplicate constraints, FIXME: does it also resort constraints?
     for (std::list<Conjunction*>::const_iterator i=mConjunctions.begin();
                 i != mConjunctions.end(); i++) {
         (*i)->cleanUp();
@@ -1731,7 +1732,6 @@ void SparseConstraints::cleanUp(){
 
     //sort the list of conjunctions
     mConjunctions.sort(_compareConjunctions);
-*/
 }
 
 /*! Find any TupleVarTerms in this expression (and subexpressions)
@@ -2761,10 +2761,12 @@ Set* Set::superAffineSet(UFCallMap* ufcmap, bool boundUFCs)
 {
     Set *copySet, *result;
 
-    if( !getNumConjuncts() ){  // There is no conjunction, so nothing to do
-       result = new Set (*this);
+    result = new Set (*this);
+    // There is no conjunction, so nothing to do
+    if( result->getNumConjuncts() == 0 ){  
        return result;   // Just return a copy of the Set
     }
+    delete result;
 
     if( boundUFCs ) copySet = this->boundDomainRange();
     else          copySet = new Set (*this);
@@ -3470,12 +3472,19 @@ std::pair <std::string,std::string> instantiate(
   leftSideOfTheRule->setTupleDecl(origTupleDecl); 
   rightSideOfTheRule->setTupleDecl(origTupleDecl);
 
+
+//std::cout<<"\n left0 = "<<leftSideOfTheRule->prettyPrintString()<<"   right0 = "<<rightSideOfTheRule->prettyPrintString();
+
+
   // create superAffine sets of left/right sides
   Set *supAffLeft, *supAffRight;
   supAffLeft  = leftSideOfTheRule->superAffineSet(ufcmap, false);
   supAffRight = rightSideOfTheRule->superAffineSet(ufcmap, false);
   delete leftSideOfTheRule;
   delete rightSideOfTheRule;
+
+
+//std::cout<<"\n left1 = "<<supAffLeft->prettyPrintString()<<"   right1 = "<<supAffRight->prettyPrintString();
 
   // we only need the constraint part of left/right sides 
   // that are stored as separate sets.
@@ -3487,11 +3496,16 @@ std::pair <std::string,std::string> instantiate(
   std::string leftStr = "false", rightStr = "false";
   if(subLeftSideParts.constraints == ""){  leftStr = "true"; } 
   else if(subLeftSideParts.constraints == "FALSE"){  leftStr = "false";}
-  else { leftStr = subLeftSideParts.constraints; }
+  else { 
+leftStr = subLeftSideParts.constraints; }
   if(subRightSideParts.constraints == ""){ rightStr = "true"; }
   else if(subRightSideParts.constraints == "FALSE"){ rightStr = "false";}
-  else { rightStr = subRightSideParts.constraints; }
+  else { 
+rightStr = subRightSideParts.constraints; }
   
+
+//std::cout<<"\n left = "<<leftStr<<"   right = "<<rightStr;
+
   return (std::make_pair( leftStr, rightStr));
 }
 
