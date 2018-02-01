@@ -3472,19 +3472,12 @@ std::pair <std::string,std::string> instantiate(
   leftSideOfTheRule->setTupleDecl(origTupleDecl); 
   rightSideOfTheRule->setTupleDecl(origTupleDecl);
 
-
-//std::cout<<"\n left0 = "<<leftSideOfTheRule->prettyPrintString()<<"   right0 = "<<rightSideOfTheRule->prettyPrintString();
-
-
   // create superAffine sets of left/right sides
   Set *supAffLeft, *supAffRight;
   supAffLeft  = leftSideOfTheRule->superAffineSet(ufcmap, false);
   supAffRight = rightSideOfTheRule->superAffineSet(ufcmap, false);
   delete leftSideOfTheRule;
   delete rightSideOfTheRule;
-
-
-//std::cout<<"\n left1 = "<<supAffLeft->prettyPrintString()<<"   right1 = "<<supAffRight->prettyPrintString();
 
   // we only need the constraint part of left/right sides 
   // that are stored as separate sets.
@@ -3496,15 +3489,10 @@ std::pair <std::string,std::string> instantiate(
   std::string leftStr = "false", rightStr = "false";
   if(subLeftSideParts.constraints == ""){  leftStr = "true"; } 
   else if(subLeftSideParts.constraints == "FALSE"){  leftStr = "false";}
-  else { 
-leftStr = subLeftSideParts.constraints; }
+  else { leftStr = subLeftSideParts.constraints; }
   if(subRightSideParts.constraints == ""){ rightStr = "true"; }
   else if(subRightSideParts.constraints == "FALSE"){ rightStr = "false";}
-  else { 
-rightStr = subRightSideParts.constraints; }
-  
-
-//std::cout<<"\n left = "<<leftStr<<"   right = "<<rightStr;
+  else { rightStr = subRightSideParts.constraints; }
 
   return (std::make_pair( leftStr, rightStr));
 }
@@ -3563,7 +3551,7 @@ isl_map* instantiationMap( srParts supRelationParts,
       string antecedentStr = syms + "{" + supRelationParts.tupDecl + " : " + (*it).first + "}";
       string consequentStr = syms + "{" + supRelationParts.tupDecl + " : " + (*it).second + "}";
 
-      // FIXME: We want have test cases showing what some of these isl funcs does
+      // FIXME: We want to have test cases showing what some of these isl funcs does
       int added = 0;
       {
         isl_map* ant_map = isl_map_read_from_str(ctx, antecedentStr.c_str());
@@ -3618,7 +3606,6 @@ Relation* checkIslMap(isl_map* map, isl_ctx* ctx,
     isl_printer_flush(ip);
     isl_printer_free(ip);
     isl_basic_map_free(bmap);
-    //free(i_str);
 
     // Puting the newly found equalities into original constraint set.
     Relation* affineEqs = new Relation(i_str);
@@ -3627,31 +3614,27 @@ Relation* checkIslMap(isl_map* map, isl_ctx* ctx,
 
     delete affineEqs;
     delete eQs;
+    //free(i_str);
   }
   return result;
 }
 
-// Detect UnSat or MaySat for the relation utilizing domain information 
-// that are stored as universally quantified rules in the environment.
-// To utilize the domain information, the function first gathers all 
-// the parameter expression to all UFCs in the relation, then it uses 
-// those expression to instantiate the quantified rules. Next, it creates 
-// a isl map out of original relation and the instantiate rules. 
-// Finally, it checks to see whither the isl map is empty or not, 
-// in case it is not empty it extract the newly found equalities, 
-// adds them the original relation and returns the result.
-Relation* Relation::detectUnsatOrFindEqualities(bool *useRule){
 
-  // Gather all UFCall Parameters for Expression Set (E) for rule instantiation
-  VisitorGatherAllParameters *vGE = new VisitorGatherAllParameters;
-  this->acceptVisitor(vGE);
-  std::set<Exp> instExps = vGE->getExps();
+/*!
+** This function takes an expression set, and instantiates 
+** quantified rules stored in the environment using them.
+** Although, only the rules that have their type set in 
+** the useRule argument are instantiated.
+** An instantiation is of the form: p1 -> q1, 
+** the output includes set of tuples like (p1,q1).
+*/
+std::set<std::pair <std::string,std::string>> ruleInstantiation
+                          (std::set<Exp> instExps, bool *useRule, 
+                           TupleDecl origTupleDecl, UFCallMap *ufcmap){
 
   int noAvalRules = queryNoUniQuantRules();
   UniQuantRule* uqRule;
-  TupleDecl origTupleDecl = getTupleDecl();
   std::set<std::pair <std::string,std::string>> instantiations;
-  UFCallMap *ufcmap = new UFCallMap();
 
   if (!useRule){
     useRule = new bool[ TheOthers ];
@@ -3680,16 +3663,71 @@ Relation* Relation::detectUnsatOrFindEqualities(bool *useRule){
     }
   }
 
+  return instantiations;
+}
+
+/*
+// Same as Relation
+Set* Set::detectUnsatOrFindEqualities(bool *useRule){
+
+  // Gather all UFCall Parameters for Expression Set (E) for rule instantiation
+  VisitorGatherAllParameters *vGE = new VisitorGatherAllParameters;
+  this->acceptVisitor(vGE);
+  std::set<Exp> instExps = vGE->getExps();
+
+
+  TupleDecl origTupleDecl = getTupleDecl();
+  std::set<std::pair <std::string,std::string>> instantiations;
+  UFCallMap *ufcmap = new UFCallMap();
+
+  instantiations = ruleInstantiation(instExps, useRule, origTupleDecl, ufcmap);
+
   Relation *supAffRel = superAffineRelation(ufcmap);
   srParts supRelationParts = getPartsFromStr(supAffRel->prettyPrintString());
   isl_ctx* ctx = isl_ctx_alloc();
 
   string syms = symsForInstantiationMap(boundDomainRange(), ufcmap);
-  //Relation *drOrigSet = boundDomainRange();
   isl_map* map = instantiationMap(supRelationParts, instantiations, syms, ctx);
 
   Relation *result = checkIslMap(map, ctx, ufcmap, this);
-//  isl_ctx_free(ctx);
+  isl_ctx_free(ctx);
+
+  return result;
+}
+*/
+
+// Detect UnSat or MaySat for the relation utilizing domain information 
+// that are stored as universally quantified rules in the environment.
+// To utilize the domain information, the function first gathers all 
+// the parameter expression to all UFCs in the relation, then it uses 
+// those expression to instantiate the quantified rules. Next, it creates 
+// a isl map out of original relation and the instantiate rules. 
+// Finally, it checks to see whither the isl map is empty or not, 
+// in case it is not empty it extract the newly found equalities, 
+// adds them the original relation and returns the result.
+Relation* Relation::detectUnsatOrFindEqualities(bool *useRule){
+
+  // Gather all UFCall Parameters for Expression Set (E) for rule instantiation
+  VisitorGatherAllParameters *vGE = new VisitorGatherAllParameters;
+  this->acceptVisitor(vGE);
+  std::set<Exp> instExps = vGE->getExps();
+
+
+  TupleDecl origTupleDecl = getTupleDecl();
+  std::set<std::pair <std::string,std::string>> instantiations;
+  UFCallMap *ufcmap = new UFCallMap();
+
+  instantiations = ruleInstantiation(instExps, useRule, origTupleDecl, ufcmap);
+
+  Relation *supAffRel = superAffineRelation(ufcmap);
+  srParts supRelationParts = getPartsFromStr(supAffRel->prettyPrintString());
+  isl_ctx* ctx = isl_ctx_alloc();
+
+  string syms = symsForInstantiationMap(boundDomainRange(), ufcmap);
+  isl_map* map = instantiationMap(supRelationParts, instantiations, syms, ctx);
+
+  Relation *result = checkIslMap(map, ctx, ufcmap, this);
+  isl_ctx_free(ctx);
 
   return result;
 }

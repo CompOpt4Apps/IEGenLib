@@ -590,7 +590,7 @@ TEST_F(ExpTest, ExpIsConst) {
     EXPECT_FALSE( e1->isConst() );   // adding in another constant
     
     delete e1;
-
+/*
     Exp* e2 = new Exp();
     e2->setEquality();
     e2->addTerm(new Term(0));
@@ -599,7 +599,7 @@ TEST_F(ExpTest, ExpIsConst) {
     e2->addTerm(new Term(-42));
     if( e2->isContradiction()) std::cout<<"\nIs a contr: 0\n";
     else std::cout<<"\nIs Not a contr: 0\n";
-
+*/
 }
 
 TEST_F(ExpTest, PrettyPrintString){
