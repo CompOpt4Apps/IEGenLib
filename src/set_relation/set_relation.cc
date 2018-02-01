@@ -3666,35 +3666,6 @@ std::set<std::pair <std::string,std::string>> ruleInstantiation
   return instantiations;
 }
 
-/*
-// Same as Relation
-Set* Set::detectUnsatOrFindEqualities(bool *useRule){
-
-  // Gather all UFCall Parameters for Expression Set (E) for rule instantiation
-  VisitorGatherAllParameters *vGE = new VisitorGatherAllParameters;
-  this->acceptVisitor(vGE);
-  std::set<Exp> instExps = vGE->getExps();
-
-
-  TupleDecl origTupleDecl = getTupleDecl();
-  std::set<std::pair <std::string,std::string>> instantiations;
-  UFCallMap *ufcmap = new UFCallMap();
-
-  instantiations = ruleInstantiation(instExps, useRule, origTupleDecl, ufcmap);
-
-  Relation *supAffRel = superAffineRelation(ufcmap);
-  srParts supRelationParts = getPartsFromStr(supAffRel->prettyPrintString());
-  isl_ctx* ctx = isl_ctx_alloc();
-
-  string syms = symsForInstantiationMap(boundDomainRange(), ufcmap);
-  isl_map* map = instantiationMap(supRelationParts, instantiations, syms, ctx);
-
-  Relation *result = checkIslMap(map, ctx, ufcmap, this);
-  isl_ctx_free(ctx);
-
-  return result;
-}
-*/
 
 // Detect UnSat or MaySat for the relation utilizing domain information 
 // that are stored as universally quantified rules in the environment.
@@ -3732,6 +3703,36 @@ Relation* Relation::detectUnsatOrFindEqualities(bool *useRule){
   return result;
 }
 
+
+/*
+// Same as Relation
+Set* Set::detectUnsatOrFindEqualities(bool *useRule){
+
+  // Gather all UFCall Parameters for Expression Set (E) for rule instantiation
+  VisitorGatherAllParameters *vGE = new VisitorGatherAllParameters;
+  this->acceptVisitor(vGE);
+  std::set<Exp> instExps = vGE->getExps();
+
+
+  TupleDecl origTupleDecl = getTupleDecl();
+  std::set<std::pair <std::string,std::string>> instantiations;
+  UFCallMap *ufcmap = new UFCallMap();
+
+  instantiations = ruleInstantiation(instExps, useRule, origTupleDecl, ufcmap);
+
+  Relation *supAffRel = superAffineRelation(ufcmap);
+  srParts supRelationParts = getPartsFromStr(supAffRel->prettyPrintString());
+  isl_ctx* ctx = isl_ctx_alloc();
+
+  string syms = symsForInstantiationMap(boundDomainRange(), ufcmap);
+  isl_map* map = instantiationMap(supRelationParts, instantiations, syms, ctx);
+
+  Relation *result = checkIslMap(map, ctx, ufcmap, this);
+  isl_ctx_free(ctx);
+
+  return result;
+}
+*/
 
 /*****************************************************************************/
 #pragma mark -

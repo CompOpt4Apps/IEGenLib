@@ -366,9 +366,74 @@ std::string islUnionMapToString ( isl_union_map* imap , isl_ctx *ctx )
 
 /*! This function buils and returns a full string from parts
 */
-std::string getFullStrFromParts (srParts  parts){
-  return (parts.symVars + "\n" + parts.sC + parts.tupDecl +
-          parts.sepC + "\n" + parts.constraints + "\n" + parts.eC);
+std::string getFullStrFromParts(srParts  parts){
+  std::string compStr;
+  if( parts.symVars != "" ){
+    compStr = parts.symVars + " -> ";
+  }
+  compStr = compStr + parts.sC + parts.tupDecl +
+            parts.sepC + parts.constraints + parts.eC;
+
+  return compStr;
+}
+
+
+/*! This function turns an IEGenLib Set represented in string form
+**  into an IEGenLib Relation string. Basically, it just changes
+**  the tuple declaration, from [...] to [...] -> [...], based on
+**  inArity and outArity. set's arity equals to inArity+outArity
+*/
+std::string setStr2RelationStr(std::string set, int inArity, int outArity){
+
+  int arity = inArity+outArity;
+  srParts setParts;
+  setParts = getPartsFromStr(set);
+
+  std::queue<std::string> iters;
+  iters = tupVarsExtract(setParts.tupDecl, arity, 0);
+  std::string newTupDecl = "[";
+  for(int i = 0 ; i < arity ; i++){
+    std::string iter = iters.front();
+    iters.pop();
+    if( i == inArity ){
+      newTupDecl = newTupDecl + "] -> [";
+    } else if( i != 0 ){
+      newTupDecl = newTupDecl + ",";      
+    }
+    newTupDecl = newTupDecl + iter;
+  }
+  newTupDecl = newTupDecl + "]";
+
+  setParts.tupDecl = newTupDecl;
+
+  return getFullStrFromParts(setParts);
+}
+
+/*! This function turns an IEGenLib Relation represented in string form
+**  into an IEGenLib Set string. It reverses setStr2RelationStr effects.
+*/
+std::string relationStr2SetStr(std::string relation, int inArity, int outArity){
+
+  int arity = inArity+outArity;
+  srParts relationParts;
+  relationParts = getPartsFromStr(relation);
+
+  std::queue<std::string> iters;
+  iters = tupVarsExtract(relationParts.tupDecl, inArity, outArity);
+  std::string newTupDecl = "[";
+  for(int i = 0 ; i < arity ; i++){
+    std::string iter = iters.front();
+    iters.pop();
+    if( i != 0 ){
+      newTupDecl = newTupDecl + ",";      
+    }
+    newTupDecl = newTupDecl + iter;
+  }
+  newTupDecl = newTupDecl + "]";
+
+  relationParts.tupDecl = newTupDecl;
+
+  return getFullStrFromParts(relationParts);
 }
 
 }// iegenlib namespace

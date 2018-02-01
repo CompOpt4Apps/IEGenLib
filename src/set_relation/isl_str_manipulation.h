@@ -63,6 +63,7 @@ std::string missingEqs(std::string origTupDecl, std::string islTupDecl,
 typedef struct srParts{
 
     srParts(){
+        symVars = "";
         sC = '{';
         sepC = ':';
         eC = '}';
@@ -141,6 +142,17 @@ std::string islUnionMapToString ( isl_union_map* imap , isl_ctx *ctx );
 /*! This function buils and returns a full string from parts
 */
 std::string getFullStrFromParts (srParts  parts);
+
+
+/*! This function turns an IEGenLib Set represented in string form
+**  into an IEGenLib Relation string
+*/
+std::string setStr2RelationStr(std::string set, int inArity, int outArity);
+
+/*! This function turns an IEGenLib Relation represented in string form
+**  into an IEGenLib Set string
+*/
+std::string relationStr2SetStr(std::string relation, int inArity, int outArity);
 
 }// iegenlib namespace
 #endif

@@ -24,7 +24,7 @@ using namespace iegenlib;
 
 #pragma mark revertISLTupDeclToOrig
 // Test the revertISLTupDeclToOrig functionality
-TEST(revertISLTupDeclToOrigTest, revertISLTupDeclToOrig) {
+TEST(islStrManipulationTest, revertISLTupDeclToOrig) {
 
     std::string orig(" [tstep, theta_0__tv1_, col_tv2_]->{[ i1, i2]->"
                      "[ 0, i4, i5 , i6] : i1 = col_i_ and i4 = tstep"
@@ -58,7 +58,7 @@ TEST(revertISLTupDeclToOrigTest, revertISLTupDeclToOrig) {
 
 #pragma mark projectOutStrCorrection
 // Test the projectOutStrCorrection functionality
-TEST(revertISLTupDeclToOrigTest, projectOutStrCorrection) {
+TEST(islStrManipulationTest, projectOutStrCorrection) {
 
     string islStr("{[col_i_ , i2] -> [0 , tstep, i5, theta_0__tv1_ + 1] }");
     string exp(   "{[col_i_, i2] -> [tstep, i5, theta_0__tv1_ + 1] }");
@@ -87,4 +87,62 @@ TEST(revertISLTupDeclToOrigTest, projectOutStrCorrection) {
 
     //cout<<endl<<corrected<<endl<<endl; 
     EXPECT_EQ( s_exp , corrected );
+}
+
+
+#pragma mark setStr2RelationStrTEST
+// Test the projectOutStrCorrection functionality
+TEST(islStrManipulationTest, setStr2RelationStrTEST) {
+
+    string set("{[i1,i2,i3,i4]: 0 < i1 and 0 < i2 and 0 < i3 and 0 < i4}");
+    string relation;
+    string expectedRelation = 
+           "{[i1,i2] -> [i3,i4]: 0 < i1 and 0 < i2 and 0 < i3 and 0 < i4}";
+    int arity = 4;
+    int inArity = arity/2;
+    int  outArity = arity-inArity;
+
+    relation = setStr2RelationStr(set, inArity, outArity);
+    EXPECT_EQ(expectedRelation , relation );
+
+    set = "{[i1,i2,i3,i4,i5]: 0 < i1 and 0 < i2"
+             " and 0 < i3 and 0 < i4 and 0 < i5}";
+    expectedRelation = 
+               "{[i1,i2] -> [i3,i4,i5]: 0 < i1 and "
+               "0 < i2 and 0 < i3 and 0 < i4 and 0 < i5}";
+    arity = 5;
+    inArity = arity/2;
+    outArity = arity-inArity;
+
+    relation = setStr2RelationStr(set, inArity, outArity);
+    EXPECT_EQ(expectedRelation , relation );
+}
+
+
+#pragma mark relationStr2SetStrTEST
+// Test the projectOutStrCorrection functionality
+TEST(islStrManipulationTest, relationStr2SetStrStrTEST) {
+
+    string relation("{[i1,i2]->[i3,i4]: 0 < i1 and 0 < i2 "
+                    "and 0 < i3 and 0 < i4}");
+    string set;
+    string expectedSet = 
+           "{[i1,i2,i3,i4]: 0 < i1 and 0 < i2 and 0 < i3 and 0 < i4}";
+    int arity = 4;
+    int inArity = arity/2;
+    int  outArity = arity-inArity;
+
+    set = relationStr2SetStr(relation, inArity, outArity);
+    EXPECT_EQ(expectedSet , set );
+
+    relation = "{[i1,i2] -> [i3,i4,i5]: 0 < i1 and 0 < i2"
+             " and 0 < i3 and 0 < i4 and 0 < i5}";
+    expectedSet = "{[i1,i2,i3,i4,i5]: 0 < i1 and "
+               "0 < i2 and 0 < i3 and 0 < i4 and 0 < i5}";
+    arity = 5;
+    inArity = arity/2;
+    outArity = arity-inArity;
+
+    set = relationStr2SetStr(relation, inArity, outArity);
+    EXPECT_EQ(expectedSet , set );
 }
