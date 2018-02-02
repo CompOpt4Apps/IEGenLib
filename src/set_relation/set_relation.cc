@@ -3779,7 +3779,6 @@ class VisitorCalculateComplexity : public Visitor {
         //                   "more than one UFC in a constraint.");
       }
       ufcUB = t;
-//std::cout<<"\n\nHi UFC!!\n\n";
     }
     void postVisitVarTerm(VarTerm * t){
       if( nestedness ) return;
@@ -3841,24 +3840,7 @@ class VisitorCalculateComplexity : public Visitor {
           } else if ( ufcUB ) {     // i < UFC(XX)
              complexity[tv1->tvloc()] = 2; //ufcUpBound( ufcUB );
           }
-        }/* else if( tv2 ){ 
-          if(tv1->coefficient() > 0 && tv2->coefficient() > 0 ) {
-            return;  // Not upper bound: i + j >= 0
-          } else if ( complexity[tv1->tvloc()] > -1 &&    
-                      complexity[tv2->tvloc()] > -1) {    
-            return;
-          } else if ( tv1->coefficient() < 0 && tv2->coefficient() > 0
-                      && complexity[tv2->tvloc()] > 0) {  // -i + j >= 0
-            if( complexity[tv1->tvloc()] < complexity[tv2->tvloc()]){
-              complexity[tv1->tvloc()] = complexity[tv2->tvloc()];
-            }
-          } else if ( tv2->coefficient() < 0 && tv1->coefficient() > 0
-                      && complexity[tv1->tvloc()] > 0) {  // i - j >= 0
-            if(complexity[tv2->tvloc()] < complexity[tv1->tvloc()]){
-              complexity[tv2->tvloc()] = complexity[tv1->tvloc()];
-            }
-          }
-        }  */
+        }
       }
     }
 
@@ -3915,7 +3897,7 @@ std::string SparseConstraints::
                            "number of conjunctions is not 1.");
   }
 
-  // What each type of complexity mean for an interator:
+  // What each type of complexity mean for an iterator:
   // -1: has not been determined yet
   //  0: ignore the iterator since it can be projected out
   //  1: O(1): the values for the iterator can be generated from another one
@@ -3936,13 +3918,7 @@ std::string SparseConstraints::
   this->acceptVisitor(vComp);
   this->acceptVisitor(vComp);
 
-  for(int i=0; i < arity() ; i++){
-    std::cout<<"\n tv"<<i<<" : "<<complexities[i]<<"\n";
-  }
-
   string result = calculateComplexityStr( complexities , arity() );
-
-  std::cout<<"\n Comp = "<<result<<"\n";
 
   return result;
 }
