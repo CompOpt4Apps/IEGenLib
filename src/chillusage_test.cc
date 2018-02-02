@@ -1560,7 +1560,12 @@ TEST_F(ChillUsageTest, InsertRetrieveUniQuantRule)
     // And, following demonstrates how we could encode it:
 
     // A pointer to an instance of the class that 
-    // defines universially quantified rules
+    // defines universially quantified rules    // Verify the results 
+    if ( ex_A8 != NULL && A8_sim != NULL) {
+        EXPECT_EQ(ex_A8->toISLString(), A8_sim->toISLString());
+    } else {
+        EXPECT_EQ(ex_A8, A8_sim);
+    }
     UniQuantRule *uqRule;
     // An optional type predefined types are: 
     //  Monotonicity, CoMonotonicity, Triangular, FuncConsistency, TheOthers
@@ -1627,5 +1632,105 @@ TEST_F(ChillUsageTest, InsertRetrieveUniQuantRule)
     // Do not delete the defined rules' objects (added or queried) 
     // since environment still owns them.
 }
-
 #endif
+
+
+#pragma mark detectUnsatOrFindEqualitiesTEST
+TEST_F(ChillUsageTest, detectUnsatOrFindEqualitiesTEST){
+
+  // Introduce the UFCalls to enviroment, and indicate their domain, range
+  // whether they are bijective, or monotonic.
+  iegenlib::setCurrEnv();
+  iegenlib::appendCurrEnv("colidx",
+            new Set("{[i]:0<=i &&i<nnz}"),      // Domain 
+            new Set("{[j]:0<=j &&j<m}"),        // Range
+            false,                              // Bijective?!
+            iegenlib::Monotonic_NONE            // monotonicity
+            );
+  iegenlib::appendCurrEnv("rowptr",
+        new Set("{[i]:0<=i &&i<m}"), 
+        new Set("{[j]:0<=j &&j<nnz}"), false, iegenlib::Monotonic_Increasing);
+  iegenlib::appendCurrEnv("diagptr",
+        new Set("{[i]:0<=i &&i<m}"), 
+        new Set("{[j]:0<=j &&j<nnz}"), false, iegenlib::Monotonic_Increasing);
+
+  // Adding universially quantified rules
+  UniQuantRule *uqRule1;
+  // Forall e1,e2,  e1 = e2 => rowptr(e1) <= diagptr(e2)
+  uqRule1 = new UniQuantRule(std::string("CoMonotonicity"), 
+                std::string("[e1,e2]"), 
+                std::string("e1 = e2"), std::string("rowptr(e1) <= diagptr(e2)") );
+  currentEnv.addUniQuantRule( uqRule1 );
+  UniQuantRule *uqRule2;
+  // Forall e1,e2,  e1 < e2 => diagptr(e1) < rowptr(e2)
+  uqRule2 = new UniQuantRule(std::string("CoMonotonicity"), 
+                std::string("[e1,e2]"), 
+                std::string("e1 < e2"), std::string("diagptr(e1) < rowptr(e2)") );
+  currentEnv.addUniQuantRule( uqRule2 );
+
+  Set *A1 = new Set("[m] -> {[i,k,j1,j2,ip,kp,j1p,j2p]: ip < i"
+                                   " && 0 <= i && i < m1"
+                                  " && 0 <= ip && ip < m"
+                           " && rowptr(i) <= k && k < diagptr(i)"
+                         " && rowptr(ip) <= kp && kp < diagptr(ip)"
+                                   " && k < j1 && j1 < rowptr(1+i)"
+                                 " && kp < j1p && j1p < rowptr(1+ip)"
+                  " && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k))"
+                " && diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp))"
+                             " && colidx(j1) = colidx(j2)"
+                             " && colidx(j1p) = colidx(j2p)"
+
+                                     " && k = kp }");
+
+    // expected output  (for testing purposes)
+  Set *ex_A1 = NULL;
+
+  Set *A1_result = A1->detectUnsatOrFindEqualities();
+  // Verify the results 
+  if ( ex_A1 != NULL && A1_result != NULL) {
+    EXPECT_EQ(ex_A1->toISLString(), A1_result->toISLString());
+  } else {
+    EXPECT_EQ(ex_A1, A1_result);
+  }
+
+  Set *A8 = new Set("[m] -> {[i,k,j1,j2,ip,kp,j1p,j2p]: ip < i"
+                                   " && 0 <= i && i < m"
+                                  " && 0 <= ip && ip < m"
+                           " && rowptr(i) <= k && k < diagptr(i)"
+                         " && rowptr(ip) <= kp && kp < diagptr(ip)"
+                                   " && k < j1 && j1 < rowptr(1+i)"
+                                 " && kp < j1p && j1p < rowptr(1+ip)"
+                  " && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k))"
+                " && diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp))"
+                             " && colidx(j1) = colidx(j2)"
+                             " && colidx(j1p) = colidx(j2p)"
+
+                                     " && j1 = j2p}");
+
+  Set *ex_A8 = new Set("[m] -> {[i,k,j1,j2,ip,kp,j1p,j2p]: ip < i"
+                                   " && 0 <= i && i < m"
+                                  " && 0 <= ip && ip < m"
+                           " && rowptr(i) <= k && k < diagptr(i)"
+                         " && rowptr(ip) <= kp && kp < diagptr(ip)"
+                                   " && k < j1 && j1 < rowptr(1+i)"
+                                 " && kp < j1p && j1p < rowptr(1+ip)"
+                  " && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k))"
+                " && diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp))"
+                             " && colidx(j1) = colidx(j2)"
+                             " && colidx(j1p) = colidx(j2p)"
+
+                                     " && j1 = j2p"
+                            "&& i = colidx(kp) && diagptr(j1) = diagptr(j2p)"
+           " && rowptr(i) = rowptr(colidx(kp)) && rowptr(j1) = rowptr(j2p)"
+                          " && rowptr(i + 1) = rowptr(colidx(kp) + 1)}");
+
+  Set *A8_result = A8->detectUnsatOrFindEqualities();
+  // Verify the results 
+  if ( ex_A8 != NULL && A8_result != NULL) {
+    EXPECT_EQ(ex_A8->toISLString(), A8_result->toISLString());
+  } else {
+    EXPECT_EQ(ex_A8, A8_result);
+  }
+
+  
+}

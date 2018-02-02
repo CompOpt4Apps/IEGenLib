@@ -593,6 +593,8 @@ public:
 
     int getArity(){ return mArity;}
 
+    Set* detectUnsatOrFindEqualities(bool *useRule=NULL);
+
 private:
     int mArity;
 };

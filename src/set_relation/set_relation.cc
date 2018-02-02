@@ -3548,8 +3548,10 @@ isl_map* instantiationMap( srParts supRelationParts,
   for (int i = 0; i < 2; i++) {
     for (std::set<std::pair <std::string,std::string>>::iterator 
           it=instantiations.begin(); it!=instantiations.end(); it++){ 
-      string antecedentStr = syms + "{" + supRelationParts.tupDecl + " : " + (*it).first + "}";
-      string consequentStr = syms + "{" + supRelationParts.tupDecl + " : " + (*it).second + "}";
+      string antecedentStr = syms + "{" + supRelationParts.tupDecl + 
+                             " : " + (*it).first + "}";
+      string consequentStr = syms + "{" + supRelationParts.tupDecl + 
+                             " : " + (*it).second + "}";
 
       // FIXME: We want to have test cases showing what some of these isl funcs does
       int added = 0;
@@ -3704,7 +3706,7 @@ Relation* Relation::detectUnsatOrFindEqualities(bool *useRule){
 }
 
 
-/*
+
 // Same as Relation
 Set* Set::detectUnsatOrFindEqualities(bool *useRule){
 
@@ -3712,27 +3714,41 @@ Set* Set::detectUnsatOrFindEqualities(bool *useRule){
   VisitorGatherAllParameters *vGE = new VisitorGatherAllParameters;
   this->acceptVisitor(vGE);
   std::set<Exp> instExps = vGE->getExps();
-
-
+  // Generate all instantiations of universialy quantified rules
   TupleDecl origTupleDecl = getTupleDecl();
   std::set<std::pair <std::string,std::string>> instantiations;
   UFCallMap *ufcmap = new UFCallMap();
-
   instantiations = ruleInstantiation(instExps, useRule, origTupleDecl, ufcmap);
-
-  Relation *supAffRel = superAffineRelation(ufcmap);
+  
+  // Here, we are going to utlize same functions that 
+  // Relation::detectUnsatOrFindEqualities uses. Therefore, we temporary
+  // turn the Set into a Relation by simply changing its tuple declaration
+  // using setStr2RelationStr function found in isl_str_manipulation.
+  int arr = arity();
+  int inArity = arr/2;
+  int outArity = arr-inArity;
+  Relation *eqRel = new Relation( setStr2RelationStr(prettyPrintString(), 
+                                  inArity, outArity) );
+  Relation *supAffRel = eqRel->superAffineRelation(ufcmap);
   srParts supRelationParts = getPartsFromStr(supAffRel->prettyPrintString());
   isl_ctx* ctx = isl_ctx_alloc();
 
-  string syms = symsForInstantiationMap(boundDomainRange(), ufcmap);
+  string syms = symsForInstantiationMap(eqRel->boundDomainRange(), ufcmap);
   isl_map* map = instantiationMap(supRelationParts, instantiations, syms, ctx);
 
-  Relation *result = checkIslMap(map, ctx, ufcmap, this);
-  isl_ctx_free(ctx);
+  Relation *resultRel = checkIslMap(map, ctx, ufcmap, eqRel);
+  //isl_ctx_free(ctx);
+
+  Set *result = NULL;
+  // Turning results back into a Set
+  if( resultRel ){
+    result = new Set( relationStr2SetStr(resultRel->prettyPrintString(), 
+                                  inArity, outArity) );
+  }
 
   return result;
 }
-*/
+
 
 /*****************************************************************************/
 #pragma mark -
