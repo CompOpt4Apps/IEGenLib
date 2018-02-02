@@ -3542,9 +3542,14 @@ isl_map* instantiationMap( srParts supRelationParts,
                    supRelationParts.constraints + "}";
 
   // Iteratively add useful instantiation utilizing isl functions
+  // We want to iterate until there is nothing useful to add.
+  // This condition is checked at the end of the loop. For most examples
+  // visiting everything 2 times must be enough. However, since
+  // there might be some unusual example, we put a cap (up to 2 times), so
+  // we would never end up looping many times even in rare occasions. 
   isl_map* map = isl_map_read_from_str(ctx, origRel.c_str() );
-  // FIXME: following loop must iterate until there is no useful 
-  // instantiation to add, so 2 should change to ... 
+  isl_map* old_map = isl_map_copy(map);
+
   for (int i = 0; i < 2; i++) {
     for (std::set<std::pair <std::string,std::string>>::iterator 
           it=instantiations.begin(); it!=instantiations.end(); it++){ 
@@ -3553,7 +3558,8 @@ isl_map* instantiationMap( srParts supRelationParts,
       string consequentStr = syms + "{" + supRelationParts.tupDecl + 
                              " : " + (*it).second + "}";
 
-      // FIXME: We want to have test cases showing what some of these isl funcs does
+      // FIXME: We want to have test cases showing 
+      // what some of these isl funcs does
       int added = 0;
       {
         isl_map* ant_map = isl_map_read_from_str(ctx, antecedentStr.c_str());
@@ -3580,7 +3586,12 @@ isl_map* instantiationMap( srParts supRelationParts,
         isl_map_free(con_map);
       }
     }
-    if( isl_map_is_empty(map) ) break;
+    if( isl_map_is_empty(map) ) break;             // relation is UnSat
+    if ( isl_map_is_equal( old_map, map ) ){ break; // We have converged
+    } else {
+      isl_map_free(old_map);
+      old_map = isl_map_copy(map);
+    }
   }
 
   return map;
@@ -3684,21 +3695,18 @@ Relation* Relation::detectUnsatOrFindEqualities(bool *useRule){
   VisitorGatherAllParameters *vGE = new VisitorGatherAllParameters;
   this->acceptVisitor(vGE);
   std::set<Exp> instExps = vGE->getExps();
-
-
+  // Generate all instantiations of universialy quantified rules
   TupleDecl origTupleDecl = getTupleDecl();
   std::set<std::pair <std::string,std::string>> instantiations;
   UFCallMap *ufcmap = new UFCallMap();
-
   instantiations = ruleInstantiation(instExps, useRule, origTupleDecl, ufcmap);
-
+  // Use ISL to add useful instantiations, refer to instantiationMap
   Relation *supAffRel = superAffineRelation(ufcmap);
   srParts supRelationParts = getPartsFromStr(supAffRel->prettyPrintString());
   isl_ctx* ctx = isl_ctx_alloc();
-
   string syms = symsForInstantiationMap(boundDomainRange(), ufcmap);
   isl_map* map = instantiationMap(supRelationParts, instantiations, syms, ctx);
-
+  // Check if the relation with new information is UnSat or MaySat
   Relation *result = checkIslMap(map, ctx, ufcmap, this);
   isl_ctx_free(ctx);
 
@@ -3887,8 +3895,24 @@ string calculateComplexityStr(int *complexities, int arr){
   return result;
 }
 
-/*!
-*/
+/**! This function calculates the algorithmic complexity of a Set/Relation
+**   that is representing a data dependence. Also, it takes into
+**   account the fact that the set is meant for dependency analysis
+**   for partial parallelism. Basically, it calculates the complexity of
+**   efficient inspector that we need to generate for the dependence.  
+**   Therefore, it considers two things: 
+**   1) It ignores any tuple variable that we can project out, other 
+**   than those that we want to parallelize.
+**   2) It takes into account the useful equalities (e.g i = col(jp), 
+**   where we can get values of i from col(jp)). Nonetheless, note that 
+**   it does not consider any sort of approximations that 
+**   we might be able to do to further optimize the inspector.
+
+**   The way it works is that we are trying to find the range of iterators
+**   that are going to be in the final inspector, and multiply together.
+
+**   The out is a string of the form O(n^2*nnz^4)
+**/ 
 std::string SparseConstraints::
             complexityForPartialParallel(std::set<int> parallelTvs){
 
@@ -3912,8 +3936,16 @@ std::string SparseConstraints::
     } else {
       complexities[i] = 0;      // We can project out the iterator
     }
-  } 
+  }
 
+
+  // We visit the constraints twice, so we can determine teh usefulness of 
+  // any potential useful equality.  First round is to determine the intial
+  // range of iterators (e.g i = colIdx(kp), we calculate the range of i and kp)
+  // Then, in the second round we determine which iterator would have a loop
+  // and which iterator can be calculated based on equalities: for example:
+  // we have i = colIdx(kp) then we found out  i == n and kp == nnz/n 
+  // =>  it is better to remove i from complexity since: n > nnz/n    
   VisitorCalculateComplexity *vComp = new VisitorCalculateComplexity(complexities);
   this->acceptVisitor(vComp);
   this->acceptVisitor(vComp);
