@@ -1,31 +1,28 @@
 /*!
-
->> clone the branch
-
-git clone -b IslIns --single-branch https://github.com/king-mahdi/IEGenLib IslIns
+ * \file simplification.cc
+ *
+ * This file is a driver for using detectUnsatOrFindEqualities 
+ * and pertaining functions in IEgenLib.
+ * This function can be used to detect whither a Set/Relation
+ * is UnSat or MaySat. And, in case of MaySat ones, it would return 
+ * new useful equalities (adhered to original constraints).
+ *
 
 >> Build IEGenLib (run in the root directory):
 
 ./configure
 make
 
-
 >> Build the driver (in root directory run):
 
-g++ -O3 -o simplifyDriver drivers/simplification.cc -I src build/src/libiegenlib.a -lisl -std=c++11
-
+g++ -O3 -o simplifyDriver src/drivers/simplification.cc 
+    -I src build/src/libiegenlib.a -lisl -std=c++11
 
 >> Run the driver (in root directory):
 
-./simplifyDriver data/sample.json
+./simplifyDriver data/SOME_EXAMPLE/SOME_EXAMPLE.json
 
-  From root directory of IEGenLib, you can build this driver using:
-     g++ -O3 -o simplifyDriver drivers/simplification.cc -I src build/src/libiegenlib.a -lisl -std=c++11
-
-  Then, use it (in the root directory) using:
-
-     ./simplifyDriver data/sample.json
- */
+*/
 
 
 #include <iostream>

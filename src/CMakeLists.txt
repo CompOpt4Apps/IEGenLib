@@ -46,9 +46,9 @@ list(REMOVE_ITEM iegenlib_SOURCES
 	${IEGENCC_SOURCE_DIR}/src/iegenlib/cpp_api_example.cc)
 
 list(REMOVE_ITEM iegenlib_SOURCES 
-	${IEGENLIB_SOURCE_DIR}/src/drivers/simplifyDriver.cc)
+	${IEGENLIB_SOURCE_DIR}/src/drivers/DEPRECATED_simplifyDriver.cc)
 list(REMOVE_ITEM iegenlib_SOURCES 
-	${IEGENLIB_SOURCE_DIR}/src/drivers/eval.cc)
+	${IEGENLIB_SOURCE_DIR}/src/drivers/simplification.cc)
 
 ############################### STEP 2 ########################################
 ######################  Generate the Parser Code ##############################
@@ -107,6 +107,11 @@ add_library(iegenlib STATIC ${iegenlib_SOURCES})
 add_executable(iegenlib_calc iegenlib_calc.cc)
 target_link_libraries(iegenlib_calc iegenlib isl gmp ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(iegenlib_calc isl gmp)
+
+#Compile and link the iegenlib_calc executable
+add_executable(../bin/simplifyDriver drivers/simplification.cc)
+target_link_libraries(../bin/simplifyDriver iegenlib isl gmp)
+
 
 ### this executable hold our unit tests
 add_executable(iegenlib_t ${iegenlib_SOURCES} ${iegenlib_t_SOURCES})
