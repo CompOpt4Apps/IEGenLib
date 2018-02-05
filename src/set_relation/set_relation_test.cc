@@ -44,6 +44,12 @@ using iegenlib::Relation;
 using iegenlib::Environment;
 using iegenlib::UninterpFunc;
 using iegenlib::SubMap;
+using iegenlib::UniQuantRule;
+using iegenlib::currentEnv;
+using iegenlib::UFCallMap;
+using iegenlib::UniQuantRuleType;
+using iegenlib::ruleInstantiation;
+using iegenlib::instantiate;
 
 // This is just a test setup class that is used in the other tests in this
 // file.  Sets up some expressions for use in many of the tests.
@@ -4363,3 +4369,61 @@ TEST_F(SetRelationTest, complexityForPartialParallelTEST){
   delete r;
 }
 
+
+#pragma mark ruleInstantiationTEST
+TEST_F(SetRelationTest, ruleInstantiationTEST){
+
+  // Introduce the UFCalls to enviroment, and indicate their domain, range
+  // whether they are bijective, or monotonic.
+  iegenlib::setCurrEnv();
+  iegenlib::appendCurrEnv("rowptr",
+     new Set("{[i]:0<=i &&i<m}"), 
+     new Set("{[j]:0<=j &&j<nnz}"), false, iegenlib::Monotonic_Nondecreasing);
+
+  // Adding universially quantified rule
+  UniQuantRule *uqRule1;
+  // Forall e1,e2,  e1 = e2 => rowptr(e1) <= diagptr(e2)
+  uqRule1 = new UniQuantRule(std::string("CoMonotonicity"), 
+            std::string("[e1,e2]"), 
+            std::string("e1 = e2"), std::string("rowptr(e1) <= diagptr(e2)") );
+  currentEnv.addUniQuantRule( uqRule1 );
+
+
+  //So now we have two rules in the environment:
+  // (1) forall e1,e2: e1 < e2 => rowptr(e1) <= rowptr(e2) 
+                   // Non-strict monotonicity
+  // (2) Forall e1,e2: e1 = e2 => rowptr(e1) <= diagptr(e2) 
+                   // User added
+
+  // Now, we must create set of expressions that 
+  // we are going to use to instantiate the two rules.
+  std::set<Exp> instExps;
+  Exp *e = new Exp();
+  e->addTerm(new TupleVarTerm(1, 0));  // i
+  instExps.insert( *(e) );
+  delete e;
+  e = new Exp();
+  e->addTerm(new TupleVarTerm(1, 1)); // j
+  instExps.insert( *(e) );
+  delete e;
+
+  // ufcmap and tupleDecl are used in detectUnsatOrFindEqualities
+  UFCallMap *ufcmap = new UFCallMap();
+  Set *s = new Set("{[i,j]: 0 < i < j}");
+  TupleDecl tupleDecl = s->getTupleDecl();
+  // useRule is used to indicate which type of rule to instantiate, 
+  // refer to environment.cc for details
+  bool* useRule = new bool[ 5 ];
+  for(int i = 0 ; i < 5 ; i++ ){ useRule[i] = 1; } // Use all of them
+  // Instantiate the rules
+  std::set<std::pair <std::string,std::string>> instantiations;
+  instantiations = ruleInstantiation(instExps, useRule, tupleDecl, ufcmap);
+
+  // Instantiations
+//  int i=0;
+//  for (std::set<std::pair <std::string,std::string>>::iterator 
+//       it=instantiations.begin(); it!=instantiations.end(); it++){
+//    std::cout<<"\n Inst #"<<++i<<"  "<<(*it).first<<" -> "<<(*it).second;
+//  }
+
+}

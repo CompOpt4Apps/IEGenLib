@@ -3502,7 +3502,7 @@ std::pair <std::string,std::string> instantiate(
 // super affine set, and instantiations, so we can use it for isl input. 
 //  drOrigSet = original set with domain/range constraints
 //  ufcmap    = list of UFCs from super super affine set, and instantiations
-string symsForInstantiationMap(Relation *drOrigSet, UFCallMap *ufcmap ){
+string symsForInstantiationSet(Set *drOrigSet, UFCallMap *ufcmap ){
   std::stringstream ss;
   StringIterator * symIter;
   bool foundSymbols = false;
@@ -3527,19 +3527,19 @@ string symsForInstantiationMap(Relation *drOrigSet, UFCallMap *ufcmap ){
   return syms;
 }
 
-// This function creates a isl map from instantiations. The naive way to 
-// do this would be to put all the instantiation inside one relation 
+// This function creates a isl set from instantiations. The naive way to 
+// do this would be to put all the instantiation inside one Set 
 // and feed it isl. However, that would create a performance bottleneck,
 // since isl has to try to colasce and simplify 
 // lots of disjunctions at the same time. Instead of the naive way 
 // this function iteratively adds the useful instantiation.
-isl_map* instantiationMap( srParts supRelationParts, 
+isl_set* instantiationSet( srParts supSetParts, 
            std::set<std::pair <std::string,std::string>> instantiations,
                                string syms , isl_ctx* ctx){
 
-  // Build original relation with all symbolic constants from instantiations
-  string origRel = syms + "{" + supRelationParts.tupDecl + " : " + 
-                   supRelationParts.constraints + "}";
+  // Build original Set with all symbolic constants from instantiations
+  string origRel = syms + "{" + supSetParts.tupDecl + " : " + 
+                   supSetParts.constraints + "}";
 
   // Iteratively add useful instantiation utilizing isl functions
   // We want to iterate until there is nothing useful to add.
@@ -3547,84 +3547,78 @@ isl_map* instantiationMap( srParts supRelationParts,
   // visiting everything 2 times must be enough. However, since
   // there might be some unusual example, we put a cap (up to 2 times), so
   // we would never end up looping many times even in rare occasions. 
-  isl_map* map = isl_map_read_from_str(ctx, origRel.c_str() );
-  isl_map* old_map = isl_map_copy(map);
-
+  isl_set* set = isl_set_read_from_str(ctx, origRel.c_str() );
+  isl_set* old_set = isl_set_copy(set);
   for (int i = 0; i < 2; i++) {
     for (std::set<std::pair <std::string,std::string>>::iterator 
           it=instantiations.begin(); it!=instantiations.end(); it++){ 
-      string antecedentStr = syms + "{" + supRelationParts.tupDecl + 
+      string antecedentStr = syms + "{" + supSetParts.tupDecl + 
                              " : " + (*it).first + "}";
-      string consequentStr = syms + "{" + supRelationParts.tupDecl + 
+      string consequentStr = syms + "{" + supSetParts.tupDecl + 
                              " : " + (*it).second + "}";
-
-      // FIXME: We want to have test cases showing 
-      // what some of these isl funcs does
+      // If antecedent is true add the consequent of the instantiation
       int added = 0;
       {
-        isl_map* ant_map = isl_map_read_from_str(ctx, antecedentStr.c_str());
-        ant_map = isl_map_gist(ant_map, isl_map_copy(map));
-        if (isl_map_plain_is_universe(ant_map)) {
-          isl_map* con_map = isl_map_read_from_str(ctx, consequentStr.c_str());
-          map = isl_map_intersect(map, con_map);
-          map = isl_map_coalesce(map);
+        isl_set* ant_set = isl_set_read_from_str(ctx, antecedentStr.c_str());
+        ant_set = isl_set_gist(ant_set, isl_set_copy(set));
+        if (isl_set_plain_is_universe(ant_set)) {
+          isl_set* con_set = isl_set_read_from_str(ctx, consequentStr.c_str());
+          set = isl_set_intersect(set, con_set);
+          set = isl_set_coalesce(set);
           added = 1;
         }
-        isl_map_free(ant_map);
+        isl_set_free(ant_set);
       }
+      // If complement of consequent is true add the complement of antecedent 
       if (!added) {
-        isl_map* con_map = isl_map_read_from_str(ctx, consequentStr.c_str());
-        con_map = isl_map_complement(con_map);
-        con_map = isl_map_gist(con_map, isl_map_copy(map));
-        if (isl_map_plain_is_universe(con_map)) {
-          isl_map* ant_map = isl_map_read_from_str(ctx, antecedentStr.c_str());
-          ant_map = isl_map_complement(ant_map);
-          map = isl_map_intersect(map, ant_map);
-          map = isl_map_coalesce(map);
+        isl_set* con_set = isl_set_read_from_str(ctx, consequentStr.c_str());
+        con_set = isl_set_complement(con_set);
+        con_set = isl_set_gist(con_set, isl_set_copy(set));
+        if (isl_set_plain_is_universe(con_set)) {
+          isl_set* ant_set = isl_set_read_from_str(ctx, antecedentStr.c_str());
+          ant_set = isl_set_complement(ant_set);
+          set = isl_set_intersect(set, ant_set);
+          set = isl_set_coalesce(set);
           added = 1;
         }
-        isl_map_free(con_map);
+        isl_set_free(con_set);
       }
     }
-    if( isl_map_is_empty(map) ) break;             // relation is UnSat
-    if ( isl_map_is_equal( old_map, map ) ){ break; // We have converged
+    if( isl_set_is_empty(set) ) break;             // Set is UnSat
+    if ( isl_set_is_equal( old_set, set ) ){ break; // We have converged
     } else {
-      isl_map_free(old_map);
-      old_map = isl_map_copy(map);
+      isl_set_free(old_set);
+      old_set = isl_set_copy(set);
     }
   }
 
-  return map;
+  return set;
 }
 
-// Check to see if the isl map is empty (the original relation is UnSat)
-// or, it is not (the original relation is MaySat) in which case extract
-// new equalities and add them to original relation
-Relation* checkIslMap(isl_map* map, isl_ctx* ctx, 
-                      UFCallMap *ufcmap, Relation *origSet ){
-  Relation *result = NULL;
-  if( isl_map_is_empty(map) ){
+// Check to see if the isl set is empty (the original Set is UnSat)
+// or, it is not (the original Set is MaySat) in which case extract
+// new equalities and add them to original Set
+Set* checkIslSet(isl_set* set, isl_ctx* ctx, 
+                      UFCallMap *ufcmap, Set *origSet ){
+  Set *result = NULL;
+  if( isl_set_is_empty(set) ){
     result = NULL;
   } else {
-    isl_basic_map *bmap = isl_map_affine_hull(map);
+    isl_basic_set *bset = isl_set_affine_hull(set);
     // Get an isl printer and associate to an isl context
     isl_printer * ip = isl_printer_to_str(ctx);
-
-    // get string back from ISL map
+    // get string back from ISL set
     isl_printer_set_output_format(ip , ISL_FORMAT_ISL);
-    isl_printer_print_basic_map(ip ,bmap);
+    isl_printer_print_basic_set(ip ,bset);
     char *i_str = isl_printer_get_str(ip);
-  
     // clean-up
     isl_printer_flush(ip);
     isl_printer_free(ip);
-    isl_basic_map_free(bmap);
-
+    isl_basic_set_free(bset);
     // Puting the newly found equalities into original constraint set.
-    Relation* affineEqs = new Relation(i_str);
-    Relation* eQs = affineEqs->reverseAffineSubstitution(ufcmap);
+    Set* affineEqs = new Set(i_str);
+    Set* eQs = affineEqs->reverseAffineSubstitution(ufcmap);
     result = origSet->Intersect(eQs);
-
     delete affineEqs;
     delete eQs;
     //free(i_str);
@@ -3644,26 +3638,22 @@ Relation* checkIslMap(isl_map* map, isl_ctx* ctx,
 std::set<std::pair <std::string,std::string>> ruleInstantiation
                           (std::set<Exp> instExps, bool *useRule, 
                            TupleDecl origTupleDecl, UFCallMap *ufcmap){
-
   int noAvalRules = queryNoUniQuantRules();
   UniQuantRule* uqRule;
   std::set<std::pair <std::string,std::string>> instantiations;
-
+  // If no rules are explicitly specified, we instantiate all of them  
   if (!useRule){
     useRule = new bool[ TheOthers ];
     for(int i = 0 ; i < TheOthers ; i++ ){ useRule[i] = 1; } 
   }
-
   // Instantiating the universially quantified rules available 
   // in the environment one by one, for the ones we want to check
   for(int i = 0 ; i < noAvalRules ; i++ ){
 
     // Query rule No. i from environment
     uqRule = queryUniQuantRuleEnv(i);
-
     // If we do not want to instantiate this rule move on to next one
     if( !(useRule[uqRule->getType()]) ) continue;
-
     // Go over our Expression Set (E), and replace uni. quant. vars.
     // in the rule with these expressions.
     for (std::set<Exp>::iterator it1=instExps.begin(); 
@@ -3680,7 +3670,7 @@ std::set<std::pair <std::string,std::string>> ruleInstantiation
 }
 
 
-// Detect UnSat or MaySat for the relation utilizing domain information 
+// Detect UnSat or MaySat for the set utilizing domain information 
 // that are stored as universally quantified rules in the environment.
 // To utilize the domain information, the function first gathers all 
 // the parameter expression to all UFCs in the relation, then it uses 
@@ -3689,33 +3679,6 @@ std::set<std::pair <std::string,std::string>> ruleInstantiation
 // Finally, it checks to see whither the isl map is empty or not, 
 // in case it is not empty it extract the newly found equalities, 
 // adds them the original relation and returns the result.
-Relation* Relation::detectUnsatOrFindEqualities(bool *useRule){
-
-  // Gather all UFCall Parameters for Expression Set (E) for rule instantiation
-  VisitorGatherAllParameters *vGE = new VisitorGatherAllParameters;
-  this->acceptVisitor(vGE);
-  std::set<Exp> instExps = vGE->getExps();
-  // Generate all instantiations of universialy quantified rules
-  TupleDecl origTupleDecl = getTupleDecl();
-  std::set<std::pair <std::string,std::string>> instantiations;
-  UFCallMap *ufcmap = new UFCallMap();
-  instantiations = ruleInstantiation(instExps, useRule, origTupleDecl, ufcmap);
-  // Use ISL to add useful instantiations, refer to instantiationMap
-  Relation *supAffRel = superAffineRelation(ufcmap);
-  srParts supRelationParts = getPartsFromStr(supAffRel->prettyPrintString());
-  isl_ctx* ctx = isl_ctx_alloc();
-  string syms = symsForInstantiationMap(boundDomainRange(), ufcmap);
-  isl_map* map = instantiationMap(supRelationParts, instantiations, syms, ctx);
-  // Check if the relation with new information is UnSat or MaySat
-  Relation *result = checkIslMap(map, ctx, ufcmap, this);
-  isl_ctx_free(ctx);
-
-  return result;
-}
-
-
-
-// Same as Relation
 Set* Set::detectUnsatOrFindEqualities(bool *useRule){
 
   // Gather all UFCall Parameters for Expression Set (E) for rule instantiation
@@ -3727,33 +3690,51 @@ Set* Set::detectUnsatOrFindEqualities(bool *useRule){
   std::set<std::pair <std::string,std::string>> instantiations;
   UFCallMap *ufcmap = new UFCallMap();
   instantiations = ruleInstantiation(instExps, useRule, origTupleDecl, ufcmap);
-  
-  // Here, we are going to utlize same functions that 
-  // Relation::detectUnsatOrFindEqualities uses. Therefore, we temporary
-  // turn the Set into a Relation by simply changing its tuple declaration
-  // using setStr2RelationStr function found in isl_str_manipulation.
-  int arr = arity();
-  int inArity = arr/2;
-  int outArity = arr-inArity;
-  Relation *eqRel = new Relation( setStr2RelationStr(prettyPrintString(), 
-                                  inArity, outArity) );
-  Relation *supAffRel = eqRel->superAffineRelation(ufcmap);
-  srParts supRelationParts = getPartsFromStr(supAffRel->prettyPrintString());
+  // Use ISL to add useful instantiations, refer to instantiationSet
+  Set *supAffSet = superAffineSet(ufcmap);
+  srParts supSetParts = getPartsFromStr(supAffSet->prettyPrintString());
   isl_ctx* ctx = isl_ctx_alloc();
-
-  string syms = symsForInstantiationMap(eqRel->boundDomainRange(), ufcmap);
-  isl_map* map = instantiationMap(supRelationParts, instantiations, syms, ctx);
-
-  Relation *resultRel = checkIslMap(map, ctx, ufcmap, eqRel);
+  string syms = symsForInstantiationSet(boundDomainRange(), ufcmap);
+  isl_set* set = instantiationSet(supSetParts, instantiations, syms, ctx);
+  Set *result = checkIslSet(set, ctx, ufcmap, this);
   //isl_ctx_free(ctx);
 
-  Set *result = NULL;
-  // Turning results back into a Set
-  if( resultRel ){
-    result = new Set( relationStr2SetStr(resultRel->prettyPrintString(), 
-                                  inArity, outArity) );
-  }
+  return result;
+}
 
+
+// Same as Set
+Relation* Relation::detectUnsatOrFindEqualities(bool *useRule){
+
+  // Gather all UFCall Parameters for Expression Set (E) for rule instantiation
+  VisitorGatherAllParameters *vGE = new VisitorGatherAllParameters;
+  this->acceptVisitor(vGE);
+  std::set<Exp> instExps = vGE->getExps();
+  // Generate all instantiations of universialy quantified rules
+  TupleDecl origTupleDecl = getTupleDecl();
+  std::set<std::pair <std::string,std::string>> instantiations;
+  UFCallMap *ufcmap = new UFCallMap();
+  instantiations = ruleInstantiation(instExps, useRule, origTupleDecl, ufcmap);
+  // Here, we are going to utlize same functions that as Set class.
+  // Set::detectUnsatOrFindEqualities uses. Therefore, we temporary
+  // turn the Relation into a Set by simply changing its tuple declaration
+  // using relationStr2SetStr function found in isl_str_manipulation.
+  Set *eqSet = new Set( relationStr2SetStr(prettyPrintString(), 
+                                  inArity(), outArity()) );
+  Set *supAffSet = eqSet->superAffineSet(ufcmap);
+  srParts supSetParts = getPartsFromStr(supAffSet->prettyPrintString());
+  isl_ctx* ctx = isl_ctx_alloc();
+  string syms = symsForInstantiationSet(eqSet->boundDomainRange(), ufcmap);
+  isl_set* set = instantiationSet(supSetParts, instantiations, syms, ctx);
+  // Check if the relation with new information is UnSat or MaySat
+  Set *resultSet = checkIslSet(set, ctx, ufcmap, eqSet);
+  //isl_ctx_free(ctx);
+  Relation *result = NULL;
+  // Turning results back into a Relation
+  if( resultSet ){
+    result = new Relation( setStr2RelationStr(resultSet->prettyPrintString(),
+                                  inArity(), outArity()) );
+  }
   return result;
 }
 
