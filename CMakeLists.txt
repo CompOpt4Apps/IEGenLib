@@ -44,10 +44,6 @@ include_directories(${IEGENLIB_SOURCE_DIR}/lib/gtest/include)
 add_subdirectory(lib)
 add_subdirectory(src)
 
-## Build the drivers
-add_custom_command(TARGET all POST_BUILD
-  COMMAND g++ -O3 -o build/bin/simplifyDriver src/drivers/simplification.cc -I src build/src/libiegenlib.a -lisl -std=c++11)
-
 ## set up the testing
 add_custom_command(OUTPUT iegen_lib_gdbtest
     COMMAND IEGEN_HOME=. gdb src/iegenlib_t

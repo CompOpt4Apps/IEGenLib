@@ -108,6 +108,7 @@ add_executable(iegenlib_calc iegenlib_calc.cc)
 target_link_libraries(iegenlib_calc iegenlib isl gmp ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(iegenlib_calc isl gmp)
 
+cmake_policy(SET CMP0037 OLD)
 #Compile and link the iegenlib_calc executable
 add_executable(../bin/simplifyDriver drivers/simplification.cc)
 target_link_libraries(../bin/simplifyDriver iegenlib isl gmp)
