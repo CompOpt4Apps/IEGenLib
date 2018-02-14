@@ -3710,11 +3710,13 @@ Relation* Relation::detectUnsatOrFindEqualities(bool *useRule){
   VisitorGatherAllParameters *vGE = new VisitorGatherAllParameters;
   this->acceptVisitor(vGE);
   std::set<Exp> instExps = vGE->getExps();
+
   // Generate all instantiations of universialy quantified rules
   TupleDecl origTupleDecl = getTupleDecl();
   std::set<std::pair <std::string,std::string>> instantiations;
   UFCallMap *ufcmap = new UFCallMap();
   instantiations = ruleInstantiation(instExps, useRule, origTupleDecl, ufcmap);
+
   // Here, we are going to utlize same functions that as Set class.
   // Set::detectUnsatOrFindEqualities uses. Therefore, we temporary
   // turn the Relation into a Set by simply changing its tuple declaration
@@ -3726,6 +3728,7 @@ Relation* Relation::detectUnsatOrFindEqualities(bool *useRule){
   isl_ctx* ctx = isl_ctx_alloc();
   string syms = symsForInstantiationSet(eqSet->boundDomainRange(), ufcmap);
   isl_set* set = instantiationSet(supSetParts, instantiations, syms, ctx);
+
   // Check if the relation with new information is UnSat or MaySat
   Set *resultSet = checkIslSet(set, ctx, ufcmap, eqSet);
   //isl_ctx_free(ctx);
