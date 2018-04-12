@@ -49,6 +49,8 @@ list(REMOVE_ITEM iegenlib_SOURCES
 	${IEGENLIB_SOURCE_DIR}/src/drivers/DEPRECATED_simplifyDriver.cc)
 list(REMOVE_ITEM iegenlib_SOURCES 
 	${IEGENLIB_SOURCE_DIR}/src/drivers/simplification.cc)
+list(REMOVE_ITEM iegenlib_SOURCES 
+	${IEGENLIB_SOURCE_DIR}/src/drivers/superAffSet.cc)
 
 ############################### STEP 2 ########################################
 ######################  Generate the Parser Code ##############################
@@ -109,9 +111,14 @@ target_link_libraries(iegenlib_calc iegenlib isl gmp ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(iegenlib_calc isl gmp)
 
 cmake_policy(SET CMP0037 OLD)
-#Compile and link the iegenlib_calc executable
+#Compile and link the simplifyDriver executable
 add_executable(../bin/simplifyDriver drivers/simplification.cc)
 target_link_libraries(../bin/simplifyDriver iegenlib isl gmp)
+
+cmake_policy(SET CMP0037 OLD)
+#Compile and link the superAffSet executable
+add_executable(../bin/superAffSet drivers/superAffSet.cc)
+target_link_libraries(../bin/superAffSet iegenlib isl gmp)
 
 
 ### this executable hold our unit tests
