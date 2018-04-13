@@ -6,20 +6,20 @@
 using namespace std;
 
 extern double sqrt(int);
-void ic0_csr(int n, double *val, int * row, int *col)
+void ic0_csr(int n, double *val, int * colPtr, int *rowIdx)
 {
   int i, k,l, m;
   for (i = 0; i < n - 1; i++){
-    val[row[i]] = sqrt(val[row[i]]);//S1
+    val[colPtr[i]] = sqrt(val[colPtr[i]]);//S1
 
-    for (m = row[i] + 1; m < row[i+1]; m++){
-      val[m] = val[m] / val[row[i]];//S2
+    for (m = colPtr[i] + 1; m < colPtr[i+1]; m++){
+      val[m] = val[m] / val[colPtr[i]];//S2
     }
 
-    for (m = row[i] + 1; m < row[i+1]; m++) {
-      for (k = row[col[m]] ; k < row[col[m]+1]; k++){
-        for ( l = m; l < row[i+1] ; l++){
-          if (col[l] == col[k] && col[l+1] <= col[k]){
+    for (m = colPtr[i] + 1; m < colPtr[i+1]; m++) {
+      for (k = colPtr[rowIdx[m]] ; k < colPtr[rowIdx[m]+1]; k++){
+        for ( l = m; l < colPtr[i+1] ; l++){
+          if (rowIdx[l] == rowIdx[k] && rowIdx[l+1] <= rowIdx[k]){
             val[k] -= val[m]* val[l]; //S3
           }
         }

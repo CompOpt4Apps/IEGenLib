@@ -972,6 +972,29 @@ Exp::prettyPrintString(const TupleDecl & aTupleDecl) const
         firstTerm = false;
     }
     return result;
+/*
+    std::string result_left, result_right, result;
+    result_left = result_right = std::string("0");
+    bool firstTerm_left = true,firstTerm_right = true;
+    for (std::list<Term*>::const_iterator i=mTerms.begin(); 
+            i != mTerms.end(); ++i) {
+        if ((*i)->coefficient() < 0) {
+            if (firstTerm_left) result_left = (*i)->prettyPrintString(aTupleDecl, true);
+            else result_left += " + " + (*i)->prettyPrintString(aTupleDecl, true);
+            firstTerm_left = false;
+        } else {
+            if (firstTerm_right) result_right = (*i)->prettyPrintString(aTupleDecl, true);
+            result_right += " + " + (*i)->prettyPrintString(aTupleDecl, true); 
+            firstTerm_right = false;
+        }
+    }
+    if( (getExpType() == Equality) )        result = result_left + std::string(" = ") + result_right;
+    else if( (getExpType() == Inequality) ) result = result_left + std::string(" <= ") + result_right;
+    else   throw assert_exception("Exp::prettyPrintString: Exp "
+                               "type is not declared");
+
+    return result;
+*/
 }
 
 //! Add a term to this expression
