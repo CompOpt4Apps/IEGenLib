@@ -526,14 +526,14 @@ std::string Conjunction::prettyPrintString() const {
                 i != dup->mEqualities.end(); i++) {
         if (not first) { ss << " && "; }
         else { ss << " : ";  first = false; }
-        ss << (*i)->prettyPrintString(mTupleDecl) << " = 0";
+        ss << (*i)->prettyPrintString(mTupleDecl)<< " = 0";
     }
 
     for (std::list<Exp*>::const_iterator i = dup->mInequalities.begin();
                 i != dup->mInequalities.end(); i++) {
         if (not first) { ss << " && "; }
         else { ss << " : ";  first = false; }
-        ss << (*i)->prettyPrintString(mTupleDecl) << " >= 0";
+        ss << (*i)->prettyPrintString(mTupleDecl)<< " >= 0";
     }
 
     ss << " }";
@@ -3740,5 +3740,191 @@ Relation* Relation::detectUnsatOrFindEqualities(bool *useRule){
   }
   return result;
 }
+
+
+
+/*****************************************************************************/
+#pragma mark -
+/*************** VisitorGetString *****************************/
+/*! Vistor Class used in getString
+**  to getting a string representation of a Set or Relation
+*/
+class VisitorGetString : public Visitor {
+  private:
+         string str;
+         TupleDecl aTupleDecl;
+         int aritySplit;
+         bool firstConj;
+         bool firstExp;
+  public:
+         VisitorGetString(){ str = ""; firstConj = firstExp = true;}
+
+         /*! Intialize an affineExp if Exp is not a UFCall argument
+         ** If this is a argument to a UFCall, we don't want to modify it.
+         ** This is because A(B(i+1)) gets replaced with A_B_iP1__ without 
+         ** doing anything about B(i+1). And keep in mind that we have already
+         ** added constraints related to function B's domain and range.
+         */
+         void preVisitExp(iegenlib::Exp * e){
+             // ignoring parameters of an UFC
+             if( e->isExpression() ){
+                 return;
+             }
+             int constT = 0;
+             bool haveConstT = false;
+             std::list<Term*> terms, leftSide, rightSide;
+
+             if(firstExp) firstExp = false;
+             else         str += string(" && ");
+
+             terms = e->getTermList();
+      
+             for (std::list<Term*>::const_iterator i=terms.begin(); 
+                  i != terms.end(); ++i) {
+                 if( (*i)->isConst() ){
+                     haveConstT = true;
+                     constT = (*i)->coefficient();
+                 }
+                 else if ((*i)->coefficient() < 0) {
+                     leftSide.push_front(*i);
+                 } else {
+                     rightSide.push_front(*i);
+                 }
+             }
+
+             bool absValue = true;
+             char buffer[20]="";
+             int tempT = 0;
+
+             for (std::list<Term*>::const_iterator i=leftSide.begin(); 
+                  i != leftSide.end(); ++i) {
+                 str += (*i)->prettyPrintString(aTupleDecl, absValue);
+             }
+             if( leftSide.empty() && !haveConstT ) str += string("0");
+     
+             if( e->isEquality() ){
+                 if( haveConstT && constT  < 0 ){
+                     tempT = constT*(-1);
+                     sprintf(buffer, "%d", tempT); 
+                     if( leftSide.empty() ) str += string(buffer);
+                     else str += string(" + ") + string(buffer);
+                 }
+                 str += string(" = ");
+             } else if( e->isInequality()){
+                 if( haveConstT && constT < 0 ){
+                     tempT = constT*(-1);
+                     tempT--;
+                     if( tempT != 0 ){
+                         sprintf(buffer, "%d", tempT); 
+                         if( leftSide.empty() ) str += string(buffer);
+                         else str += string(" + ") + string(buffer);
+                     } else if( tempT == 0 && leftSide.empty() ){
+                         str += string("0");
+                     }
+                     str += string(" < ");
+                 } else if( haveConstT && constT > 0 && leftSide.empty() ){
+                     tempT = constT*(-1);
+                     tempT--;
+                     sprintf(buffer, "%d", tempT); 
+                     str += string(buffer);
+
+                     str += string(" < ");
+                 } else { //if( !haveConstT || !(leftSide.empty()) ){
+                     str += string(" <= ");
+                 }
+             }
+
+             for (std::list<Term*>::const_iterator i=rightSide.begin(); 
+                  i != rightSide.end(); ++i) {
+                 str += (*i)->prettyPrintString(aTupleDecl, absValue);
+             }
+             if( rightSide.empty() && !haveConstT ) str += string("0");
+
+             if( e->isEquality() && haveConstT && constT > 0 ){
+                 sprintf(buffer, "%d", constT); 
+                 if( leftSide.empty() ) str += string(buffer);
+                 else str += string(" + ") + string(buffer);
+             } else if( e->isInequality() && haveConstT && constT > 0 && !(leftSide.empty()) ){
+                 tempT = constT;
+                 sprintf(buffer, "%d", tempT);
+                 if( rightSide.empty() ) str += string(buffer);
+                 else str += string(" + ") + string(buffer);
+             }
+         }
+         //! Initializes an affineConj
+         void preVisitConjunction(iegenlib::Conjunction * c){
+             aTupleDecl = c->getTupleDecl();
+
+             if(firstConj) firstConj = false;
+             else          str += string(" union ");
+
+             str += string("{ ") + aTupleDecl.toString(true,aritySplit) + string(" : ");
+
+             firstExp = true;
+         }
+         //! adds the current affineConj to maffineConj
+         void postVisitConjunction(iegenlib::Conjunction * c){
+             str += string(" }");
+         }
+
+         //! Indicate, we are traversing a Set
+         void preVisitSet(iegenlib::Set * s){
+             aritySplit = 0;
+
+             // If there are no conjunctions then indicate we have an empty set
+             // by printing out generic arity tuple declarations and FALSE as 
+             // a constraint.
+             if (s->getNumConjuncts()==0) {
+                 str = string("{ ") + 
+                       TupleDecl::sDefaultTupleDecl(s->arity()).toString(true) +
+                       string(" : FALSE }");
+             }
+         }
+         //! Indicate, we are traversing a Relation
+         void preVisitRelation(iegenlib::Relation * r){
+             aritySplit = r->inArity();
+
+             // If there are no conjunctions then indicate we have an empty set
+             // by printing out generic arity tuple declarations and FALSE as 
+             // a constraint.
+             if (r->getNumConjuncts()==0) {
+                 str = string("{ ") + 
+                       TupleDecl::sDefaultTupleDecl(r->arity()).toString(true,aritySplit) +
+                       string(" : FALSE }");
+             }
+         }
+
+         string getString(){ return str; }
+};
+
+/*! 
+**  
+*/
+string Set::getString()
+{
+    string result;
+
+    VisitorGetString* v = new VisitorGetString();
+    this->acceptVisitor( v );
+    
+    result = v->getString();
+
+    return result;
+}
+
+//! Same as Set
+string Relation::getString()
+{
+    string result;
+
+    VisitorGetString* v = new VisitorGetString();
+    this->acceptVisitor( v );
+    
+    result = v->getString();
+
+    return result;
+}
+
+
 
 }//end namespace iegenlib

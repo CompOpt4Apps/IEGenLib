@@ -11,7 +11,7 @@
  *
  * \date Started: 3/28/12
  *
- * \authors Michelle Strout
+ * \authors Michelle Strout, and Mahdi Soltan Mohammadi 
  *
  * Copyright (c) 2012, Colorado State University <br>
  * Copyright (c) 2015, University of Arizona <br>
@@ -594,6 +594,8 @@ public:
     int getArity(){ return mArity;}
 
     Set* detectUnsatOrFindEqualities(bool *useRule=NULL);
+    
+    string getString();
 
 private:
     int mArity;
@@ -783,6 +785,8 @@ public:
     }
 
     Relation* detectUnsatOrFindEqualities(bool *useRule=NULL);
+    
+    string getString();
 
 private:
     int mInArity;

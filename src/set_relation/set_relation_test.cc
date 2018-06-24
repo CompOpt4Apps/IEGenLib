@@ -4263,3 +4263,59 @@ TEST_F(SetRelationTest, domainInfoT){
 }
 */
 
+
+#pragma mark getString
+TEST_F(SetRelationTest, getString){
+
+    iegenlib::setCurrEnv();
+    iegenlib::appendCurrEnv("colidx",
+            new Set("{[i]:0<=i &&i<nnz}"),         // Domain 
+            new Set("{[j]:0<=j &&j<m}"),           // Range
+            false,                                 // Not bijective.
+            iegenlib::Monotonic_NONE               // no monotonicity
+            );
+    iegenlib::appendCurrEnv("rowptr",
+        new Set("{[i]:0<=i &&i<m}"), 
+        new Set("{[j]:0<=j &&j<nnz}"), false, iegenlib::Monotonic_Increasing);
+    iegenlib::appendCurrEnv("diagptr",
+        new Set("{[i]:0<=i &&i<m}"), 
+        new Set("{[j]:0<=j &&j<nnz}"), false, iegenlib::Monotonic_Increasing);
+
+    Set *s = new Set("[m] -> {[i,ip,k,kp]: i < ip"
+                                   " && -5 <= i && i < m"
+                                  " && 0 <= ip && ip+1 <= m"
+                           " && rowptr(i) <= k && k+10 < diagptr(i)"
+                         " && rowptr(ip) <= kp && kp < 10"
+                       " && diagptr(colidx(k)) = rowptr(1+colidx(k))"
+                       " && diagptr(k) = 1+colidx(kp)"
+                                     " && k-3 = kp}");
+
+    EXPECT_EQ( string("{ [i, ip, k, kp] : rowptr(colidx(k) + 1) = diagptr(colidx(k)) "
+                                      "&& kp + 3 = k && diagptr(k) = colidx(kp) + 1 "
+                                      "&& 0 <= ip && -6 < i && rowptr(i) <= k && kp <= 9 "
+                                      "&& rowptr(ip) <= kp && i < ip && i < m && ip < m "
+                                      "&& k + 10 < diagptr(i) }")
+                     , s->getString());
+
+    Relation *rel = new Relation("[m] -> {[i,k] -> [ip,kp]: i < ip"
+                                   " && 0 <= i && i < m"
+                                  " && 0 <= ip && ip <= 10"
+                           " && rowptr(i) <= k && k-10 < diagptr(i)"
+                       " && diagptr(colidx(k)) = rowptr(1+colidx(k))"
+                       " && diagptr(colidx(k)) = rowptr(1+colidx(kp))"
+                                     " && k+3 = kp}");
+
+    EXPECT_EQ( string("{ [i, k] -> [ip, kp] : rowptr(colidx(k) + 1) = diagptr(colidx(k)) "
+                                          "&& rowptr(colidx(kp) + 1) = diagptr(colidx(k)) "
+                                          "&& kp = k + 3 && 0 <= i && 0 <= ip && rowptr(i) <= k "
+                                          "&& ip <= 10 && i < ip && i < m && k <= diagptr(i) + 9 }") 
+                      , rel->getString());
+
+
+
+   //std::cout << "\n\n--- getString --- \n\nSet = " 
+   //          << s->getString()<<"\n\nRelation = "<<rel->getString()<<"\n\n";
+
+   delete s;
+   delete rel;
+}
