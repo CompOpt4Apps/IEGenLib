@@ -151,6 +151,12 @@ install(DIRECTORY ./
 	FILES_MATCHING PATTERN "*.h"
 	PATTERN ".svn" EXCLUDE)
 
+#Install jsoncon specific header files
+install(DIRECTORY ./parser/jsoncons/
+	DESTINATION include/iegenlib/parser/jsoncons/
+	FILES_MATCHING PATTERN "*.hpp"
+	PATTERN ".svn" EXCLUDE)
+
 #Install the oracle files for testing dot output
 install(DIRECTORY ./set_relation/dotTest 
         DESTINATION ${CMAKE_INSTALL_PREFIX}/test_data
