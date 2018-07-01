@@ -79,18 +79,32 @@ class VisitorCalculateComplexity : public Visitor {
     void postVisitExp(iegenlib::Exp * e) {
       if( e->isExpression() ){ nestedness--; return; }
       if( !tv1 ) { return; }   // Nothing useful to investigate
-      if(complexity[tv1->tvloc()] == 0 ) { return; }
+      // Mahdi FIXME: complexity[tv1->tvloc()] == 0 is not correct in general.
+      // If there are two equalities like this: i = j && j = k, 
+      // this could generate the wrong complexity. However, I have made
+      // this limitation for now to conveniently avoid getting O(1) for 
+      // both iterators in one equality like i=j (only i or j should get O(1) complexity). 
+      // Without it we need a complex scheme to avoid such recursive wrong result. 
+      if(complexity[tv1->tvloc()] == 0 || complexity[tv1->tvloc()] == 1 ) { return; }
 
       if( curr->isEquality() ){ // An equlity constraint
         // Do we have something like i = jp
         if( tv2 ) {
-          if(complexity[tv1->tvloc()] == -1 && complexity[tv1->tvloc()] == -1){
-            return;  // We need to know the original range of both iterators 
+          if(complexity[tv1->tvloc()] == -1 && complexity[tv2->tvloc()] == -1){
+            return;  // We need to know the complexity of at least one of the iterators 
           }          // to know that only less expensive one needs a loop.
-          if(complexity[tv1->tvloc()] == 0 || complexity[tv1->tvloc()] == 0){
-            return;  // The equality is useless since at least one the iterators 
-          }          // is going to be projected out. 
-          if(complexity[tv2->tvloc()] <= complexity[tv1->tvloc()] ){
+          if(complexity[tv1->tvloc()] == 0 || complexity[tv2->tvloc()] == 0){
+            return;  // The equality is useless since at least one of the iterators 
+          }          // is going to be projected out.  
+          // Mahdi FIXME: related to the previous fixme.
+          if(complexity[tv1->tvloc()] == 1 || complexity[tv2->tvloc()] == 1){
+            return;  // One of the iterators already have O(1) complexity
+          }
+          if(complexity[tv1->tvloc()] == -1 || complexity[tv2->tvloc()] > 1){
+            complexity[tv1->tvloc()] = 1;
+          } else if(complexity[tv1->tvloc()] > 1 || complexity[tv2->tvloc()] == -1){
+            complexity[tv2->tvloc()] = 1;
+          } else if(complexity[tv2->tvloc()] <= complexity[tv1->tvloc()] ){
             complexity[tv1->tvloc()] = 1;
           } else {
             complexity[tv2->tvloc()] = 1;
@@ -101,10 +115,12 @@ class VisitorCalculateComplexity : public Visitor {
       } else {                  // An inequlity constraint{
         if( !tv2 ){
           if(tv1->coefficient() > 0 || complexity[tv1->tvloc()] > -1 ){
-            return;
+            return; // If this is a lower bound or if complexity has already been determined 
           } else if( varUB ){     // i < n
             if(varUB->symbol() == "n" || varUB->symbol() == "m"){
               complexity[tv1->tvloc()] = 3;
+            } else if(varUB->symbol() == "nnz"){
+              complexity[tv1->tvloc()] = 2;
             } else {
               //throw assert_exception("VisitorCalculateComplexity: "
               //                         "unknown symbolic constant.");
@@ -112,7 +128,23 @@ class VisitorCalculateComplexity : public Visitor {
           } else if ( ufcUB ) {     // i < UFC(XX)
              complexity[tv1->tvloc()] = 2; //ufcUpBound( ufcUB );
           }
-        }
+        } else {  ////
+          if(tv1->coefficient() < 0 && tv2->coefficient() < 0 ){
+            return;
+          } else if(tv1->coefficient() < 0 && tv2->coefficient() > 0 ){
+            if( complexity[tv2->tvloc()] < 2 ){
+              return;
+            } else if( complexity[tv2->tvloc()] < complexity[tv1->tvloc()] ){
+              complexity[tv1->tvloc()]  = complexity[tv2->tvloc()] ;
+            }
+          } else if(tv1->coefficient() > 0 && tv2->coefficient() < 0 ){
+            if( complexity[tv1->tvloc()] < 2 ){
+              return;
+            } else if( complexity[tv1->tvloc()] < complexity[tv2->tvloc()] ){
+              complexity[tv2->tvloc()]  = complexity[tv1->tvloc()] ;
+            }
+          }
+        }  ////
       }
     }
 
@@ -200,8 +232,9 @@ std::string SparseConstraints::
       complexities[i] = 0;      // We can project out the iterator
     }
   }
-  // We visit the constraints twice, so we can determine teh usefulness of 
-  // any potential useful equality.  First round is to determine the intial
+
+  // We visit the constraints twice, so we can determine the usefulness of 
+  // any potential useful equality.  First round is to determine the initial
   // range of iterators (e.g i = colIdx(kp), we calculate the range of i and kp)
   // Then, in the second round we determine which iterator would have a loop
   // and which iterator can be calculated based on equalities: for example:
