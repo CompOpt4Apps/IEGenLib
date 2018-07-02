@@ -137,36 +137,30 @@ TEST(complexityTest, complexityForPartialParallelTEST){
 
 
 
-  // 4: k can be projected, and i = colidx(kp) can be used to get i from kp
-  iegenlib::appendCurrEnv("rowIdx",
-          new Set("{[i]:0<=i &&i<nnz}"),         // Domain 
-          new Set("{[j]:0<=j &&j<m}"),           // Range
-          false,                                 // Not bijective.
-          iegenlib::Monotonic_NONE               // no monotonicity
-          );
-  iegenlib::appendCurrEnv("colPtr",
-      new Set("{[i]:0<=i &&i<m}"), 
-      new Set("{[j]:0<=j &&j<nnz}"), false, iegenlib::Monotonic_Increasing);
+  // 5: Out_6's upper bound is not provided. Nonetheless, we do not need it
+  // since it is in an equality constraint with In_6. 
+  // Note: This can happen when we pass a relations string through ISL.
+  //       ISL would replace all the instances of an iterators with its equal.
   r = new Relation("{ [In_2, In_4, In_6, In_8] -> [Out_2, Out_4, Out_6, Out_8] : "
-"Out_6 = In_6 && rowIdx(In_8) = rowIdx(In_6) && rowIdx(Out_8) = rowIdx(Out_6) && "
+"Out_6 = In_6 && colidx(In_8) = colidx(In_6) && colidx(Out_8) = colidx(Out_6) && "
 "0 <= In_2 && 0 <= In_4 && 0 <= In_6 && 0 <= In_8 && 0 <= Out_2 && 0 <= Out_4 && "
-"0 <= Out_8 && 0 <= colPtr(In_2) && 0 <= colPtr(In_2 + 1) && 0 <= colPtr(Out_2) "
-"&& 0 <= colPtr(Out_2 + 1) && 0 <= colPtr(rowIdx(In_4)) && 0 <= colPtr(rowIdx(In_4) + 1) "
-"&& 0 <= colPtr(rowIdx(Out_4)) && 0 <= colPtr(rowIdx(Out_4) + 1) && 0 <= rowIdx(In_4) "
-"&& 0 <= rowIdx(In_6) && 0 <= rowIdx(In_8 + 1) && 0 <= rowIdx(Out_4) && 0 <= rowIdx(Out_6) "
-"&& 0 <= rowIdx(Out_8 + 1) && In_4 <= In_8 && colPtr(rowIdx(In_4)) <= In_6 && "
-"colPtr(rowIdx(Out_4)) <= In_6 && Out_4 <= Out_8 && rowIdx(In_8 + 1) <= rowIdx(In_6) "
-"&& rowIdx(Out_8 + 1) <= rowIdx(Out_6) && In_2 < Out_2 && In_2 + 1 < m && In_2 + 1 < n "
-"&& In_4 < nnz && In_4 < colPtr(In_2 + 1) && colPtr(In_2) < In_4 && In_6 < nnz "
-"&& In_6 < colPtr(rowIdx(In_4) + 1) && In_6 < colPtr(rowIdx(Out_4) + 1) && In_8 + 1 < nnz "
-"&& In_8 < colPtr(In_2 + 1) && Out_2 + 1 < m && Out_2 + 1 < n && Out_4 < nnz "
-"&& Out_4 < colPtr(Out_2 + 1) && colPtr(Out_2) < Out_4 && Out_8 + 1 < nnz "
-"&& Out_8 < colPtr(Out_2 + 1) && rowIdx(In_4) + 1 < m && rowIdx(In_6) < m "
-"&& rowIdx(In_8 + 1) < m && rowIdx(Out_4) + 1 < m && rowIdx(Out_6) < m "
-"&& rowIdx(Out_8 + 1) < m && colPtr(In_2) < nnz && colPtr(In_2 + 1) < nnz "
-"&& colPtr(Out_2) < nnz && colPtr(Out_2 + 1) < nnz && colPtr(rowIdx(In_4)) < nnz "
-"&& colPtr(rowIdx(In_4) + 1) < nnz && colPtr(rowIdx(Out_4)) < nnz "
-"&& colPtr(rowIdx(Out_4) + 1) < nnz }");
+"0 <= Out_8 && 0 <= rowptr(In_2) && 0 <= rowptr(In_2 + 1) && 0 <= rowptr(Out_2) "
+"&& 0 <= rowptr(Out_2 + 1) && 0 <= rowptr(colidx(In_4)) && 0 <= rowptr(colidx(In_4) + 1) "
+"&& 0 <= rowptr(colidx(Out_4)) && 0 <= rowptr(colidx(Out_4) + 1) && 0 <= colidx(In_4) "
+"&& 0 <= colidx(In_6) && 0 <= colidx(In_8 + 1) && 0 <= colidx(Out_4) && 0 <= colidx(Out_6) "
+"&& 0 <= colidx(Out_8 + 1) && In_4 <= In_8 && rowptr(colidx(In_4)) <= In_6 && "
+"rowptr(colidx(Out_4)) <= In_6 && Out_4 <= Out_8 && colidx(In_8 + 1) <= colidx(In_6) "
+"&& colidx(Out_8 + 1) <= colidx(Out_6) && In_2 < Out_2 && In_2 + 1 < m && In_2 + 1 < n "
+"&& In_4 < nnz && In_4 < rowptr(In_2 + 1) && rowptr(In_2) < In_4 && In_6 < nnz "
+"&& In_6 < rowptr(colidx(In_4) + 1) && In_6 < rowptr(colidx(Out_4) + 1) && In_8 + 1 < nnz "
+"&& In_8 < rowptr(In_2 + 1) && Out_2 + 1 < m && Out_2 + 1 < n && Out_4 < nnz "
+"&& Out_4 < rowptr(Out_2 + 1) && rowptr(Out_2) < Out_4 && Out_8 + 1 < nnz "
+"&& Out_8 < rowptr(Out_2 + 1) && colidx(In_4) + 1 < m && colidx(In_6) < m "
+"&& colidx(In_8 + 1) < m && colidx(Out_4) + 1 < m && colidx(Out_6) < m "
+"&& colidx(Out_8 + 1) < m && rowptr(In_2) < nnz && rowptr(In_2 + 1) < nnz "
+"&& rowptr(Out_2) < nnz && rowptr(Out_2 + 1) < nnz && rowptr(colidx(In_4)) < nnz "
+"&& rowptr(colidx(In_4) + 1) < nnz && rowptr(colidx(Out_4)) < nnz "
+"&& rowptr(colidx(Out_4) + 1) < nnz }");
   parallelTvs.clear();
   parallelTvs.insert( 0 ); // i
   parallelTvs.insert( 4 ); // ip
