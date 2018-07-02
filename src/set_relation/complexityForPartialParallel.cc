@@ -27,6 +27,35 @@ namespace iegenlib{
 /*****************************************************************************/
 /*! Vistor Class used in VisitorCalculateComplexity
 **  The visitor class calculates complexity for TupleVarTerms
+The way it works in general is that: we want to determine whether 
+a (smart) code generator would generate loop for any of the iterators and if so, 
+what is the complexity of that loop. For instance, consider following example:
+
+{[i,j] : i = j && 0 <= j < n }
+
+(Smart) Code genrator would not generate a loop for i-iterator, 
+because we have the constraints: i=j. 
+But we need a loop with complexity of O(n) in that example. 
+So, the output of this visitor would be:
+
+[1,3] : indicating i has complexity O(1), and j has complexity O(n).
+
+We use inequalities to determine  upper bounds of each term. 
+If we have already find an upper bound but we see a smaller one, 
+we would replace the bigger one.
+We also use useful equalities to make complexity of one of 
+the tuple terms in equalities like i=j, or i=f(j), to be O(1).
+The important thing to note here is that we make the complexity of an iterator 
+with bigger complexity O(1).
+If a term is in an equality constraint with another constraints, 
+'and we know the upper bound of the other iterator, 
+then we do not have to find the upper bounds of this iterator. 
+
+Note: we need to call this visitor at least twice since, it might be 
+the case that while traversing the constraints (iegenlib::Exp's) 
+we pass by an useful equality like i=j, but we do not know 
+upper bound of neither i or j. 
+So, we would not make complexity of any of them O(1).
 */
 class VisitorCalculateComplexity : public Visitor {
   private:
@@ -88,7 +117,7 @@ class VisitorCalculateComplexity : public Visitor {
       if(complexity[tv1->tvloc()] == 0 || complexity[tv1->tvloc()] == 1 ) { return; }
 
       if( curr->isEquality() ){ // An equlity constraint
-        // Do we have something like i = jp
+        // Do we have something like i = jp  ** useful equality
         if( tv2 ) {
           if(complexity[tv1->tvloc()] == -1 && complexity[tv2->tvloc()] == -1){
             return;  // We need to know the complexity of at least one of the iterators 
@@ -109,6 +138,9 @@ class VisitorCalculateComplexity : public Visitor {
           } else {
             complexity[tv2->tvloc()] = 1;
           } 
+        // Do we have something like i = f(jp)  ** useful equality
+        // No need for complicated checks since we can only use f(jp) 
+        // to produce values to remove the need for a for-loop for i 
         } else if( ufcUB ){
           complexity[tv1->tvloc()] = 1;
         }

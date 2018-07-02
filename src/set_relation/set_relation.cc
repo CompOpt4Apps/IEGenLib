@@ -3759,11 +3759,10 @@ class VisitorGetString : public Visitor {
   public:
          VisitorGetString(){ str = ""; firstConj = firstExp = true;}
 
-         /*! Intialize an affineExp if Exp is not a UFCall argument
-         ** If this is a argument to a UFCall, we don't want to modify it.
-         ** This is because A(B(i+1)) gets replaced with A_B_iP1__ without 
-         ** doing anything about B(i+1). And keep in mind that we have already
-         ** added constraints related to function B's domain and range.
+         /*! We build our string one expression at a time before visiting 
+         **  each expression. Note, we cannot build the expression at term
+         **  granularity, because at that level would not know which term 
+         **  to put at which side of an inequality.
          */
          void preVisitExp(iegenlib::Exp * e){
              // ignoring parameters of an UFC
@@ -3774,11 +3773,13 @@ class VisitorGetString : public Visitor {
              bool haveConstT = false;
              std::list<Term*> terms, leftSide, rightSide;
 
+             // Check if we are vising first expression to know whether we need &&
              if(firstExp) firstExp = false;
              else         str += string(" && ");
 
+             // Get list of terms and separate them into 2 lists, 
+             // the ones for the left side and the ones for right side 
              terms = e->getTermList();
-      
              for (std::list<Term*>::const_iterator i=terms.begin(); 
                   i != terms.end(); ++i) {
                  if( (*i)->isConst() ){
@@ -3796,10 +3797,12 @@ class VisitorGetString : public Visitor {
              char buffer[20]="";
              int tempT = 0;
 
+             // print the terms in the left of the inequality ( < or <= )
              for (std::list<Term*>::const_iterator i=leftSide.begin(); 
                   i != leftSide.end(); ++i) {
                  str += (*i)->prettyPrintString(aTupleDecl, absValue);
              }
+             // If there is no terms in the left, print 0
              if( leftSide.empty() && !haveConstT ) str += string("0");
      
              if( e->isEquality() ){
@@ -3810,7 +3813,9 @@ class VisitorGetString : public Visitor {
                      else str += string(" + ") + string(buffer);
                  }
                  str += string(" = ");
-             } else if( e->isInequality()){
+             } 
+             // Notice we check if we need < or <=
+             else if( e->isInequality()){
                  if( haveConstT && constT < 0 ){
                      tempT = constT*(-1);
                      tempT--;
@@ -3844,25 +3849,29 @@ class VisitorGetString : public Visitor {
                  sprintf(buffer, "%d", constT); 
                  if( leftSide.empty() ) str += string(buffer);
                  else str += string(" + ") + string(buffer);
-             } else if( e->isInequality() && haveConstT && constT > 0 && !(leftSide.empty()) ){
+             } else if( e->isInequality() && haveConstT && 
+                        constT > 0 && !(leftSide.empty()) ){
                  tempT = constT;
                  sprintf(buffer, "%d", tempT);
                  if( rightSide.empty() ) str += string(buffer);
                  else str += string(" + ") + string(buffer);
              }
          }
-         //! Initializes an affineConj
+         //! 
          void preVisitConjunction(iegenlib::Conjunction * c){
              aTupleDecl = c->getTupleDecl();
 
+             // If this is not the first conjunction print &&
              if(firstConj) firstConj = false;
              else          str += string(" union ");
 
-             str += string("{ ") + aTupleDecl.toString(true,aritySplit) + string(" : ");
+             // Start the conjunction's string with tuple
+             str += string("{ ") + 
+                    aTupleDecl.toString(true,aritySplit) + string(" : ");
 
              firstExp = true;
          }
-         //! adds the current affineConj to maffineConj
+         //! 
          void postVisitConjunction(iegenlib::Conjunction * c){
              str += string(" }");
          }
@@ -3884,7 +3893,7 @@ class VisitorGetString : public Visitor {
          void preVisitRelation(iegenlib::Relation * r){
              aritySplit = r->inArity();
 
-             // If there are no conjunctions then indicate we have an empty set
+             // If there are no conjunctions then indicate we have an empty relation
              // by printing out generic arity tuple declarations and FALSE as 
              // a constraint.
              if (r->getNumConjuncts()==0) {
@@ -3898,7 +3907,16 @@ class VisitorGetString : public Visitor {
 };
 
 /*! 
-**  
+**  This function generates a string representation of the Set.
+**  There are two differences between this function and other string
+**  genrators, like toString, and prettyPrintSring:
+**  (1) it uses visitor patter
+**  (2) The generated string is better formatted, for instance while other functions 
+        generate something like following for some relation: 
+           {[i,j] : i - j = 0 && i - 6 >= 0 && -j + 2 >= 0}
+        This function genrates bellow for the same relation: 
+           {[i,j] : i = j && 0 <= i && j <= 2}
+    For more examples see the getString test case in set_relation_test.cc
 */
 string Set::getString()
 {
