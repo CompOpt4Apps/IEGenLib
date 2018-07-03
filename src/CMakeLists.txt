@@ -47,10 +47,12 @@ list(REMOVE_ITEM iegenlib_SOURCES
 
 list(REMOVE_ITEM iegenlib_SOURCES 
 	${IEGENLIB_SOURCE_DIR}/src/drivers/DEPRECATED_simplifyDriver.cc)
+
 list(REMOVE_ITEM iegenlib_SOURCES 
 	${IEGENLIB_SOURCE_DIR}/src/drivers/simplification.cc)
 list(REMOVE_ITEM iegenlib_SOURCES 
 	${IEGENLIB_SOURCE_DIR}/src/drivers/superAffSet.cc)
+
 
 ############################### STEP 2 ########################################
 ######################  Generate the Parser Code ##############################
