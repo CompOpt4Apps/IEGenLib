@@ -7,8 +7,9 @@
       "Relation" : "{ [i] -> [ip,jp] : i < ip && i = colidx(jp) && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(ip) <= jp && jp < rowptr(ip+1) }",
 
       "Efficient Inspector complexity:" : "O( nnz )",
+      "Efficient Inspector complexity after adding domain info:" : "stays O( nnz ) )",
+      "Expected" : "{ [i] -> [ip,jp] : i < ip && i = colidx(jp) && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(ip) <= jp && jp < rowptr(ip+1) }",
 
-      "Expected" : "{ [i] -> [ip,jp] : i = colidx(jp) && colidx(jp) < ip && ip < m-1 && rowptr(i) < rowptr(i+1) && rowptr(ip) <= jp && jp < rowptr(ip+1) && colidx(jp) >= 0 && rowptr(i) >= 0 && rowptr(ip) >= 0 && rowptr(i+1) < nnz && rowptr(ip+1) < nnz}",
       "UFS" :
       [
         { 
@@ -62,8 +63,9 @@
       "Relation" : "{ [i] -> [ip,jp] : ip < i && i = colidx(jp) && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(ip) <= jp && jp < rowptr(ip+1) }",
 
       "Efficient Inspector complexity:" : "O( nnz )",
+      "Efficient Inspector complexity after adding domain info:" : "stays O( nnz ) )",
+      "Expected" : "{ [i] -> [ip,jp] : ip < i && i = colidx(jp) && 0 <= i && i < m && 0 <= ip && ip < m && rowptr(ip) <= jp && jp < rowptr(ip+1) }",
 
-      "Expected" : "{ [i] -> [ip,jp] : i=colidx(jp) && 0 <= ip && ip < colidx(jp) && rowptr(i) < rowptr(i+1) && rowptr(ip) <= jp && jp < rowptr(ip+1) && colidx(jp) < m-1 && rowptr(i) >= 0 && rowptr(ip) >= 0 && rowptr(i+1) < nnz && rowptr(ip+1) < nnz}",
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     "a read in S1 (y[colidx[j]]);  a write in S1 (y[i]); "
@@ -75,9 +77,11 @@
       "Index" : "3",
       "Relation" : "{ [i] -> [ip] : i < ip && i = ip && 0 <= i && i < m && 0 <= ip && ip < m }",
 
-      "Efficient Inspector complexity:" : "O( n^2 )",
-
+      "Efficient Inspector complexity:" : "0",
+      "Efficient Inspector complexity after adding domain info:" : "0",
       "Expected" : "Not Satisfiable",
+      "What helps to detect unsat 1:" : "Linear inconsistency",
+
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     "a write in S2 (y[i]);  a write in S2 (y[i]); "
@@ -89,9 +93,11 @@
       "Index" : "4",
       "Relation" : "{ [i] -> [ip] : ip < i && i = ip && 0 <= i && i < m && 0 <= ip && ip < m }",
 
-      "Efficient Inspector complexity:" : "O( n^2 )",
-
+      "Efficient Inspector complexity:" : "0",
+      "Efficient Inspector complexity after adding domain info:" : "0",
       "Expected" : "Not Satisfiable",
+      "What helps to detect unsat 1:" : "Linear inconsistency",
+
       "Comment: Source of data access in the code for this relation" : [
                     " ",
                     "a write in S2 (y[i]);  a write in S2 (y[i]); "

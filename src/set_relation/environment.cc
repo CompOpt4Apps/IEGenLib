@@ -65,7 +65,7 @@ void appendCurrEnv(std::string funcName, Set* domain, Set* range,
 
     UniQuantRule *uqRule;
     string type, tupleDecl, leftSide, rightSide;
-
+/*
     // 3.1.1 adding Functional consistency rules:
     //   forall e1, e2 : if e1 = e2 then f(e1) = f(e2)
     type = ("FuncConsistency");
@@ -74,7 +74,7 @@ void appendCurrEnv(std::string funcName, Set* domain, Set* range,
     rightSide = ( funcName + "(e1) = " + funcName + "(e2)" );
     uqRule = new UniQuantRule(type, tupleDecl, leftSide, rightSide);
     currentEnv.addUniQuantRule( uqRule );
-
+*/
     // 3.1.2 Adding Monotonicity rules based on:
     //   If UF monotonically strictly increasing then:
     if ( Monotonic_Increasing == monoType ){
@@ -86,7 +86,7 @@ void appendCurrEnv(std::string funcName, Set* domain, Set* range,
       rightSide = ( funcName + "(e1) < " + funcName + "(e2)" );
       uqRule = new UniQuantRule(type, tupleDecl, leftSide, rightSide);
       currentEnv.addUniQuantRule( uqRule );
-  
+/*
       // forall e1, e2 : UF(e1) = UF(e2) => e1 = e2
       type = ("Monotonicity");
       tupleDecl = ("[e1,e2]");
@@ -94,7 +94,7 @@ void appendCurrEnv(std::string funcName, Set* domain, Set* range,
       rightSide = ( "e1 = e2" );
       uqRule = new UniQuantRule(type, tupleDecl, leftSide, rightSide);
       currentEnv.addUniQuantRule( uqRule );
-
+*/
       // forall e1, e2 : UF(e1) < UF(e2) => e1 < e2
       type = ("Monotonicity");
       tupleDecl = ("[e1,e2]");
@@ -102,7 +102,7 @@ void appendCurrEnv(std::string funcName, Set* domain, Set* range,
       rightSide = ( "e1 < e2" );
       uqRule = new UniQuantRule(type, tupleDecl, leftSide, rightSide);
       currentEnv.addUniQuantRule( uqRule );
-  
+/*
       // forall e1, e2 : UF(e1) <= UF(e2) => e1 <= e2
       type = ("Monotonicity");
       tupleDecl = ("[e1,e2]");
@@ -110,15 +110,15 @@ void appendCurrEnv(std::string funcName, Set* domain, Set* range,
       rightSide = ( "e1 <= e2" );
       uqRule = new UniQuantRule(type, tupleDecl, leftSide, rightSide);
       currentEnv.addUniQuantRule( uqRule );
-
+*/
     //   If UF monotonically increasing then:
     } else  if ( Monotonic_Nondecreasing == monoType ){
- 
-      // forall e1, e2 : UF(e1) < UF(e2) => e1 < e2
+
+      // forall e1, e2 : e1 < e2 => UF(e1) <= UF(e2)
       type = ("Monotonicity");
       tupleDecl = ("[e1,e2]");
-      leftSide = ( funcName + "(e1) < " + funcName + "(e2)" );
-      rightSide = ( "e1 < e2" );
+      leftSide = ( "e1 < e2" );
+      rightSide = ( funcName + "(e1) <= " + funcName + "(e2)" );
       uqRule = new UniQuantRule(type, tupleDecl, leftSide, rightSide);
       currentEnv.addUniQuantRule( uqRule );
   
@@ -132,7 +132,7 @@ void appendCurrEnv(std::string funcName, Set* domain, Set* range,
       rightSide = ( funcName + "(e1) > " + funcName + "(e2)" );
       uqRule = new UniQuantRule(type, tupleDecl, leftSide, rightSide);
       currentEnv.addUniQuantRule( uqRule );
-
+/*
       // forall e1, e2 : UF(e1) = UF(e2) => e1 = e2
       type = ("Monotonicity");
       tupleDecl = ("[e1,e2]");
@@ -140,7 +140,7 @@ void appendCurrEnv(std::string funcName, Set* domain, Set* range,
       rightSide = ( "e1 = e2" ); 
       uqRule = new UniQuantRule(type, tupleDecl, leftSide, rightSide);
       currentEnv.addUniQuantRule( uqRule );
- 
+*/
       // forall e1, e2 : UF(e1) < UF(e2) => e1 > e2
       type = ("Monotonicity");
       tupleDecl = ("[e1,e2]");
@@ -148,7 +148,7 @@ void appendCurrEnv(std::string funcName, Set* domain, Set* range,
       rightSide = ( "e1 > e2" );
       uqRule = new UniQuantRule(type, tupleDecl, leftSide, rightSide);
       currentEnv.addUniQuantRule( uqRule );
-
+/*
       // forall e1, e2 : UF(e1) <= UF(e2) => e1 >= e2
       type = ("Monotonicity");
       tupleDecl = ("[e1,e2]");
@@ -156,15 +156,15 @@ void appendCurrEnv(std::string funcName, Set* domain, Set* range,
       rightSide = ( "e1 >= e2" );
       uqRule = new UniQuantRule(type, tupleDecl, leftSide, rightSide);
       currentEnv.addUniQuantRule( uqRule );
-
+*/
       // If UF monotonically decreasing then:
     } else  if ( Monotonic_Nonincreasing == monoType ){
 
-      // forall e1, e2 : UF(e1) < UF(e2) => e1 > e2
+      // forall e1, e2 : e1 < e2 => UF(e1) <= UF(e2)
       type = ("Monotonicity");
       tupleDecl = ("[e1,e2]");
-      leftSide = ( funcName + "(e1) < " + funcName + "(e2)" );
-      rightSide = ( "e1 > e2" );
+      leftSide = ( "e1 < e2" );
+      rightSide = ( funcName + "(e1) >= " + funcName + "(e2)" );
       uqRule = new UniQuantRule(type, tupleDecl, leftSide, rightSide);
       currentEnv.addUniQuantRule( uqRule );
     }
@@ -408,7 +408,7 @@ UniQuantRule::UniQuantRule(string type, string tupleDecl,
 
     if(type == "Monotonicity")         mUniQuantRuleType = Monotonicity;
     else if (type == "CoMonotonicity") mUniQuantRuleType = CoMonotonicity;
-    else if (type == "Triangular")     mUniQuantRuleType = Triangular;
+    else if (type == "Triangularity")     mUniQuantRuleType = Triangularity;
     else if (type == "FuncConsistency")mUniQuantRuleType = FuncConsistency;
     else                               mUniQuantRuleType = TheOthers;
 }

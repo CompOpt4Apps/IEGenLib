@@ -1502,7 +1502,6 @@ S2:     v[j1] -= tmp*v[j2];
 
 }
 
-#endif
 
 
 
@@ -1561,7 +1560,12 @@ TEST_F(ChillUsageTest, InsertRetrieveUniQuantRule)
     // And, following demonstrates how we could encode it:
 
     // A pointer to an instance of the class that 
-    // defines universially quantified rules
+    // defines universially quantified rules    // Verify the results 
+    if ( ex_A8 != NULL && A8_sim != NULL) {
+        EXPECT_EQ(ex_A8->toISLString(), A8_sim->toISLString());
+    } else {
+        EXPECT_EQ(ex_A8, A8_sim);
+    }
     UniQuantRule *uqRule;
     // An optional type predefined types are: 
     //  Monotonicity, CoMonotonicity, Triangular, FuncConsistency, TheOthers
@@ -1628,4 +1632,6 @@ TEST_F(ChillUsageTest, InsertRetrieveUniQuantRule)
     // Do not delete the defined rules' objects (added or queried) 
     // since environment still owns them.
 }
+#endif
+
 

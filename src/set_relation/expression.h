@@ -664,6 +664,9 @@ public:
     //! Returns true if only have a constant term
     bool isConst() const;
 
+    //! Returns true if we have something like: 2 = 0
+    bool isContradiction() const;
+
     //! Return Term* if the expression has only one Term.
     //! Otherwise returns NULL.
     //! this still owns Term.

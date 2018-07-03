@@ -140,7 +140,7 @@ int main(int argc, char **argv)
 // the simplification algorithm to the sets found in the file. 
 void simplify(string inputFile)
 {
-
+/*
   iegenlib::setCurrEnv();
   std::set<int> parallelTvs;
   // (0)
@@ -242,6 +242,7 @@ void simplify(string inputFile)
   }
 
  } // End of p loop
+*/
 }
 
 bool printRelation(string msg, Relation *rel){

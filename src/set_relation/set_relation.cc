@@ -526,14 +526,14 @@ std::string Conjunction::prettyPrintString() const {
                 i != dup->mEqualities.end(); i++) {
         if (not first) { ss << " && "; }
         else { ss << " : ";  first = false; }
-        ss << (*i)->prettyPrintString(mTupleDecl) << " = 0";
+        ss << (*i)->prettyPrintString(mTupleDecl)<< " = 0";
     }
 
     for (std::list<Exp*>::const_iterator i = dup->mInequalities.begin();
                 i != dup->mInequalities.end(); i++) {
         if (not first) { ss << " && "; }
         else { ss << " : ";  first = false; }
-        ss << (*i)->prettyPrintString(mTupleDecl) << " >= 0";
+        ss << (*i)->prettyPrintString(mTupleDecl)<< " >= 0";
     }
 
     ss << " }";
@@ -1267,10 +1267,11 @@ bool Conjunction::satisfiable() const {
 
     for (std::list<Exp*>::const_iterator i=mEqualities.begin();
             i != mEqualities.end(); i++) {
-        if ( (*i)->isConst() ) {
+        if ( (*i)->isContradiction() ) {
             return false;
         }
     }
+
     return true;
 }
 
@@ -1280,6 +1281,7 @@ bool Conjunction::satisfiable() const {
 */
 
 void Conjunction::cleanUp() {
+
     // Remove zero equalities, normalize, and remove nested inverse funcs
     for (std::list<Exp*>::iterator i=mEqualities.begin();
             i != mEqualities.end(); ) {
@@ -1730,7 +1732,6 @@ void SparseConstraints::cleanUp(){
 
     //sort the list of conjunctions
     mConjunctions.sort(_compareConjunctions);
-
 }
 
 /*! Find any TupleVarTerms in this expression (and subexpressions)
@@ -2760,10 +2761,12 @@ Set* Set::superAffineSet(UFCallMap* ufcmap, bool boundUFCs)
 {
     Set *copySet, *result;
 
-    if( !noConjuncts() ){  // There is no conjunction, so nothing to do
-       result = new Set (*this);
+    result = new Set (*this);
+    // There is no conjunction, so nothing to do
+    if( result->getNumConjuncts() == 0 ){  
        return result;   // Just return a copy of the Set
     }
+    delete result;
 
     if( boundUFCs ) copySet = this->boundDomainRange();
     else          copySet = new Set (*this);
@@ -2784,7 +2787,7 @@ Relation* Relation::superAffineRelation(UFCallMap* ufcmap, bool boundUFCs)
 {
     Relation *copyRelation, *result;
 
-    if( !noConjuncts() ){  // There is no conjunction, so nothing to do
+    if( !getNumConjuncts() ){  // There is no conjunction, so nothing to do
        result = new Relation (*this);
        return result;   // Just return a copy of the Set
     }
@@ -2801,6 +2804,13 @@ Relation* Relation::superAffineRelation(UFCallMap* ufcmap, bool boundUFCs)
     delete v;
 
     return result;
+}
+
+Relation* Relation::superAffineRelation()
+{
+      // Create variable names for UF calls.
+      iegenlib::UFCallMap* uf_call_map = new UFCallMap();
+    return superAffineRelation(uf_call_map);
 }
 
 /*****************************************************************************/
@@ -3393,6 +3403,546 @@ Relation* Relation::simplifyForPartialParallel(std::set<int> parallelTvs)
 
     return result;    
 }
+
+
+
+
+/*****************************************************************************/
+#pragma mark -
+/*****************************************************************************/
+/*! Vistor Class used in VisitorGatherAllTerms
+**  The visitor class to gather all (unique) terms so they
+**  can be used in rule instantiation.
+*/
+class VisitorGatherAllParameters : public Visitor {
+  private:
+    std::set<Exp> instExps; 
+
+  public:
+    VisitorGatherAllParameters(){}
+    virtual ~VisitorGatherAllParameters(){}
+
+    void preVisitUFCallTerm(UFCallTerm * t){
+        instExps.insert( *(t->getParamExp(0)) );
+    }
+
+    std::set<Exp> getExps() { 
+        return instExps;
+    }
+};
+
+/* We get a rule looking like:
+**   forall x1, x2: x1 <= x2 -> f(x1) <= g(x2)
+** Note, left side (x1 <= x2), and right side (f(x1) <= g(x2))
+** are stored as separate sets like: 
+**  {[x1,x2]: x1 <= x2}
+**  {[x1,x2]: f(x1) < g(x2)}
+** We want to replace x1 and x2 with expressions like: i, col(j), ... 
+** and returned instantiated rule, for instance:
+   if we have 
+     rule: forall x1, x2: x1 <= x2 -> f(x1) <= g(x2)
+     x1 = i   and x2 = col(j)
+   we want to return:
+      < i <= col(j) , f(i) <= g(col(j)) >
+*/
+std::pair <std::string,std::string> instantiate(
+          UniQuantRule* uqRule, Exp x1, Exp x2, 
+          UFCallMap *ufcmap, TupleDecl origTupleDecl){
+  
+  Set *leftSideOfTheRule, *rightSideOfTheRule;
+
+  // Create map for substituting uni. quant. vars. in a rule
+  //  with expressions from our list. 
+  SubMap subMap;
+  TupleVarTerm *uQV = new TupleVarTerm( 0 );
+  Exp *subExp = new Exp( x1 ); 
+  subMap.insertPair( uQV , subExp );
+  uQV = new TupleVarTerm( 1 );
+  subExp = new Exp( x2 ); 
+  subMap.insertPair( uQV , subExp );
+
+  // Substitute universially quantified variables 
+  // with terms from list of terms
+  leftSideOfTheRule = new Set ( *(uqRule->getLeftSide()) );
+  rightSideOfTheRule = new Set ( *(uqRule->getRightSide()) );
+  leftSideOfTheRule->substituteInConstraints( subMap );
+  rightSideOfTheRule->substituteInConstraints( subMap );
+
+  // make rule's tuple declaration to match original constraints 
+  leftSideOfTheRule->setTupleDecl(origTupleDecl); 
+  rightSideOfTheRule->setTupleDecl(origTupleDecl);
+
+  // create superAffine sets of left/right sides
+  Set *supAffLeft, *supAffRight;
+  supAffLeft  = leftSideOfTheRule->superAffineSet(ufcmap, false);
+  supAffRight = rightSideOfTheRule->superAffineSet(ufcmap, false);
+  delete leftSideOfTheRule;
+  delete rightSideOfTheRule;
+
+  // we only need the constraint part of left/right sides 
+  // that are stored as separate sets.
+  srParts subLeftSideParts, subRightSideParts;
+  subLeftSideParts = getPartsFromStr(supAffLeft->prettyPrintString());
+  subRightSideParts = getPartsFromStr(supAffRight->prettyPrintString());
+  subLeftSideParts.constraints = trim(subLeftSideParts.constraints);
+  subRightSideParts.constraints = trim(subRightSideParts.constraints);
+  std::string leftStr = "false", rightStr = "false";
+  if(subLeftSideParts.constraints == ""){  leftStr = "true"; } 
+  else if(subLeftSideParts.constraints == "FALSE"){  leftStr = "false";}
+  else { leftStr = subLeftSideParts.constraints; }
+  if(subRightSideParts.constraints == ""){ rightStr = "true"; }
+  else if(subRightSideParts.constraints == "FALSE"){ rightStr = "false";}
+  else { rightStr = subRightSideParts.constraints; }
+
+  return (std::make_pair( leftStr, rightStr));
+}
+
+
+// Builds list of symbolic constants from original constraints,
+// super affine set, and instantiations, so we can use it for isl input. 
+//  drOrigSet = original set with domain/range constraints
+//  ufcmap    = list of UFCs from super super affine set, and instantiations
+string symsForInstantiationSet(Set *drOrigSet, UFCallMap *ufcmap ){
+  std::stringstream ss;
+  StringIterator * symIter;
+  bool foundSymbols = false;
+  symIter = (*(drOrigSet->mConjunctions.begin()))->getSymbolIterator();
+  while (symIter->hasNext()) {
+    if (foundSymbols == false) {
+      foundSymbols = true;
+      ss << symIter->next();
+    } else { ss << ", " << symIter->next(); }
+  }
+  delete drOrigSet;
+  std::string syms = "";
+  if( !((ss.str()).empty()) && !((ufcmap->varTermStrList()).empty()) ){
+    syms = "[" + ss.str() + ", " 
+                           + ufcmap->varTermStrList() + "] -> ";    
+  } else if ( (ufcmap->varTermStrList()).empty() ) {
+    syms = "[" + ss.str() + "] -> ";   
+  } else if ( (ss.str()).empty() ){
+    syms = "[" + ufcmap->varTermStrList() + "] -> "; 
+  }
+
+  return syms;
+}
+
+// This function creates a isl set from instantiations. The naive way to 
+// do this would be to put all the instantiation inside one Set 
+// and feed it isl. However, that would create a performance bottleneck,
+// since isl has to try to colasce and simplify 
+// lots of disjunctions at the same time. Instead of the naive way 
+// this function iteratively adds the useful instantiation.
+isl_set* instantiationSet( srParts supSetParts, 
+           std::set<std::pair <std::string,std::string>> instantiations,
+                               string syms , isl_ctx* ctx){
+
+  // Build original Set with all symbolic constants from instantiations
+  string origRel = syms + "{" + supSetParts.tupDecl + " : " + 
+                   supSetParts.constraints + "}";
+
+  // Iteratively add useful instantiation utilizing isl functions
+  // We want to iterate until there is nothing useful to add.
+  // This condition is checked at the end of the loop. For most examples
+  // visiting everything 2 times must be enough. However, since
+  // there might be some unusual example, we put a cap (up to 2 times), so
+  // we would never end up looping many times even in rare occasions. 
+  isl_set* set = isl_set_read_from_str(ctx, origRel.c_str() );
+  isl_set* old_set = isl_set_copy(set);
+  for (int i = 0; i < 2; i++) {
+    for (std::set<std::pair <std::string,std::string>>::iterator 
+          it=instantiations.begin(); it!=instantiations.end(); it++){ 
+      string antecedentStr = syms + "{" + supSetParts.tupDecl + 
+                             " : " + (*it).first + "}";
+      string consequentStr = syms + "{" + supSetParts.tupDecl + 
+                             " : " + (*it).second + "}";
+      // If antecedent is true add the consequent of the instantiation
+      int added = 0;
+      {
+        isl_set* ant_set = isl_set_read_from_str(ctx, antecedentStr.c_str());
+        ant_set = isl_set_gist(ant_set, isl_set_copy(set));
+        if (isl_set_plain_is_universe(ant_set)) {
+          isl_set* con_set = isl_set_read_from_str(ctx, consequentStr.c_str());
+          set = isl_set_intersect(set, con_set);
+          set = isl_set_coalesce(set);
+          added = 1;
+        }
+        isl_set_free(ant_set);
+      }
+      // If complement of consequent is true add the complement of antecedent 
+      if (!added) {
+        isl_set* con_set = isl_set_read_from_str(ctx, consequentStr.c_str());
+        con_set = isl_set_complement(con_set);
+        con_set = isl_set_gist(con_set, isl_set_copy(set));
+        if (isl_set_plain_is_universe(con_set)) {
+          isl_set* ant_set = isl_set_read_from_str(ctx, antecedentStr.c_str());
+          ant_set = isl_set_complement(ant_set);
+          set = isl_set_intersect(set, ant_set);
+          set = isl_set_coalesce(set);
+          added = 1;
+        }
+        isl_set_free(con_set);
+      }
+    }
+    if( isl_set_is_empty(set) ) break;             // Set is UnSat
+    if ( isl_set_is_equal( old_set, set ) ){ break; // We have converged
+    } else {
+      isl_set_free(old_set);
+      old_set = isl_set_copy(set);
+    }
+  }
+
+  return set;
+}
+
+// Check to see if the isl set is empty (the original Set is UnSat)
+// or, it is not (the original Set is MaySat) in which case extract
+// new equalities and add them to original Set
+Set* checkIslSet(isl_set* set, isl_ctx* ctx, 
+                      UFCallMap *ufcmap, Set *origSet ){
+  Set *result = NULL;
+  if( isl_set_is_empty(set) ){
+    result = NULL;
+  } else {
+    isl_basic_set *bset = isl_set_affine_hull(set);
+    // Get an isl printer and associate to an isl context
+    isl_printer * ip = isl_printer_to_str(ctx);
+    // get string back from ISL set
+    isl_printer_set_output_format(ip , ISL_FORMAT_ISL);
+    isl_printer_print_basic_set(ip ,bset);
+    char *i_str = isl_printer_get_str(ip);
+    // clean-up
+    isl_printer_flush(ip);
+    isl_printer_free(ip);
+    isl_basic_set_free(bset);
+    // Puting the newly found equalities into original constraint set.
+    Set* affineEqs = new Set(i_str);
+    Set* eQs = affineEqs->reverseAffineSubstitution(ufcmap);
+    result = origSet->Intersect(eQs);
+    delete affineEqs;
+    delete eQs;
+    //free(i_str);
+  }
+  return result;
+}
+
+
+/*!
+** This function takes an expression set, and instantiates 
+** quantified rules stored in the environment using them.
+** Although, only the rules that have their type set in 
+** the useRule argument are instantiated.
+** An instantiation is of the form: p1 -> q1, 
+** the output includes set of tuples like (p1,q1).
+*/
+std::set<std::pair <std::string,std::string>> ruleInstantiation
+                          (std::set<Exp> instExps, bool *useRule, 
+                           TupleDecl origTupleDecl, UFCallMap *ufcmap){
+  int noAvalRules = queryNoUniQuantRules();
+  UniQuantRule* uqRule;
+  std::set<std::pair <std::string,std::string>> instantiations;
+  // If no rules are explicitly specified, we instantiate all of them  
+  if (!useRule){
+    useRule = new bool[ TheOthers ];
+    for(int i = 0 ; i < TheOthers ; i++ ){ useRule[i] = 1; } 
+  }
+  // Instantiating the universially quantified rules available 
+  // in the environment one by one, for the ones we want to check
+  for(int i = 0 ; i < noAvalRules ; i++ ){
+
+    // Query rule No. i from environment
+    uqRule = queryUniQuantRuleEnv(i);
+    // If we do not want to instantiate this rule move on to next one
+    if( !(useRule[uqRule->getType()]) ) continue;
+    // Go over our Expression Set (E), and replace uni. quant. vars.
+    // in the rule with these expressions.
+    for (std::set<Exp>::iterator it1=instExps.begin(); 
+             it1!=instExps.end(); it1++){
+      for (std::set<Exp>::iterator it2=instExps.begin(); 
+               it2!=instExps.end(); it2++){
+        instantiations.insert(instantiate(uqRule,*it1,*it2,
+                              ufcmap,origTupleDecl));
+      }
+    }
+  }
+
+  return instantiations;
+}
+
+
+// Detect UnSat or MaySat for the set utilizing domain information 
+// that are stored as universally quantified rules in the environment.
+// To utilize the domain information, the function first gathers all 
+// the parameter expression to all UFCs in the relation, then it uses 
+// those expression to instantiate the quantified rules. Next, it creates 
+// a isl map out of original relation and the instantiate rules. 
+// Finally, it checks to see whither the isl map is empty or not, 
+// in case it is not empty it extract the newly found equalities, 
+// adds them the original relation and returns the result.
+Set* Set::detectUnsatOrFindEqualities(bool *useRule){
+
+  // Gather all UFCall Parameters for Expression Set (E) for rule instantiation
+  VisitorGatherAllParameters *vGE = new VisitorGatherAllParameters;
+  this->acceptVisitor(vGE);
+  std::set<Exp> instExps = vGE->getExps();
+  // Generate all instantiations of universialy quantified rules
+  TupleDecl origTupleDecl = getTupleDecl();
+  std::set<std::pair <std::string,std::string>> instantiations;
+  UFCallMap *ufcmap = new UFCallMap();
+  instantiations = ruleInstantiation(instExps, useRule, origTupleDecl, ufcmap);
+  // Use ISL to add useful instantiations, refer to instantiationSet
+  Set *supAffSet = superAffineSet(ufcmap);
+  srParts supSetParts = getPartsFromStr(supAffSet->prettyPrintString());
+  isl_ctx* ctx = isl_ctx_alloc();
+  string syms = symsForInstantiationSet(boundDomainRange(), ufcmap);
+  isl_set* set = instantiationSet(supSetParts, instantiations, syms, ctx);
+  Set *result = checkIslSet(set, ctx, ufcmap, this);
+  //isl_ctx_free(ctx);
+
+  return result;
+}
+
+
+// Same as Set
+Relation* Relation::detectUnsatOrFindEqualities(bool *useRule){
+
+  // Gather all UFCall Parameters for Expression Set (E) for rule instantiation
+  VisitorGatherAllParameters *vGE = new VisitorGatherAllParameters;
+  this->acceptVisitor(vGE);
+  std::set<Exp> instExps = vGE->getExps();
+
+  // Generate all instantiations of universialy quantified rules
+  TupleDecl origTupleDecl = getTupleDecl();
+  std::set<std::pair <std::string,std::string>> instantiations;
+  UFCallMap *ufcmap = new UFCallMap();
+  instantiations = ruleInstantiation(instExps, useRule, origTupleDecl, ufcmap);
+
+  // Here, we are going to utlize same functions that as Set class.
+  // Set::detectUnsatOrFindEqualities uses. Therefore, we temporary
+  // turn the Relation into a Set by simply changing its tuple declaration
+  // using relationStr2SetStr function found in isl_str_manipulation.
+  Set *eqSet = new Set( relationStr2SetStr(prettyPrintString(), 
+                                  inArity(), outArity()) );
+  Set *supAffSet = eqSet->superAffineSet(ufcmap);
+  srParts supSetParts = getPartsFromStr(supAffSet->prettyPrintString());
+  isl_ctx* ctx = isl_ctx_alloc();
+  string syms = symsForInstantiationSet(eqSet->boundDomainRange(), ufcmap);
+  isl_set* set = instantiationSet(supSetParts, instantiations, syms, ctx);
+
+  // Check if the relation with new information is UnSat or MaySat
+  Set *resultSet = checkIslSet(set, ctx, ufcmap, eqSet);
+  //isl_ctx_free(ctx);
+  Relation *result = NULL;
+  // Turning results back into a Relation
+  if( resultSet ){
+    result = new Relation( setStr2RelationStr(resultSet->prettyPrintString(),
+                                  inArity(), outArity()) );
+  }
+  return result;
+}
+
+
+
+/*****************************************************************************/
+#pragma mark -
+/*************** VisitorGetString *****************************/
+/*! Vistor Class used in getString
+**  to getting a string representation of a Set or Relation
+*/
+class VisitorGetString : public Visitor {
+  private:
+         string str;
+         TupleDecl aTupleDecl;
+         int aritySplit;
+         bool firstConj;
+         bool firstExp;
+  public:
+         VisitorGetString(){ str = ""; firstConj = firstExp = true;}
+
+         /*! We build our string one expression at a time before visiting 
+         **  each expression. Note, we cannot build the expression at term
+         **  granularity, because at that level would not know which term 
+         **  to put at which side of an inequality.
+         */
+         void preVisitExp(iegenlib::Exp * e){
+             // ignoring parameters of an UFC
+             if( e->isExpression() ){
+                 return;
+             }
+             int constT = 0;
+             bool haveConstT = false;
+             std::list<Term*> terms, leftSide, rightSide;
+
+             // Check if we are vising first expression to know whether we need &&
+             if(firstExp) firstExp = false;
+             else         str += string(" && ");
+
+             // Get list of terms and separate them into 2 lists, 
+             // the ones for the left side and the ones for right side 
+             terms = e->getTermList();
+             for (std::list<Term*>::const_iterator i=terms.begin(); 
+                  i != terms.end(); ++i) {
+                 if( (*i)->isConst() ){
+                     haveConstT = true;
+                     constT = (*i)->coefficient();
+                 }
+                 else if ((*i)->coefficient() < 0) {
+                     leftSide.push_front(*i);
+                 } else {
+                     rightSide.push_front(*i);
+                 }
+             }
+
+             bool absValue = true;
+             char buffer[20]="";
+             int tempT = 0;
+
+             // print the terms in the left of the inequality ( < or <= )
+             for (std::list<Term*>::const_iterator i=leftSide.begin(); 
+                  i != leftSide.end(); ++i) {
+                 str += (*i)->prettyPrintString(aTupleDecl, absValue);
+             }
+             // If there is no terms in the left, print 0
+             if( leftSide.empty() && !haveConstT ) str += string("0");
+     
+             if( e->isEquality() ){
+                 if( haveConstT && constT  < 0 ){
+                     tempT = constT*(-1);
+                     sprintf(buffer, "%d", tempT); 
+                     if( leftSide.empty() ) str += string(buffer);
+                     else str += string(" + ") + string(buffer);
+                 }
+                 str += string(" = ");
+             } 
+             // Notice we check if we need < or <=
+             else if( e->isInequality()){
+                 if( haveConstT && constT < 0 ){
+                     tempT = constT*(-1);
+                     tempT--;
+                     if( tempT != 0 ){
+                         sprintf(buffer, "%d", tempT); 
+                         if( leftSide.empty() ) str += string(buffer);
+                         else str += string(" + ") + string(buffer);
+                     } else if( tempT == 0 && leftSide.empty() ){
+                         str += string("0");
+                     }
+                     str += string(" < ");
+                 } else if( haveConstT && constT > 0 && leftSide.empty() ){
+                     tempT = constT*(-1);
+                     tempT--;
+                     sprintf(buffer, "%d", tempT); 
+                     str += string(buffer);
+
+                     str += string(" < ");
+                 } else { //if( !haveConstT || !(leftSide.empty()) ){
+                     str += string(" <= ");
+                 }
+             }
+
+             for (std::list<Term*>::const_iterator i=rightSide.begin(); 
+                  i != rightSide.end(); ++i) {
+                 str += (*i)->prettyPrintString(aTupleDecl, absValue);
+             }
+             if( rightSide.empty() && !haveConstT ) str += string("0");
+
+             if( e->isEquality() && haveConstT && constT > 0 ){
+                 sprintf(buffer, "%d", constT); 
+                 if( leftSide.empty() ) str += string(buffer);
+                 else str += string(" + ") + string(buffer);
+             } else if( e->isInequality() && haveConstT && 
+                        constT > 0 && !(leftSide.empty()) ){
+                 tempT = constT;
+                 sprintf(buffer, "%d", tempT);
+                 if( rightSide.empty() ) str += string(buffer);
+                 else str += string(" + ") + string(buffer);
+             }
+         }
+         //! 
+         void preVisitConjunction(iegenlib::Conjunction * c){
+             aTupleDecl = c->getTupleDecl();
+
+             // If this is not the first conjunction print &&
+             if(firstConj) firstConj = false;
+             else          str += string(" union ");
+
+             // Start the conjunction's string with tuple
+             str += string("{ ") + 
+                    aTupleDecl.toString(true,aritySplit) + string(" : ");
+
+             firstExp = true;
+         }
+         //! 
+         void postVisitConjunction(iegenlib::Conjunction * c){
+             str += string(" }");
+         }
+
+         //! Indicate, we are traversing a Set
+         void preVisitSet(iegenlib::Set * s){
+             aritySplit = 0;
+
+             // If there are no conjunctions then indicate we have an empty set
+             // by printing out generic arity tuple declarations and FALSE as 
+             // a constraint.
+             if (s->getNumConjuncts()==0) {
+                 str = string("{ ") + 
+                       TupleDecl::sDefaultTupleDecl(s->arity()).toString(true) +
+                       string(" : FALSE }");
+             }
+         }
+         //! Indicate, we are traversing a Relation
+         void preVisitRelation(iegenlib::Relation * r){
+             aritySplit = r->inArity();
+
+             // If there are no conjunctions then indicate we have an empty relation
+             // by printing out generic arity tuple declarations and FALSE as 
+             // a constraint.
+             if (r->getNumConjuncts()==0) {
+                 str = string("{ ") + 
+                       TupleDecl::sDefaultTupleDecl(r->arity()).toString(true,aritySplit) +
+                       string(" : FALSE }");
+             }
+         }
+
+         string getString(){ return str; }
+};
+
+/*! 
+**  This function generates a string representation of the Set.
+**  There are two differences between this function and other string
+**  genrators, like toString, and prettyPrintSring:
+**  (1) it uses visitor patter
+**  (2) The generated string is better formatted, for instance while other functions 
+        generate something like following for some relation: 
+           {[i,j] : i - j = 0 && i - 6 >= 0 && -j + 2 >= 0}
+        This function genrates bellow for the same relation: 
+           {[i,j] : i = j && 0 <= i && j <= 2}
+    For more examples see the getString test case in set_relation_test.cc
+*/
+string Set::getString()
+{
+    string result;
+
+    VisitorGetString* v = new VisitorGetString();
+    this->acceptVisitor( v );
+    
+    result = v->getString();
+
+    return result;
+}
+
+//! Same as Set
+string Relation::getString()
+{
+    string result;
+
+    VisitorGetString* v = new VisitorGetString();
+    this->acceptVisitor( v );
+    
+    result = v->getString();
+
+    return result;
+}
+
 
 
 }//end namespace iegenlib

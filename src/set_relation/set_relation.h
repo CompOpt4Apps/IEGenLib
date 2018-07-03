@@ -11,7 +11,7 @@
  *
  * \date Started: 3/28/12
  *
- * \authors Michelle Strout
+ * \authors Michelle Strout, and Mahdi Soltan Mohammadi 
  *
  * Copyright (c) 2012, Colorado State University <br>
  * Copyright (c) 2015, University of Arizona <br>
@@ -415,7 +415,22 @@ public:
     }
 
     //! Return the number of conjunction
-    int noConjuncts(){ return mConjunctions.size(); } 
+    int getNumConjuncts(){ return mConjunctions.size(); } 
+
+    /**! This function calculates the algorithmic complexity of a Set/Relation
+    **   that is representing a data dependence. Also, it takes into
+    **   account the fact that the set is meant for dependency analysis
+    **   for partial parallelism. Basically, it calculates the complexity of
+    **   efficient inspector that we need to generate for the dependence.  
+    **   Therefore, it considers two things: 
+    **   1) It ignores any tuple variable that we can project out, other 
+    **   than those that we want to parallelize.
+    **   2) It takes into account the useful equalities (e.g i = col(jp), 
+    **   where we can get values of i from col(jp)). Nonetheless, note that 
+    **   it does not consider any sort of approximations that 
+    **   we might be able to do to further optimize the inspector.
+    **/ 
+    std::string complexityForPartialParallel(std::set<int> parallelTvs);
 
 
 // FIXME: what methods should we have to iterate over conjunctions so
@@ -578,6 +593,10 @@ public:
 
     int getArity(){ return mArity;}
 
+    Set* detectUnsatOrFindEqualities(bool *useRule=NULL);
+    
+    string getString();
+
 private:
     int mArity;
 };
@@ -732,7 +751,7 @@ public:
     **  The function does not own the ufcmap.
     */
     Relation* superAffineRelation(UFCallMap* ufcmap, bool boundUFCs = true);
-
+    Relation* superAffineRelation();
     /*! Creates a sub non-affine set from an affine Relation.
     **  By replacing symbolic constants that are representative of UFCalls
     **  with their respective UFCalls.
@@ -765,6 +784,10 @@ public:
         }
     }
 
+    Relation* detectUnsatOrFindEqualities(bool *useRule=NULL);
+    
+    string getString();
+
 private:
     int mInArity;
     int mOutArity;
@@ -777,7 +800,12 @@ string passRelationStrThruISL(string rstr);
 string passUnionRelationStrThruISL(string rstr);
 Set* passSetThruISL(Set* s);
 Relation* passRelationThruISL(Relation* r);
-
+std::pair <std::string,std::string> instantiate(
+          UniQuantRule* uqRule, Exp x1, Exp x2, 
+          UFCallMap *ufcmap, TupleDecl origTupleDecl);
+std::set<std::pair <std::string,std::string>> ruleInstantiation
+                          (std::set<Exp> instExps, bool *useRule, 
+                           TupleDecl origTupleDecl, UFCallMap *ufcmap);
 }//end namespace iegenlib
 
 #endif /* SET_RELATION_H_ */

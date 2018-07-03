@@ -48,6 +48,12 @@ list(REMOVE_ITEM iegenlib_SOURCES
 list(REMOVE_ITEM iegenlib_SOURCES 
 	${IEGENLIB_SOURCE_DIR}/src/drivers/DEPRECATED_simplifyDriver.cc)
 
+list(REMOVE_ITEM iegenlib_SOURCES 
+	${IEGENLIB_SOURCE_DIR}/src/drivers/simplification.cc)
+list(REMOVE_ITEM iegenlib_SOURCES 
+	${IEGENLIB_SOURCE_DIR}/src/drivers/superAffSet.cc)
+
+
 ############################### STEP 2 ########################################
 ######################  Generate the Parser Code ##############################
 if(GEN_PARSER)
@@ -106,6 +112,17 @@ add_executable(iegenlib_calc iegenlib_calc.cc)
 target_link_libraries(iegenlib_calc iegenlib isl gmp ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(iegenlib_calc isl gmp)
 
+cmake_policy(SET CMP0037 OLD)
+#Compile and link the simplifyDriver executable
+add_executable(../bin/simplifyDriver drivers/simplification.cc)
+target_link_libraries(../bin/simplifyDriver iegenlib isl gmp)
+
+cmake_policy(SET CMP0037 OLD)
+#Compile and link the superAffSet executable
+add_executable(../bin/superAffSet drivers/superAffSet.cc)
+target_link_libraries(../bin/superAffSet iegenlib isl gmp)
+
+
 ### this executable hold our unit tests
 add_executable(iegenlib_t ${iegenlib_SOURCES} ${iegenlib_t_SOURCES})
 #Tell included gtest headers to NOT use tuple support.
@@ -134,6 +151,12 @@ install(TARGETS iegenlib_t
 install(DIRECTORY ./ 
 	DESTINATION include/iegenlib
 	FILES_MATCHING PATTERN "*.h"
+	PATTERN ".svn" EXCLUDE)
+
+#Install jsoncon specific header files
+install(DIRECTORY ./parser/jsoncons/
+	DESTINATION include/iegenlib/parser/jsoncons/
+	FILES_MATCHING PATTERN "*.hpp"
 	PATTERN ".svn" EXCLUDE)
 
 #Install the oracle files for testing dot output
