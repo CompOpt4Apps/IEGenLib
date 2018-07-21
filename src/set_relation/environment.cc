@@ -216,7 +216,7 @@ MonotonicType queryMonoTypeEnv(const std::string funcName) {
 
 
 
-//! search this environment for a function range arity
+//! search this environment for a function's range arity
 unsigned int queryRangeArityCurrEnv(const std::string funcName) {
     Set* range = queryRangeCurrEnv(funcName);
     unsigned int retval = range->arity();
@@ -224,6 +224,13 @@ unsigned int queryRangeArityCurrEnv(const std::string funcName) {
     return retval;
 }
 
+//! search this environment for a function's range arity
+unsigned int queryDomainArityCurrEnv(const std::string funcName) {
+    Set* domain = queryDomainCurrEnv(funcName);
+    unsigned int retval = domain->arity();
+    delete domain;
+    return retval;
+}
 
 //! add an universially quantified Rule to environment
 void addUniQuantRule(UniQuantRule *uqRule){

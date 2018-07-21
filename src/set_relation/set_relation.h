@@ -432,7 +432,10 @@ public:
     **/ 
     std::string complexityForPartialParallel(std::set<int> parallelTvs);
 
-
+    /**! This function 
+    **/
+    std::vector<std::string> getZ3form();
+    
 // FIXME: what methods should we have to iterate over conjunctions so
 // this can go back to protected?
 // protected:

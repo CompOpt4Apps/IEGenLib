@@ -3945,4 +3945,153 @@ string Relation::getString()
 
 
 
+
+
+/*****************************************************************************/
+#pragma mark -
+/*************** VisitorGetZ3form *****************************/
+/*! Vistor Class used in getZ3form()
+*/
+string int2str(int i){
+  char buf[50];
+  sprintf (buf, "%d",i);
+  return string(buf);
+}
+class VisitorGetZ3form : public Visitor {
+  private:
+         TupleDecl tupleDecl;
+
+         std::set<std::string> tvTs;
+         std::set<std::string> vtTs;
+         std::set<std::string> ufsTs;
+         
+
+         std::vector<std::string> expZ3Form;
+         std::vector<std::string> conjZ3Form;
+         std::vector<std::string> z3Form;
+
+         int constT;
+         std::string leftSide;
+         std::string rightSide;
+
+  public:
+         VisitorGetZ3form(){}
+         // 
+         void preVisitTerm(Term * t) {
+             constT = t->coefficient();
+         }
+         /*! 
+         */
+         void preVisitUFCallTerm(UFCallTerm * t){
+             ufsTs.insert( t->name() );             
+         }
+         /*! 
+         */
+         void postVisitUFCallTerm(UFCallTerm * t){        
+         }
+         void preVisitTupleVarTerm(TupleVarTerm * t){
+             std::string str = t->prettyPrintString(tupleDecl,true);
+             tvTs.insert( str );
+             if( t->coefficient() < 0 ) leftSide = str;
+             else                       rightSide = str; 
+         }
+         void preVisitVarTerm(VarTerm * t){
+             std::string str = t->prettyPrintString(tupleDecl,true);
+             vtTs.insert( str );
+             if( t->coefficient() < 0 ) leftSide = str;
+             else                       rightSide = str; 
+         }
+         /*! 
+         */
+         void preVisitExp(iegenlib::Exp * e){
+             if( !(e->isExpression()) ){ 
+               leftSide = "";
+               rightSide = "";
+               constT = 0;
+             }
+         }
+         /*! 
+         */ 
+         void postVisitExp(iegenlib::Exp * e){
+             string z3Str = "";
+             string comp = "";
+             if( !(e->isExpression()) ) {
+               if(e->isEquality()) comp = "=";
+               else if(constT == 0) comp = "<=";
+               else {
+                 comp = "<";
+                 constT++;
+               }
+               if(leftSide == "") leftSide = "0";
+               if(rightSide == "") rightSide = "0";
+
+               if( constT == 0 ){
+                 z3Str = "(" + comp + " " + leftSide + " " + rightSide + ")";
+               } else if ( constT < 0 ){
+                 z3Str = "(" + comp + " (+ " + leftSide + " " + int2str((constT*-1)) + ") " + rightSide + ")";
+               } else if ( constT > 0 ){
+                 z3Str = "(" + comp + " " + leftSide + " (+ " + rightSide + " " + int2str(constT) + ") )";
+               }
+
+               expZ3Form.push_back(z3Str);
+             }
+         }
+         //! 
+         void preVisitConjunction(iegenlib::Conjunction * c){
+             tupleDecl = c->getTupleDecl();
+             expZ3Form.clear();
+         }
+         //! 
+         void postVisitConjunction(iegenlib::Conjunction * c){
+           if(expZ3Form.size()>0){
+             string z3Str = "(and";
+             for(int i=0; i<expZ3Form.size(); i++){
+               z3Str += " " + expZ3Form[i]; 
+             }
+             z3Str += " )";
+             conjZ3Form.push_back(z3Str);
+           }
+         }
+         //! 
+         void preVisitSparseConstraints(iegenlib::SparseConstraints *sc){
+           conjZ3Form.clear();
+         }
+         //! 
+         void postVisitSparseConstraints(iegenlib::SparseConstraints *sc){
+           // Adding tuple variables, symbolic constants, and UFSs definition.
+           for (std::set<std::string>::iterator it=tvTs.begin(); it!=tvTs.end(); it++)
+             z3Form.push_back("(declare-const "+ *it + " Int)");
+           for (std::set<std::string>::iterator it=vtTs.begin(); it!=vtTs.end(); it++)
+             z3Form.push_back("(declare-const "+ *it + " Int)");
+           
+//(declare-fun Li (Int) Int) 
+
+           if( sc->getNumConjuncts() == 1){
+             z3Form.push_back("(assert " + conjZ3Form[0] + " )");
+           }
+
+         }
+
+         std::vector<std::string> getZ3Form(){ return z3Form; }
+};
+
+
+
+std::vector<std::string> SparseConstraints::getZ3form(){
+    std::vector<std::string> result;
+//std::cout<<"\nHi from SparseConstraints::getZ3form(): s = "<<this->prettyPrintString()<<"\n";
+    VisitorGetZ3form *v = new VisitorGetZ3form();
+//std::cout<<"\nHi2 from SparseConstraints::getZ3form()!!\n";
+    this->acceptVisitor( v );
+    
+    result = v->getZ3Form();
+
+    return result;
+}
+
+
+
+
+
+
 }//end namespace iegenlib

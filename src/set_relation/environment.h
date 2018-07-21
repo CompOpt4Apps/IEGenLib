@@ -73,8 +73,11 @@ Set* queryRangeCurrEnv(const std::string funcName);
 //! Returns the monotonicity type of the given function.
 MonotonicType queryMonoTypeEnv(const std::string funcName);
 
-//! search this environment for a function range arity
+//! search this environment for a function's domain arity
 unsigned int queryRangeArityCurrEnv(const std::string funcName);
+
+//! search this environment for a function's range arity
+unsigned int queryDomainArityCurrEnv(const std::string funcName);
 
 //! add an universially quantified Rule to environment
 //! The environment is going to own uqRule object (user should not delete it)
