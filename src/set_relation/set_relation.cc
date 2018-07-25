@@ -3952,6 +3952,18 @@ string Relation::getString()
 /*************** VisitorGetZ3form *****************************/
 /*! Vistor Class used in getZ3form()
 */
+class VisitorGetVarTerms : public Visitor {
+  private:
+         std::set<std::string> vtTs;
+  public:
+         void preVisitVarTerm(VarTerm * t){
+           std::string str = t->toString(true);
+           vtTs.insert( str );
+         }
+         std::set<std::string> getVarTerms(){ return vtTs; }
+};
+
+
 string int2str(int i){
   char buf[50];
   sprintf (buf, "%d",i);
@@ -3959,13 +3971,17 @@ string int2str(int i){
 }
 class VisitorGetZ3form : public Visitor {
   private:
-         TupleDecl tupleDecl;
-
+         // When we are using this class for generating domain/Range assertion 
+         // we just need the constraints, and we should not generate 
+         // the UF symbols definitions to avoid recursive calls.
+         bool termDef;
+         TupleDecl tupleDecl; // Need this for tuple variable name
+         int cc;
+         // Keep a list of different vars to define them.
          std::set<std::string> tvTs;
          std::set<std::string> vtTs;
          std::set<std::string> ufsTs;
          
-
          std::vector<std::string> expZ3Form;
          std::vector<std::string> conjZ3Form;
          std::vector<std::string> z3Form;
@@ -3973,68 +3989,115 @@ class VisitorGetZ3form : public Visitor {
          int constT;
          std::string leftSide;
          std::string rightSide;
+         // Need to consider nested UF Calls, e.g row(col(i)+1)  
+         int UFnestLevel;
+         std::string UFparamT;
+         std::string UFparamExp;
 
   public:
-         VisitorGetZ3form(){}
-         // 
+         VisitorGetZ3form(std::set<std::string> inUfsTs, 
+                          std::set<std::string> inVtTs, bool inTermDef){
+           cc = 1;
+           termDef = inTermDef;
+           ufsTs = inUfsTs;
+           vtTs = inVtTs;
+         }
+         //! Keeping track of const term in the expression
          void preVisitTerm(Term * t) {
-             constT = t->coefficient();
+           if(UFnestLevel > 0) return;
+           constT = t->coefficient();
          }
-         /*! 
-         */
+         //! 
          void preVisitUFCallTerm(UFCallTerm * t){
-             ufsTs.insert( t->name() );             
+           ufsTs.insert( t->name() );
+           if(UFnestLevel == 0){
+             UFparamT = "";
+             UFparamExp = "";
+           }
+           UFnestLevel++;
          }
-         /*! 
-         */
-         void postVisitUFCallTerm(UFCallTerm * t){        
+         //! 
+         void postVisitUFCallTerm(UFCallTerm * t){
+           UFnestLevel--;
+           std::string str = "("+ t->name() + " " + UFparamExp + ")";
+           if(UFnestLevel == 0){
+             if( t->coefficient() < 0 ) leftSide = str;
+             else                       rightSide = str;
+           } else {
+             UFparamExp = str;
+           }
          }
          void preVisitTupleVarTerm(TupleVarTerm * t){
-             std::string str = t->prettyPrintString(tupleDecl,true);
-             tvTs.insert( str );
+           std::string str = t->prettyPrintString(tupleDecl,true);
+           tvTs.insert( str );
+
+           if(UFnestLevel == 0){
              if( t->coefficient() < 0 ) leftSide = str;
-             else                       rightSide = str; 
+             else                       rightSide = str;
+           } else {
+             // Mahdi: FIXME: for simplicity for now assuming all the parameters to UFCs have positive sign
+             UFparamT = str;
+           }
          }
          void preVisitVarTerm(VarTerm * t){
-             std::string str = t->prettyPrintString(tupleDecl,true);
-             vtTs.insert( str );
+           std::string str = t->toString(true);
+           vtTs.insert( str );
+
+           if(UFnestLevel == 0){
              if( t->coefficient() < 0 ) leftSide = str;
-             else                       rightSide = str; 
+             else                       rightSide = str;
+           } else {
+             // Mahdi: FIXME: for simplicity for now assuming all the parameters to UFCs have positive sign
+             UFparamT = str;
+           }
          }
-         /*! 
-         */
+         //!
          void preVisitExp(iegenlib::Exp * e){
-             if( !(e->isExpression()) ){ 
-               leftSide = "";
-               rightSide = "";
-               constT = 0;
-             }
+           if( !(e->isExpression()) ){ 
+             leftSide = "";
+             rightSide = "";
+             constT = 0;
+             UFnestLevel = 0;
+           }
          }
          /*! 
          */ 
          void postVisitExp(iegenlib::Exp * e){
+           if( !(e->isExpression()) ) {
              string z3Str = "";
              string comp = "";
-             if( !(e->isExpression()) ) {
-               if(e->isEquality()) comp = "=";
-               else if(constT == 0) comp = "<=";
-               else {
-                 comp = "<";
-                 constT++;
-               }
-               if(leftSide == "") leftSide = "0";
-               if(rightSide == "") rightSide = "0";
-
-               if( constT == 0 ){
-                 z3Str = "(" + comp + " " + leftSide + " " + rightSide + ")";
-               } else if ( constT < 0 ){
-                 z3Str = "(" + comp + " (+ " + leftSide + " " + int2str((constT*-1)) + ") " + rightSide + ")";
-               } else if ( constT > 0 ){
-                 z3Str = "(" + comp + " " + leftSide + " (+ " + rightSide + " " + int2str(constT) + ") )";
-               }
-
-               expZ3Form.push_back(z3Str);
+             if(e->isEquality()) comp = "=";
+             else if(constT == 0) comp = "<=";
+             else {
+               comp = "<";
+               constT++;
              }
+             if(leftSide == "") leftSide = "0";
+             if(rightSide == "") rightSide = "0";
+
+             if( constT == 0 ){
+               z3Str = "(" + comp + " " + leftSide + " " + rightSide + ")";
+             } else if ( constT < 0 ){
+               z3Str = "(" + comp + " (+ " + leftSide + " " + 
+                       int2str((constT*-1)) + ") " + rightSide + ")";
+             } else if ( constT > 0 ){
+               z3Str = "(" + comp + " " + leftSide + " (+ " + 
+                       rightSide + " " + int2str(constT) + ") )";
+             }
+
+             expZ3Form.push_back(z3Str);
+           } else {
+             Term* cons = e->getConstTerm();
+             if(UFparamExp == "" && cons == NULL){
+               UFparamExp = UFparamT;
+             } else if(UFparamExp == ""){
+               UFparamExp = "(+ " + UFparamT + " " + int2str(cons->coefficient()) + ")";
+             } else if(cons == NULL){
+               UFparamExp = UFparamExp;
+             } else {
+               UFparamExp = "(+ " + UFparamExp + " " + int2str(cons->coefficient()) + ")";
+             } 
+           }
          }
          //! 
          void preVisitConjunction(iegenlib::Conjunction * c){
@@ -4044,12 +4107,18 @@ class VisitorGetZ3form : public Visitor {
          //! 
          void postVisitConjunction(iegenlib::Conjunction * c){
            if(expZ3Form.size()>0){
-             string z3Str = "(and";
-             for(int i=0; i<expZ3Form.size(); i++){
-               z3Str += " " + expZ3Form[i]; 
+             if(termDef){
+               for(int i=0; i<expZ3Form.size(); i++){
+                 conjZ3Form.push_back(expZ3Form[i]);
+               }
+             } else {
+               string z3Str = "(and";
+               for(int i=0; i<expZ3Form.size(); i++){
+                 z3Str += " " + expZ3Form[i];
+               }
+               z3Str += " )";
+               conjZ3Form.push_back(z3Str);
              }
-             z3Str += " )";
-             conjZ3Form.push_back(z3Str);
            }
          }
          //! 
@@ -4058,34 +4127,38 @@ class VisitorGetZ3form : public Visitor {
          }
          //! 
          void postVisitSparseConstraints(iegenlib::SparseConstraints *sc){
-           // Adding tuple variables, symbolic constants, and UFSs definition.
-           for (std::set<std::string>::iterator it=tvTs.begin(); it!=tvTs.end(); it++)
-             z3Form.push_back("(declare-const "+ *it + " Int)");
-           for (std::set<std::string>::iterator it=vtTs.begin(); it!=vtTs.end(); it++)
-             z3Form.push_back("(declare-const "+ *it + " Int)");
-           
-//(declare-fun Li (Int) Int) 
 
-           if( sc->getNumConjuncts() == 1){
+           if(termDef){
+             // Adding tuple variables definitions.
+             for (std::set<std::string>::iterator it=tvTs.begin(); it!=tvTs.end(); it++)
+               z3Form.push_back("(declare-const "+ *it + " Int)");
+             //
+             string z3Str = "";
+              for(int i=0; i<conjZ3Form.size(); i++){
+                z3Str = "(assert (! " + conjZ3Form[i] + " :named c1"+int2str(cc++)+") )";
+                z3Form.push_back(z3Str);
+              }
+           } else {
              z3Form.push_back("(assert " + conjZ3Form[0] + " )");
            }
-
          }
 
          std::vector<std::string> getZ3Form(){ return z3Form; }
+         std::set<std::string> getUFSs(){ return ufsTs; }
+         std::set<std::string> getVars(){ return vtTs; }
 };
 
-
-
-std::vector<std::string> SparseConstraints::getZ3form(){
+//
+std::vector<std::string> SparseConstraints::getZ3form
+(std::set<std::string> &UFSyms, std::set<std::string> &VarSyms, bool termDef){
     std::vector<std::string> result;
-//std::cout<<"\nHi from SparseConstraints::getZ3form(): s = "<<this->prettyPrintString()<<"\n";
-    VisitorGetZ3form *v = new VisitorGetZ3form();
-//std::cout<<"\nHi2 from SparseConstraints::getZ3form()!!\n";
+    VisitorGetZ3form *v = new VisitorGetZ3form(UFSyms, VarSyms, termDef);
     this->acceptVisitor( v );
-    
-    result = v->getZ3Form();
+    UFSyms = v->getUFSs();
+    VarSyms = v->getVars();
 
+    result = v->getZ3Form();
+    
     return result;
 }
 

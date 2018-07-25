@@ -434,7 +434,8 @@ public:
 
     /**! This function 
     **/
-    std::vector<std::string> getZ3form();
+    std::vector<std::string> getZ3form(std::set<std::string> &UFSyms, 
+                  std::set<std::string> &VarSyms, bool termDef = true);
     
 // FIXME: what methods should we have to iterate over conjunctions so
 // this can go back to protected?
