@@ -3595,6 +3595,55 @@ isl_set* instantiationSet( srParts supSetParts,
   return set;
 }
 
+
+/*! Vistor Class for finding only potential useful equalities from set of equalities
+*/
+class VisitorGetUsefulEqs : public Visitor {
+  private:
+         int UFnestLevel;
+         Conjunction* uEqsC;
+         Set* uEqsS;
+  public:
+         //! 
+         void preVisitUFCallTerm(UFCallTerm* t){
+           
+         }
+         //! 
+         void postVisitUFCallTerm(UFCallTerm* t){
+
+         }
+         //!
+         void preVisitTupleVarTerm(TupleVarTerm* t){
+
+         }
+         //!
+         void preVisitExp(iegenlib::Exp* e){
+
+         }
+         //!
+         void postVisitExp(iegenlib::Exp* e){
+
+         }
+         //! 
+         void preVisitConjunction(Conjunction* c){
+           
+         }
+         //! 
+         void postVisitConjunction(Conjunction* c){
+
+         }
+         //! 
+         void preVisitSet(Set* s){
+
+         }
+         //! 
+         void postVisitSet(Set* s){
+
+         }
+         Set* getUsefulEqs(){ return uEqsS; }
+};
+
+
 // Check to see if the isl set is empty (the original Set is UnSat)
 // or, it is not (the original Set is MaySat) in which case extract
 // new equalities and add them to original Set
@@ -3618,6 +3667,14 @@ Set* checkIslSet(isl_set* set, isl_ctx* ctx,
     // Puting the newly found equalities into original constraint set.
     Set* affineEqs = new Set(i_str);
     Set* eQs = affineEqs->reverseAffineSubstitution(ufcmap);
+
+    // Only keeping equalities that can potentially be useful. Potential useful 
+    // equalities must directly define at least one tuple variable in terms of 
+    // other terms, i.e. tv_i = ...; something like following is not a potential 
+    // useful equality: f(tv_i) = g(tv_j), because both tv_i and tv_j are 
+    // parameters to uninterpreted function calls. 
+
+
     result = origSet->Intersect(eQs);
     delete affineEqs;
     delete eQs;
@@ -4166,5 +4223,34 @@ std::vector<std::string> SparseConstraints::getZ3form
 
 
 
+/*****************************************************************************/
+#pragma mark -
+
+// 
+SetRelationshipType Conjunction::setRelationship(Conjunction* rightSide){
+
+//  other.mEqualities.size()
+//  other.mInequalities.size()
+
+  return UnKnown;
+}
+
+// 
+SetRelationshipType Set::setRelationship(Set* rightSide){
+  
+  Conjunction *lside = *(this->mConjunctions.begin());
+  Conjunction *rside = *(rightSide->mConjunctions.begin());
+
+  return lside->setRelationship(rside);
+}
+
+// 
+SetRelationshipType Relation::setRelationship(Relation* rightSide){
+
+  Conjunction *lside = *(this->mConjunctions.begin());
+  Conjunction *rside = *(rightSide->mConjunctions.begin());
+
+  return lside->setRelationship(rside);
+}
 
 }//end namespace iegenlib

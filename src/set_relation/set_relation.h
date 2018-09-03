@@ -51,6 +51,11 @@ extern Set* parse_set(std::string set_string);
 extern Relation* parse_relation(std::string relation_string);
 }
 
+
+//
+typedef enum {Equal, SubSetEqual, SubSet, SuperSet, SuperSetEqual, UnKnown} SetRelationshipType;
+
+
 /*!
  * \class Conjunction
  * \brief Class containing sets of all the equalities and inequalities
@@ -255,6 +260,9 @@ public:
     void setUnsat(){ unsat = true;}
     bool isUnsat(){return unsat;}
 
+    // 
+    SetRelationshipType setRelationship(Conjunction* rightSide);
+
 private:
 
     /// Set of equality constraints.
@@ -437,6 +445,11 @@ public:
     std::vector<std::string> getZ3form(std::set<std::string> &UFSyms, 
                   std::set<std::string> &VarSyms, bool termDef = true);
     
+
+    // 
+    SetRelationshipType setRelationship(Set* rightSet);
+
+
 // FIXME: what methods should we have to iterate over conjunctions so
 // this can go back to protected?
 // protected:
@@ -600,6 +613,9 @@ public:
     Set* detectUnsatOrFindEqualities(bool *useRule=NULL);
     
     string getString();
+
+    // 
+    SetRelationshipType setRelationship(Set* rightSide);
 
 private:
     int mArity;
@@ -791,6 +807,9 @@ public:
     Relation* detectUnsatOrFindEqualities(bool *useRule=NULL);
     
     string getString();
+
+    // 
+    SetRelationshipType setRelationship(Relation* rightSide);
 
 private:
     int mInArity;
