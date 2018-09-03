@@ -3597,42 +3597,54 @@ isl_set* instantiationSet( srParts supSetParts,
 
 
 /*! Vistor Class for finding only potential useful equalities from set of equalities
+  Potential useful  equalities must directly define at least one tuple variable 
+  in terms of other terms, i.e. tv_i = ...; something like following is not 
+  a potential   useful equality: f(tv_i) = g(tv_j), because both tv_i and tv_j are 
+  parameters to uninterpreted function calls. 
 */
 class VisitorGetUsefulEqs : public Visitor {
   private:
+         bool foundTvVar;
          int UFnestLevel;
          Conjunction* uEqsC;
          Set* uEqsS;
   public:
+         VisitorGetUsefulEqs(){UFnestLevel=0;foundTvVar=false;}
          //! 
          void preVisitUFCallTerm(UFCallTerm* t){
-           
+           UFnestLevel++;
          }
          //! 
          void postVisitUFCallTerm(UFCallTerm* t){
-
+           UFnestLevel--;
          }
          //!
          void preVisitTupleVarTerm(TupleVarTerm* t){
-
+           if( UFnestLevel == 0) foundTvVar=true;
          }
          //!
          void preVisitExp(iegenlib::Exp* e){
-
+           if( UFnestLevel == 0) foundTvVar=false;
          }
          //!
          void postVisitExp(iegenlib::Exp* e){
-
+           if( UFnestLevel == 0 && foundTvVar ){
+             uEqsC->addEquality(e->clone());
+           }
          }
          //! 
          void preVisitConjunction(Conjunction* c){
-           
+           UFnestLevel=0;
+           TupleDecl td = c->getTupleDecl();
+           uEqsC = new Conjunction(td);
          }
          //! 
          void postVisitConjunction(Conjunction* c){
-
+           TupleDecl td = c->getTupleDecl();
+           uEqsS = new Set(td);
+           uEqsS->addConjunction(uEqsC);
          }
-         //! 
+/*         //! 
          void preVisitSet(Set* s){
 
          }
@@ -3640,6 +3652,7 @@ class VisitorGetUsefulEqs : public Visitor {
          void postVisitSet(Set* s){
 
          }
+*/
          Set* getUsefulEqs(){ return uEqsS; }
 };
 
@@ -3668,16 +3681,19 @@ Set* checkIslSet(isl_set* set, isl_ctx* ctx,
     Set* affineEqs = new Set(i_str);
     Set* eQs = affineEqs->reverseAffineSubstitution(ufcmap);
 
-    // Only keeping equalities that can potentially be useful. Potential useful 
-    // equalities must directly define at least one tuple variable in terms of 
-    // other terms, i.e. tv_i = ...; something like following is not a potential 
-    // useful equality: f(tv_i) = g(tv_j), because both tv_i and tv_j are 
-    // parameters to uninterpreted function calls. 
+std::cout<<"\n\nOrig extacted Eqs = "<<eQs->getString()<<"\n\n";
 
+    // Only keeping equalities that can potentially be useful. 
+    VisitorGetUsefulEqs *v = new VisitorGetUsefulEqs();
+    eQs->acceptVisitor( v );
+    Set * uEqs = v->getUsefulEqs();
 
-    result = origSet->Intersect(eQs);
+std::cout<<"\n\pUEqs found = "<<uEqs->getString()<<"\n\n";
+
+    result = origSet->Intersect(uEqs);
     delete affineEqs;
     delete eQs;
+    delete uEqs;
     //free(i_str);
   }
   return result;
