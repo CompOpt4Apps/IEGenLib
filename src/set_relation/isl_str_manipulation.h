@@ -154,5 +154,15 @@ std::string setStr2RelationStr(std::string set, int inArity, int outArity);
 */
 std::string relationStr2SetStr(std::string relation, int inArity, int outArity);
 
+
+/*! This function adds constraints from a Set/Relation string to another one
+**  without checking whether their tuple declaration match or not. 
+**  Note that Intersect functionality of IEGenLib that can be used for similar 
+**  purposes checks for matching tuple declaration.
+*/
+std::string strAddConstraints(std::string dest, std::string src);
+
+
+
 }// iegenlib namespace
 #endif

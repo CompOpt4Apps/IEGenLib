@@ -3644,15 +3644,6 @@ class VisitorGetUsefulEqs : public Visitor {
            uEqsS = new Set(td);
            uEqsS->addConjunction(uEqsC);
          }
-/*         //! 
-         void preVisitSet(Set* s){
-
-         }
-         //! 
-         void postVisitSet(Set* s){
-
-         }
-*/
          Set* getUsefulEqs(){ return uEqsS; }
 };
 
@@ -3681,19 +3672,18 @@ Set* checkIslSet(isl_set* set, isl_ctx* ctx,
     Set* affineEqs = new Set(i_str);
     Set* eQs = affineEqs->reverseAffineSubstitution(ufcmap);
 
-std::cout<<"\n\nOrig extacted Eqs = "<<eQs->getString()<<"\n\n";
-
     // Only keeping equalities that can potentially be useful. 
     VisitorGetUsefulEqs *v = new VisitorGetUsefulEqs();
     eQs->acceptVisitor( v );
-    Set * uEqs = v->getUsefulEqs();
+//    Set * uEqs = v->getUsefulEqs();
 
-std::cout<<"\n\pUEqs found = "<<uEqs->getString()<<"\n\n";
+//    result = origSet->Intersect(uEqs);
 
-    result = origSet->Intersect(uEqs);
+    result = v->getUsefulEqs();
+
     delete affineEqs;
     delete eQs;
-    delete uEqs;
+//    delete uEqs;
     //free(i_str);
   }
   return result;

@@ -436,4 +436,17 @@ std::string relationStr2SetStr(std::string relation, int inArity, int outArity){
   return getFullStrFromParts(relationParts);
 }
 
+
+/*! This function adds constraints from a Set/Relation string to another one
+**  without checking whether their tuple declaration match or not. 
+**  Note that Intersect functionality of IEGenLib that can be used for similar 
+**  purposes checks for matching tuple declaration.
+*/
+std::string strAddConstraints(std::string dest, std::string src){
+  srParts destParts = getPartsFromStr(dest);
+  srParts srcParts = getPartsFromStr(src);
+  destParts.constraints = srcParts.constraints + " && " + destParts.constraints;
+  return getFullStrFromParts(destParts);
+}
+
 }// iegenlib namespace
