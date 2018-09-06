@@ -4338,3 +4338,67 @@ TEST_F(SetRelationTest, getString){
    delete s1_ex;
    delete rel1_ex;
 }
+
+
+#pragma mark getZ3form
+TEST_F(SetRelationTest, getZ3form){
+
+    iegenlib::setCurrEnv();
+    iegenlib::appendCurrEnv("colidx",
+            new Set("{[i]:0<=i &&i<nnz}"),         // Domain 
+            new Set("{[j]:0<=j &&j<m}"),           // Range
+            false,                                 // Not bijective.
+            iegenlib::Monotonic_NONE               // no monotonicity
+            );
+    iegenlib::appendCurrEnv("rowptr",
+        new Set("{[i]:0<=i &&i<m}"), 
+        new Set("{[j]:0<=j &&j<nnz}"), false, iegenlib::Monotonic_Increasing);
+    iegenlib::appendCurrEnv("diagptr",
+        new Set("{[i]:0<=i &&i<m}"), 
+        new Set("{[j]:0<=j &&j<nnz}"), false, iegenlib::Monotonic_Increasing);
+
+    Set *s1 = new Set("[m] -> {[i,ip,k,kp]: i < ip"
+                                  " && 0 <= ip <= m"
+                           " && k+10 < diagptr(i)"
+                       " && diagptr(colidx(k)) = rowptr(1+colidx(k))"
+                                     " && k-3 = kp}");
+
+    // UFSyms and VarSyms get populated with uninterpreted function symbols (UFSymbols),  
+    // and symbolic constants found in the set. Then later when a driver actually  
+    // generating a z3 file it can use them to define global variables and UFSymbols.
+
+    std::set<std::string> UFSyms;
+    std::set<std::string> VarSyms;
+    std::vector<std::string> constrants = s1->getZ3form(UFSyms, VarSyms);
+//    std::cout<<"\n>>> z3 Form:";
+//    for(int i = 0 ; i < constrants.size(); i++)
+//      std::cout<<"\n"<<constrants[i]<<"\n";
+
+    // !! SparseConstraints::getZ3form returns a vector of strings that include 
+    //    constraints represented in SMT-LIB format that SMT solvers like z3 
+    //    gets as input. This can be used to check the satisfiability of 
+    //    an IEGenLib Set/Relation with a SMT solver. The returned list
+    //    also includes tuple variable declarations, however they do not include UFSymbol
+    //    and global variable declarations. This is because, when checking satisfiability of
+    //    a set, we usually also want to define some user defined assertions along side original
+    //    constraints. The assertions might have UFSymbols and global variables of their
+    //    own that original constraints do not. We can put their UFSymbols and globals into 
+    //    UFSyms, and VarSyms std::set that SparseConstraints::getZ3form returns by reference,
+    //    and then a driver function can declare all the UFSymbols and globals at the beginning of 
+    //    the input file that it is going to generate and pass to a SMT solver.
+
+    EXPECT_EQ( string("(declare-const i Int)") , constrants[0] ); // Just defining i variable
+    EXPECT_EQ( string("(declare-const ip Int)") , constrants[1] ); // Just defining ip variable
+    EXPECT_EQ( string("(declare-const k Int)") , constrants[2] ); // Just defining k variable
+    EXPECT_EQ( string("(declare-const kp Int)" ) , constrants[3] ); // Just defining i variable
+
+    EXPECT_EQ( string("(assert (! (= (rowptr (+ (colidx k) 1))"
+                      " (diagptr (colidx k))) :named c11) )") , constrants[4] ); // defining diagptr(colidx(k)) = rowptr(1+colidx(k)) 
+    EXPECT_EQ( string("(assert (! (= (+ kp 3) k) :named c12) )") , constrants[5] ); // defining i < ip
+    EXPECT_EQ( string("(assert (! (<= 0 ip) :named c13) )") , constrants[6] ); // defining 0 <= ip
+    EXPECT_EQ( string("(assert (! (<= ip m) :named c14) )") , constrants[7] ); // defining ip <= m
+    EXPECT_EQ( string("(assert (! (< i ip) :named c15) )") , constrants[8] ); // defining i < ip
+    EXPECT_EQ( string("(assert (! (< (+ k 10) (diagptr i)) :named c16) )") , constrants[9] ); // defining k+10 < diagptr(i)
+    
+   delete s1;
+}

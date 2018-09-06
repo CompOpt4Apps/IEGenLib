@@ -440,7 +440,18 @@ public:
     **/ 
     std::string complexityForPartialParallel(std::set<int> parallelTvs);
 
-    /**! This function 
+    /**! SparseConstraints::getZ3form returns a vector of strings that include 
+    //    constraints represented in SMT-LIB format that SMT solvers like z3 
+    //    gets as input. This can be used to check the satisfiability of 
+    //    an IEGenLib Set/Relation with a SMT solver. The returned list
+    //    also includes tuple variable declarations, however they do not include UFSymbol
+    //    and global variable declarations. This is because, when checking satisfiability of
+    //    a set, we usually also want to define some user defined assertions along side original
+    //    constraints. The assertions might have UFSymbols and global variables of their
+    //    own that original constraints do not. We can put their UFSymbols and globals into 
+    //    UFSyms, and VarSyms std::set that SparseConstraints::getZ3form returns by reference,
+    //    and then a driver function can declare all the UFSymbols and globals at the beginning of 
+    //    the input file that it is going to generate and pass to a SMT solver. 
     **/
     std::vector<std::string> getZ3form(std::set<std::string> &UFSyms, 
                   std::set<std::string> &VarSyms, bool termDef = true);

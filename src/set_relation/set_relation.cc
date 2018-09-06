@@ -4211,7 +4211,22 @@ class VisitorGetZ3form : public Visitor {
          std::set<std::string> getVars(){ return vtTs; }
 };
 
-//
+/**! SparseConstraints::getZ3form returns a vector of strings that include 
+//   constraints represented in SMT-LIB format that SMT solvers like z3 
+//   gets as input. This can be used to check the satisfiability of 
+//   an IEGenLib Set/Relation with a SMT solver. The returned list
+//   also includes tuple variable declarations, however they do not include UFSymbol
+//   and global variable declarations. This is because, when checking satisfiability of
+//   a set, we usually also want to define some user defined assertions along side original
+//   constraints. The assertions might have UFSymbols and global variables of their
+//   own that original constraints do not. We can put their UFSymbols and globals into 
+//   UFSyms, and VarSyms std::set that SparseConstraints::getZ3form returns by reference,
+//   and then a driver function can declare all the UFSymbols and globals at the beginning of 
+//   the input file that it is going to generate and pass to a SMT solver. 
+
+     Also note that: UniQuantRule::getZ3form (in environment.h/cc) can be used to get SMT-LIB
+     format of an user defined assertion stored in IEGenLib environment about UFSymbols.
+**/
 std::vector<std::string> SparseConstraints::getZ3form
 (std::set<std::string> &UFSyms, std::set<std::string> &VarSyms, bool termDef){
     std::vector<std::string> result;
