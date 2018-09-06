@@ -1962,7 +1962,7 @@ Set* Set::boundTupleExp(const TupleExpTerm& tuple_exp) const {
 }
 
 // Replace UFs with vars, pass to ISL, and then reverse substitution.
-void Set::normalize() {
+void Set::normalize(bool bdr) {
 
     // Sometimes to provide arguments of an UFC like sigma(a1, a2, ...)
     // we use another UFC that is not indexed like left(f). Here, the
@@ -1975,7 +1975,7 @@ void Set::normalize() {
     UFCallMap* uf_call_map = new UFCallMap();
     
     // Replace uf calls with the variables to create an affine superset.
-    Set* superset_copy = superAffineSet(uf_call_map);
+    Set* superset_copy = superAffineSet(uf_call_map,bdr);
 
     // Send affine super set to ISL and let it normalize it.
     Set* superset_normalized = passSetThruISL(superset_copy);
@@ -2305,7 +2305,7 @@ void Relation::addConjunction(Conjunction *adoptedConjunction) {
 }
 
 // Replace UFs with vars, pass to ISL, and then reverse substitution.
-void Relation::normalize() {
+void Relation::normalize(bool bdr) {
 
     // Sometimes to provide arguments of an UFC like sigma(a1, a2, ...)
     // we use another UFC that is not indexed like left(f). Here, the
@@ -2318,7 +2318,7 @@ void Relation::normalize() {
     UFCallMap* uf_call_map = new UFCallMap();
     
     // Replace uf calls with the variables to create an affine superset.
-    Relation* superset_copy = superAffineRelation(uf_call_map);
+    Relation* superset_copy = superAffineRelation(uf_call_map,bdr);
 
     // Send affine super set to ISL and let it normalize it.
     Relation* superset_normalized = passRelationThruISL(superset_copy);
@@ -4256,20 +4256,43 @@ SetRelationshipType Conjunction::setRelationship(Conjunction* rightSide){
   return UnKnown;
 }
 
+bool islUnSat(std::string str){
+  srParts parts = getPartsFromStr(str);
+  if( trim(parts.constraints) == "FALSE") return true;
+  return false;
+}
 // 
 SetRelationshipType Set::setRelationship(Set* rightSide){
-  
-  Conjunction *lside = *(this->mConjunctions.begin());
-  Conjunction *rside = *(rightSide->mConjunctions.begin());
+  // get clones of the sets
+  Set* ls = new Set(*this);
+  Set* rs = new Set(*rightSide);
+  ls->normalize(false); rs->normalize(false);
+  // See if the inormalization has detected the sets as unsat 
+  // * normalization can detect trivially unsat sets
+  if( islUnSat(ls->getString()) || islUnSat(rs->getString()) ) UnSatSet;
+  // See if the sets are equal * normalization exposes the trivially equal sets
+  if(*ls == *rs) SetEqual;
+
+  Conjunction *lside = *(ls->mConjunctions.begin());
+  Conjunction *rside = *(rs->mConjunctions.begin());
 
   return lside->setRelationship(rside);
 }
 
 // 
 SetRelationshipType Relation::setRelationship(Relation* rightSide){
+  // get clones of the sets
+  Relation* ls = new Relation(*this);
+  Relation* rs = new Relation(*rightSide);
+  ls->normalize(false); rs->normalize(false);
+  // See if the inormalization has detected the sets as unsat 
+  // * normalization can detect trivially unsat sets
+  if( islUnSat(ls->getString()) || islUnSat(rs->getString()) ) UnSatSet;
+  // See if the sets are equal * normalization exposes the trivially equal sets
+  if(*ls == *rs) SetEqual;
 
-  Conjunction *lside = *(this->mConjunctions.begin());
-  Conjunction *rside = *(rightSide->mConjunctions.begin());
+  Conjunction *lside = *(ls->mConjunctions.begin());
+  Conjunction *rside = *(rs->mConjunctions.begin());
 
   return lside->setRelationship(rside);
 }

@@ -53,7 +53,7 @@ extern Relation* parse_relation(std::string relation_string);
 
 
 //
-typedef enum {Equal, SubSetEqual, SubSet, SuperSet, SuperSetEqual, UnKnown} SetRelationshipType;
+typedef enum {SetEqual, SubSetEqual, SubSet, SuperSet, SuperSetEqual, UnKnown, UnSatSet} SetRelationshipType;
 
 
 /*!
@@ -457,9 +457,6 @@ public:
                   std::set<std::string> &VarSyms, bool termDef = true);
     
 
-    // 
-    SetRelationshipType setRelationship(Set* rightSet);
-
 
 // FIXME: what methods should we have to iterate over conjunctions so
 // this can go back to protected?
@@ -569,7 +566,7 @@ public:
     Set* boundDomainRange();
 
     //! Send through ISL to achieve a canonical form.
-    void normalize();
+    void normalize(bool bdr=true);
     
     //! Visitor design pattern, see Visitor.h for usage
     void acceptVisitor(Visitor *v);
@@ -763,7 +760,7 @@ public:
     Relation* addConstraintsDueToMonotonicity() const;    
 
     //! Send through ISL to achieve a canonical form.
-    void normalize();
+    void normalize(bool bdr=true);
 
     //! Visitor design pattern, see Visitor.h for usage
     void acceptVisitor(Visitor *v);
