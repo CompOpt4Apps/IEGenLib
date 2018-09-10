@@ -32,6 +32,42 @@ namespace iegenlib{
 /*****************************************************************************/
 #pragma mark -
 
+/*! Vistor Class to get implicit bounds on a tuple var
+*/
+class VisitorGetTVBounds : public Visitor {
+  private:
+         int UFnestLevel;
+         int loc;
+         std::vector<Exp> bExpS;
+         bool found;
+  public:
+         VisitorGetTVBounds(int mloc){loc = mloc; UFnestLevel=0; found = false;}
+         //! 
+         void preVisitUFCallTerm(UFCallTerm * t){
+           UFnestLevel++;
+         }
+         //! 
+         void postVisitUFCallTerm(UFCallTerm * t){
+           UFnestLevel--;
+         }
+         void preVisitTupleVarTerm(TupleVarTerm * t){
+           if(UFnestLevel == 0 && t->tvloc() == loc) found = true;
+         }
+         //!
+         void preVisitExp(iegenlib::Exp * e){
+           if( UFnestLevel == 0 ) found = false;
+         }
+         //!
+         void postVisitExp(iegenlib::Exp * e){
+           if( UFnestLevel == 0 && found ){ 
+             bExpS.push_back(*e);
+           }
+         }
+
+         std::vector<Exp> getExps(){ return bExpS; }
+};
+
+
 // 
 SetRelationshipType Conjunction::setRelationship(Conjunction* rightSide){
 
@@ -44,36 +80,127 @@ SetRelationshipType Conjunction::setRelationship(Conjunction* rightSide){
   rInEqC = rightSide->mInequalities.size();
   rConstC = rEqC+rInEqC;
 
-  std::cout<<"\n\nConjunction::setRelationship:\n Left EqC = "<<lEqC<<" InEqC = "<<lInEqC<<"  ConstC = "<<lConstC<<" Right EqC = "<<rEqC <<" InEqC = "<<rInEqC <<"  ConstC = "<<rConstC<<"\n\n";
-
-  Conjunction *supSetCond, *subSetCond;
-
+  // We are going to consider the set with fewer constraints as 
+  // the candidate of being superset of the other one.
+  Conjunction *supSetCand, *subSetCand;
   if(lConstC <= rConstC){
-    supSetCond = this;
-    subSetCond = rightSide;
+    supSetCand = this;
+    subSetCand = rightSide;
     supSetEqC = lEqC;
     supSetInEqC = lInEqC;
     supSetContC = lConstC;
   } else {
-    supSetCond = rightSide;
-    subSetCond = this;
+    supSetCand = rightSide;
+    subSetCand = this;
     supSetEqC = rEqC;
     supSetInEqC = rInEqC;
     supSetContC = rConstC;
   }
 
-  std::set<Exp> supSetEq, supSetInEq;
-
-  for (std::list<Exp*>::const_iterator i=supSetCond->mEqualities.begin();
-              i != supSetCond->mEqualities.end(); i++) {
-  //  mEqualities.push_back((*i)->clone());
+  // Putting Constraints of the subset candidate set into std::set's
+  std::set<Exp> supSetEq, supSetInEq,subSetEq, subSetInEq;
+  for(std::list<Exp*>::const_iterator i=subSetCand->mEqualities.begin();
+              i != subSetCand->mEqualities.end(); i++) {
+    subSetEq.insert( (*(*i)) ); 
+  }
+  for(std::list<Exp*>::const_iterator i=subSetCand->mInequalities.begin();
+              i != subSetCand->mInequalities.end(); i++) {
+    subSetInEq.insert( (*(*i)) );
   }
 
-  for (std::list<Exp*>::const_iterator i=supSetCond->mInequalities.begin();
-              i != supSetCond->mInequalities.end(); i++) {
-  //  mInequalities.push_back((*i)->clone());
+  std::set<Exp>::iterator it;
+  // Comprae the constraints of the superset candidate with the subset candidate 
+  for(std::list<Exp*>::const_iterator i=supSetCand->mEqualities.begin();
+              i != supSetCand->mEqualities.end(); i++) {
+    it = subSetEq.find( (*(*i)) );
+    if( it == subSetEq.end() ){
+      supSetEq.insert( (*(*i)) );
+    } else {
+      subSetEq.erase( it );
+    }
+  }
+  for(std::list<Exp*>::const_iterator i=supSetCand->mInequalities.begin();
+              i != supSetCand->mInequalities.end(); i++) {
+    it = subSetInEq.find( (*(*i)) );
+    if( it == subSetInEq.end() ){
+      supSetInEq.insert( (*(*i)) );
+    } else {
+      subSetInEq.erase( it );
+    }
   }
 
+  // If subset candidate relation have all the constranits of the superset
+  // relatrion, we  can say that superset candidate is trivially 
+  // superset of subset candidate
+  if( supSetEq.empty() && supSetInEq.empty() ){
+    if(lConstC <= rConstC) return SuperSetEqual;
+    else                   return SubSetEqual;
+  }
+
+  // Otherwise, it might be the case that the superset candidate is the 
+  // superset of the subset candidate , but in a complicated manner.
+  // Right now, we are looking into just one straight forward case 
+  // of such situation.
+  bool isSupSet = false;
+  if(supSetEq.size() == 1 && supSetInEq.empty() ){
+isSupSet=true;
+/*
+    Exp supEqCand = *(supSetEq.begin()), subEqCand;
+    std::list<Term*> suptl = supEqCand.getTermList();
+    if(suptl.size() == 2){
+      for(std::set<Exp>::iterator i=subSetEq.begin(); i != subSetEq.end(); i++){
+        std::list<Term*> subtl = (*it).getTermList();
+        Term *supTerm, *subTerm;
+        Exp copyE = *i;
+
+        if(supTerm->type() != "TupleVarTerm" || subTerm->type() != "TupleVarTerm"){
+          continue;
+        }
+
+        int supTvLoc = ((TupleVarTerm*)(supTerm))->tvloc();
+        std::vector<Exp> bExpS;
+        VisitorGetTVBounds *v = new VisitorGetTVBounds(supTvLoc);
+        supSetCand->acceptVisitor( v );
+        bExpS = v->getExps();
+        SubMap subMap;
+        Exp e1;
+        e1.addTerm(new TupleVarTerm(((TupleVarTerm*)(subTerm))->tvloc()));
+        subMap.insertPair(new TupleVarTerm(supTvLoc), new Exp(e1));
+std::cout<<"\n\n>>>>>Bound Exps:\n\n";
+        for(int j=0; j<bExpS.size() ; j++){
+std::cout<<"BeS = "<<bExpS[j].toString();
+          bExpS[j].substitute(subMap);
+std::cout<<"   AfS = "<<bExpS[j].toString()<<"\n";
+        }
+        //
+      }
+    }
+*/
+  }
+
+  if(isSupSet){
+    std::cout<<"\n\n>>>The complicated case!!\n\n";
+    if(lConstC <= rConstC) return SuperSetEqual;
+    else                   return SubSetEqual;
+  }
+/*
+  std::cout<<"\n\nLeftS = "<<this->toString()<<"\nRightS = "<<rightSide->toString()<<"\n\n";
+  std::cout<<"\n\nConjunction::setRelationship:\n Left EqC = "<<lEqC<<" InEqC = "<<lInEqC<<"  ConstC = "<<lConstC<<" Right EqC = "<<rEqC <<" InEqC = "<<rInEqC <<"  ConstC = "<<rConstC<<"\n\n";
+  std::cout<<"\n\n\n ----SupSetEqC = "<<supSetEq.size()<<" nSupSetInEqC = "<<supSetInEq.size()<<"\n";
+  for(std::set<Exp>::const_iterator i=supSetEq.begin(); i != supSetEq.end(); i++) {
+    std::cout<<"\n  EQ  = "<<(*i).toString();
+  }
+  for(std::set<Exp>::const_iterator i=supSetInEq.begin(); i != supSetInEq.end(); i++) {
+    std::cout<<"\n  InEQ  = "<<(*i).toString();
+  }
+  std::cout<<"\n\n\n ----SubSetEqC = "<<subSetEq.size()<<" nSubSetInEqC = "<<subSetInEq.size()<<"\n";
+  for(std::set<Exp>::const_iterator i=subSetEq.begin(); i != subSetEq.end(); i++) {
+    std::cout<<"\n  EQ  = "<<(*i).toString();
+  }
+  for(std::set<Exp>::const_iterator i=subSetInEq.begin(); i != subSetInEq.end(); i++) {
+    std::cout<<"\n  InEQ  = "<<(*i).toString();
+  }
+*/
   return UnKnown;
 }
 
@@ -82,6 +209,7 @@ bool islUnSat(std::string str){
   if( trim(parts.constraints) == "FALSE") return true;
   return false;
 }
+
 // 
 SetRelationshipType Set::setRelationship(Set* rightSide){
   // get clones of the sets
@@ -97,7 +225,15 @@ SetRelationshipType Set::setRelationship(Set* rightSide){
   Conjunction *lside = *(ls->mConjunctions.begin());
   Conjunction *rside = *(rs->mConjunctions.begin());
 
-  return lside->setRelationship(rside);
+  SetRelationshipType ret = lside->setRelationship(rside);
+
+  if( ret == UnKnown) {
+    lside = *(ls->mConjunctions.begin());
+    rside = *(rs->mConjunctions.begin());
+    return lside->setRelationship(rside);
+  }
+
+  return ret;
 }
 
 // 
@@ -112,10 +248,18 @@ SetRelationshipType Relation::setRelationship(Relation* rightSide){
   // See if the sets are equal * normalization exposes the trivially equal sets
   if(*ls == *rs) return SetEqual;
 
-  Conjunction *lside = *(ls->mConjunctions.begin());
-  Conjunction *rside = *(rs->mConjunctions.begin());
+  Conjunction *lside = *(this->mConjunctions.begin());
+  Conjunction *rside = *(rightSide->mConjunctions.begin());
 
-  return lside->setRelationship(rside);
+  SetRelationshipType ret = lside->setRelationship(rside);
+
+  if( ret == UnKnown) {
+    lside = *(ls->mConjunctions.begin());
+    rside = *(rs->mConjunctions.begin());
+    return lside->setRelationship(rside);
+  }
+
+  return ret;
 }
 
 
