@@ -3675,15 +3675,15 @@ Set* checkIslSet(isl_set* set, isl_ctx* ctx,
     // Only keeping equalities that can potentially be useful. 
     VisitorGetUsefulEqs *v = new VisitorGetUsefulEqs();
     eQs->acceptVisitor( v );
-//    Set * uEqs = v->getUsefulEqs();
 
-//    result = origSet->Intersect(uEqs);
+    Set * uEqs = v->getUsefulEqs();
+    result = origSet->Intersect(uEqs);
 
-    result = v->getUsefulEqs();
+//    result = v->getUsefulEqs();
 
     delete affineEqs;
     delete eQs;
-//    delete uEqs;
+    delete uEqs;
     //free(i_str);
   }
   return result;
