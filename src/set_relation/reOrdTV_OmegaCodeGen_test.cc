@@ -119,3 +119,63 @@ TEST(reOrdTV_OmegaCodeGenTest, reOrdTV_OmegaCodeGenTEST){
 
 }
 
+
+#pragma mark reOrdTV_OmegaCodeGenTEST
+TEST(reOrdTV_OmegaCodeGenTest, rmPsTEST){
+
+  string complexity = "";  
+
+  // Introducing UFSymbols
+  iegenlib::setCurrEnv();
+  iegenlib::appendCurrEnv("colidx",
+          new Set("{[i]:0<=i &&i<nnz}"),         // Domain 
+          new Set("{[j]:0<=j &&j<m}"),           // Range
+          false,                                 // Not bijective.
+          iegenlib::Monotonic_NONE               // no monotonicity
+          );
+  iegenlib::appendCurrEnv("rowptr",
+      new Set("{[i]:0<=i &&i<m}"), 
+      new Set("{[j]:0<=j &&j<nnz}"), false, iegenlib::Monotonic_Increasing);
+  iegenlib::appendCurrEnv("diagptr",
+      new Set("{[i]:0<=i &&i<m}"), 
+      new Set("{[j]:0<=j &&j<nnz}"), false, iegenlib::Monotonic_Increasing);
+
+  
+  // We need to define which iterators are meant for parallelization
+  // therefore those iterators must not considered projectable. In other
+  // words the assumption is that those iterators must be in final inspector
+  // and hence we must count their complexity regardless of whatever else.
+  std::set<int> parallelTvs;
+
+
+  // DIFFERENT examples:
+
+
+  // 1: No iterator can be projected, and there is no useful equalities
+  Set *s = new Set("[n] -> {[i,ip,k,kp]: i < ip && sw =0"
+                                 " && 0 <= i && i < n"
+                                " && 0 <= ip && ip < n"
+                         " && rowptr(i) <= k && k < diagptr(i)"
+                       " && rowptr(ip) <= kp && kp < diagptr(ip)"
+                               " && colidx(k) = colidx(kp) }");
+
+
+  s->removeUPs();
+  std::cout<<"\n\nNew set = "<<s->getString()<<"\n\n";
+
+  delete s;
+
+
+  // 2: No iterator can be projected, and there is no useful equalities
+  s = new Set("[n] -> {[i,ip,kp]: i < ip"
+                                 " && 0 <= i && i < n"
+                                " && 0 <= ip && ip < n"
+                         "&& sw = 1 && rowptr(ip) <= kp && kp < diagptr(ip)"
+                               " &&  i = colidx(kp) }");
+  s->removeUPs();
+  std::cout<<"\n\nNew set = "<<s->getString()<<"\n\n";
+
+  delete s;
+
+}
+

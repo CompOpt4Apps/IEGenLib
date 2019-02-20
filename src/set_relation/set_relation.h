@@ -625,6 +625,8 @@ public:
 
     // 
     void reOrdTV_OmegaCodeGen(std::set<int> parallelTvs);
+    //
+    void removeUPs();
 
 private:
     int mArity;

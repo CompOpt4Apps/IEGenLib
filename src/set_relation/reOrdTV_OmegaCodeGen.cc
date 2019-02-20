@@ -305,4 +305,90 @@ void Set::reOrdTV_OmegaCodeGen(std::set<int> parallelTvs){
 
 
 
+
+/*! Visitor Class for removing uninterpreted predicates
+*/
+class VisitorRmvUPs : public Visitor {
+  private:
+         Set* newSet;
+         Conjunction* newConj;
+         VarTerm *vt;
+         int ct;
+         int UFnestLevel;
+  public:
+         VisitorRmvUPs(){
+           vt = NULL;
+           UFnestLevel=0;
+           ct=-100;
+         }
+         //! 
+         void preVisitUFCallTerm(UFCallTerm* t){
+           UFnestLevel++;
+         }
+         //! 
+         void postVisitUFCallTerm(UFCallTerm* t){
+           UFnestLevel--;
+         }
+         void preVisitTerm(Term * t) {
+           if( UFnestLevel == 0){
+             ct = t->coefficient();
+           }
+         }
+         //!
+         void postVisitVarTerm(VarTerm* t){
+           if( UFnestLevel == 0){
+             vt = t;
+           }
+         }
+         //!
+         void preVisitExp(iegenlib::Exp* e){
+           if( UFnestLevel == 0){
+             vt = NULL;
+             ct=-100;
+           }
+         }
+         //!
+         void postVisitExp(iegenlib::Exp* e){
+           if( UFnestLevel > 0 ) return;
+
+           if( e->getTerm() != NULL ) ct =0;
+           if( vt != NULL && ct != -100 && e->isEquality()) // removing UPs
+             return;
+
+           if( e->isInequality() ){
+             newConj->addInequality( e->clone() );
+           }else{
+             newConj->addEquality( e->clone() );
+           }
+         }
+
+
+         void preVisitConjunction(iegenlib::Conjunction * c){
+             newConj = new Conjunction( c->getTupleDecl() );
+         }
+         //! Add Conjunctions in maffineConj to affineSet
+         void postVisitSet(iegenlib::Set * s){
+             newSet = new Set( s->arity() );
+
+             newSet->addConjunction( newConj );
+         }
+
+         Set* getNewSet(){ return newSet; }
+};
+
+
+/**! This function 
+**/ 
+void Set::removeUPs(){
+  
+  VisitorRmvUPs *v = new VisitorRmvUPs();
+  this->acceptVisitor(v);
+ 
+  Set* newSet = v->getNewSet();
+
+  *this = *newSet;
+ 
+}
+
+
 }//end namespace iegenlib
