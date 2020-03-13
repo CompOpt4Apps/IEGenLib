@@ -65,6 +65,8 @@ class ChillUsageTest : public::testing::Test {
     virtual void TearDown() {}
 };
 
+
+
 /*! Tests modifying the access relations for loop coalescing.
 */
 TEST_F(ChillUsageTest, LoopCoalescing)
@@ -137,6 +139,8 @@ TEST_F(ChillUsageTest, LoopCoalescing)
     delete T_coalesce;
     delete T_coalesce_inv;
 }
+
+
 
 /*! Tests modifying the access relations for loop coalescing
     and indicating that k=j.
