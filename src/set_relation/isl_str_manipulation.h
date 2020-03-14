@@ -33,6 +33,10 @@ namespace iegenlib{
 struct srParts;
 //****** ISL tuple correction functions
 
+
+//
+typedef enum {SetEqual, SubSetEqual, SubSet, SuperSet, SuperSetEqual, UnKnown, UnSatSet} SetRelationshipType;
+
 /*! trim function trims spacing from left and right of a string
 */
 std::string trim(std::string s);
@@ -162,7 +166,11 @@ std::string relationStr2SetStr(std::string relation, int inArity, int outArity);
 */
 std::string strAddConstraints(std::string dest, std::string src);
 
-
+/*!
+**  
+**  
+*/
+SetRelationshipType strISLSetRelationship(std::string set1, std::string set2);
 
 }// iegenlib namespace
 #endif

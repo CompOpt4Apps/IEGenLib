@@ -52,9 +52,6 @@ extern Relation* parse_relation(std::string relation_string);
 }
 
 
-//
-typedef enum {SetEqual, SubSetEqual, SubSet, SuperSet, SuperSetEqual, UnKnown, UnSatSet} SetRelationshipType;
-
 
 /*!
  * \class Conjunction
@@ -822,6 +819,9 @@ public:
     // 
     SetRelationshipType setRelationship(Relation* rightSide);
 
+    // 
+    SetRelationshipType setRelation(Relation* rightSide);
+
 private:
     int mInArity;
     int mOutArity;
@@ -840,6 +840,7 @@ std::pair <std::string,std::string> instantiate(
 std::set<std::pair <std::string,std::string>> ruleInstantiation
                           (std::set<Exp> instExps, bool *useRule, 
                            TupleDecl origTupleDecl, UFCallMap *ufcmap);
+Set* islSetProjectOut(Set* s, unsigned pos);
 }//end namespace iegenlib
 
 #endif /* SET_RELATION_H_ */

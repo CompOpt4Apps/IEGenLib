@@ -263,4 +263,53 @@ SetRelationshipType Relation::setRelationship(Relation* rightSide){
 }
 
 
+
+
+
+// 
+SetRelationshipType Relation::setRelation(Relation* rightSide){
+
+  SetRelationshipType ret = UnKnown;
+  Set *eqSet1 = new Set( relationStr2SetStr(prettyPrintString(), 
+                                  inArity(), outArity()) );
+  UFCallMap *ufcmap1 = new UFCallMap(eqSet1->getTupleDecl());
+  Set *supAffSet1 = eqSet1->superAffineSet(ufcmap1,false);
+
+  std::cout<<"\n\nSuper Affiner Set = "<<supAffSet1->prettyPrintString()<<"\n\n";
+
+  Set *eqSet2 = new Set( relationStr2SetStr(rightSide->prettyPrintString(), 
+                                  rightSide->inArity(), rightSide->outArity()) );
+  UFCallMap *ufcmap2 = new UFCallMap(eqSet2->getTupleDecl());
+  Set *supAffSet2 = eqSet2->superAffineSet(ufcmap2,false);
+
+  std::cout<<"\n\nSuper Affiner Set1 = "<<supAffSet1->prettyPrintString()<<"\n\n";
+  std::cout<<"\n\nSuper Affiner Set2 = "<<supAffSet2->prettyPrintString()<<"\n\n";
+
+  Set* islSet1 = islSetProjectOut(supAffSet1, 5);
+  islSet1 = islSetProjectOut(islSet1, 3);
+  islSet1 = islSetProjectOut(islSet1, 2);
+  islSet1 = islSetProjectOut(islSet1, 1);
+  std::cout<<"\n\nProjected Set1 = "<<islSet1->toISLString()<<"\n\n";
+
+  Set* islSet2 = islSetProjectOut(supAffSet2, 7);
+  islSet2 = islSetProjectOut(islSet2, 6);
+  islSet2 = islSetProjectOut(islSet2, 5);
+  islSet2 = islSetProjectOut(islSet2, 3);
+  islSet2 = islSetProjectOut(islSet2, 2);
+  islSet2 = islSetProjectOut(islSet2, 1);
+  std::cout<<"\n\nProjected Set2 = "<<islSet2->toISLString()<<"\n\n";
+
+  ret = strISLSetRelationship(islSet1->toISLString(), islSet2->toISLString());
+  
+  if(ret == SetEqual)
+    std::cout<<"\n\nSets are equal!!\n\n";
+
+  if(ret == UnKnown)
+    std::cout<<"\n\nRelationship Unknown!!\n\n";
+
+  return ret;
+}
+
+
+
 }//end namespace iegenlib

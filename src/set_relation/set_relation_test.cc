@@ -3933,8 +3933,9 @@ TEST_F(SetRelationTest, projectOut) {
    // is argument to any UFS, if it is, it terminates, and returns NULL.
    // However, if the tuple variable is not argument to any UFS,
    // it will project it out, and return new Relation/Set.
-   // Additionally, the function adds constraints that are due to domain
-   //  and range info of all UFCall terms in the Set/Relation, for instance:
+   // Additionally, we add the constraints that are due to domain
+   //  and range info of all UFCall terms in the Set/Relation, before calling project out,
+   //  for instance:
    //  if we have: col( x ) + y > 5    then  
    //                             ldb <= x <= udb and lrb <= col(x) <= urb
    //              will be added to constraints.
@@ -3942,12 +3943,14 @@ TEST_F(SetRelationTest, projectOut) {
 
     Relation *r1 = new Relation("{ [i,k] -> [ip,kp] :  i = kp and col(i) < n"
                                      " and i < ip and diag(col(i))+1 <= k }");
+    Relation *r2; 
 
     Relation *ex_r1 = new Relation("{ [i] -> [ip] : i < ip  and "
      "0 <= i and i < n and col(i) >= 0 and diag(col(i)) >= 0 and"
                              " col(i) < n and diag(col(i)) < n }");
+    r2 = r1->boundDomainRange();
+    *r1 = *r2;
 
-    Relation *r2; 
     r2 = r1->projectOut(3);    // 3 == index of 'kp'
     if ( r2 ){                 // Did we project out 'jp': YES!
         delete r1;             // removing old r1
@@ -3955,7 +3958,7 @@ TEST_F(SetRelationTest, projectOut) {
     }
 
     r2 = r1->projectOut(0);    // 0 == index of 'i'
-    if ( r2 ){                 // Did we project out 'k': NO!
+    if ( r2 ){                 // Did we project out 'i': NO!
         delete r1;             // The reason is that k is argumnet to col().
         r1 = r2;               // We don't project out variables
     }                          // that are argument to an UFCall.
@@ -3972,12 +3975,13 @@ TEST_F(SetRelationTest, projectOut) {
 
     Set *s1 = new Set("{ [i,j,ip,jp] : i = col(jp)+1 and 0 <= i and i < n"
                                      " and idx(i) <= j and j < idx(i+1) }");
+    Set *s2;
 
-    Set *ex_s1 = new Set("{ [i, jp] : i = col(jp)+1 and jp >= 0 and "
-          "idx(i) >= 0 and idx(i+1) >= 0 and col(jp) >= 0 and jp < n and"
-  " col(jp)+2 < n and idx(i) < n and idx(i+1) < n and idx(i) < idx(i + 1) }");
+    Set *ex_s1 = new Set("{ [i, jp] : i = col(jp)+1 && jp >= 0 && col(jp) >= 0 && idx(i) >= 0 && jp < n && col(jp) < n-2 && idx(i+1) < n && idx(i) < idx(i+1)}");
 
-   Set *s2;
+    s2 = s1->boundDomainRange();
+    *s1 = *s2;
+
    // projectOut has the same behaivor for both Relation and Set
 
   // Projecting out 'j' from s1
