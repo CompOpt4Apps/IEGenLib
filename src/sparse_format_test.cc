@@ -74,4 +74,30 @@ TEST_F(SparseFormatTest, COO_CSR_1) {
    delete r_coo_csr_comp;
 }
 
+TEST_F (SparseFormatTest, COO_BCSR){
+   Relation* Flatten = 
+	   new Relation("{ [n] -> [i,j] : n = i * R + j }");
+
+   Relation* Zeros = 
+	   new Relation ( " { [i,j] -> [i_p,j_p,i_pp,j_pp]:"
+			   " Dense(i_p,j_p) = 0 && Dense(i_pp,j_pp) != 0 && "
+			   " i_pp/R =i_p/R && j_pp/R = j_p/R}");
+   Relation* coo = 
+	    new Relation("{[n] -> [i,j] : row(n) = i && col(n) = j "
+			 "&& 0 <= n && n < NNZ && Dense(i,j) != 0}");
+
+   Relation * bcsr_inv =
+	   new Relation("{ [i,j] -> [b,i_p,j_p]: 0 <= b && b < NB "
+			" && b = block_inv(i/R,j/C) && 0 <= i_p   "
+			" && i_p < R && 0 <= j_p < C && i_p =     "
+			"i - (i/R) * R && j_p = j- (j/C) *C}      ");
+
+   Relation * Zeros_Flatten = Zeros->Compose(Flatten);
+   Relation* bcsr_coo = bcsr_inv->Compose(coo->Union(Zeros_Flatten));
+   EXPECT_EQ("{ [n] -> [n1] : n1 - rowcol_inv(row(n), col(n)) = 0 && n >= 0 && n1 >= 0 && n1 - rptr(row(n)) >= 0 && -n + NNZ - 1 >= 0 && -n1 + NNZ - 1 >= 0 && -n1 + rptr(row(n) + 1) - 1 >= 0 }",bcsr_coo->prettyPrintString());
+   
+
+
+
+}
 
