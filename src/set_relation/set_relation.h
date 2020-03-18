@@ -820,7 +820,8 @@ public:
     SetRelationshipType setRelationship(Relation* rightSide);
 
     // 
-    SetRelationshipType setRelation(Relation* rightSide);
+    SetRelationshipType setRelation(Relation* rightSide, 
+                        std::set<int> eigenLTvs, std::set<int> eigenRTvs);
 
 private:
     int mInArity;
