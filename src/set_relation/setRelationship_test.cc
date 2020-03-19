@@ -69,7 +69,7 @@ TEST(setRelationshipTest, setEqualityTEST){
 
   Relation *r2 = new Relation("{ [0, Out_2, 2, Out_4, 0, Out_6, 0, Out_8, 0] -> [0, In_2, 0, 0, 0, 0, 0, 0, 0] : colPtr(In_2) = Out_6 && rowIdx(Out_8) = rowIdx(Out_6) && 0 <= Out_2 && 0 <= In_2 && Out_4 <= Out_8 && colPtr(rowIdx(Out_4)) <= Out_6 && rowIdx(Out_8 + 1) <= rowIdx(Out_6) && Out_2 < In_2 && Out_2 + 1 < n && Out_4 < colPtr(Out_2 + 1) && colPtr(Out_2) < Out_4 && Out_6 < colPtr(rowIdx(Out_4) + 1) && Out_8 < colPtr(Out_2 + 1) && In_2 + 1 < n }");
 
-  EXPECT_EQ( iegenlib::SetEqual, r1->setRelationship(r2) );
+  EXPECT_EQ( iegenlib::SetEqual, r1->dataDependenceRelationship(r2,1) );
 
 
   // R26 and R27
@@ -78,7 +78,7 @@ TEST(setRelationshipTest, setEqualityTEST){
   r2 = new Relation("{ [0, Out_2, 2, Out_4, 0, Out_6, 0, Out_8, 0] -> [0, In_2, 2, In_4, 0, In_6, 0, In_8, 0] : In_6 = Out_6 && rowIdx(In_8) = rowIdx(In_6) && rowIdx(Out_8) = rowIdx(Out_6) && 0 <= Out_2 && 0 <= In_2 && Out_4 <= Out_8 && colPtr(rowIdx(Out_4)) <= Out_6 && In_4 <= In_8 && colPtr(rowIdx(In_4)) <= In_6 && rowIdx(In_8 + 1) <= rowIdx(In_8) && rowIdx(Out_8 + 1) <= rowIdx(Out_6) && Out_2 < In_2 && Out_2 + 1 < n && Out_4 < colPtr(Out_2 + 1) && colPtr(Out_2) < Out_4 && Out_6 < colPtr(rowIdx(Out_4) + 1) && Out_8 < colPtr(Out_2 + 1) && In_2 + 1 < n && In_4 < colPtr(In_2 + 1) && colPtr(In_2) < In_4 && In_6 < colPtr(rowIdx(In_4) + 1) && In_8 < colPtr(In_2 + 1) }");
 
   // Testing r1->setRelationship(r2) 
-  EXPECT_EQ( iegenlib::SetEqual, r1->setRelationship(r2) );
+  EXPECT_EQ( iegenlib::SetEqual, r1->dataDependenceRelationship(r2,1) );
 
   delete r1;
   delete r2;
@@ -90,7 +90,7 @@ TEST(setRelationshipTest, setEqualityTEST){
   r2 = new Relation("{ [0, In_2, 2, In_4, 0, In_6, 0, In_8, 0] -> [0, Out_2, 1, Out_4, 0, 0, 0, 0, 0] : Out_4 = In_6 && rowIdx(In_8) = rowIdx(In_6) && 0 <= In_2 && 0 <= Out_2 && In_4 <= In_8 && colPtr(rowIdx(In_4)) <= In_6 && rowIdx(In_8 + 1) <= rowIdx(In_8) && In_2 < Out_2 && In_2 + 1 < n && In_4 < colPtr(In_2 + 1) && colPtr(In_2) < In_4 && In_6 < colPtr(rowIdx(In_4) + 1) && In_8 < colPtr(In_2 + 1) && Out_2 + 1 < n && Out_4 < colPtr(Out_2 + 1) && colPtr(Out_2) < Out_4 }");
 
   // Testing r1->setRelationship(r2) 
-  EXPECT_EQ( iegenlib::SetEqual, r1->setRelationship(r2) );
+  EXPECT_EQ( iegenlib::SetEqual, r1->dataDependenceRelationship(r2,1) );
 
   delete r1;
   delete r2;
@@ -98,7 +98,7 @@ TEST(setRelationshipTest, setEqualityTEST){
 
 
 #pragma mark setEqualityTEST
-TEST(setRelationshipTest, setTrivialSuperSetEqualityTEST){
+TEST(setRelationshipTest, setTrivialSuperSetTEST){
 
   // Introduce the UFCalls to enviroment, and indicate their domain, range
   // whether they are bijective, or monotonic.
@@ -144,7 +144,7 @@ TEST(setRelationshipTest, setTrivialSuperSetEqualityTEST){
   Relation *r2 = new Relation("{ [0, In_2, 2, In_4, 0, In_6, 0, In_8, 0] -> [0, Out_2, 1, Out_4, 0, 0, 0, 0, 0] : colPtr(Out_2) = In_6 && rowIdx(In_8) = rowIdx(In_6) && 0 <= In_2 && 0 <= Out_2 && In_4 <= In_8 && colPtr(rowIdx(In_4)) <= In_6 && rowIdx(In_8 + 1) <= rowIdx(In_8) && In_2 < Out_2 && In_2 + 1 < n && In_4 < colPtr(In_2 + 1) && colPtr(In_2) < In_4 && In_6 < colPtr(rowIdx(In_4) + 1) && In_8 < colPtr(In_2 + 1) && Out_2 + 1 < n && Out_4 < colPtr(Out_2 + 1) && colPtr(Out_2) < Out_4 }");
 
   // Testing r1->setRelationship(r2) 
-  EXPECT_EQ( iegenlib::SuperSetEqual, r1->setRelationship(r2) );
+  EXPECT_EQ( iegenlib::SuperSet, r1->dataDependenceRelationship(r2,1) );
 
   delete r1;
   delete r2;
@@ -158,7 +158,7 @@ TEST(setRelationshipTest, setTrivialSuperSetEqualityTEST){
   r2 = new Relation("{ [0, In_2, 2, 0, 0, 0, 0] -> [0, Out_2, 1, Out_4, 1, Out_6, 0] : lR(Out_6) = Out_2 && lC(In_2) = Out_6 && 0 <= In_2 && 0 <= Out_2 && prunePtr(Out_2) <= Out_4 && lC(pruneSet(Out_4)) <= Out_6 && In_2 < Out_2 && In_2 < n && Out_2 < n && Out_4 < prunePtr(Out_2 + 1) && Out_6 < lC(pruneSet(Out_4) + 1) }");  // 0 = sw && 
 
   // Testing r1->setRelationship(r2) 
-  EXPECT_EQ( iegenlib::SuperSetEqual, r1->setRelationship(r2) );
+  EXPECT_EQ( iegenlib::SuperSet, r1->dataDependenceRelationship(r2,1) );
 
   delete r1;
   delete r2;
@@ -173,7 +173,7 @@ TEST(setRelationshipTest, setTrivialSuperSetEqualityTEST){
   r2 = new Relation("{ [0, In_2, 3, In_4, 0, 0, 0] -> [0, Out_2, 1, Out_4, 1, Out_6, 0] : Out_6 = In_4 && lR(Out_6) = Out_2 && 0 <= In_2 && 0 <= Out_2 && prunePtr(Out_2) <= Out_4 && lC(pruneSet(Out_4)) <= Out_6 && In_2 < Out_2 && In_2 < n && In_4 < lC(In_2 + 1) && lC(In_2) < In_4 && Out_2 < n && Out_4 < prunePtr(Out_2 + 1) && Out_6 < lC(pruneSet(Out_4) + 1) }");  // 0 = sw && 
 
   // Testing r1->setRelationship(r2) 
-  EXPECT_EQ( iegenlib::SuperSetEqual, r1->setRelationship(r2) );
+  EXPECT_EQ( iegenlib::SuperSet, r1->dataDependenceRelationship(r2,1) );
 
   delete r1;
   delete r2;
@@ -204,7 +204,7 @@ TEST(setRelationshipTest, setTrivialSubSetEqualityTEST){
   Relation *r2 = new Relation("{ [0, Out_2, 2, Out_4, 0, Out_6, 0, Out_8, 0] -> [0, In_2, 1, In_4, 0, 0, 0, 0, 0] : In_4 = Out_6 && rowIdx(Out_8) = rowIdx(Out_6) && 0 <= Out_2 && 0 <= In_2 && Out_4 <= Out_8 && colPtr(rowIdx(Out_4)) <= Out_6 && rowIdx(Out_8 + 1) <= rowIdx(Out_6) && Out_2 < In_2 && Out_2 + 1 < n && Out_4 < colPtr(Out_2 + 1) && colPtr(Out_2) < Out_4 && Out_6 < colPtr(rowIdx(Out_4) + 1) && Out_8 < colPtr(Out_2 + 1) && In_2 + 1 < n && In_4 < colPtr(In_2 + 1) && colPtr(In_2) < In_4 }");
 
   // Testing r1->setRelationship(r2) 
-  EXPECT_EQ( iegenlib::SubSetEqual, r1->setRelationship(r2) );
+  EXPECT_EQ( iegenlib::SubSet, r1->dataDependenceRelationship(r2,1) );
 
   delete r1;
   delete r2;
@@ -218,7 +218,7 @@ TEST(setRelationshipTest, setTrivialSubSetEqualityTEST){
   r2 = new Relation("{ [0, In_2, 2, In_4, 0, In_6, 0, In_8, 0] -> [0, Out_2, 1, Out_4, 0, 0, 0, 0, 0] : Out_4 = In_6 && rowIdx(In_8) = rowIdx(In_6) && 0 <= In_2 && 0 <= Out_2 && In_4 <= In_8 && colPtr(rowIdx(In_4)) <= In_6 && rowIdx(In_8 + 1) <= rowIdx(In_8) && In_2 < Out_2 && In_2 + 1 < n && In_4 < colPtr(In_2 + 1) && colPtr(In_2) < In_4 && In_6 < colPtr(rowIdx(In_4) + 1) && In_8 < colPtr(In_2 + 1) && Out_2 + 1 < n && Out_4 < colPtr(Out_2 + 1) && colPtr(Out_2) < Out_4 }");
 
   // Testing r1->setRelationship(r2) 
-  EXPECT_EQ( iegenlib::SubSetEqual, r1->setRelationship(r2) );
+  EXPECT_EQ( iegenlib::SubSet, r1->dataDependenceRelationship(r2,1) );
 
   delete r1;
   delete r2;
@@ -252,7 +252,7 @@ TEST(setRelationshipTest, setComplicatedSuperSetEqualityTEST){
   Relation *r2 = new Relation("{ [0, In_2, 2, In_4, 0, In_6, 0, In_8, 0] -> [0, Out_2, 2, Out_4, 0, Out_6, 0, Out_8, 0] : Out_8 = In_6 && rowIdx(Out_8) = rowIdx(Out_6) && rowIdx(In_8) = rowIdx(In_6) && 0 <= In_2 && 0 <= Out_2 && In_4 <= In_8 && colPtr(rowIdx(In_4)) <= In_6 && Out_4 <= Out_8 && colPtr(rowIdx(Out_4)) <= Out_6 && rowIdx(Out_8 + 1) <= rowIdx(Out_6) && rowIdx(In_8 + 1) <= rowIdx(In_8) && In_2 < Out_2 && In_2 + 1 < n && In_4 < colPtr(In_2 + 1) && colPtr(In_2) < In_4 && In_6 < colPtr(rowIdx(In_4) + 1) && In_8 < colPtr(In_2 + 1) && Out_2 + 1 < n && Out_4 < colPtr(Out_2 + 1) && colPtr(Out_2) < Out_4 && Out_6 < colPtr(rowIdx(Out_4) + 1) && Out_8 < colPtr(Out_2 + 1) }");
 
   // Testing r1->setRelationship(r2) 
-  EXPECT_EQ( iegenlib::SuperSetEqual, r1->setRelationship(r2) );
+  EXPECT_EQ( iegenlib::SetEqual, r1->dataDependenceRelationship(r2,1) );
 
   delete r1;
   delete r2;

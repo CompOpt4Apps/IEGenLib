@@ -71,22 +71,13 @@ int main(int argc, char **argv)
                                    " and i < ip and row(i) <= k < row(i+1)  and row(ip) <= kp < row(ip+1)  }");
 */
 
-  Relation *r1 = new Relation("{[i, m, k, l] -> [ip, mp] : k = mp && i < ip && 0  <=  i < n && 0 <= ip < n && col(i) + 1  <=  m  < col(i + 1) && l < col(i + 1) && m  <=  l && row(l+1)  <= row(k) && col(row(m))  <=  k < col(row(m) + 1) && row(l) = row(k) && col(ip) + 1  <=  mp < col(ip+ 1) }");
-  Relation *r2 = new Relation("{[i, m, k, l] -> [ip, mp, kp, lp] : k = lp && i < ip && 0  <=  i < n && 0 <= ip < n && col(i) + 1  <=  m  < col(i + 1) && l < col(i + 1) && m  <=  l && row(l + 1)  <=  row(k) && col(row(m))  <=  k < col(row(m) + 1) && row(l) = row(k) && col(ip) + 1  <=  mp < col(ip+ 1) &&  lp < col(ip+ 1) && mp <=  lp && row(lp+ 1)  <=  row(kp) && col(row(mp)) <=  kp < col(row(mp) + 1) && row(lp) = row(kp)}");
+  Relation *r1 = new Relation("{[0,i, m, k, l] -> [1,ip, mp] : k = mp && i < ip && 0  <=  i < n && 0 <= ip < n && col(i) + 1  <=  m  < col(i + 1) && l < col(i + 1) && m  <=  l && row(l+1)  <= row(k) && col(row(m))  <=  k < col(row(m) + 1) && row(l) = row(k) && col(ip) + 1  <=  mp < col(ip+ 1) }");
+  Relation *r2 = new Relation("{[0,i, m, k, l] -> [1,ip, mp, kp, lp] : k = lp && i < ip && 0  <=  i < n && 0 <= ip < n && col(i) + 1  <=  m  < col(i + 1) && l < col(i + 1) && m  <=  l && row(l + 1)  <=  row(k) && col(row(m))  <=  k < col(row(m) + 1) && row(l) = row(k) && col(ip) + 1  <=  mp < col(ip+ 1) &&  lp < col(ip+ 1) && mp <=  lp && row(lp+ 1)  <=  row(kp) && col(row(mp)) <=  kp < col(row(mp) + 1) && row(lp) = row(kp)}");
+
+//  cout<<"\n\nR1 = "<<r1->toString()<<"\n\n";
 
 
-//  json npJL = "{}";
-  std::set<int> eigenLTvs;
-  std::set<int> eigenRTvs;
-  
-  eigenLTvs.insert( 0 );
-  eigenLTvs.insert( r1->inArity() );
-  
-  eigenRTvs.insert( 0 );
-  eigenRTvs.insert( r2->inArity() );
-
-  cout<<"\n\nR1 = "<<r1->prettyPrintString()<<"\n\n";
-  r1->setRelation(r2, eigenLTvs, eigenRTvs);
+  r1->dataDependenceRelationship(r2,1);
 
 
   return 0;

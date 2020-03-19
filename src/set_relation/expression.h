@@ -71,7 +71,7 @@ public:
 
     //! Creates a compact string to help with debugging.
     //! \param absValue Will use absolute value of coeff if true.
-    virtual std::string toString(bool absValue = false) const;
+    virtual std::string toString(bool absValue = false, bool generic=false) const;
 
     //! Creates a compact string, pretty printed.
     //! \param aTupleDecl name or constant for each tuple var
@@ -202,7 +202,7 @@ public:
 
     //! Creates a compact string to help with debugging.
     //! \param absValue Will use absolute value of coeff if true.
-    std::string toString(bool absValue = false) const;
+    std::string toString(bool absValue = false, bool generic=false) const;
 
     //! Replaces any tuple var instances with given tuple var decl.
     //! \param aTupleDecl name or constant for each tuple var
@@ -279,7 +279,7 @@ public:
 
 
 private:
-    void argsToStream(std::stringstream& ss) const;
+    void argsToStream(std::stringstream& ss, bool generic=false) const;
     void argsToStreamPrettyPrint(const TupleDecl & aTupleDecl,
         std::stringstream& ss) const;
 
@@ -318,7 +318,7 @@ public:
 
     //! Creates a compact string to help with debugging.
     //! \param absValue Will use absolute value of coeff if true.
-    std::string toString(bool absValue = false) const;
+    std::string toString(bool absValue = false, bool generic=false) const;
 
     //! Creates a compact string, pretty printed.
     //! \param aTupleDecl name or constant for each tuple var
@@ -381,7 +381,7 @@ public:
 
     //! Creates a compact string to help with debugging.
     //! \param absValue Will use absolute value of coeff if true.
-    std::string toString(bool absValue = false) const;
+    std::string toString(bool absValue = false, bool generic=false) const;
 
     //! Creates a compact string, pretty printed.
     //! \param aTupleDecl name or constant for each tuple var
@@ -469,7 +469,7 @@ public:
 
     //! Creates a comma separated list of expressions.
     //! \param absValue Will use absolute value of coeff if true.
-    std::string toString(bool absValue = false) const;
+    std::string toString(bool absValue = false, bool generic=false) const;
 
     //! In comma-separated list of expressions,
     //! replaces any tuple var instances with given tuple var decl.
@@ -545,7 +545,7 @@ public:
     virtual Exp* clone() const;
 
     //! Creates a compact string to help with debugging.
-    virtual std::string toString() const;
+    virtual std::string toString(bool generic=false) const;
 
     //! Convert to a human-readable string (substitute in tuple vars).
     virtual std::string prettyPrintString(const TupleDecl & aTupleDecl) const;

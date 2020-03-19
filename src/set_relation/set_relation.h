@@ -615,7 +615,7 @@ public:
 
     Set* detectUnsatOrFindEqualities(bool *useRule=NULL);
     
-    string getString();
+    string getString(bool generic=false);
 
     // 
     SetRelationshipType setRelationship(Set* rightSide);
@@ -812,17 +812,18 @@ public:
         }
     }
 
+    //
     Relation* detectUnsatOrFindEqualities(bool *useRule=NULL);
     
-    string getString();
+    //
+    string getString(bool generic=false);
 
     // 
     SetRelationshipType setRelationship(Relation* rightSide);
 
     // 
-    SetRelationshipType setRelation(Relation* rightSide, 
-                        std::set<int> eigenLTvs, std::set<int> eigenRTvs);
-
+    SetRelationshipType dataDependenceRelationship(Relation* rightSide, int parallelLoopLevel=0);
+    
 private:
     int mInArity;
     int mOutArity;

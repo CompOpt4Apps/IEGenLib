@@ -86,7 +86,7 @@ void Term::coeffToStream(std::stringstream& ss, bool absValue) const {
 }
 
 //! Creates a compact string to help with debugging.
-std::string Term::toString(bool absValue) const {
+std::string Term::toString(bool absValue, bool generic) const {
     std::stringstream ss;
     ss << (absValue ? abs(mCoeff) : mCoeff);
     return ss.str();
@@ -256,12 +256,12 @@ Term* UFCallTerm::clone() const {
 
 //! Emits our argument list, as strings, to the given stream.
 //! Helper method for toString and operator<.
-void UFCallTerm::argsToStream(std::stringstream& ss) const {
+void UFCallTerm::argsToStream(std::stringstream& ss, bool generic) const {
     bool firstArg = true;
     for (std::vector<Exp*>::const_iterator i=mArgs.begin(); 
             i != mArgs.end(); ++i) {
         if (not firstArg) { ss << ", "; }
-        if (*i) { ss << (*i)->toString(); }
+        if (*i) { ss << (*i)->toString(generic); }
         firstArg = false;
     }
 }
@@ -280,11 +280,11 @@ void UFCallTerm::argsToStreamPrettyPrint(
 }
 
 //! Creates a compact string to help with debugging.
-std::string UFCallTerm::toString(bool absValue) const {
+std::string UFCallTerm::toString(bool absValue, bool generic) const {
     std::stringstream ss;
     coeffToStream(ss, absValue);
     ss << mFuncName << '(';
-    argsToStream(ss);
+    argsToStream(ss, generic);
     ss << ')';
     if (isIndexed()) {
         ss << '[' << tupleIndex() << ']';
@@ -554,10 +554,15 @@ Term* TupleVarTerm::clone() const {
 }
 
 //! Creates a compact string to help with debugging.
-std::string TupleVarTerm::toString(bool absValue) const {
+std::string TupleVarTerm::toString(bool absValue, bool generic) const {
     std::stringstream ss;
     coeffToStream(ss, absValue);
-    ss << "__tv" << mLocation;
+    // IEGenLib parser cannot handle "__" as a start of a variable name 
+    if(!generic){
+      ss << "__tv" << mLocation;
+    } else {
+      ss << "tv" << mLocation;
+    }
     return ss.str();
 }
 
@@ -646,7 +651,7 @@ Term* VarTerm::clone() const {
 }
 
 //! Creates a compact string to help with debugging.
-std::string VarTerm::toString(bool absValue) const {
+std::string VarTerm::toString(bool absValue, bool generic) const {
     std::stringstream ss;
     coeffToStream(ss, absValue);
     ss << mSymbol;
@@ -798,14 +803,14 @@ Term* TupleExpTerm::clone() const {
 
 
 
-std::string TupleExpTerm::toString(bool absValue) const {
+std::string TupleExpTerm::toString(bool absValue, bool generic) const {
     std::stringstream ss;
     ss << "( ";
     for (unsigned int i=0; i<mSize; i++) {
         if (i > 0) {
             ss << ", ";
         }
-        if (mExps[i] != NULL) { ss << mExps[i]->toString(); }
+        if (mExps[i] != NULL) { ss << mExps[i]->toString(generic); }
     }
     ss << " )";
 
@@ -928,7 +933,7 @@ Exp* Exp::clone() const {
 }
 
 //! Creates a compact string to help with debugging.
-std::string Exp::toString() const {
+std::string Exp::toString(bool generic) const {
     std::string result;
     bool firstTerm = true;
     // FIXME does the line just below go in other
@@ -945,7 +950,7 @@ std::string Exp::toString() const {
             }
             absValue = true;
         }
-        result += (*i)->toString(absValue);
+        result += (*i)->toString(absValue, generic);
         firstTerm = false;
     }
     return result;

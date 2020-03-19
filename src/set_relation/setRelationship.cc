@@ -301,65 +301,47 @@ SetRelationshipType iegenSetRelationship(Set *set1, std::set<int> set1EigenTvs,
 
   UFCallMap *ufcmap2 = new UFCallMap(set2->getTupleDecl());
   Set *affineSet2 = set2->superAffineSet(ufcmap2,false);
-  std::cout<<"\n\nSuper Affiner Set1 = "<<affineSet1->prettyPrintString()<<"\n\n";
-  std::cout<<"\n\nSuper Affiner Set2 = "<<affineSet2->prettyPrintString()<<"\n\n";
+//  std::cout<<"\n\nSuper Affiner Set1 = "<<affineSet1->prettyPrintString()<<"\n\n";
+//  std::cout<<"\n\nSuper Affiner Set2 = "<<affineSet2->prettyPrintString()<<"\n\n";
 
   Set* islSet1 = islSetProjectOutAll(affineSet1, set1EigenTvs);
-  std::cout<<"\n\nProjected Set1 = "<<islSet1->toISLString()<<"\n\n";
+//  std::cout<<"\n\nProjected Set1 = "<<islSet1->toISLString()<<"\n\n";
 
   Set* islSet2 = islSetProjectOutAll(affineSet2, set2EigenTvs);
-  std::cout<<"\n\nProjected Set2 = "<<islSet2->toISLString()<<"\n\n";
+//  std::cout<<"\n\nProjected Set2 = "<<islSet2->toISLString()<<"\n\n";
 
   ret = strISLSetRelationship(islSet1->toISLString(), islSet2->toISLString());
   
-  if(ret == SetEqual)
-    std::cout<<"\n\nSets are equal!!\n\n";
-
-  if(ret == UnKnown)
-    std::cout<<"\n\nRelationship Unknown!!\n\n";
-
   return ret;
 }
 
-// 
-SetRelationshipType Relation::setRelation(Relation* rightSide, 
-                    std::set<int> eigenLTvs, std::set<int> eigenRTvs){
+/**
+ ** This function determines the relationship between 2 data dependence
+ ** constraint sets, formulated using iegenlib:Relations. 
+ ** 
+ **/
+SetRelationshipType Relation::dataDependenceRelationship(Relation* rightSide, int parallelLoopLevel){
 
   SetRelationshipType ret = UnKnown;
-  Set *eqSet1 = new Set( relationStr2SetStr(prettyPrintString(), 
-                                  inArity(), outArity()) );
-//  UFCallMap *ufcmap1 = new UFCallMap(eqSet1->getTupleDecl());
-//  Set *affineSet1 = eqSet1->superAffineSet(ufcmap1,false);
+  string genericStringDep1 = this->getString(true);
+  string genericStringDep2 = rightSide->getString(true);
 
-//  std::cout<<"\n\nSuper Affiner Set = "<<affineSet1->prettyPrintString()<<"\n\n";
+  std::cout<<"\n\ngenericStringDep1 = "<<genericStringDep1<<"\n\n";
+  std::cout<<"\n\ngenericStringDep2 = "<<genericStringDep2<<"\n\n";
 
-  Set *eqSet2 = new Set( relationStr2SetStr(rightSide->prettyPrintString(), 
-                                  rightSide->inArity(), rightSide->outArity()) );
+  Set *eqSet1 = new Set( relationStr2SetStr(genericStringDep1 , inArity(), outArity()) );
+
+  Set *eqSet2 = new Set( relationStr2SetStr(genericStringDep2 , 
+                         rightSide->inArity(), rightSide->outArity()) );
+
+  std::set<int> eigenLTvs;
+  std::set<int> eigenRTvs;
+  eigenLTvs.insert( parallelLoopLevel );
+  eigenLTvs.insert( inArity()+parallelLoopLevel );
+  eigenRTvs.insert( parallelLoopLevel );
+  eigenRTvs.insert( rightSide->inArity()+parallelLoopLevel );
 
   return iegenSetRelationship(eqSet1, eigenLTvs, eqSet2, eigenRTvs);
-/*
-  UFCallMap *ufcmap2 = new UFCallMap(eqSet2->getTupleDecl());
-  Set *affineSet2 = eqSet2->superAffineSet(ufcmap2,false);
-
-  std::cout<<"\n\nSuper Affiner Set1 = "<<affineSet1->prettyPrintString()<<"\n\n";
-  std::cout<<"\n\nSuper Affiner Set2 = "<<affineSet2->prettyPrintString()<<"\n\n";
-
-  Set* islSet1 = islSetProjectOutAll(affineSet1, eigenLTvs);
-  std::cout<<"\n\nProjected Set1 = "<<islSet1->toISLString()<<"\n\n";
-
-  Set* islSet2 = islSetProjectOutAll(affineSet2, eigenRTvs);
-  std::cout<<"\n\nProjected Set2 = "<<islSet2->toISLString()<<"\n\n";
-
-  ret = strISLSetRelationship(islSet1->toISLString(), islSet2->toISLString());
-  
-  if(ret == SetEqual)
-    std::cout<<"\n\nSets are equal!!\n\n";
-
-  if(ret == UnKnown)
-    std::cout<<"\n\nRelationship Unknown!!\n\n";
-
-  return ret;
-*/
 }
 
 

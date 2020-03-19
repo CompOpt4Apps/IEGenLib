@@ -3819,8 +3819,9 @@ class VisitorGetString : public Visitor {
          int aritySplit;
          bool firstConj;
          bool firstExp;
+         bool generic;
   public:
-         VisitorGetString(){ str = ""; firstConj = firstExp = true;}
+         VisitorGetString(bool gen){ str = ""; firstConj = firstExp = true; generic = gen;}
 
          /*! We build our string one expression at a time before visiting 
          **  each expression. Note, we cannot build the expression at term
@@ -3863,7 +3864,11 @@ class VisitorGetString : public Visitor {
              // print the terms in the left of the inequality ( < or <= )
              for (std::list<Term*>::const_iterator i=leftSide.begin(); 
                   i != leftSide.end(); ++i) {
-                 str += (*i)->prettyPrintString(aTupleDecl, absValue);
+                 if( ! generic ){
+                   str += (*i)->prettyPrintString(aTupleDecl, absValue);
+                 } else {
+                   str += (*i)->toString(absValue,generic);
+                 }
              }
              // If there is no terms in the left, print 0
              if( leftSide.empty() && !haveConstT ) str += string("0");
@@ -3904,7 +3909,11 @@ class VisitorGetString : public Visitor {
 
              for (std::list<Term*>::const_iterator i=rightSide.begin(); 
                   i != rightSide.end(); ++i) {
-                 str += (*i)->prettyPrintString(aTupleDecl, absValue);
+                 if( ! generic ){
+                   str += (*i)->prettyPrintString(aTupleDecl, absValue);
+                 } else {
+                   str += (*i)->toString(absValue,generic);
+                 }
              }
              if( rightSide.empty() && !haveConstT ) str += string("0");
 
@@ -3930,7 +3939,7 @@ class VisitorGetString : public Visitor {
 
              // Start the conjunction's string with tuple
              str += string("{ ") + 
-                    aTupleDecl.toString(true,aritySplit) + string(" : ");
+                    aTupleDecl.toString(true,aritySplit, generic) + string(" : ");
 
              firstExp = true;
          }
@@ -3973,19 +3982,19 @@ class VisitorGetString : public Visitor {
 **  This function generates a string representation of the Set.
 **  There are two differences between this function and other string
 **  genrators, like toString, and prettyPrintSring:
-**  (1) it uses visitor patter
+**  (1) it uses visitor pattern
 **  (2) The generated string is better formatted, for instance while other functions 
-        generate something like following for some relation: 
+        generate something like following for some set: 
            {[i,j] : i - j = 0 && i - 6 >= 0 && -j + 2 >= 0}
         This function genrates bellow for the same relation: 
            {[i,j] : i = j && 0 <= i && j <= 2}
     For more examples see the getString test case in set_relation_test.cc
 */
-string Set::getString()
+string Set::getString(bool generic)
 {
     string result;
 
-    VisitorGetString* v = new VisitorGetString();
+    VisitorGetString* v = new VisitorGetString(generic);
     this->acceptVisitor( v );
     
     result = v->getString();
@@ -3994,11 +4003,11 @@ string Set::getString()
 }
 
 //! Same as Set
-string Relation::getString()
+string Relation::getString(bool generic)
 {
     string result;
 
-    VisitorGetString* v = new VisitorGetString();
+    VisitorGetString* v = new VisitorGetString(generic);
     this->acceptVisitor( v );
     
     result = v->getString();
@@ -4239,6 +4248,7 @@ std::vector<std::string> SparseConstraints::getZ3form
     
     return result;
 }
+
 
 
 
