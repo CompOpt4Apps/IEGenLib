@@ -28,7 +28,7 @@ namespace iegenlib{
 #pragma mark -
 /*****************************************************************************/
 /*! Vistor Class used in VisitorCalculateComplexityNoEq
-**  This isa  simplified versiopn of complexityForPartialParallel
+**  This is a  simplified version of complexityForPartialParallel
     that do not considers useful equalities effect on complexity.
     This functionality is useful particularly here.
     For more details on how to calculate complexity please 
@@ -224,8 +224,6 @@ void Set::reOrdTV_OmegaCodeGen(std::set<int> parallelTvs){
 
   VisitorCalculateComplexityNoEqs *vComp = new VisitorCalculateComplexityNoEqs(complexities);
   this->acceptVisitor(vComp);
-//  this->acceptVisitor(vComp);
-//  string result = calculateComplexityStr( complexities , arity() );
 
   int* zTVs = new int[arity()+1];
   for(int i=0; i < arity() ; i++){

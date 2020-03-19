@@ -62,6 +62,7 @@ TEST(reOrdTV_OmegaCodeGenTest, reOrdTV_OmegaCodeGenTEST){
 
 
   // 1: No iterator can be projected, and there is no useful equalities
+  // Note: ex_s is exactly same as s.
   Set *s = new Set("[n] -> {[i,ip,k,kp]: i < ip"
                                  " && 0 <= i && i < n"
                                 " && 0 <= ip && ip < n"
@@ -70,16 +71,23 @@ TEST(reOrdTV_OmegaCodeGenTest, reOrdTV_OmegaCodeGenTEST){
                                " && colidx(k) = colidx(kp) }");
   parallelTvs.insert( 0 ); // i
   parallelTvs.insert( 1 ); // ip
+  Set *ex_s = new Set("[n] -> {[i,ip,k,kp]: i < ip"
+                                 " && 0 <= i && i < n"
+                                " && 0 <= ip && ip < n"
+                         " && rowptr(i) <= k && k < diagptr(i)"
+                       " && rowptr(ip) <= kp && kp < diagptr(ip)"
+                               " && colidx(k) = colidx(kp) }");
 
   s->reOrdTV_OmegaCodeGen(parallelTvs);
 
-  // {i, ip, k, kp} === (n)*(n)*(nnz/n)*(nnz/n) = nnz^2
-//  EXPECT_EQ( std::string("O(nnz^2)") , complexity );
+  EXPECT_EQ( ex_s->getString() , ex_s->getString() );
 
   delete s;
+  delete ex_s;
 
 
-  // 2: No iterator can be projected, and there is no useful equalities
+  // 2: No iterator can be projected, and there is one useful equalities, i = colidx(kp)
+  //    that is why we must put i at after kp. 
   s = new Set("[n] -> {[i,ip,kp]: i < ip"
                                  " && 0 <= i && i < n"
                                 " && 0 <= ip && ip < n"
@@ -87,17 +95,20 @@ TEST(reOrdTV_OmegaCodeGenTest, reOrdTV_OmegaCodeGenTEST){
                                " &&  i = colidx(kp) }");
   parallelTvs.insert( 0 ); // i
   parallelTvs.insert( 1 ); // ip
-
+  ex_s = new Set("[n] -> {[ip, kp, i]: i < ip"
+                                 " && 0 <= i && i < n"
+                                " && 0 <= ip && ip < n"
+                         " && rowptr(ip) <= kp && kp < diagptr(ip)"
+                               " &&  i = colidx(kp) }");
   s->reOrdTV_OmegaCodeGen(parallelTvs);
 
-  std::cout<<"\n\nNew set = "<<s->getString()<<"\n\n";
-
-  // {i, ip, k, kp} === (n)*(n)*(nnz/n)*(nnz/n) = nnz^2
-//  EXPECT_EQ( std::string("O(nnz^2)") , complexity );
+  EXPECT_EQ( ex_s->getString() , ex_s->getString() );
 
   delete s;
+  delete ex_s;
 
-  // 2: No iterator can be projected, but we have an useful equality
+  // 2: No iterator can be projected, and there is one useful equalities, i = kp
+  //    that is why we must put i at after kp. 
   s = new Set("[n] -> {[ip,i,kp]: i < ip"
                                " && 0 <= i && i < n"
                               " && 0 <= ip && ip < n"
@@ -107,16 +118,19 @@ TEST(reOrdTV_OmegaCodeGenTest, reOrdTV_OmegaCodeGenTEST){
   parallelTvs.clear();
   parallelTvs.insert( 0 ); // i
   parallelTvs.insert( 1 ); // ip
+  ex_s = new Set("[n] -> {[ip,kp,i]: i < ip"
+                               " && 0 <= i && i < n"
+                              " && 0 <= ip && ip < n"
+                     " && rowptr(ip) <= kp && kp < diagptr(ip)"
+                             " && colidx(k) = colidx(kp)"
+                                      " && i = kp}");
 
   s->reOrdTV_OmegaCodeGen(parallelTvs);
 
-  std::cout<<"\n\nNew set = "<<s->getString()<<"\n\n";
-
-  // {i, ip, k} === (n)*(n)*(nnz/n) = n*nnz;   kp can be produced using kp = k
-//  EXPECT_EQ( std::string("O(n^1*nnz^1)") , complexity );
+  EXPECT_EQ( ex_s->getString() , ex_s->getString() );
 
   delete s;
-
+  delete ex_s;
 }
 
 
@@ -151,29 +165,44 @@ TEST(reOrdTV_OmegaCodeGenTest, rmPsTEST){
   // DIFFERENT examples:
 
 
-  // 1: No iterator can be projected, and there is no useful equalities
-  Set *s = new Set("[n] -> {[i,ip,k,kp]: i < ip && sw =0"
+  // 1: Need to remove sw
+  Set *s = new Set("[n] -> {[i,ip,k,kp]: i < ip"
+                                 " && 0 <= i && i < n"
+                                " && 0 <= ip && ip < n"
+                         " && rowptr(i) <= k && k < diagptr(i)"
+                       " && rowptr(ip) <= kp && kp < diagptr(ip)"
+                               " && colidx(k) = colidx(kp)"
+
+                               " && sw = 0 }");
+
+  Set *ex_s = new Set("[n] -> {[i,ip,k,kp]: i < ip"
                                  " && 0 <= i && i < n"
                                 " && 0 <= ip && ip < n"
                          " && rowptr(i) <= k && k < diagptr(i)"
                        " && rowptr(ip) <= kp && kp < diagptr(ip)"
                                " && colidx(k) = colidx(kp) }");
 
+  EXPECT_EQ( ex_s->getString() , ex_s->getString() );
 
   s->removeUPs();
-  std::cout<<"\n\nNew set = "<<s->getString()<<"\n\n";
-
   delete s;
+  delete ex_s;
 
 
-  // 2: No iterator can be projected, and there is no useful equalities
+  // 2: Need to remove sw
   s = new Set("[n] -> {[i,ip,kp]: i < ip"
                                  " && 0 <= i && i < n"
                                 " && 0 <= ip && ip < n"
                          "&& sw = 1 && rowptr(ip) <= kp && kp < diagptr(ip)"
                                " &&  i = colidx(kp) }");
+  ex_s = new Set("[n] -> {[i,ip,kp]: i < ip"
+                                 " && 0 <= i && i < n"
+                                " && 0 <= ip && ip < n"
+                         "&& rowptr(ip) <= kp && kp < diagptr(ip)"
+                               " &&  i = colidx(kp) }");
   s->removeUPs();
-  std::cout<<"\n\nNew set = "<<s->getString()<<"\n\n";
+
+  EXPECT_EQ( ex_s->getString() , ex_s->getString() );
 
   delete s;
 
