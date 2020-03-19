@@ -452,19 +452,28 @@ std::string strAddConstraints(std::string dest, std::string src){
 
 
 /*!
-**  
+** This function uses ISL library to dermine the relationship between
+** two affine set, given as strings that ISL can read.
+
+   A ?? B
+
+ ** Inputs:
+ 
+    setStr1: Left-hand side dependence  (A)
+    setStr2: Right-hand side dependence (B)
+
+ ** Output is one of following:
+     
+     SetEqual, SubSetEqual, SubSet, SuperSet, SuperSetEqual, UnKnown  
 **  
 */
 SetRelationshipType strISLSetRelationship(std::string setStr1, std::string setStr2){
    isl_ctx* ctx = isl_ctx_alloc();  
    SetRelationshipType ret = UnKnown;
-std::cout<<"\n\nStr1 = "<<setStr1<<"\nStr2 = "<<setStr2<<"\n\n";
-
    isl_set* set1 = isl_set_read_from_str(ctx, setStr1.c_str());
    isl_set* set2 = isl_set_read_from_str(ctx, setStr2.c_str());
    
    if( isl_set_is_equal( set1, set2) ){
-std::cout<<"\n\nEqual!!?!!\n\n";
      ret = SetEqual;
    } else if( isl_set_is_strict_subset(set1,set2) ){
      ret = SubSet;
@@ -472,12 +481,9 @@ std::cout<<"\n\nEqual!!?!!\n\n";
      ret = SubSetEqual;
    } else if( isl_set_is_strict_subset(set2,set1) ){
      ret = SuperSet;
-std::cout<<"\n\nsUPs!!?!!\n\n";
    } else if( isl_set_is_subset(set2,set1) ){
      ret = SuperSetEqual;
-std::cout<<"\n\nsUPsEq!!?!!\n\n";
    } else {
-std::cout<<"\n\nUnKnown!!?!!\n\n";
      ret = UnKnown;
    }
    return ret;

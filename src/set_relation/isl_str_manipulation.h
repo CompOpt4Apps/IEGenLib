@@ -167,8 +167,8 @@ std::string relationStr2SetStr(std::string relation, int inArity, int outArity);
 std::string strAddConstraints(std::string dest, std::string src);
 
 /*!
-**  
-**  
+** This function uses ISL library to dermine the relationship between
+** two affine set, given as strings that ISL can read.
 */
 SetRelationshipType strISLSetRelationship(std::string set1, std::string set2);
 
