@@ -177,11 +177,29 @@ TEST(detectUnsatOrFindEqualitiesTest, detectUnsatOrFindEqualitiesTEST){
                              " && colidx(j1) = colidx(j2)"
                              " && colidx(j1p) = colidx(j2p)"
 
-                                     " && j1 = j2p}");
+                                     " && j1 = j2p"
+                                     " }");
 
-  Set *ex_A8 = new Set("[m] -> {[i,k,j1,j2,ip,kp,j1p,j2p]: "
-                                   "  j1 = j2p"
-                                "&& i = colidx(kp)   }");
+  // Note that detectUnsatOrFindEqualities return the original relation with 
+  // newly found equalities. 
+  // For instacnce in the following, the newly found equality is: "i = colidx(kp)"
+  Set *ex_A8 = new Set("[m] -> {[i,k,j1,j2,ip,kp,j1p,j2p]: ip < i"
+                                   " && 0 <= i && i < m"
+                                  " && 0 <= ip && ip < m"
+                           " && rowptr(i) <= k && k < diagptr(i)"
+                         " && rowptr(ip) <= kp && kp < diagptr(ip)"
+                                   " && k < j1 && j1 < rowptr(1+i)"
+                                 " && kp < j1p && j1p < rowptr(1+ip)"
+                  " && diagptr(colidx(k)) < j2 && j2 < rowptr(1+colidx(k))"
+                " && diagptr(colidx(kp)) < j2p && j2p < rowptr(1+colidx(kp))"
+                             " && colidx(j1) = colidx(j2)"
+                             " && colidx(j1p) = colidx(j2p)"
+
+                                     " && j1 = j2p"
+
+                                     " && i = colidx(kp)"
+                                     " }");
+
 
   Set *A8_result = A8->detectUnsatOrFindEqualities();
   // Verify the results 
