@@ -84,17 +84,13 @@ TEST_F(SparseFormatTest, COO_BCSR) {
   Relation *coo = new Relation("{[n] -> [i,j] : row(n) = i && col(n) = j "
                                "&& 0 <= n && n < NNZ && Dense(i,j) != 0}");
 
-  Relation *Zeros = new Relation(
-      " { [i,j] -> [i_p,j_p,i_pp,j_pp]: "
-      "Dense(i_p,j_p) = 0 && Dense(i_pp,j_pp) != 0 && "
-      " int_div(i_pp,9) =int_div(i_p,9) && int_div(j_pp,9) = int_div(j_p,9)}");
 
   Relation *Zeros = new Relation(
       " { [i,j] -> [i_p,j_p,i_pp,j_pp]: "
       " Dense(i_p,j_p) = 0 && Dense(i_pp,j_pp) != 0 &&"
       " int_div(i_pp,9) =int_div(i_p,9) && int_div(j_pp,9)"
-      " = int_div(j_p,9)}  && 0 <= i && i < 9 && 0 <= j < 7"
-      " && i = i_p - int_div(i,9) * 9 && j = j_p- int_div(j,7) *7");
+      " = int_div(j_p,9)  && 0 <= i && i < 9 && 0 <= j < 7"
+      " && i = i_p - int_div(i,9) * 9 && j = j_p- int_div(j,7) *7}");
 
   Relation *bcsr_inv =
       new Relation("{ [i,j] -> [b,i_p,j_p]: 0 <= b && b < NB "
