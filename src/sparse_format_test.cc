@@ -77,31 +77,46 @@ TEST_F(SparseFormatTest, COO_CSR_1) {
 }
 
 TEST_F(SparseFormatTest, COO_BCSR) {
-  // note 999999 is a replacement for 999999
-  // 777777 for C
-  Relation *Flatten = new Relation("{ [n] -> [i,j] : n = i * 9 + j }");
+  // note 9 is a replacement for 999999
+  // 7 for C
+  Relation *Flatten = new Relation("{ [n] -> [ti,tj,iz,jz,in,zn,riz,rjz,rin,rjn] :"
+		  " n = iz * 9 + jz }");
 
+  EXPECT_EQ ("{ [n] -> [ti, tj, iz, jz, in, zn,"
+		  " riz, rjz, rin, rjn] : n - 9 iz - jz = 0 }" 
+		  ,Flatten->prettyPrintString());
   Relation *coo = new Relation("{[n] -> [i,j] : row(n) = i && col(n) = j "
                                "&& 0 <= n && n < NNZ && Dense(i,j) != 0}");
 
 
   Relation *Zeros = new Relation(
-      " { [i,j] -> [i_p,j_p,i_pp,j_pp]: "
-      " Dense(i_p,j_p) = 0 && Dense(i_pp,j_pp) != 0 &&"
-      " int_div(i_pp,9) =int_div(i_p,9) && int_div(j_pp,9)"
-      " = int_div(j_p,9)  && 0 <= i && i < 9 && 0 <= j < 7"
-      " && i = i_p - int_div(i,9) * 9 && j = j_p- int_div(j,7) *7}");
+		  " { [i,j] -> [ti, tj, iz, jz, in, zn, riz, rjz, rin, rjn]: "
+		  " Dense (i,j) = 0 && Dense(in,jn) != 0  && iz = i && jz = j"
+		  " && i = ti * 9 + riz && j = ti * 7 + rjz && in = ti * 9 + rin"
+		  " && in = ti * 7 + rin && 0 <= riz && riz <= 9 && 0 <= rjz "
+		  " && rjz <= 7 && 0 <= rin && rin <= 9 && 0 <= rjz && rjz<=7"
+		  "}"
+		  );
 
-  Relation *bcsr_inv =
-      new Relation("{ [i,j] -> [b,i_p,j_p]: 0 <= b && b < NB "
-                   " && b = block_inv(int_div(i,9),int_div(j,7)) && 0 <= i_p   "
-                   " && i_p < 9 && 0 <= j_p < 7 && i_p =     "
-                   "i - int_div(i,9) * 9 && j_p = j- int_div(j,7) *7}      ");
+  EXPECT_EQ (   "{ [i, j] -> [ti, tj, iz, jz, in, zn, riz, rjz, rin, rjn]"
+		" : Dense(i, j) = 0 && Dense(in, jn) = 0 && i - iz = 0 &&"
+		" j - jz = 0 && i - 9 ti - riz = 0 && j - 7 ti - rjz = 0"
+		" && 7 ti - in + rin = 0 && 9 ti - in + rin = 0 && riz >= 0"
+		" && rjz >= 0 && rin >= 0 && -riz + 9 >= 0 && -rjz + 7 >= 0"
+		" && -rin + 9 >= 0 }"
+  		  ,Zeros->prettyPrintString());
+  Relation *zerosFlatten = Zeros->Inverse()->Compose(Flatten);
+  EXPECT_EQ ("",zerosFlatten->prettyPrintString());
+//  Relation *bcsr_inv =
+//      new Relation("{ [i,j] -> [b,i_p,j_p]: 0 <= b && b < NB "
+//                   " && b = block_inv(int_div(i,9),int_div(j,7)) && 0 <= i_p   "
+ //                  " && i_p < 9 && 0 <= j_p < 7 && i_p =     "
+//                   "i - int_div(i,9) * 9 && j_p = j- int_div(j,7) *7}      ");
 
-  Relation *Zeros_Flatten = Zeros->Compose(Flatten);
-  Relation *bcsr_coo = bcsr_inv->Compose(coo->Union(Zeros_Flatten));
-  EXPECT_EQ("{ [n] -> [n1] : n1 - rowcol_inv(row(n), col(n)) = 0 && n >= 0 && "
-            "n1 >= 0 && n1 - rptr(row(n)) >= 0 && -n + NNZ - 1 >= 0 && -n1 + "
-            "NNZ - 1 >= 0 && -n1 + rptr(row(n) + 1) - 1 >= 0 }",
-            bcsr_coo->prettyPrintString());
+//  Relation *Zeros_Flatten = Zeros->Compose(Flatten);
+//  Relation *bcsr_coo = bcsr_inv->Compose(coo->Union(Zeros_Flatten));
+//  EXPECT_EQ("{ [n] -> [n1] : n1 - rowcol_inv(row(n), col(n)) = 0 && n >= 0 && "
+//            "n1 >= 0 && n1 - rptr(row(n)) >= 0 && -n + NNZ - 1 >= 0 && -n1 + "
+//            "NNZ - 1 >= 0 && -n1 + rptr(row(n) + 1) - 1 >= 0 }",
+//            bcsr_coo->prettyPrintString());
 }
