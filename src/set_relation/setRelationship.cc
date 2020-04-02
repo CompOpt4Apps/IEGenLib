@@ -76,7 +76,7 @@ SetRelationshipType iegenSetRelationship(Set *set1, std::set<int> set1EigenTvs,
   SetRelationshipType ret = UnKnown;
   UFCallMap *ufcmap1 = new UFCallMap(set1->getTupleDecl());
 
-  // Getting the affine verions of the sets
+  // Getting the affine verions of the sets by appling Ackerman reduction
   Set *affineSet1 = set1->superAffineSet(ufcmap1,false);
 
   UFCallMap *ufcmap2 = new UFCallMap(set2->getTupleDecl());
@@ -117,7 +117,7 @@ SetRelationshipType Relation::dataDependenceRelationship(Relation* rightSide, in
 
   SetRelationshipType ret = UnKnown;
   // Getting a string representation of the relations that their tuple variables
-  // have general names: tv1, tv2 ...
+  // have general names: tv0, tv1 ...
   string genericStringDep1 = this->getString(true);
   string genericStringDep2 = rightSide->getString(true);
 
