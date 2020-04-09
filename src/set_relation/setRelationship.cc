@@ -37,6 +37,7 @@ namespace iegenlib{
  ** The function owns the inSet object, and it deletes it at the end
  **/
 Set* islSetProjectOutAll(Set *inSet, std::set<int> eigenTvs){
+  bool at_least_one_projected = false;
   Set *retSet;
   for(int tV = (inSet->arity()-1); tV >= 0; tV--){
     if( eigenTvs.find(tV) != eigenTvs.end() ){
@@ -45,9 +46,11 @@ Set* islSetProjectOutAll(Set *inSet, std::set<int> eigenTvs){
        retSet = islSetProjectOut(inSet, tV);
        delete inSet;
        inSet = retSet;
+       at_least_one_projected = true;
     }
   }
-  return retSet;
+  if(at_least_one_projected)  return retSet;
+  else                        return inSet;
 }
 
 
