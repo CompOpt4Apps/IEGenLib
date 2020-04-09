@@ -70,38 +70,6 @@ using iegenlib::instantiate;
       }
     }
   } 
-
-
-
-// Static Left Cholesky a modifie version of Left Cholesky from CSparse Library
-
-  for (colNo = 0; colNo < n; colNo++) {
-    //Uncompressing a col into a 1D array
-    for (nzNo = c[colNo]; nzNo < c[colNo + 1]; nzNo++) {
-      f[r[nzNo]] = values[nzNo];//Copying nonzero of the col
-    }
-    for (i = prunePtr[colNo]; i < prunePtr[colNo + 1]; i++) {
-      sw=0;
-      for (l = lC[pruneSet[i]]; l < lC[pruneSet[i] + 1]; l++) {
-        if (lR[l] == colNo && sw == 0) {
-          tmp = lValues[l];
-          sw=1;
-        }
-        if(sw == 1){
-          f[lR[l]] -= lValues[l] * tmp;                            // S1
-        }
-      }
-    }
-    temp = f[colNo];
-    tmpSqrt = sqrt(temp);
-    f[colNo] = 0;
-    lValues[lC[colNo]] = tmpSqrt;                                 // S2
-    for (j = lC[colNo] + 1; j < lC[colNo + 1]; j++) {
-      lValues[j] = f[lR[j]] / tmpSqrt;                            // S3
-      f[lR[j]] = 0;
-    }
-  }
-
 */
 #pragma mark setEqualityTEST
 TEST(setRelationshipTest, setEqualityTEST){
@@ -120,26 +88,23 @@ TEST(setRelationshipTest, setEqualityTEST){
    new Set("{[j]:0<=j &&j<nnz}"), false, iegenlib::Monotonic_Nondecreasing);
 
   // r1: [In Incomplete Cholesky 0 ] a read in S1 (val[colPtr[i]]);  a write in S3 (val[k]); (Flow dependence)
-  // r1 = { [i,m,k,l] -> [ip] : k = colPtr(ip) && i < ip && 0 <= i,ip < n-1 &&
-  //         colPtr(i)+1 <= m < colPtr(i+1) &&
-  //         colPtr(rowIdx(m)) <= k < colPtr(rowIdx(m)+1) && 
-  //         m <= l < colPtr(i+1) && rowIdx(l+1) <= rowIdx(k) 
-  //         && rowIdx(l) = rowIdx(k) }
-  // Note: Following is the automatically extracted dependence
-  Relation *r1 = new Relation("{ [0, In_2, 2, In_4, 0, In_6, 0, In_8, 0] -> [0, Out_2, 0, 0, 0, 0, 0, 0, 0] : colPtr(Out_2) = In_6 && rowIdx(In_8) = rowIdx(In_6) && 0 <= In_2 && 0 <= Out_2 && In_4 <= In_8 && colPtr(rowIdx(In_4)) <= In_6 && rowIdx(In_8 + 1) <= rowIdx(In_8) && In_2 < Out_2 && In_2 + 1 < n && In_4 < colPtr(In_2 + 1) && colPtr(In_2) < In_4 && In_6 < colPtr(rowIdx(In_4) + 1) && In_8 < colPtr(In_2 + 1) && Out_2 + 1 < n }");
+  Relation *r1 = new Relation("{ [i,m,k,l] -> [ip] : k = colPtr(ip) && i < ip && 0 <= i < n-1 && "
+             "0 <= ip < n-1 && colPtr(i)+1 <= m < colPtr(i+1) && "
+             "colPtr(rowIdx(m)) <= k < colPtr(rowIdx(m)+1) && "
+             "m <= l < colPtr(i+1) && rowIdx(l+1) <= rowIdx(k) "
+             "&& rowIdx(l) = rowIdx(k) }");
 
   // r2: [In Incomplete Cholesky 0 ]  a write in S1 (val[colPtr[i]]);  a read in S3 (val[k]); (Anti dependence)
-  // r2 = { [ip,mp,kp,lp] -> [i] : kp = colPtr(i) && ip < i && 0 <= i,ip < n-1 && 
-  //         colPtr(ip)+1 <= mp < colPtr(ip+1) && 
-  //         colPtr(rowIdx(mp)) <= kp < colPtr(rowIdx(mp)+1) && 
-  //         mp <= lp < colPtr(ip+1) && rowIdx(lp+1) <= rowIdx(kp) && 
-  //         rowIdx(lp) = rowIdx(kp) }
-  // Note: Following is the automatically extracted dependence
-  Relation *r2 = new Relation("{ [0, Out_2, 2, Out_4, 0, Out_6, 0, Out_8, 0] -> [0, In_2, 0, 0, 0, 0, 0, 0, 0] : colPtr(In_2) = Out_6 && rowIdx(Out_8) = rowIdx(Out_6) && 0 <= Out_2 && 0 <= In_2 && Out_4 <= Out_8 && colPtr(rowIdx(Out_4)) <= Out_6 && rowIdx(Out_8 + 1) <= rowIdx(Out_8) && Out_2 < In_2 && Out_2 + 1 < n && Out_4 < colPtr(Out_2 + 1) && colPtr(Out_2) < Out_4 && Out_6 < colPtr(rowIdx(Out_4) + 1) && Out_8 < colPtr(Out_2 + 1) && In_2 + 1 < n }");
+  Relation *r2 = new Relation("{ [ip,mp,kp,lp] -> [i] : kp = colPtr(i) && ip < i && 0 <= i < n-1 && "
+             "0 <= ip < n-1 && colPtr(ip)+1 <= mp < colPtr(ip+1) && "
+             "colPtr(rowIdx(mp)) <= kp < colPtr(rowIdx(mp)+1) && "
+             "mp <= lp < colPtr(ip+1) && rowIdx(lp+1) <= rowIdx(kp) && "
+             "rowIdx(lp) = rowIdx(kp) }");
 
   // The reason we can expect these two dependences to be SetEqual is following:
   // First let us change the name of tuple variables into general names 
-  // as only their ordering is important for determining relationsship between two polehedral:
+  // as only their ordering is important for forming the polyhedral space 
+  // (and for our purposes determining relationsship between two polehedral):
 
   // 
   // r1 = { [tv1,tv2,tv3,tv4] -> [tv5] : tv3 = colPtr(tv5) && tv1 < tv5 && 0 <= tv1,tv5 < n-1 &&
@@ -157,35 +122,42 @@ TEST(setRelationshipTest, setEqualityTEST){
 
   EXPECT_EQ( iegenlib::SetEqual, r1->dataDependenceRelationship(r2,1) );
 
-
-  // r1: [In Incomplete Cholesky 0 ]  a read in S3 (val[k]);  a write in S3 (val[k]); (Flow dependence)
-  r1 = new Relation("{ [0, In_2, 2, In_4, 0, In_6, 0, In_8, 0] -> [0, Out_2, 2, Out_4, 0, Out_6, 0, Out_8, 0] : Out_6 = In_6 && rowIdx(Out_8) = rowIdx(Out_6) && rowIdx(In_8) = rowIdx(In_6) && 0 <= In_2 && 0 <= Out_2 && In_4 <= In_8 && colPtr(rowIdx(In_4)) <= In_6 && Out_4 <= Out_8 && colPtr(rowIdx(Out_4)) <= Out_6 && rowIdx(Out_8 + 1) <= rowIdx(Out_6) && rowIdx(In_8 + 1) <= rowIdx(In_8) && In_2 < Out_2 && In_2 + 1 < n && In_4 < colPtr(In_2 + 1) && colPtr(In_2) < In_4 && In_6 < colPtr(rowIdx(In_4) + 1) && In_8 < colPtr(In_2 + 1) && Out_2 + 1 < n && Out_4 < colPtr(Out_2 + 1) && colPtr(Out_2) < Out_4 && Out_6 < colPtr(rowIdx(Out_4) + 1) && Out_8 < colPtr(Out_2 + 1) }");
-
-  // r2: [In Incomplete Cholesky 0 ]  a read in S3 (val[k]);  a write in S3 (val[k]); (Anti dependence)
-  r2 = new Relation("{ [0, Out_2, 2, Out_4, 0, Out_6, 0, Out_8, 0] -> [0, In_2, 2, In_4, 0, In_6, 0, In_8, 0] : In_6 = Out_6 && rowIdx(In_8) = rowIdx(In_6) && rowIdx(Out_8) = rowIdx(Out_6) && 0 <= Out_2 && 0 <= In_2 && Out_4 <= Out_8 && colPtr(rowIdx(Out_4)) <= Out_6 && In_4 <= In_8 && colPtr(rowIdx(In_4)) <= In_6 && rowIdx(In_8 + 1) <= rowIdx(In_8) && rowIdx(Out_8 + 1) <= rowIdx(Out_6) && Out_2 < In_2 && Out_2 + 1 < n && Out_4 < colPtr(Out_2 + 1) && colPtr(Out_2) < Out_4 && Out_6 < colPtr(rowIdx(Out_4) + 1) && Out_8 < colPtr(Out_2 + 1) && In_2 + 1 < n && In_4 < colPtr(In_2 + 1) && colPtr(In_2) < In_4 && In_6 < colPtr(rowIdx(In_4) + 1) && In_8 < colPtr(In_2 + 1) }");
-
-  // Testing r1->setRelationship(r2) 
-  EXPECT_EQ( iegenlib::SetEqual, r1->dataDependenceRelationship(r2,1) );
-
   delete r1;
   delete r2;
 
 
-  // r1: [In Incomplete Cholesky 0 ]  a write in S3 (val[k]);  a read in S3 (val[m]); (Anti dependence)
-  r1 = new Relation("{ [0, Out_2, 2, Out_4, 0, Out_6, 0, Out_8, 0] -> [0, In_2, 1, In_4, 0, 0, 0, 0, 0] : In_4 = Out_6 && rowIdx(Out_8) = rowIdx(Out_6) && 0 <= Out_2 && 0 <= In_2 && Out_4 <= Out_8 && colPtr(rowIdx(Out_4)) <= Out_6 && rowIdx(Out_8 + 1) <= rowIdx(Out_6) && Out_2 < In_2 && Out_2 + 1 < n && Out_4 < colPtr(Out_2 + 1) && colPtr(Out_2) < Out_4 && Out_6 < colPtr(rowIdx(Out_4) + 1) && Out_8 < colPtr(Out_2 + 1) && In_2 + 1 < n && In_4 < colPtr(In_2 + 1) && colPtr(In_2) < In_4 }");
+  // Exact same reason for following two sets being equal as the earlier case applies here.
+  // r1: [In Incomplete Cholesky 0 ]  a read in S3 (val[k]);  a write in S3 (val[k]); (Flow dependence)
+  r1 = new Relation("{ [i,m,k,l] -> [ip,mp,kp,lp] : k = colPtr(ip) && i < ip && 0 <= i < n-1 && "
+             "0 <= ip < n-1 && colPtr(i)+1 <= m < colPtr(i+1) && "
+             "colPtr(rowIdx(m)) <= k < colPtr(rowIdx(m)+1) && "
+             "m <= l < colPtr(i+1) && rowIdx(l+1) <= rowIdx(k) "
+             "&& rowIdx(l) = rowIdx(k) "
+             "&& colPtr(ip)+1 <= mp < colPtr(ip+1) && "
+             "colPtr(rowIdx(mp)) <= kp < colPtr(rowIdx(mp)+1) && "
+             "mp <= lp < colPtr(ip+1) && rowIdx(lp+1) <= rowIdx(kp) "
+             "&& rowIdx(lp) = rowIdx(kp)}");
 
-  // r2: [In Incomplete Cholesky 0 ]  a read in S2 (val[m]);  a write in S3 (val[k]); (Flow dependence)
-  r2 = new Relation("{ [0, In_2, 2, In_4, 0, In_6, 0, In_8, 0] -> [0, Out_2, 1, Out_4, 0, 0, 0, 0, 0] : Out_4 = In_6 && rowIdx(In_8) = rowIdx(In_6) && 0 <= In_2 && 0 <= Out_2 && In_4 <= In_8 && colPtr(rowIdx(In_4)) <= In_6 && rowIdx(In_8 + 1) <= rowIdx(In_8) && In_2 < Out_2 && In_2 + 1 < n && In_4 < colPtr(In_2 + 1) && colPtr(In_2) < In_4 && In_6 < colPtr(rowIdx(In_4) + 1) && In_8 < colPtr(In_2 + 1) && Out_2 + 1 < n && Out_4 < colPtr(Out_2 + 1) && colPtr(Out_2) < Out_4 }");
+  // r2: [In Incomplete Cholesky 0 ]  a read in S3 (val[k]);  a write in S3 (val[k]); (Anti dependence)
+  r2 = new Relation("{ [ip,mp,kp,lp] -> [i,m,k,l] : colPtr(i) = kp && ip < i && 0 <= i < n-1 && "
+             "0 <= ip < n-1 && colPtr(i)+1 <= m < colPtr(i+1) && "
+             "colPtr(rowIdx(m)) <= k < colPtr(rowIdx(m)+1) && "
+             "m <= l < colPtr(i+1) && rowIdx(l+1) <= rowIdx(k) "
+             "&& rowIdx(l) = rowIdx(k) "
+             "&& colPtr(ip)+1 <= mp < colPtr(ip+1) && "
+             "colPtr(rowIdx(mp)) <= kp < colPtr(rowIdx(mp)+1) && "
+             "mp <= lp < colPtr(ip+1) && rowIdx(lp+1) <= rowIdx(kp) "
+             "&& rowIdx(lp) = rowIdx(kp)}");
 
-  // Testing r1->setRelationship(r2) 
-  EXPECT_EQ( iegenlib::SetEqual, r1->dataDependenceRelationship(r2,1) );
+  // Testing r1->dataDependenceRelationship(r2) 
+  EXPECT_EQ( iegenlib::SetEqual, r1->dataDependenceRelationship(r2,0) );
 
   delete r1;
   delete r2;
 }
 
 
-#pragma mark setEqualityTEST
+#pragma mark setTrivialSuperSetTEST
 TEST(setRelationshipTest, setTrivialSuperSetTEST){
 
   // Introduce the UFCalls to enviroment, and indicate their domain, range
@@ -201,77 +173,50 @@ TEST(setRelationshipTest, setTrivialSuperSetTEST){
    new Set("{[i]:0<=i &&i<m}"), 
    new Set("{[j]:0<=j &&j<nnz}"), false, iegenlib::Monotonic_Nondecreasing);
 
-  iegenlib::appendCurrEnv("lR",
-            new Set("{[i]:0<=i &&i<nnz}"),      // Domain 
-            new Set("{[j]:0<=j &&j<m}"),        // Range
-            false,                              // Bijective?!
-            iegenlib::Monotonic_NONE            // monotonicity
-            );
-  iegenlib::appendCurrEnv("lC",
-   new Set("{[i]:0<=i &&i<m}"), 
-   new Set("{[j]:0<=j &&j<nnz}"), false, iegenlib::Monotonic_Nondecreasing);
-
-
-  iegenlib::appendCurrEnv("pruneSet",
-            new Set("{[i]:0<=i &&i<nnz}"),      // Domain 
-            new Set("{[j]:0<=j &&j<m}"),        // Range
-            false,                              // Bijective?!
-            iegenlib::Monotonic_NONE            // monotonicity
-            );
-  iegenlib::appendCurrEnv("prunePtr",
-   new Set("{[i]:0<=i &&i<m}"), 
-   new Set("{[j]:0<=j &&j<nnz}"), false, iegenlib::Monotonic_Nondecreasing);
-
-
-
-  // r2 has all the constraints of the r1, plus some other constraints, in this case 
-  // we say that r1 is SuperSetEqual of r2..
-
   // r1:  [In Incomplete Cholesky 0 ] a read in S1 (val[colPtr[i]]);  a write in S3 (val[k]); (Flow dependence)
-  Relation *r1 = new Relation("{ [0, In_2, 2, In_4, 0, In_6, 0, In_8, 0] -> [0, Out_2, 0, 0, 0, 0, 0, 0, 0] : colPtr(Out_2) = In_6 && rowIdx(In_8) = rowIdx(In_6) && 0 <= In_2 && 0 <= Out_2 && In_4 <= In_8 && colPtr(rowIdx(In_4)) <= In_6 && rowIdx(In_8 + 1) <= rowIdx(In_8) && In_2 < Out_2 && In_2 + 1 < n && In_4 < colPtr(In_2 + 1) && colPtr(In_2) < In_4 && In_6 < colPtr(rowIdx(In_4) + 1) && In_8 < colPtr(In_2 + 1) && Out_2 + 1 < n }");
+  Relation *r1 = new Relation("{ [i,m,k,l] -> [ip] : k = colPtr(ip) && i < ip && 0 <= i < n-1 && "
+             "0 <= ip < n-1 && colPtr(i)+1 <= m < colPtr(i+1) && "
+             "colPtr(rowIdx(m)) <= k < colPtr(rowIdx(m)+1) && "
+             "m <= l < colPtr(i+1) && rowIdx(l+1) <= rowIdx(k) "
+             "&& rowIdx(l) = rowIdx(k) }");
 
-  // r1:  [In Incomplete Cholesky 0 ] a read in S2 (val[colPtr[i]]);  a write in S3 (val[k]); (Flow dependence)
-  Relation *r2 = new Relation("{ [0, In_2, 2, In_4, 0, In_6, 0, In_8, 0] -> [0, Out_2, 1, Out_4, 0, 0, 0, 0, 0] : colPtr(Out_2) = In_6 && rowIdx(In_8) = rowIdx(In_6) && 0 <= In_2 && 0 <= Out_2 && In_4 <= In_8 && colPtr(rowIdx(In_4)) <= In_6 && rowIdx(In_8 + 1) <= rowIdx(In_8) && In_2 < Out_2 && In_2 + 1 < n && In_4 < colPtr(In_2 + 1) && colPtr(In_2) < In_4 && In_6 < colPtr(rowIdx(In_4) + 1) && In_8 < colPtr(In_2 + 1) && Out_2 + 1 < n && Out_4 < colPtr(Out_2 + 1) && colPtr(Out_2) < Out_4 }");
+  // r2:  [In Incomplete Cholesky 0 ] a read in S2 (val[colPtr[i]]);  a write in S3 (val[k]); (Flow dependence)
+  Relation *r2 = new Relation("{ [ip,mp,kp,lp] -> [i,m] : kp = colPtr(i) && ip < i && 0 <= i < n-1 && "
+             "0 <= ip < n-1 && colPtr(ip)+1 <= mp < colPtr(ip+1) && "
+             "colPtr(rowIdx(mp)) <= kp < colPtr(rowIdx(mp)+1) && "
+             "mp <= lp < colPtr(ip+1) && rowIdx(lp+1) <= rowIdx(kp) && "
+             "rowIdx(lp) = rowIdx(kp) && colPtr(i)+1 <= m < colPtr(i+1)}");
 
-  // Testing r1->setRelationship(r2) 
-  EXPECT_EQ( iegenlib::SuperSet, r1->dataDependenceRelationship(r2,1) );
+  // Since r2 has all the constraints of the r1, plus some other constraints, in this case 
+  // we say that r1 is SuperSet of r2. To make this more clear,
+  // first let us change the name of tuple variables into general names 
+  // as only their ordering is important for forming the polyhedral space 
+  // (and for our purposes determining relationsship between two polehedral):
 
-  delete r1;
-  delete r2;
-
-
-  // r2 has all the constraints of the r1, plus some other constraints, in this case 
-  // we say that r1 is SuperSetEqual of r2.
-  // r1: [In Static Left Cholesky] a write  lValues[lC[colNo]] in S2; A read lValues[l] in S1
-  r1 = new Relation("{ [0, In_2, 2, 0, 0, 0, 0] -> [0, Out_2, 1, Out_4, 1, Out_6, 1] : lC(In_2) = Out_6 && 0 <= In_2 && 0 <= Out_2 && prunePtr(Out_2) <= Out_4 && lC(pruneSet(Out_4)) <= Out_6 && In_2 < Out_2 && In_2 < n && Out_2 < n && Out_4 < prunePtr(Out_2 + 1) && Out_6 < lC(pruneSet(Out_4) + 1) }");  // && 1 = sw
-
-  r2 = new Relation("{ [0, In_2, 2, 0, 0, 0, 0] -> [0, Out_2, 1, Out_4, 1, Out_6, 0] : lR(Out_6) = Out_2 && lC(In_2) = Out_6 && 0 <= In_2 && 0 <= Out_2 && prunePtr(Out_2) <= Out_4 && lC(pruneSet(Out_4)) <= Out_6 && In_2 < Out_2 && In_2 < n && Out_2 < n && Out_4 < prunePtr(Out_2 + 1) && Out_6 < lC(pruneSet(Out_4) + 1) }");  // 0 = sw && 
-
-  // Testing r1->setRelationship(r2) 
-  EXPECT_EQ( iegenlib::SuperSet, r1->dataDependenceRelationship(r2,1) );
-
-  delete r1;
-  delete r2;
-
-
-
-  // lChol R6 and R2
-  // r2 has all the constraints of the r1, plus some other constraints, in this case 
-  // we say that r1 is SuperSetEqual of r2, which is trivially to see.
-  r1 = new Relation("{ [0, In_2, 3, In_4, 0, 0, 0] -> [0, Out_2, 1, Out_4, 1, Out_6, 1] : Out_6 = In_4 && 0 <= In_2 && 0 <= Out_2 && prunePtr(Out_2) <= Out_4 && lC(pruneSet(Out_4)) <= Out_6 && In_2 < Out_2 && In_2 < n && In_4 < lC(In_2 + 1) && lC(In_2) < In_4 && Out_2 < n && Out_4 < prunePtr(Out_2 + 1) && Out_6 < lC(pruneSet(Out_4) + 1) }");  // && 1 = sw
-
-  r2 = new Relation("{ [0, In_2, 3, In_4, 0, 0, 0] -> [0, Out_2, 1, Out_4, 1, Out_6, 0] : Out_6 = In_4 && lR(Out_6) = Out_2 && 0 <= In_2 && 0 <= Out_2 && prunePtr(Out_2) <= Out_4 && lC(pruneSet(Out_4)) <= Out_6 && In_2 < Out_2 && In_2 < n && In_4 < lC(In_2 + 1) && lC(In_2) < In_4 && Out_2 < n && Out_4 < prunePtr(Out_2 + 1) && Out_6 < lC(pruneSet(Out_4) + 1) }");  // 0 = sw && 
-
-  // Testing r1->setRelationship(r2) 
-  EXPECT_EQ( iegenlib::SuperSet, r1->dataDependenceRelationship(r2,1) );
+  // 
+  // r1 = { [tv1,tv2,tv3,tv4] -> [tv5] : tv3 = colPtr(tv5) && tv1 < tv5 && 0 <= tv1,tv5 < n-1 &&
+  //         colPtr(tv1)+1 <= tv2 < colPtr(tv1+1) &&
+  //         colPtr(rowIdx(tv2)) <= tv3 < colPtr(rowIdx(tv2)+1) && 
+  //         tv2 <= tv4 < colPtr(tv1+1) && rowIdx(tv4+1) <= rowIdx(tv3) 
+  //         && rowIdx(tv4) = rowIdx(tv3) }
+  // r2 = { [tv1,tv2,tv3,tv4] -> [tv5,tv6] : tv3 = colPtr(tv5) && tv1 < tv5 && 0 <= tv1,tv5 < n-1 &&
+  //         colPtr(tv1)+1 <= tv2 < colPtr(tv1+1) &&
+  //         colPtr(rowIdx(tv2)) <= tv3 < colPtr(rowIdx(tv2)+1) && 
+  //         tv2 <= tv4 < colPtr(tv1+1) && rowIdx(tv4+1) <= rowIdx(tv3) 
+  //         && rowIdx(tv4) = rowIdx(tv3)
+  //         && colPtr(tv5)+1 <= tv6 < colPtr(tv5+1)}
+  //
+  //   r2 has the constraints: "colPtr(tv5)+1 <= tv6 < colPtr(tv5+1)" that r1 does not have.
+  EXPECT_EQ( iegenlib::SuperSet, r1->dataDependenceRelationship(r2,0) );
 
   delete r1;
   delete r2;
+
 }
 
 
-#pragma mark setEqualityTEST
-TEST(setRelationshipTest, setTrivialSubSetEqualityTEST){
+#pragma mark setTrivialSubSetTEST
+TEST(setRelationshipTest, setTrivialSubSetTEST){
 
   // Introduce the UFCalls to enviroment, and indicate their domain, range
   // whether they are bijective, or monotonic.
@@ -286,37 +231,36 @@ TEST(setRelationshipTest, setTrivialSubSetEqualityTEST){
    new Set("{[i]:0<=i &&i<m}"), 
    new Set("{[j]:0<=j &&j<nnz}"), false, iegenlib::Monotonic_Nondecreasing);
 
-  // Mahdi: Self note: R28 and R17: needs isl normalization
+  // r1: [In Incomplete Cholesky 0 ] a read in S3 (val[m]);  a write in S3 (val[k]); (Flow dependence)
+  Relation *r1 = new Relation("{ [i,m,k,l] -> [ip,mp,kp,lp] : k = mp && i < ip && 0 <= i < n-1 && "
+             "0 <= ip < n-1 && colPtr(i)+1 <= m < colPtr(i+1) && "
+             "colPtr(rowIdx(m)) <= k < colPtr(rowIdx(m)+1) && "
+             "m <= l < colPtr(i+1) && rowIdx(l+1) <= rowIdx(k) "
+             "&& rowIdx(l) = rowIdx(k) "
+             "&& colPtr(ip)+1 <= mp < colPtr(ip+1) && "
+             "colPtr(rowIdx(mp)) <= kp < colPtr(rowIdx(mp)+1) && "
+             "mp <= lp < colPtr(ip+1) && rowIdx(lp+1) <= rowIdx(kp) "
+             "&& rowIdx(lp) = rowIdx(kp)}");
+
+  // r1: [In Incomplete Cholesky 0 ] a write in S1 (val[m]);  a read in S3 (val[k]); (Anti dependence)
+  Relation *r2 = new Relation("{ [ip,mp,kp,lp] -> [i,m] : kp = m && ip < i && 0 <= i < n-1 && "
+             "0 <= ip < n-1 && colPtr(ip)+1 <= mp < colPtr(ip+1) && "
+             "colPtr(rowIdx(mp)) <= kp < colPtr(rowIdx(mp)+1) && "
+             "mp <= lp < colPtr(ip+1) && rowIdx(lp+1) <= rowIdx(kp) && "
+             "rowIdx(lp) = rowIdx(kp) && colPtr(i)+1 <= m < colPtr(i+1)}");
+
+
   // r1 has all the constraints of the r2, plus some other constraints, in this case 
   // we say that r1 is SubSetEqual of r2, which is trivially to see.
-  Relation *r1 = new Relation("{ [0, In_2, 2, In_4, 0, In_6, 0, In_8, 0] -> [0, Out_2, 2, Out_4, 0, Out_6, 0, Out_8, 0] : Out_4 = In_6 && rowIdx(Out_8) = rowIdx(Out_6) && rowIdx(In_8) = rowIdx(In_6) && 0 <= In_2 && 0 <= Out_2 && In_4 <= In_8 && colPtr(rowIdx(In_4)) <= In_6 && Out_4 <= Out_8 && colPtr(rowIdx(Out_4)) <= Out_6 && rowIdx(Out_8 + 1) <= rowIdx(Out_6) && rowIdx(In_8 + 1) <= rowIdx(In_8) && In_2 < Out_2 && In_2 + 1 < n && In_4 < colPtr(In_2 + 1) && colPtr(In_2) < In_4 && In_6 < colPtr(rowIdx(In_4) + 1) && In_8 < colPtr(In_2 + 1) && Out_2 + 1 < n && Out_4 < colPtr(Out_2 + 1) && colPtr(Out_2) < Out_4 && Out_6 < colPtr(rowIdx(Out_4) + 1) && Out_8 < colPtr(Out_2 + 1) }");
-
-  Relation *r2 = new Relation("{ [0, Out_2, 2, Out_4, 0, Out_6, 0, Out_8, 0] -> [0, In_2, 1, In_4, 0, 0, 0, 0, 0] : In_4 = Out_6 && rowIdx(Out_8) = rowIdx(Out_6) && 0 <= Out_2 && 0 <= In_2 && Out_4 <= Out_8 && colPtr(rowIdx(Out_4)) <= Out_6 && rowIdx(Out_8 + 1) <= rowIdx(Out_6) && Out_2 < In_2 && Out_2 + 1 < n && Out_4 < colPtr(Out_2 + 1) && colPtr(Out_2) < Out_4 && Out_6 < colPtr(rowIdx(Out_4) + 1) && Out_8 < colPtr(Out_2 + 1) && In_2 + 1 < n && In_4 < colPtr(In_2 + 1) && colPtr(In_2) < In_4 }");
-
-  // Testing r1->setRelationship(r2) 
-  EXPECT_EQ( iegenlib::SubSet, r1->dataDependenceRelationship(r2,1) );
-
-  delete r1;
-  delete r2;
-
-
-  // R28 and R22
-  // r1 has all the constraints of the r2, plus some other constraints, in this case 
-  // we say that r1 is SubSetEqual of r2, which is trivially to see.
-  r1 = new Relation("{ [0, In_2, 2, In_4, 0, In_6, 0, In_8, 0] -> [0, Out_2, 2, Out_4, 0, Out_6, 0, Out_8, 0] : Out_4 = In_6 && rowIdx(Out_8) = rowIdx(Out_6) && rowIdx(In_8) = rowIdx(In_6) && 0 <= In_2 && 0 <= Out_2 && In_4 <= In_8 && colPtr(rowIdx(In_4)) <= In_6 && Out_4 <= Out_8 && colPtr(rowIdx(Out_4)) <= Out_6 && rowIdx(Out_8 + 1) <= rowIdx(Out_6) && rowIdx(In_8 + 1) <= rowIdx(In_8) && In_2 < Out_2 && In_2 + 1 < n && In_4 < colPtr(In_2 + 1) && colPtr(In_2) < In_4 && In_6 < colPtr(rowIdx(In_4) + 1) && In_8 < colPtr(In_2 + 1) && Out_2 + 1 < n && Out_4 < colPtr(Out_2 + 1) && colPtr(Out_2) < Out_4 && Out_6 < colPtr(rowIdx(Out_4) + 1) && Out_8 < colPtr(Out_2 + 1) }");
-
-  r2 = new Relation("{ [0, In_2, 2, In_4, 0, In_6, 0, In_8, 0] -> [0, Out_2, 1, Out_4, 0, 0, 0, 0, 0] : Out_4 = In_6 && rowIdx(In_8) = rowIdx(In_6) && 0 <= In_2 && 0 <= Out_2 && In_4 <= In_8 && colPtr(rowIdx(In_4)) <= In_6 && rowIdx(In_8 + 1) <= rowIdx(In_8) && In_2 < Out_2 && In_2 + 1 < n && In_4 < colPtr(In_2 + 1) && colPtr(In_2) < In_4 && In_6 < colPtr(rowIdx(In_4) + 1) && In_8 < colPtr(In_2 + 1) && Out_2 + 1 < n && Out_4 < colPtr(Out_2 + 1) && colPtr(Out_2) < Out_4 }");
-
-  // Testing r1->setRelationship(r2) 
-  EXPECT_EQ( iegenlib::SubSet, r1->dataDependenceRelationship(r2,1) );
+  EXPECT_EQ( iegenlib::SubSet, r1->dataDependenceRelationship(r2,0) );
 
   delete r1;
   delete r2;
 }
 
 
-#pragma mark setEqualityTEST
-TEST(setRelationshipTest, setComplicatedSuperSetEqualityTEST){
+#pragma mark setComplicatedSetEqualityTEST
+TEST(setRelationshipTest, setComplicatedSetEqualityTEST){
 
   // Introduce the UFCalls to enviroment, and indicate their domain, range
   // whether they are bijective, or monotonic.
@@ -331,18 +275,39 @@ TEST(setRelationshipTest, setComplicatedSuperSetEqualityTEST){
    new Set("{[i]:0<=i &&i<m}"), 
    new Set("{[j]:0<=j &&j<nnz}"), false, iegenlib::Monotonic_Nondecreasing);
 
+  // r1: [In Incomplete Cholesky 0 ] a read in S3 (val[m]);  a write in S3 (val[k]); (Flow dependence)
+  Relation *r1 = new Relation("{ [i,m,k,l] -> [ip,mp,kp,lp] :        k = mp "
+             "&& i < ip && 0 <= i < n-1 && "
+             "0 <= ip < n-1 && colPtr(i)+1 <= m < colPtr(i+1) && "
+             "colPtr(rowIdx(m)) <= k < colPtr(rowIdx(m)+1) && "
+             "m <= l < colPtr(i+1) && rowIdx(l+1) <= rowIdx(k) "
+             "&& rowIdx(l) = rowIdx(k) "
+             "&& colPtr(ip)+1 <= mp < colPtr(ip+1) && "
+             "colPtr(rowIdx(mp)) <= kp < colPtr(rowIdx(mp)+1) && "
+             "mp <= lp < colPtr(ip+1) && rowIdx(lp+1) <= rowIdx(kp) "
+             "&& rowIdx(lp) = rowIdx(kp)}");
 
-  // R22 and R30
-  // r2 has all the constraints of the r1, except for one different equality
-  // (alos some extra other constraints), in this case we look into that 
-  // different equality, if the equality of r1 subsumes the equality in r2,
-  // we say that r1 is SuperSetEqual of r2, which is trivially to see.
-  Relation *r1 = new Relation("{ [0, In_2, 2, In_4, 0, In_6, 0, In_8, 0] -> [0, Out_2, 2, Out_4, 0, Out_6, 0, Out_8, 0] : Out_4 = In_6 && rowIdx(Out_8) = rowIdx(Out_6) && rowIdx(In_8) = rowIdx(In_6) && 0 <= In_2 && 0 <= Out_2 && In_4 <= In_8 && colPtr(rowIdx(In_4)) <= In_6 && Out_4 <= Out_8 && colPtr(rowIdx(Out_4)) <= Out_6 && rowIdx(Out_8 + 1) <= rowIdx(Out_6) && rowIdx(In_8 + 1) <= rowIdx(In_8) && In_2 < Out_2 && In_2 + 1 < n && In_4 < colPtr(In_2 + 1) && colPtr(In_2) < In_4 && In_6 < colPtr(rowIdx(In_4) + 1) && In_8 < colPtr(In_2 + 1) && Out_2 + 1 < n && Out_4 < colPtr(Out_2 + 1) && colPtr(Out_2) < Out_4 && Out_6 < colPtr(rowIdx(Out_4) + 1) && Out_8 < colPtr(Out_2 + 1) }");
+  // r1: [In Incomplete Cholesky 0 ] a read in S3 (val[l]);  a write in S3 (val[k]); (Flow dependence)
+  Relation *r2 = new Relation("{ [i,m,k,l] -> [ip,mp,kp,lp] :        k = lp "
+             "&& i < ip && 0 <= i < n-1 && "
+             "0 <= ip < n-1 && colPtr(i)+1 <= m < colPtr(i+1) && "
+             "colPtr(rowIdx(m)) <= k < colPtr(rowIdx(m)+1) && "
+             "m <= l < colPtr(i+1) && rowIdx(l+1) <= rowIdx(k) "
+             "&& rowIdx(l) = rowIdx(k) "
+             "&& colPtr(ip)+1 <= mp < colPtr(ip+1) && "
+             "colPtr(rowIdx(mp)) <= kp < colPtr(rowIdx(mp)+1) && "
+             "mp <= lp < colPtr(ip+1) && rowIdx(lp+1) <= rowIdx(kp) "
+             "&& rowIdx(lp) = rowIdx(kp)}");
 
-  Relation *r2 = new Relation("{ [0, In_2, 2, In_4, 0, In_6, 0, In_8, 0] -> [0, Out_2, 2, Out_4, 0, Out_6, 0, Out_8, 0] : Out_8 = In_6 && rowIdx(Out_8) = rowIdx(Out_6) && rowIdx(In_8) = rowIdx(In_6) && 0 <= In_2 && 0 <= Out_2 && In_4 <= In_8 && colPtr(rowIdx(In_4)) <= In_6 && Out_4 <= Out_8 && colPtr(rowIdx(Out_4)) <= Out_6 && rowIdx(Out_8 + 1) <= rowIdx(Out_6) && rowIdx(In_8 + 1) <= rowIdx(In_8) && In_2 < Out_2 && In_2 + 1 < n && In_4 < colPtr(In_2 + 1) && colPtr(In_2) < In_4 && In_6 < colPtr(rowIdx(In_4) + 1) && In_8 < colPtr(In_2 + 1) && Out_2 + 1 < n && Out_4 < colPtr(Out_2 + 1) && colPtr(Out_2) < Out_4 && Out_6 < colPtr(rowIdx(Out_4) + 1) && Out_8 < colPtr(Out_2 + 1) }");
 
-  // Testing r1->setRelationship(r2) 
-  EXPECT_EQ( iegenlib::SetEqual, r1->dataDependenceRelationship(r2,1) );
+  // Intuitive reason as to why r1 and r2 are equal:
+  // r2 has all the constraints of the r1, except for one different equality" r1 has "k = mp" and r2 has "k = lp"
+  // In this case we look into that different equality, since one side of the equalities is the same variable, namely k,
+  // we can consider the different sides, mp Vs. lp, to determine r1 and r2 relationship.
+  // And since mp and lp variables have the same domain (colPtr(ip)+1 <= mp <= lp < colPtr(ip+1)),
+  // we can see that r1 and r2 are equal.
+
+  EXPECT_EQ( iegenlib::SetEqual, r1->dataDependenceRelationship(r2,0) );
 
   delete r1;
   delete r2;
