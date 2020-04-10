@@ -436,4 +436,58 @@ std::string relationStr2SetStr(std::string relation, int inArity, int outArity){
   return getFullStrFromParts(relationParts);
 }
 
+
+/*! This function adds constraints from a Set/Relation string to another one
+**  without checking whether their tuple declaration match or not. 
+**  Note that Intersect functionality of IEGenLib that can be used for similar 
+**  purposes checks for matching tuple declaration.
+*/
+std::string strAddConstraints(std::string dest, std::string src){
+  srParts destParts = getPartsFromStr(dest);
+  srParts srcParts = getPartsFromStr(src);
+  destParts.constraints = srcParts.constraints + " && " + destParts.constraints;
+  return getFullStrFromParts(destParts);
+}
+
+
+
+/*!
+** This function uses ISL library to dermine the relationship between
+** two affine set, given as strings that ISL can read.
+
+   A ?? B
+
+ ** Inputs:
+ 
+    setStr1: Left-hand side dependence  (A)
+    setStr2: Right-hand side dependence (B)
+
+ ** Output is one of following:
+     
+     SetEqual, SubSetEqual, SubSet, SuperSet, SuperSetEqual, UnKnown  
+**  
+*/
+SetRelationshipType strISLSetRelationship(std::string setStr1, std::string setStr2){
+   isl_ctx* ctx = isl_ctx_alloc();  
+   SetRelationshipType ret = UnKnown;
+   isl_set* set1 = isl_set_read_from_str(ctx, setStr1.c_str());
+   isl_set* set2 = isl_set_read_from_str(ctx, setStr2.c_str());
+   
+   if( isl_set_is_equal( set1, set2) ){
+     ret = SetEqual;
+   } else if( isl_set_is_strict_subset(set1,set2) ){
+     ret = SubSet;
+   }  else if( isl_set_is_subset(set1,set2) ){
+     ret = SubSetEqual;
+   } else if( isl_set_is_strict_subset(set2,set1) ){
+     ret = SuperSet;
+   } else if( isl_set_is_subset(set2,set1) ){
+     ret = SuperSetEqual;
+   } else {
+     ret = UnKnown;
+   }
+   return ret;
+}
+
+
 }// iegenlib namespace

@@ -53,6 +53,8 @@ list(REMOVE_ITEM iegenlib_SOURCES
 list(REMOVE_ITEM iegenlib_SOURCES 
 	${IEGENLIB_SOURCE_DIR}/src/drivers/superAffSet.cc)
 
+list(REMOVE_ITEM iegenlib_SOURCES 
+	${IEGENLIB_SOURCE_DIR}/src/drivers/subSetDriver.cc)
 
 ############################### STEP 2 ########################################
 ######################  Generate the Parser Code ##############################
@@ -121,6 +123,11 @@ cmake_policy(SET CMP0037 OLD)
 #Compile and link the superAffSet executable
 add_executable(../bin/superAffSet drivers/superAffSet.cc)
 target_link_libraries(../bin/superAffSet iegenlib isl gmp)
+
+cmake_policy(SET CMP0037 OLD)
+#Compile and link the subSetDriver executable
+add_executable(../bin/subSetDriver drivers/subSetDriver.cc)
+target_link_libraries(../bin/subSetDriver iegenlib isl gmp)
 
 
 ### this executable hold our unit tests

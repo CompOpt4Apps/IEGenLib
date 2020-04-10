@@ -1962,7 +1962,7 @@ Set* Set::boundTupleExp(const TupleExpTerm& tuple_exp) const {
 }
 
 // Replace UFs with vars, pass to ISL, and then reverse substitution.
-void Set::normalize() {
+void Set::normalize(bool bdr) {
 
     // Sometimes to provide arguments of an UFC like sigma(a1, a2, ...)
     // we use another UFC that is not indexed like left(f). Here, the
@@ -1975,7 +1975,7 @@ void Set::normalize() {
     UFCallMap* uf_call_map = new UFCallMap();
     
     // Replace uf calls with the variables to create an affine superset.
-    Set* superset_copy = superAffineSet(uf_call_map);
+    Set* superset_copy = superAffineSet(uf_call_map,bdr);
 
     // Send affine super set to ISL and let it normalize it.
     Set* superset_normalized = passSetThruISL(superset_copy);
@@ -2305,7 +2305,7 @@ void Relation::addConjunction(Conjunction *adoptedConjunction) {
 }
 
 // Replace UFs with vars, pass to ISL, and then reverse substitution.
-void Relation::normalize() {
+void Relation::normalize(bool bdr) {
 
     // Sometimes to provide arguments of an UFC like sigma(a1, a2, ...)
     // we use another UFC that is not indexed like left(f). Here, the
@@ -2318,7 +2318,7 @@ void Relation::normalize() {
     UFCallMap* uf_call_map = new UFCallMap();
     
     // Replace uf calls with the variables to create an affine superset.
-    Relation* superset_copy = superAffineRelation(uf_call_map);
+    Relation* superset_copy = superAffineRelation(uf_call_map,bdr);
 
     // Send affine super set to ISL and let it normalize it.
     Relation* superset_normalized = passRelationThruISL(superset_copy);
@@ -3074,7 +3074,7 @@ Set* Set::projectOut(int tvar)
     // Geting a map of UFCalls 
     iegenlib::UFCallMap *ufcmap = new UFCallMap();;
     // Getting the super affine set of constraints with no UFCallTerms
-    Set* sup_s = this->superAffineSet(ufcmap);
+    Set* sup_s = this->superAffineSet(ufcmap, false);
 
     // Projecting out tvar using ISL library
     VisitorProjectOut* pv = new VisitorProjectOut(tvar, 0);
@@ -3114,7 +3114,7 @@ Relation* Relation::projectOut(int tvar)
     // Geting a map of UFCalls 
     iegenlib::UFCallMap *ufcmap = new UFCallMap();
     // Getting the super affine set of constraints with no UFCallTerms
-    Relation* sup_r = this->superAffineRelation(ufcmap);
+    Relation* sup_r = this->superAffineRelation(ufcmap, false);
 
     // Projecting out tvar using ISL library
     VisitorProjectOut* pv = new VisitorProjectOut(tvar, sup_r->inArity());
@@ -3333,7 +3333,7 @@ Set* Set::simplifyForPartialParallel(std::set<int> parallelTvs )
 //    result = copySet->addConstraintsDueToMonotonicity();
 //    delete copySet;
 
-    result->normalize();
+//    result->normalize();
 
     // Projecting out any tuple variable that are not argument to a UFCall 
     // starting from inner most loops. We also do not project out indecies
@@ -3595,6 +3595,59 @@ isl_set* instantiationSet( srParts supSetParts,
   return set;
 }
 
+
+/*! Vistor Class for finding only potential useful equalities from set of equalities
+  Potential useful  equalities must directly define at least one tuple variable 
+  in terms of other terms, i.e. tv_i = ...; something like following is not 
+  a potential   useful equality: f(tv_i) = g(tv_j), because both tv_i and tv_j are 
+  parameters to uninterpreted function calls. 
+*/
+class VisitorGetUsefulEqs : public Visitor {
+  private:
+         bool foundTvVar;
+         int UFnestLevel;
+         Conjunction* uEqsC;
+         Set* uEqsS;
+  public:
+         VisitorGetUsefulEqs(){UFnestLevel=0;foundTvVar=false;}
+         //! 
+         void preVisitUFCallTerm(UFCallTerm* t){
+           UFnestLevel++;
+         }
+         //! 
+         void postVisitUFCallTerm(UFCallTerm* t){
+           UFnestLevel--;
+         }
+         //!
+         void preVisitTupleVarTerm(TupleVarTerm* t){
+           if( UFnestLevel == 0) foundTvVar=true;
+         }
+         //!
+         void preVisitExp(iegenlib::Exp* e){
+           if( UFnestLevel == 0) foundTvVar=false;
+         }
+         //!
+         void postVisitExp(iegenlib::Exp* e){
+           if( UFnestLevel == 0 && foundTvVar ){
+             uEqsC->addEquality(e->clone());
+           }
+         }
+         //! 
+         void preVisitConjunction(Conjunction* c){
+           UFnestLevel=0;
+           TupleDecl td = c->getTupleDecl();
+           uEqsC = new Conjunction(td);
+         }
+         //! 
+         void postVisitConjunction(Conjunction* c){
+           TupleDecl td = c->getTupleDecl();
+           uEqsS = new Set(td);
+           uEqsS->addConjunction(uEqsC);
+         }
+         Set* getUsefulEqs(){ return uEqsS; }
+};
+
+
 // Check to see if the isl set is empty (the original Set is UnSat)
 // or, it is not (the original Set is MaySat) in which case extract
 // new equalities and add them to original Set
@@ -3618,9 +3671,19 @@ Set* checkIslSet(isl_set* set, isl_ctx* ctx,
     // Puting the newly found equalities into original constraint set.
     Set* affineEqs = new Set(i_str);
     Set* eQs = affineEqs->reverseAffineSubstitution(ufcmap);
-    result = origSet->Intersect(eQs);
+
+    // Only keeping equalities that can potentially be useful. 
+    VisitorGetUsefulEqs *v = new VisitorGetUsefulEqs();
+    eQs->acceptVisitor( v );
+
+    Set * uEqs = v->getUsefulEqs();
+    result = origSet->Intersect(uEqs);
+
+//    result = v->getUsefulEqs();
+
     delete affineEqs;
     delete eQs;
+    delete uEqs;
     //free(i_str);
   }
   return result;
@@ -3756,8 +3819,9 @@ class VisitorGetString : public Visitor {
          int aritySplit;
          bool firstConj;
          bool firstExp;
+         bool generic;
   public:
-         VisitorGetString(){ str = ""; firstConj = firstExp = true;}
+         VisitorGetString(bool gen){ str = ""; firstConj = firstExp = true; generic = gen;}
 
          /*! We build our string one expression at a time before visiting 
          **  each expression. Note, we cannot build the expression at term
@@ -3800,7 +3864,11 @@ class VisitorGetString : public Visitor {
              // print the terms in the left of the inequality ( < or <= )
              for (std::list<Term*>::const_iterator i=leftSide.begin(); 
                   i != leftSide.end(); ++i) {
-                 str += (*i)->prettyPrintString(aTupleDecl, absValue);
+                 if( ! generic ){
+                   str += (*i)->prettyPrintString(aTupleDecl, absValue);
+                 } else {
+                   str += (*i)->toString(absValue,generic);
+                 }
              }
              // If there is no terms in the left, print 0
              if( leftSide.empty() && !haveConstT ) str += string("0");
@@ -3841,7 +3909,11 @@ class VisitorGetString : public Visitor {
 
              for (std::list<Term*>::const_iterator i=rightSide.begin(); 
                   i != rightSide.end(); ++i) {
-                 str += (*i)->prettyPrintString(aTupleDecl, absValue);
+                 if( ! generic ){
+                   str += (*i)->prettyPrintString(aTupleDecl, absValue);
+                 } else {
+                   str += (*i)->toString(absValue,generic);
+                 }
              }
              if( rightSide.empty() && !haveConstT ) str += string("0");
 
@@ -3867,7 +3939,7 @@ class VisitorGetString : public Visitor {
 
              // Start the conjunction's string with tuple
              str += string("{ ") + 
-                    aTupleDecl.toString(true,aritySplit) + string(" : ");
+                    aTupleDecl.toString(true,aritySplit, generic) + string(" : ");
 
              firstExp = true;
          }
@@ -3910,19 +3982,19 @@ class VisitorGetString : public Visitor {
 **  This function generates a string representation of the Set.
 **  There are two differences between this function and other string
 **  genrators, like toString, and prettyPrintSring:
-**  (1) it uses visitor patter
+**  (1) it uses visitor pattern
 **  (2) The generated string is better formatted, for instance while other functions 
-        generate something like following for some relation: 
+        generate something like following for some set: 
            {[i,j] : i - j = 0 && i - 6 >= 0 && -j + 2 >= 0}
         This function genrates bellow for the same relation: 
            {[i,j] : i = j && 0 <= i && j <= 2}
     For more examples see the getString test case in set_relation_test.cc
 */
-string Set::getString()
+string Set::getString(bool generic)
 {
     string result;
 
-    VisitorGetString* v = new VisitorGetString();
+    VisitorGetString* v = new VisitorGetString(generic);
     this->acceptVisitor( v );
     
     result = v->getString();
@@ -3931,17 +4003,252 @@ string Set::getString()
 }
 
 //! Same as Set
-string Relation::getString()
+string Relation::getString(bool generic)
 {
     string result;
 
-    VisitorGetString* v = new VisitorGetString();
+    VisitorGetString* v = new VisitorGetString(generic);
     this->acceptVisitor( v );
     
     result = v->getString();
 
     return result;
 }
+
+
+
+
+
+/*****************************************************************************/
+#pragma mark -
+/*************** VisitorGetZ3form *****************************/
+/*! Vistor Class used in getZ3form()
+*/
+class VisitorGetVarTerms : public Visitor {
+  private:
+         std::set<std::string> vtTs;
+  public:
+         void preVisitVarTerm(VarTerm * t){
+           std::string str = t->toString(true);
+           vtTs.insert( str );
+         }
+         std::set<std::string> getVarTerms(){ return vtTs; }
+};
+
+
+string int2str(int i){
+  char buf[50];
+  sprintf (buf, "%d",i);
+  return string(buf);
+}
+class VisitorGetZ3form : public Visitor {
+  private:
+         // When we are using this class for generating domain/Range assertion 
+         // we just need the constraints, and we should not generate 
+         // the UF symbols definitions to avoid recursive calls.
+         bool termDef;
+         TupleDecl tupleDecl; // Need this for tuple variable name
+         int cc;
+         // Keep a list of different vars to define them.
+         std::set<std::string> tvTs;
+         std::set<std::string> vtTs;
+         std::set<std::string> ufsTs;
+         
+         std::vector<std::string> expZ3Form;
+         std::vector<std::string> conjZ3Form;
+         std::vector<std::string> z3Form;
+
+         int constT;
+         std::string leftSide;
+         std::string rightSide;
+         // Need to consider nested UF Calls, e.g row(col(i)+1)  
+         int UFnestLevel;
+         std::string UFparamT;
+         std::string UFparamExp;
+
+  public:
+         VisitorGetZ3form(std::set<std::string> inUfsTs, 
+                          std::set<std::string> inVtTs, bool inTermDef){
+           cc = 1;
+           termDef = inTermDef;
+           ufsTs = inUfsTs;
+           vtTs = inVtTs;
+         }
+         //! Keeping track of const term in the expression
+         void preVisitTerm(Term * t) {
+           if(UFnestLevel > 0) return;
+           constT = t->coefficient();
+         }
+         //! 
+         void preVisitUFCallTerm(UFCallTerm * t){
+           ufsTs.insert( t->name() );
+           if(UFnestLevel == 0){
+             UFparamT = "";
+             UFparamExp = "";
+           }
+           UFnestLevel++;
+         }
+         //! 
+         void postVisitUFCallTerm(UFCallTerm * t){
+           UFnestLevel--;
+           std::string str = "("+ t->name() + " " + UFparamExp + ")";
+           if(UFnestLevel == 0){
+             if( t->coefficient() < 0 ) leftSide = str;
+             else                       rightSide = str;
+           } else {
+             UFparamExp = str;
+           }
+         }
+         void preVisitTupleVarTerm(TupleVarTerm * t){
+           std::string str = t->prettyPrintString(tupleDecl,true);
+           tvTs.insert( str );
+
+           if(UFnestLevel == 0){
+             if( t->coefficient() < 0 ) leftSide = str;
+             else                       rightSide = str;
+           } else {
+             // Mahdi: FIXME: for simplicity for now assuming all the parameters to UFCs have positive sign
+             UFparamT = str;
+           }
+         }
+         void preVisitVarTerm(VarTerm * t){
+           std::string str = t->toString(true);
+           vtTs.insert( str );
+
+           if(UFnestLevel == 0){
+             if( t->coefficient() < 0 ) leftSide = str;
+             else                       rightSide = str;
+           } else {
+             // Mahdi: FIXME: for simplicity for now assuming all the parameters to UFCs have positive sign
+             UFparamT = str;
+           }
+         }
+         //!
+         void preVisitExp(iegenlib::Exp * e){
+           if( !(e->isExpression()) ){ 
+             leftSide = "";
+             rightSide = "";
+             constT = 0;
+             UFnestLevel = 0;
+           }
+         }
+         /*! 
+         */ 
+         void postVisitExp(iegenlib::Exp * e){
+           if( !(e->isExpression()) ) {
+             string z3Str = "";
+             string comp = "";
+             if(e->isEquality()) comp = "=";
+             else if(constT == 0) comp = "<=";
+             else {
+               comp = "<";
+               constT++;
+             }
+             if(leftSide == "") leftSide = "0";
+             if(rightSide == "") rightSide = "0";
+
+             if( constT == 0 ){
+               z3Str = "(" + comp + " " + leftSide + " " + rightSide + ")";
+             } else if ( constT < 0 ){
+               z3Str = "(" + comp + " (+ " + leftSide + " " + 
+                       int2str((constT*-1)) + ") " + rightSide + ")";
+             } else if ( constT > 0 ){
+               z3Str = "(" + comp + " " + leftSide + " (+ " + 
+                       rightSide + " " + int2str(constT) + ") )";
+             }
+
+             expZ3Form.push_back(z3Str);
+           } else {
+             Term* cons = e->getConstTerm();
+             if(UFparamExp == "" && cons == NULL){
+               UFparamExp = UFparamT;
+             } else if(UFparamExp == ""){
+               UFparamExp = "(+ " + UFparamT + " " + int2str(cons->coefficient()) + ")";
+             } else if(cons == NULL){
+               UFparamExp = UFparamExp;
+             } else {
+               UFparamExp = "(+ " + UFparamExp + " " + int2str(cons->coefficient()) + ")";
+             } 
+           }
+         }
+         //! 
+         void preVisitConjunction(iegenlib::Conjunction * c){
+             tupleDecl = c->getTupleDecl();
+             expZ3Form.clear();
+         }
+         //! 
+         void postVisitConjunction(iegenlib::Conjunction * c){
+           if(expZ3Form.size()>0){
+             if(termDef){
+               for(int i=0; i<expZ3Form.size(); i++){
+                 conjZ3Form.push_back(expZ3Form[i]);
+               }
+             } else {
+               string z3Str = "(and";
+               for(int i=0; i<expZ3Form.size(); i++){
+                 z3Str += " " + expZ3Form[i];
+               }
+               z3Str += " )";
+               conjZ3Form.push_back(z3Str);
+             }
+           }
+         }
+         //! 
+         void preVisitSparseConstraints(iegenlib::SparseConstraints *sc){
+           conjZ3Form.clear();
+         }
+         //! 
+         void postVisitSparseConstraints(iegenlib::SparseConstraints *sc){
+
+           if(termDef){
+             // Adding tuple variables definitions.
+             for (std::set<std::string>::iterator it=tvTs.begin(); it!=tvTs.end(); it++)
+               z3Form.push_back("(declare-const "+ *it + " Int)");
+             //
+             string z3Str = "";
+              for(int i=0; i<conjZ3Form.size(); i++){
+                z3Str = "(assert (! " + conjZ3Form[i] + " :named c1"+int2str(cc++)+") )";
+                z3Form.push_back(z3Str);
+              }
+           } else {
+             z3Form.push_back("(assert " + conjZ3Form[0] + " )");
+           }
+         }
+
+         std::vector<std::string> getZ3Form(){ return z3Form; }
+         std::set<std::string> getUFSs(){ return ufsTs; }
+         std::set<std::string> getVars(){ return vtTs; }
+};
+
+/**! SparseConstraints::getZ3form returns a vector of strings that include 
+//   constraints represented in SMT-LIB format that SMT solvers like z3 
+//   gets as input. This can be used to check the satisfiability of 
+//   an IEGenLib Set/Relation with a SMT solver. The returned list
+//   also includes tuple variable declarations, however they do not include UFSymbol
+//   and global variable declarations. This is because, when checking satisfiability of
+//   a set, we usually also want to define some user defined assertions along side original
+//   constraints. The assertions might have UFSymbols and global variables of their
+//   own that original constraints do not. We can put their UFSymbols and globals into 
+//   UFSyms, and VarSyms std::set that SparseConstraints::getZ3form returns by reference,
+//   and then a driver function can declare all the UFSymbols and globals at the beginning of 
+//   the input file that it is going to generate and pass to a SMT solver. 
+
+     Also note that: UniQuantRule::getZ3form (in environment.h/cc) can be used to get SMT-LIB
+     format of an user defined assertion stored in IEGenLib environment about UFSymbols.
+**/
+std::vector<std::string> SparseConstraints::getZ3form
+(std::set<std::string> &UFSyms, std::set<std::string> &VarSyms, bool termDef){
+    std::vector<std::string> result;
+    VisitorGetZ3form *v = new VisitorGetZ3form(UFSyms, VarSyms, termDef);
+    this->acceptVisitor( v );
+    UFSyms = v->getUFSs();
+    VarSyms = v->getVars();
+
+    result = v->getZ3Form();
+    
+    return result;
+}
+
 
 
 

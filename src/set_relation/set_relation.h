@@ -51,6 +51,8 @@ extern Set* parse_set(std::string set_string);
 extern Relation* parse_relation(std::string relation_string);
 }
 
+
+
 /*!
  * \class Conjunction
  * \brief Class containing sets of all the equalities and inequalities
@@ -255,6 +257,9 @@ public:
     void setUnsat(){ unsat = true;}
     bool isUnsat(){return unsat;}
 
+    // 
+    SetRelationshipType setRelationship(Conjunction* rightSide);
+
 private:
 
     /// Set of equality constraints.
@@ -432,7 +437,22 @@ public:
     **/ 
     std::string complexityForPartialParallel(std::set<int> parallelTvs);
 
-
+    /**! SparseConstraints::getZ3form returns a vector of strings that include 
+    //    constraints represented in SMT-LIB format that SMT solvers like z3 
+    //    gets as input. This can be used to check the satisfiability of 
+    //    an IEGenLib Set/Relation with a SMT solver. The returned list
+    //    also includes tuple variable declarations, however they do not include UFSymbol
+    //    and global variable declarations. This is because, when checking satisfiability of
+    //    a set, we usually also want to define some user defined assertions along side original
+    //    constraints. The assertions might have UFSymbols and global variables of their
+    //    own that original constraints do not. We can put their UFSymbols and globals into 
+    //    UFSyms, and VarSyms std::set that SparseConstraints::getZ3form returns by reference,
+    //    and then a driver function can declare all the UFSymbols and globals at the beginning of 
+    //    the input file that it is going to generate and pass to a SMT solver. 
+    **/
+    std::vector<std::string> getZ3form(std::set<std::string> &UFSyms, 
+                  std::set<std::string> &VarSyms, bool termDef = true);
+    
 // FIXME: what methods should we have to iterate over conjunctions so
 // this can go back to protected?
 // protected:
@@ -541,7 +561,7 @@ public:
     Set* boundDomainRange();
 
     //! Send through ISL to achieve a canonical form.
-    void normalize();
+    void normalize(bool bdr=true);
     
     //! Visitor design pattern, see Visitor.h for usage
     void acceptVisitor(Visitor *v);
@@ -595,7 +615,15 @@ public:
 
     Set* detectUnsatOrFindEqualities(bool *useRule=NULL);
     
-    string getString();
+    string getString(bool generic=false);
+
+    // 
+    SetRelationshipType setRelationship(Set* rightSide);
+
+    // 
+    void reOrdTV_OmegaCodeGen(std::set<int> parallelTvs);
+    //
+    void removeUPs();
 
 private:
     int mArity;
@@ -732,7 +760,7 @@ public:
     Relation* addConstraintsDueToMonotonicity() const;    
 
     //! Send through ISL to achieve a canonical form.
-    void normalize();
+    void normalize(bool bdr=true);
 
     //! Visitor design pattern, see Visitor.h for usage
     void acceptVisitor(Visitor *v);
@@ -784,10 +812,18 @@ public:
         }
     }
 
+    //
     Relation* detectUnsatOrFindEqualities(bool *useRule=NULL);
     
-    string getString();
+    //
+    string getString(bool generic=false);
 
+    // 
+    SetRelationshipType setRelationship(Relation* rightSide);
+
+    // 
+    SetRelationshipType dataDependenceRelationship(Relation* rightSide, int parallelLoopLevel=0);
+    
 private:
     int mInArity;
     int mOutArity;
@@ -806,6 +842,7 @@ std::pair <std::string,std::string> instantiate(
 std::set<std::pair <std::string,std::string>> ruleInstantiation
                           (std::set<Exp> instExps, bool *useRule, 
                            TupleDecl origTupleDecl, UFCallMap *ufcmap);
+Set* islSetProjectOut(Set* s, unsigned pos);
 }//end namespace iegenlib
 
 #endif /* SET_RELATION_H_ */

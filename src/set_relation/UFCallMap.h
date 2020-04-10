@@ -34,8 +34,13 @@ class Set;
  * UFCallTerm or VarTerm in the map using find functions.
  */
 class UFCallMap {
+private:
+    TupleDecl tupleDecl;
+    bool tDecl;
+
 public:
-    UFCallMap(){}
+    UFCallMap(){ tDecl = false;}
+    UFCallMap(TupleDecl aTupleDecl){ tDecl = true; tupleDecl = aTupleDecl;}
     ~UFCallMap(){
                mUFC2VarParam.clear();
                mVarParam2UFC.clear();

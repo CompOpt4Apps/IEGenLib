@@ -147,7 +147,8 @@ TupleDecl* TupleDecl::clone() const {
 
 
 std::string TupleDecl::toString(bool withBrackets, 
-                                unsigned int aritySplit) const {
+                                unsigned int aritySplit, 
+                                bool generic) const {
     std::stringstream ss;
     // Do not print empty brackets if have zero arity.
     if (mSize != 0 ) {
@@ -160,7 +161,7 @@ std::string TupleDecl::toString(bool withBrackets,
                     ss << ", ";
                 }
             }
-            ss << elemToString(i);
+            ss << elemToString(i, generic);
         }
         if (withBrackets) { ss << "]"; }
     }
@@ -196,12 +197,17 @@ void TupleDecl::copyTupleElem(const TupleDecl& other,
 }
 
 
-std::string TupleDecl::elemToString(unsigned int elem_loc) const {
+std::string TupleDecl::elemToString(unsigned int elem_loc, 
+                                    bool generic) const {
     std::stringstream ss;
     if (mIsConst[elem_loc]) {
         ss << mConstVal[elem_loc];
     } else {
-        ss << mVarString[elem_loc];
+        if(!generic){
+            ss << mVarString[elem_loc];
+        } else {
+            ss <<"tv"<<elem_loc;
+        }
     }
     return ss.str();
 }

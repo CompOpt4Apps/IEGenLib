@@ -73,8 +73,11 @@ Set* queryRangeCurrEnv(const std::string funcName);
 //! Returns the monotonicity type of the given function.
 MonotonicType queryMonoTypeEnv(const std::string funcName);
 
-//! search this environment for a function range arity
+//! search this environment for a function's domain arity
 unsigned int queryRangeArityCurrEnv(const std::string funcName);
+
+//! search this environment for a function's range arity
+unsigned int queryDomainArityCurrEnv(const std::string funcName);
 
 //! add an universially quantified Rule to environment
 //! The environment is going to own uqRule object (user should not delete it)
@@ -86,6 +89,9 @@ int queryNoUniQuantRules();
 // Returns the universially quantified Rule No. idx stored in the enviroment
 //! The environment still owns returned object (user should not delete it)
 UniQuantRule* queryUniQuantRuleEnv(int idx);
+
+//! Get an UniQuantRule representing Domain and Range of an UF Symbol
+UniQuantRule* getUQRForFuncDomainRange(std::string func);
 
 class Environment {
 public:
@@ -154,10 +160,11 @@ private:
 
 extern Environment currentEnv;
 
+// Mahdi: FIXME: Want to have FuncConsistency to be the first
 // Monotonicity should always be the first and TheOthers the last type
 // This convention is used inside drivers 
 typedef enum {Monotonicity, CoMonotonicity, Triangularity, 
-              FuncConsistency, TheOthers} UniQuantRuleType;
+              DomainRange, FuncConsistency, TheOthers} UniQuantRuleType;
 
 /*!
 ** This is the basic structure for storing different domain information
@@ -189,6 +196,9 @@ public:
   // Get right side of the rule as a Set:
   //     Forall e1, e2,  p => q ( this functions returns { [e1, e2] : q } )
   Set* getRightSide();
+
+  std::string getZ3Form(std::set<std::string> &relevantUFSs, 
+                        std::set<std::string> &glVarSyms, int cc);
 
 private:
 

@@ -82,7 +82,7 @@ public:
     //! and what the input arity is for that relation.
     //! Use zero arity for a set. 
     std::string toString(bool withBrackets=false, 
-                         unsigned int aritySplit=0) const;
+                         unsigned int aritySplit=0, bool generic=false) const;
     
     // Setting individual elements
     void setTupleElem(unsigned int elem_loc, int const_val);
@@ -94,7 +94,7 @@ public:
                        unsigned int elem_loc_to);
     
     // Methods that access individual elements in the tuple.
-    std::string elemToString(unsigned int elem_loc) const;
+    std::string elemToString(unsigned int elem_loc, bool generic=false) const;
     bool elemIsConst(unsigned int elem_loc) const;
     int elemConstVal(unsigned int elem_loc) const;
     std::string elemVarString(unsigned int elem_loc) const;

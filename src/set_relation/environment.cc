@@ -216,7 +216,7 @@ MonotonicType queryMonoTypeEnv(const std::string funcName) {
 
 
 
-//! search this environment for a function range arity
+//! search this environment for a function's range arity
 unsigned int queryRangeArityCurrEnv(const std::string funcName) {
     Set* range = queryRangeCurrEnv(funcName);
     unsigned int retval = range->arity();
@@ -224,6 +224,13 @@ unsigned int queryRangeArityCurrEnv(const std::string funcName) {
     return retval;
 }
 
+//! search this environment for a function's range arity
+unsigned int queryDomainArityCurrEnv(const std::string funcName) {
+    Set* domain = queryDomainCurrEnv(funcName);
+    unsigned int retval = domain->arity();
+    delete domain;
+    return retval;
+}
 
 //! add an universially quantified Rule to environment
 void addUniQuantRule(UniQuantRule *uqRule){
@@ -240,6 +247,48 @@ int queryNoUniQuantRules(){
 UniQuantRule* queryUniQuantRuleEnv(int idx){
   return currentEnv.getUniQuantRule(idx);
 }
+
+//! Get an UniQuantRule representing Domain and Range of an UF Symbol
+UniQuantRule* getUQRForFuncDomainRange(std::string func){
+  // Mahdi: FIXME: For now this only handles 1-dim functions
+  Set* domain = queryDomainCurrEnv(func);
+  Set* range = queryRangeCurrEnv(func);
+  TupleDecl dtd = domain->getTupleDecl();
+  TupleDecl rtd = range->getTupleDecl();
+  srParts domain_parts = getPartsFromStr(domain->getString());
+  srParts range_parts = getPartsFromStr(range->getString());
+  string domain_const_str = domain_parts.constraints;
+  string range_const_str = range_parts.constraints;
+  string dtd_str = domain_parts.tupDecl;
+  string rtd_str = range_parts.tupDecl;
+
+  std::queue<std::string> dtd_its = tupVarsExtract(dtd_str, domain->arity(), 0);
+  std::queue<std::string> rtd_its = tupVarsExtract(rtd_str, range->arity(), 0);
+  string ufc = (func) + "(" + dtd_its.front() + ")";
+  string rtv = rtd_its.front();
+  
+  // FIXME: name of the tVar should not exist as part of func name or other places in the range.
+  std::size_t found = range_const_str.find(rtv);
+  range_const_str.replace(found, rtv.length(), ufc);
+  if(found < range_const_str.length()){
+    found = range_const_str.find(rtv, found+1);
+    range_const_str.replace(found, rtv.length(), ufc);
+  }
+
+  // forall e1: DLB <= e1 < DUB => RLB <= UF(e1) < RUB
+  UniQuantRule *uqRule;
+  string type = ("DomainRange");
+  string tupleDecl = dtd_str;
+  string leftSide = domain_const_str;
+  string rightSide = range_const_str;
+  uqRule = new UniQuantRule(type, tupleDecl, leftSide, rightSide);
+  
+  delete range; 
+  delete domain;
+
+  return uqRule;
+}
+
 
 void Environment::append(Environment *other){
     mInverseMap.insert(other->mInverseMap.begin(),other->mInverseMap.end());
@@ -460,5 +509,86 @@ std::string UniQuantRule::toString(){
 UniQuantRuleType UniQuantRule::getType(){return mUniQuantRuleType;}
 Set* UniQuantRule::getLeftSide(){ return mLeftSide; }
 Set* UniQuantRule::getRightSide(){ return mRightSide; }
+
+
+
+string i2s(int i){
+  char buf[50];
+  sprintf (buf, "%d",i);
+  return string(buf);
+}
+
+//! Get a z3 (smt lib) representation of the universially quantified assertion
+//  If there is a set of relevant UFSs in the relevantUFSs,
+//  then it only returns the representation if this rule is relevant to any
+//  of the UFSs in the the relevantUFSs, otherwise returns empty string
+std::string UniQuantRule::getZ3Form(std::set<std::string> &relevantUFSs, 
+                                    std::set<std::string> &glVarSyms, int cc){
+
+  if( relevantUFSs.empty() ){
+    return string("");
+  } 
+
+  string z3Str = "(assert (! (forall ( ";
+  Set *leftSide = getLeftSide();
+  Set *rightSide = getRightSide();
+  TupleDecl tupleDecl = leftSide->getTupleDecl();
+  for(int i=0; i <tupleDecl.getSize(); i++)
+    z3Str += "(" + tupleDecl.elemToString(i) + " Int) ";
+  z3Str += ") (=> ";
+
+  std::set<std::string> UFSyms;
+  std::set<std::string> apVarSyms;
+
+  std::vector<std::string> leftSideZ3 = leftSide->getZ3form(UFSyms, apVarSyms, false);
+  std::string constStr= "()"; 
+  for(int i=0; i <leftSideZ3.size(); i++){
+    // To add handling more than one conjunction, I should add:
+    //  || (leftSideZ3[i]).find("(assert (or ") !=std::string::npos
+    if( (leftSideZ3[i]).find("(assert (and ") !=std::string::npos ){
+      constStr = leftSideZ3[i]; 
+      constStr.erase(0,8);
+      constStr.erase(constStr.end()-1, constStr.end());
+      break;
+    }
+  }
+  z3Str += constStr;
+
+  std::vector<std::string> rightSideZ3 = rightSide->getZ3form(UFSyms, apVarSyms, false);
+  constStr= "()";
+  for(int i=0; i <rightSideZ3.size(); i++){
+    if( (rightSideZ3[i]).find("(assert (and ") !=std::string::npos ){
+      constStr = rightSideZ3[i]; 
+      constStr.erase(0,8);
+      constStr.erase(constStr.end()-1, constStr.end());
+      break;
+    }
+  }
+  z3Str += constStr + ") )  :named a"+i2s(cc)+") )";
+
+//std::cout<<"\n>>>> UQR Z3 = "<<z3Str<<"\n";
+//for(std::set<std::string>::iterator it=UFSyms.begin(); it != UFSyms.end(); it++)
+//std::cout<<"      Seen UFS = "<<*it<<"\n";
+//for(std::set<std::string>::iterator it=apVarSyms.begin(); it != apVarSyms.end(); it++)
+//std::cout<<"      Seen Vars = "<<*it<<"\n";
+
+  bool found = false;
+  for(std::set<std::string>::iterator it=UFSyms.begin();
+      it != UFSyms.end(); it++){
+    if( relevantUFSs.find(*it) != relevantUFSs.end() || *it == "ALL_UFSs"){
+      found = true; 
+      break;
+    }
+  }
+  if(!found) z3Str = "";
+  else {
+    for(std::set<std::string>::iterator it=UFSyms.begin();
+        it != UFSyms.end(); it++) relevantUFSs.insert(*it);
+    for(std::set<std::string>::iterator it=apVarSyms.begin();
+        it != apVarSyms.end(); it++) glVarSyms.insert(*it);
+    
+  }
+  return z3Str;
+}
 
 }//end namespace iegenlib

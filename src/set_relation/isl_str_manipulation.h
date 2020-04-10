@@ -33,6 +33,10 @@ namespace iegenlib{
 struct srParts;
 //****** ISL tuple correction functions
 
+
+//
+typedef enum {SetEqual, SubSetEqual, SubSet, SuperSet, SuperSetEqual, UnKnown, UnSatSet} SetRelationshipType;
+
 /*! trim function trims spacing from left and right of a string
 */
 std::string trim(std::string s);
@@ -153,6 +157,21 @@ std::string setStr2RelationStr(std::string set, int inArity, int outArity);
 **  into an IEGenLib Set string
 */
 std::string relationStr2SetStr(std::string relation, int inArity, int outArity);
+
+
+/*! This function adds constraints from a Set/Relation string to another one
+**  without checking whether their tuple declaration match or not. 
+**  Note that Intersect functionality of IEGenLib that can be used for similar 
+**  purposes checks for matching tuple declaration.
+*/
+std::string strAddConstraints(std::string dest, std::string src);
+
+/*!
+** This function uses ISL library to dermine the relationship between
+** two affine set, given as strings that ISL can read.
+*/
+SetRelationshipType strISLSetRelationship(std::string set1, std::string set2);
+
 
 }// iegenlib namespace
 #endif

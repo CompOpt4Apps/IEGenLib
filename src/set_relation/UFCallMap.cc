@@ -71,7 +71,12 @@ VarTerm UFCallMap::insert( UFCallTerm *ufc )
 {
     UFCallTerm* ufcterm = new UFCallTerm (*ufc);
     ufcterm->setCoefficient(1);
-    std::string symCons = ufcterm->toString();
+    std::string symCons;
+    if(tDecl){
+       symCons = ufcterm->prettyPrintString(tupleDecl);
+    } else{
+       symCons = ufcterm->toString();
+    }
 
     symCons = UFCallMap::symUFC(symCons);
     VarTerm vt( 1 , symCons );
