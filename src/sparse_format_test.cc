@@ -76,6 +76,21 @@ TEST_F(SparseFormatTest, COO_CSR_1) {
   delete r_coo_csr_comp;
 }
 
+TEST_F (SparseFormatTest, COO_DENSE_COMPOSE){
+  Relation *dense = new Relation("{ [n1] -> [i,j] :"
+		  " n1 = i * 9 + j }");
+
+  EXPECT_EQ ("{ [n1] -> [i, j] : n1 - 9 i - j = 0 }" 
+		  ,dense->prettyPrintString());
+  Relation *coo_inv = new Relation("{[i,j] -> [n2] : rowcol_inv(n2,0) = i && rowcol_inv(n2,1) = j "
+                               "&& 0 <= n2 && n2 < NNZ }");
+  Relation *result = coo_inv->Compose(dense);
+
+  EXPECT_EQ ("{ [n1] -> [n2] : n1 - 9 rowcol_inv(n2, ) - rowcol_inv(n2, 1) = 0 && n2 >= 0 && -n2 + NNZ - 1 >= 0 }"
+		  ,result->prettyPrintString());
+
+}
+
 TEST_F(SparseFormatTest, COO_BCSR) {
   // note 9 is a replacement for 999999
   // 7 for C
