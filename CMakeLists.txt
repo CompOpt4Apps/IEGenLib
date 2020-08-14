@@ -14,6 +14,8 @@ include(MacroOutOfSourceBuild)
 macro_ensure_out_of_source_build(
     "${PROJECT_NAME} requires an out of source build.")
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
 enable_testing()
 
 ## add the includes and libaries that we depend on
