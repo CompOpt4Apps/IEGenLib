@@ -7,10 +7,10 @@ using namespace std;
 /*!
  * \class Sparse Format Tests
  *
- * \brief Class to Sparse Format usage of IEGenLib.
+ * \brief Class to Sparse Format compositions in.
  *
- * This class holds gtest test cases that test the functionality in
- * iegenlib that will be needed by CHILL.
+ * This class holds gtest test cases for sparse format conversions
+ * and code synthesis.
  */
 class SparseFormatTest : public ::testing::Test {
 public:
@@ -19,7 +19,6 @@ protected:
   virtual void TearDown() {}
 };
 
-// TODO take to bottom
 // Test for COO WRT Dense
 TEST_F(SparseFormatTest, COOWRTDense_1) {
   Relation *r = new Relation("{[n] -> [i,j] : row(n) = i && col(n) = j "
@@ -91,17 +90,17 @@ TEST_F (SparseFormatTest, COO_DENSE_COMPOSE){
 
 }
 
+
+// INCOMPLETE: Test of COO to BCSR
 TEST_F(SparseFormatTest, COO_BCSR) {
-  // note 9 is a replacement for 999999
-  // 7 for C
+  // note 9 is a replacement for row: R
+  // 7 for column: C
   Relation *Flatten = new Relation("{ [n] -> [ti,tj,iz,jz,in,zn,riz,rjz,rin,rjn] :"
 		  " n = iz * 9 + jz }");
 
   EXPECT_EQ ("{ [n] -> [ti, tj, iz, jz, in, zn,"
 		  " riz, rjz, rin, rjn] : n - 9 iz - jz = 0 }" 
 		  ,Flatten->prettyPrintString());
-  Relation *coo = new Relation("{[n] -> [i,j] : row(n) = i && col(n) = j "
-                               "&& 0 <= n && n < NNZ && Dense(i,j) != 0}");
 
 
   Relation *Zeros = new Relation(
@@ -120,18 +119,4 @@ TEST_F(SparseFormatTest, COO_BCSR) {
 		" && rjz >= 0 && rin >= 0 && -riz + 9 >= 0 && -rjz + 7 >= 0"
 		" && -rin + 9 >= 0 }"
   		  ,Zeros->prettyPrintString());
-  Relation *zerosFlatten = Zeros->Inverse()->Compose(Flatten);
-  EXPECT_EQ ("",zerosFlatten->prettyPrintString());
-//  Relation *bcsr_inv =
-//      new Relation("{ [i,j] -> [b,i_p,j_p]: 0 <= b && b < NB "
-//                   " && b = block_inv(int_div(i,9),int_div(j,7)) && 0 <= i_p   "
- //                  " && i_p < 9 && 0 <= j_p < 7 && i_p =     "
-//                   "i - int_div(i,9) * 9 && j_p = j- int_div(j,7) *7}      ");
-
-//  Relation *Zeros_Flatten = Zeros->Compose(Flatten);
-//  Relation *bcsr_coo = bcsr_inv->Compose(coo->Union(Zeros_Flatten));
-//  EXPECT_EQ("{ [n] -> [n1] : n1 - rowcol_inv(row(n), col(n)) = 0 && n >= 0 && "
-//            "n1 >= 0 && n1 - rptr(row(n)) >= 0 && -n + NNZ - 1 >= 0 && -n1 + "
-//            "NNZ - 1 >= 0 && -n1 + rptr(row(n) + 1) - 1 >= 0 }",
-//            bcsr_coo->prettyPrintString());
 }
