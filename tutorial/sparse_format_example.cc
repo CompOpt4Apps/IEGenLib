@@ -1,13 +1,7 @@
 /*!
  * \file sparse_format_example.cc
  *
- * \brief This file contains sparse format examples for IEGenLib C++ API.  
- *
- * To compile, execute the following command from the root of the project:
- *     cd ..
- *     make install VERBOSE=1   // NOTE the compiler being used, <C++COMP>
- *     cd tutorial
- *     <C++COMP> -o sparse_format_example -I../iegen/include/iegenlib -L../iegen/lib -liegenlib -L../lib/installed/lib  -lisl -lgmp sparse_format_example.cc
+ * \brief This file contains sparse format examples for IEGenLib C++ API.
  *
  * \date Date Started: 8/29/20
  *
