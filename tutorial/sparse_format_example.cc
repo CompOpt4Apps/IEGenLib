@@ -102,10 +102,7 @@ int main(int ac, char **av) {
         " && in = ti * 7 + rin && 0 <= riz && riz <= 9 && 0 <= rjz "
         " && rjz <= 7 && 0 <= rin && rin <= 9 && 0 <= rjz && rjz<=7"
         "}");
-    std::cout << "generating zeroes string" << std::endl;
-    std::string zeroesRelation = Zeros->prettyPrintString();
-    std::cout << "generated" << std::endl;
-    std::cout << "Zeroes relation: " << zeroesRelation << std::endl;
+    std::cout << "Zeroes relation: " << Zeros->prettyPrintString() << std::endl;
     delete Flatten;
     delete Zeros;
 
