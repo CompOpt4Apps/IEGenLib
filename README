@@ -6,15 +6,17 @@ relations that have affine and uninterpreted function constraints.
 
 Contents of this README:
 
-I.   Getting The Source Code
-II.  Quick Start
-        A. Building IEGenLib
-        B. Replicating relation simplification result from the SC 2016 paper
-III. Distribution Organization
-IV.  Building IEGenLib from Source
-V.   Running Tests
-VI.  Documentation
-VII. Contact
+I.    Getting The Source Code
+II.   Quick Start
+         A. Building IEGenLib
+         B. Replicating relation simplification result from the SC 2016 paper
+III.  Distribution Organization
+IV.   Building IEGenLib from Source
+V.    Running Tests
+VI.   Documentation
+VII.  Tutorial Examples
+VIII. Debug and Release Builds
+IX.   Contact
 
 
 ====  I. Getting The Source Code ===================
@@ -37,7 +39,7 @@ If you want to do a quick build, just run:
     make
     make test
     make install
- 
+
 This will install into a directory IEGenLib/iegenlib
 Set IEGEN_HOME to /full/path/to/IEGenLib/iegen
 
@@ -63,7 +65,7 @@ sub-directory.
 
 The library and demonstration driver create both string and dot
 output; graphviz is needed to visualize the dot output.
-      
+
 
 ==== IV. Building IEGenLib from Source =======================
 
@@ -76,22 +78,22 @@ output; graphviz is needed to visualize the dot output.
         ./configure
         make
         make test
-       
+
 
     Requirements
         * cmake 2.6 or newer
-        
+
         * C++ compiler, the below versions are known to work
-            Mac i686-apple-darwin10-g++-4.2.1, 
+            Mac i686-apple-darwin10-g++-4.2.1,
             GCC 4.6.3 20120306 (Red Hat 4.6.3-2)
-            
+
         * If re-generating parser files BISON 2.4 and FLEX 2.5 or newer
-        
+
         * If re-generating docs
             * doxygen (http://www.stack.nl/~dimitri/doxygen/index.html,
                        known to work with 1.5.6 and 1.7.5)
             * dot (http://www.graphviz.org)
- 
+
         * If you plan to change the grammar for the sets or relations:
             * Flex: version 2.5.35 known to work
             * Bison: version 2.4.1 known to work
@@ -120,11 +122,11 @@ distribution.
 
 ==== V. Running Tests =====
 
-The iegen/bin/run_iegenlib_tests binary can be executed to run the tests of 
-the various components of IEGenLib. Additionally, from the root of the 
+The iegen/bin/run_iegenlib_tests binary can be executed to run the tests of
+the various components of IEGenLib. Additionally, from the root of the
 distribution you can run 'make test' to run these same tests.
 
-The gtest framework is used for writing and running unit tests.  Information 
+The gtest framework is used for writing and running unit tests.  Information
 on gtest can be found at:
 
     http://code.google.com/p/googletest/
@@ -139,24 +141,33 @@ To create the doxygen documentation, run the following command:
 
     make docs
 
-An index.html file will be created in the distribution root directory, in 
-doc/html/. A latex pdf file, called refman.pdf will also be created, in the 
-doc/latex/ directory. 
+An index.html file will be created in the distribution root directory, in
+doc/html/. A latex pdf file, called refman.pdf will also be created, in the
+doc/latex/ directory.
 
-==== VII. Debug and Release Builds =====
+==== VII. Tutorial Examples =====
 
-The default build is the debug build.  It is set by cmake in the configure 
-script with -DCMAKE_BUILD_TYPE:STRING=Debug.  The compiler options for the 
-debug build are '-O0 -g'.  
+To build the example executables (located in the tutorial directory), run the
+following command:
 
-To create a release version, use in the -build--release option to the 
+    make tutorial
+
+Output will be located alongside the normal executables produced in build/bin.
+
+==== VIII. Debug and Release Builds =====
+
+The default build is the debug build.  It is set by cmake in the configure
+script with -DCMAKE_BUILD_TYPE:STRING=Debug.  The compiler options for the
+debug build are '-O0 -g'.
+
+To create a release version, use in the -build--release option to the
 configure script. The compiler options for the release are '-O3 -DNDEBUG'.
 
 To show actual build commands, you can run the verbose version of the build:
-  
+
   make install VERBOSE=1
 
-==== VII. Contact =====
+==== IX. Contact =====
 
 For more information please contact:
 

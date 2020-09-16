@@ -1,7 +1,7 @@
 /*!
  * \file cpp_api_example.cc
  *
- * \brief This file is a small example of using the IEGenLib C++ API.  
+ * \brief This file is a small example of using the IEGenLib C++ API.
  *
  * To compile, execute the following command from the root of the project:
  *     cd ..

@@ -22,3 +22,7 @@ clean:
 
 dist:
 	./scripts/make_dist_tarball.sh
+
+.PHONY: tutorial
+tutorial:
+	@make -C build tutorial

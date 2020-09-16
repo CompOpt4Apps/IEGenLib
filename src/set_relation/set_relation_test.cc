@@ -170,11 +170,15 @@ TEST_F(SetRelationTest, SetUpTest) {
     EXPECT_EQ("{ [x, y, 2, 0] : x - y = 0 && x >= 0 }", conj2->toString());
 }
 
+
+
+
+
 // Test the construction of a Conjunction.
 #pragma mark SetNoTupleVarDecl
 TEST_F(SetRelationTest, SetNoTupleVarDecl) {
     Set* s = new Set(3);
-    
+
     EXPECT_EQ("{ [tv0, tv1, tv2] }", s->toString());
     delete s;
 }
@@ -438,7 +442,7 @@ TEST_F(SetRelationTest, RelationWithUFCall) {
     tdecl->setTupleElem(3,"i'");
     c->setTupleDecl(*tdecl);
     delete tdecl;
-    
+
     // Create the expression
     Exp* exp = new Exp();
     exp->addTerm(new VarTerm("i'"));
@@ -610,7 +614,7 @@ TEST_F(SetRelationTest, ExpressionSignBug){
 
 // Test that we don't display 0 = 0 equality with toString method
 // Example of some normalization we are already doing.
-TEST_F(SetRelationTest, EmptyExpressionBug){    
+TEST_F(SetRelationTest, EmptyExpressionBug){
     std::string expStr = "{ [] : 0 = 0 && 0 = 0 }";
     Set *s = new Set(expStr);
     EXPECT_EQ("{  }", s->toString());
@@ -1049,7 +1053,7 @@ TEST_F(SetRelationTest, ComposeWithUFCNeedsInverse) {
     delete expected;
     expected = new Relation("{ [x,z,r] -> [w,t]: w=g(x+z-r+35) && r+2=f(t) }");
     EXPECT_EQ(expected->toString(), result->toString());
-    
+
     delete r1;
     delete r2;
     delete result;
@@ -1143,7 +1147,7 @@ TEST_F(SetRelationTest, CompositionOneFunctionWithConstraints) {
     delete r2;
     delete result;
     delete expected;
-   
+
     r1 = new Relation("{ [v,s] -> [v,s]}");
     r2 = new Relation("{[x,z] -> [y,i] : i=z+2 && y=x-2}");
 
@@ -1154,8 +1158,8 @@ TEST_F(SetRelationTest, CompositionOneFunctionWithConstraints) {
     delete r1;
     delete r2;
     delete result;
-    delete expected;   
-    
+    delete expected;
+
 }
 
 // Test composition of relations.
@@ -1328,7 +1332,7 @@ TEST_F(SetRelationTest, ApplySpMV) {
     EXPECT_TRUE(result);
     //EXPECT_EQ("{ [c_0, i, c_0] : __tv0 = 0 && __tv2 = 0 && __tv1 >= 0 "
     //          "&& -__tv1 + nnz - 1 >= 0 }", result->toString() );
-    // FIXME Barbara: below should work once normalize is going.  
+    // FIXME Barbara: below should work once normalize is going.
     //       Above should break. Should expect 0,i,0 in result, so just modify
     //       above string and uncomment the below.
     EXPECT_EQ(expected->toString(), result->toString());
@@ -1347,7 +1351,7 @@ TEST_F(SetRelationTest, ApplySpMV) {
     //            "&& c_0 = 0 && b - cb(i) = 0 && r - row(i) = 0 "
     //            "&& c_2 - 2 = 0 && i >= 0 && -i + nnz - 1 >= 0 }",
     //            result->prettyPrintString() );
-    // FIXME Barbara: below should work once normalize is going.  
+    // FIXME Barbara: below should work once normalize is going.
     //       Above should break. Should expect 0,i,0 in result, so just modify
     //       above string and uncomment the below.
     EXPECT_EQ(expected->prettyPrintString(), result->prettyPrintString());
@@ -1368,7 +1372,7 @@ TEST_F(SetRelationTest, ApplySpMV) {
     EXPECT_EQ("{ [b, r, i] : __tv0 - cb(__tv2) = 0 && __tv1 - row(__tv2) = 0 "
                 "&& __tv2 >= 0 && -__tv2 + nnz - 1 >= 0 }",
                 result->toString() );
-    // FIXME Barbara: below should work once normalize is going.  
+    // FIXME Barbara: below should work once normalize is going.
     //       Above should break. Should expect 0,i,0 in result, so just modify
     //       above string and uncomment the below.
     //EXPECT_EQ(expected->toString(), result->toString());
@@ -1584,7 +1588,7 @@ FIXME Barbara: that same constants issue
     Relation *expected = new Relation("{ [m] -> [1, k] : k = m + 7}");
     EXPECT_TRUE(result);
     EXPECT_EQ(expected->toString(), result->toString());
-    
+
     delete expected;
     delete result;
     delete r2;
@@ -1894,7 +1898,7 @@ TEST_F(SetRelationTest, IEGRONE41Zeros) {
 //        "&& s >= 0 && i >= 0 && -s + T - 1 >= 0 && -i + N - 1 >= 0 }",
 //        s2->prettyPrintString());
     // FIXME: we also don't want the above to be the pretty print of s2
-    
+
     delete s2;
     delete s1;
     delete r1;
@@ -2828,13 +2832,13 @@ TEST_F(SetRelationTest,SparseConstraintsLessThanValues) {
 TEST_F(SetRelationTest,SetLessThan) {
     Set *s1 = new Set("{ }");
     Set *s2 = new Set("{ }");
-    
+
     // compare empty Sets
     EXPECT_FALSE(*s1 < *s2);
     EXPECT_FALSE(*s2 < *s1);
 
     Set *s3 = new Set("{ [a] }");
-    
+
     // compare empty to non-empty
     // s2 = { }
     // s3 = { [a] }
@@ -2871,7 +2875,7 @@ TEST_F(SetRelationTest,SetLessThan) {
                       "{ [a, b, c, d] : a >= 0 }");
     Set *s9 = new Set("{ [a, b, c, d] : a >= 0 } union "
                       "{ [a, b, c, d] : a >= 0 && b >= 0 }");
-    
+
     // s8 = s9 = { [a, b, c, d] : __tv0 >= 0 } union
     //           { [a, b, c, d] : __tv0 >= 0 && __tv1 >= 0 }
     // (Order shouldn't matter since SparseConstraints sorts Conjunctions)
@@ -2882,12 +2886,12 @@ TEST_F(SetRelationTest,SetLessThan) {
     // Comparing sets with constants for some of the locations.
     Set *s10 = new Set("{ [0, 1, i, 2] }");
     Set *s11 = new Set("{ [0, 1, j, 2] }");
-    
+
     // s10 == s11
     EXPECT_FALSE(*s10 < *s11);
     EXPECT_FALSE(*s10 < *s11);
 
-    
+
     delete s1;
     delete s2;
     delete s3;
@@ -3021,12 +3025,12 @@ TEST_F(SetRelationTest, ComposeForIterationReorderingMoldyn) {
     iegenlib::appendCurrEnv("delta",
         new Set("{[i]:0<=i &&i<G}"), new Set("{[i]:0<=i &&i<G}"), true,
         iegenlib::Monotonic_NONE);
-    
+
     // scattering function
     Relation* S1 = new Relation("{ [ i ] -> [ 0, s, 0, i, 0 ] }");
     Relation* S2 = new Relation("{ [ ii ] -> [ 0, s, 1, ii, 0 ] }");
     Relation* S3 = new Relation("{ [ i ] -> [ 0, s, 2, i, 0 ] }");
-    
+
     // transformation
     Relation* T = new Relation("{ [0,s,0,i,0] -> [0,s,0,i,0] } "
       "union { [ 0, s, 1, ii, 0 ] -> [ 0, s, 1, k, 0] : k = delta(ii)} "
@@ -3035,16 +3039,16 @@ TEST_F(SetRelationTest, ComposeForIterationReorderingMoldyn) {
     Relation* S1prime = T->Compose(S1);
     Relation* S1primeExp = new Relation("{ [i]->[0, s, 0, i, 0 ] }");
     EXPECT_TRUE((*S1primeExp) == (*S1prime));
-    
+
     Relation* S2prime = T->Compose(S2);
     Relation* S2primeExp = new Relation("{ [ii]->[0, s, 1, k,"
                                         " 0]:ii=delta_inv(k)}");
     EXPECT_TRUE((*S2primeExp) == (*S2prime));
-    
+
     Relation* S3prime = T->Compose(S3);
     Relation* S3primeExp = new Relation("{ [i]->[0, s, 2, i, 0 ] }");
     EXPECT_TRUE((*S3primeExp) == (*S3prime));
-    
+
     delete S1;
     delete S2;
     delete S3;
@@ -3060,37 +3064,37 @@ TEST_F(SetRelationTest, ComposeForIterationReorderingMoldyn) {
 
 // This test case walks through the first example of RTRTs in the journal paper
 TEST_F(SetRelationTest, ComposeForDataReorderingPlusIterationReorderingMoldyn){
-    
+
     //refresh the env and add delta's inverse delta_inv
     iegenlib::setCurrEnv();
     iegenlib::appendCurrEnv("delta",
         new Set("{[i]:0<=i &&i<G}"), new Set("{[i]:0<=i &&i<G}"), true,
         iegenlib::Monotonic_NONE);
-    
+
     // This is the original Data Access Function
     // it maps from the local iteration space to the data space
     Relation* A_i_to_a = new Relation("{ [ii]->[i]:i=inter1(ii) } union "
-                                      "{ [ii]->[i]:i=inter2(ii) } ");                                  
+                                      "{ [ii]->[i]:i=inter2(ii) } ");
     // scattering function
     // maps from the local iteration space to the full iteration space
     Relation* S1 = new Relation("{ [ i ] -> [ 0, s, 0, i, 0 ] }");
     Relation* S2 = new Relation("{ [ ii ] -> [ 0, s, 1, ii, 0 ] }");
     Relation* S3 = new Relation("{ [ i ] -> [ 0, s, 2, i, 0 ] }");
-    
-    // the data reordering transformation                                                                
+
+    // the data reordering transformation
     Relation* R_x0_to_x1 = new Relation("{ [i]->[j]:j=sigma(i) }");
-    
+
     // iteration reordering transformation transformation
     Relation* T = new Relation("{ [0,s,0,i1,0] -> [0,s,0,k1,0] : k1=delta(i1)} "
       "union { [ 0, s, 1, ii, 0 ] -> [ 0, s, 1, ii, 0] } "
       "union { [ 0, s, 2, i2, 0 ] -> [ 0, s, 2, k2, 0] : k2=delta(i2) }");
-    
+
     // Step 0: calculate inverses
     // need the inverse of each of these for the modified access function
     Relation* S1_inv = S1->Inverse();
     Relation* S2_inv = S2->Inverse();
     Relation* S3_inv = S3->Inverse();
-    
+
     // verify inverses
     Relation* S1_inv_exp = new Relation("{[0,s,0,i,0]->[i]}");
     ASSERT_TRUE((*S1_inv) == (*S1_inv_exp));
@@ -3101,14 +3105,14 @@ TEST_F(SetRelationTest, ComposeForDataReorderingPlusIterationReorderingMoldyn){
     Relation* S3_inv_exp = new Relation("{[0,s,2,i,0]->[i]}");
     ASSERT_TRUE((*S3_inv) == (*S3_inv_exp));
     delete S3_inv_exp;
-    
+
     // STEP 1: create modified data access function
     // maps from the full iteration space to the data space
     Relation* A_I1_to_a = A_i_to_a->Compose(S1_inv);
     Relation* A_I2_to_a = A_i_to_a->Compose(S2_inv);
     Relation* A_I3_to_a = A_i_to_a->Compose(S3_inv);
-    
-    // verify compose 
+
+    // verify compose
     Relation* A_I1_to_a_exp = new Relation("{[0,s,0,i1,0]->[i2]:i2=inter1(i1)}"
                                     "union {[0,s,0,i1,0]->[i2]:i2=inter2(i1)}");
     ASSERT_TRUE((*A_I1_to_a) == (*A_I1_to_a_exp));
@@ -3127,7 +3131,7 @@ TEST_F(SetRelationTest, ComposeForDataReorderingPlusIterationReorderingMoldyn){
     Relation* A_I2_to_aprime = R_x0_to_x1->Compose(A_I2_to_a);
     Relation* A_I3_to_aprime = R_x0_to_x1->Compose(A_I3_to_a);
     delete R_x0_to_x1;
-    
+
     // verify compose
     Relation* A_I1_to_aprime_exp = new Relation(
                                   "{[0,s,0,i,0]->[j]:j=sigma(inter1(i))} union "
@@ -3144,11 +3148,11 @@ TEST_F(SetRelationTest, ComposeForDataReorderingPlusIterationReorderingMoldyn){
                                   "{[0,s,2,i,0]->[j]:j=sigma(inter2(i))}");
     EXPECT_TRUE((*A_I3_to_aprime_exp) == (*A_I3_to_aprime));
     delete A_I3_to_aprime_exp;
-    
+
     // STEP 3: apply iteration reordering by composing the inverse
     // of the iteration reordering transformation function
     Relation* T_inv = T->Inverse();
-    
+
     // verify the inverse
     Relation* T_inv_exp = new Relation(
       "{[0,s,0,k1,0]->[0,s,0,i1,0]:k1=delta(i1) } union "
@@ -3156,49 +3160,49 @@ TEST_F(SetRelationTest, ComposeForDataReorderingPlusIterationReorderingMoldyn){
       "{[0,s,2,k2,0]->[0,s,2,i2,0]:k2=delta(i2) }");
     EXPECT_TRUE((*T_inv_exp) == (*T_inv));
     delete T_inv_exp;
-    
+
     // The final access functions
     Relation* A_I1prime_to_aprime = A_I1_to_aprime->Compose(T_inv);
     Relation* A_I2prime_to_aprime = A_I2_to_aprime->Compose(T_inv);
     Relation* A_I3prime_to_aprime = A_I3_to_aprime->Compose(T_inv);
-    
+
     // verify the final access functions
     Relation* A_I1prime_to_aprime_exp = new Relation(
       "{[0,s,0,k1,0]->[j]: j=sigma(inter1(delta_inv(k1)))} union "
       "{[0,s,0,k2,0]->[j]: j=sigma(inter2(delta_inv(k2)))}");
     EXPECT_TRUE((*A_I1prime_to_aprime_exp) == (*A_I1prime_to_aprime));
     delete A_I1prime_to_aprime_exp;
-    
+
     Relation* A_I2prime_to_aprime_exp = new Relation(
       "{[0,s,1,k1,0]->[j]: j=sigma(inter1(k1))} union "
       "{[0,s,1,k2,0]->[j]: j=sigma(inter2(k2))}");
     EXPECT_TRUE((*A_I2prime_to_aprime_exp) == (*A_I2prime_to_aprime));
     delete A_I2prime_to_aprime_exp;
-    
+
     Relation* A_I3prime_to_aprime_exp = new Relation(
       "{[0,s,2,k1,0]->[j]: j=sigma(inter1(delta_inv(k1)))} union "
       "{[0,s,2,k2,0]->[j]: j=sigma(inter2(delta_inv(k2))) }");
     EXPECT_TRUE((*A_I3prime_to_aprime_exp) == (*A_I3prime_to_aprime));
     delete A_I3prime_to_aprime_exp;
-    
+
     // STEP 4: apply the iteration reordering to the scattering functions
     Relation* S1prime = T->Compose(S1);
     Relation* S2prime = T->Compose(S2);
     Relation* S3prime = T->Compose(S3);
-    
+
     // verify new scheduling functions
     Relation* S1prime_exp = new Relation("{[i]->[0,s,0,k1,0]:i=delta_inv(k1)}");
     EXPECT_TRUE((*S1prime_exp) == (*S1prime));
-    delete S1prime_exp; 
+    delete S1prime_exp;
     Relation* S2prime_exp = new Relation("{[i]->[0,s,1,i,0]}");
     EXPECT_TRUE((*S2prime_exp) == (*S2prime));
     delete S2prime_exp;
     Relation* S3prime_exp = new Relation("{[i]->[0,s,2,k1,0]:i=delta_inv(k1)}");
     EXPECT_TRUE((*S3prime_exp) == (*S3prime));
     delete S3prime_exp;
-    
+
     // STEP 5: TODO add the dependencies
-    
+
     // clean up all of the relations
     delete T;
     delete T_inv;
@@ -3221,7 +3225,7 @@ TEST_F(SetRelationTest, ComposeForDataReorderingPlusIterationReorderingMoldyn){
     delete A_I1prime_to_aprime;
     delete A_I2prime_to_aprime;
     delete A_I3prime_to_aprime;
-        
+
 
 }
 
@@ -3234,7 +3238,7 @@ TEST_F(SetRelationTest, LoopFlatteningMoldyn){
         iegenlib::Monotonic_NONE);
     // FIXME: we need to detect that the domain I give above
     // and the way alpha is being used is inconsistent
-    
+
     // Iteration space for each statement
     Set* Phi_S1 = new Set("{[0,s,0,i,0]: 0<=s and s<Ns "
                                " and 0<=i and i<Nv }");
@@ -3242,20 +3246,20 @@ TEST_F(SetRelationTest, LoopFlatteningMoldyn){
                                " and 0<=e and e<Nv and 0<=q and q<=1 }");
     Set* Phi_S3 = new Set("{[0,s,2,k,0]: 0<=s and s<Ns "
                                " and 0<=k and k<Nv }");
-    
-    
+
+
     // loop flattening transformation
     Relation* T = new Relation("{[0,s,0,i,0] -> [0,e,0] : e=alpha(s,i)} "
                          "union {[0,s,1,i,0] -> [0,e,1] : e=alpha(s,i)} "
                          "union {[0,s,2,i,0] -> [0,e,2] : e=alpha(s,i)}");
-                         
+
     // calculate the new scheduling functions
     Set* Phi_S1prime = T->Apply(Phi_S1);
     Set* expected = new Set( "{[0,e,0]: 0<=alpha_inv(e)[0] "
         "&& alpha_inv(e)[0]<Ns && 0<=alpha_inv(e)[1] && alpha_inv(e)[1]<Nv}");
     EXPECT_EQ( *expected, *Phi_S1prime);
     //EXPECT_EQ( expected->toString(), Phi_S1prime->toString());
-    
+
     delete expected;
     delete Phi_S1;
     delete Phi_S2;
@@ -3274,17 +3278,17 @@ TEST_F(SetRelationTest, LoopFlatteningCSRtoCOO){
         iegenlib::Monotonic_NONE);
     // FIXME: we need to detect that the domain I give above
     // and the way tau is being used is inconsistent
-    
+
     // Iteration space for original statement in
     // for (i=0; i<nr; i++) {
     //    for (k=ptr(i); k<ptr(i+1); k++) {
     //      y[i] += ...
     Set* s1_iter = new Set("{[i,k]: 0<=i and i<nr "
-                           " and ptr(i)<=k and k<ptr(i+1) }");    
-    
+                           " and ptr(i)<=k and k<ptr(i+1) }");
+
     // loop flattening transformation
     Relation* T = new Relation("{[i,j]->[k]:k=tau(i,j)}");
-                         
+
     // apply transformation to set
     Set* s1_iter_prime = T->Apply(s1_iter);
     Set* expected = new Set( "{[k] : 0<=tau_inv(k)[0] && tau_inv(k)[0]<nr "
@@ -3292,7 +3296,7 @@ TEST_F(SetRelationTest, LoopFlatteningCSRtoCOO){
         "&& tau_inv(k)[1]<ptr(tau_inv(k)[0]+1)   }");
     //EXPECT_EQ( *expected, *Phi_S1prime);
     EXPECT_EQ( expected->toString(), s1_iter_prime->toString());
-    
+
     delete expected;
     delete s1_iter;
     delete s1_iter_prime;
@@ -3316,11 +3320,11 @@ TEST_F(SetRelationTest, SubstituteInConstraints){
     VarTerm* nrTerm = new VarTerm("nr");
     Exp* e1 = new Exp();
     e1->addTerm(new VarTerm(9,"bye"));
-    subMap.insertPair(nrTerm, e1);    
-    
+    subMap.insertPair(nrTerm, e1);
+
     // perform the substitution
     initial_set->substituteInConstraints(subMap);
-    
+
     // check results
     Set* expected = new Set( "{[k] : 0<=tau_inv(7 N)[0] "
         "&& tau_inv(7 N)[0]<9 bye "
@@ -3342,7 +3346,7 @@ TEST_F(SetRelationTest, SparseConstraintsSetTupleDecl){
                     "union {[0,s,2,i,0]->[0,s,2,i,0]} "
                     "union {[0,s,3,i,0]->[0,s,3,i',0]: i'=sigma_inv(i)}");
     Relation* r_org = new Relation(*r);
-    
+
     TupleDecl tdecl_good(10);
     tdecl_good.setTupleElem(0,"a");
     tdecl_good.setTupleElem(1,"b");
@@ -3354,14 +3358,14 @@ TEST_F(SetRelationTest, SparseConstraintsSetTupleDecl){
     tdecl_good.setTupleElem(7,"h");
     tdecl_good.setTupleElem(8,"i");
     tdecl_good.setTupleElem(9,"j");
-    
+
     r->setTupleDecl(tdecl_good);
 
 /*
     EXPECT_EQ( "{ [0, b, 0, d, 0] -> [0, g, 0, i, 0] : d = 0 && b - g = 0 && d - i = 0 } union { [0, b, 1, d, 0] -> [0, g, 1, i, 0] : b - g = 0 && i - sigma_inv(d) = 0 } union { [0, b, 2, d, 0] -> [0, g, 2, i, 0] : b - g = 0 && d - i = 0 } union { [0, b, 3, d, 0] -> [0, g, 3, i, 0] : b - g = 0 && i - sigma_inv(d) = 0 }", r->prettyPrintString() );
 */
     EXPECT_EQ( *r_org, *r );
-    
+
     // Check one that should throw an exception because
     // trying to change the constant.
     TupleDecl tdecl_bad(10);
@@ -3375,9 +3379,9 @@ TEST_F(SetRelationTest, SparseConstraintsSetTupleDecl){
     tdecl_bad.setTupleElem(7,"g");
     tdecl_bad.setTupleElem(8,"h");
     tdecl_bad.setTupleElem(9,"i");
-    
+
    EXPECT_THROW(r->setTupleDecl(tdecl_bad), iegenlib::assert_exception );
-    
+
     delete r;
     delete r_org;
 }
@@ -3393,8 +3397,8 @@ TEST_F(SetRelationTest, RelationIsFunction){
     Relation* r2 = new Relation("{[s,1,t,2]->[s,t,i]}");
     EXPECT_EQ(r2->isFunction(), true);
     */
-    
-    
+
+
     delete r1;
     //delete r2;
 }
@@ -3403,10 +3407,10 @@ TEST_F(SetRelationTest, RelationIsFunction){
 class VisitorDebugTest : public Visitor {
   private:
     std::stringstream ss;
-    
+
   public:
     std::string returnResult() { return ss.str(); }
-    
+
     void postVisitTerm(iegenlib::Term * t) {
         ss << "visitTerm (" << t->toString() << ")" << std::endl;
     }
@@ -3425,13 +3429,13 @@ class VisitorDebugTest : public Visitor {
     void postVisitExp(iegenlib::Exp * e) {
         ss << "visitExp (" << e->toString() << ")" << std::endl;
     }
-   
+
     // Classes in set_relation.h
     void postVisitConjunction(iegenlib::Conjunction * c) {
         ss << "visitConjunction (" << c->toString() << ")" << std::endl;
     }
     void postVisitSparseConstraints(iegenlib::SparseConstraints * sc) {
-        ss << "visitSparseConstraints (" << sc->toString() 
+        ss << "visitSparseConstraints (" << sc->toString()
                  << ")" << std::endl;
     }
     void postVisitSet(iegenlib::Set * s) {
@@ -3450,7 +3454,7 @@ TEST_F(SetRelationTest, VisitorDebugTest){
     Set *s = s1->Union(s2);
     Relation *r = new Relation("{[k,p] -> [k1,i'] : k1=k-1 && "
         "i' = sigma(col(p)) && v=foo(a,b,bar(p+x))}");
-        
+
     VisitorDebugTest* v = new VisitorDebugTest();
     s->acceptVisitor(v);
     EXPECT_EQ("visitVarTerm (-__tv1)\nvisitTerm (N)\nvisitTerm (-1)\nvisitExp"
@@ -3460,7 +3464,7 @@ TEST_F(SetRelationTest, VisitorDebugTest){
               "__tv0 - N >= 0 })\nvisitSparseConstraints ({ [x, y, z] : "
               "-__tv1 + N - 1 >= 0 } union { [i, 0, k] : __tv0 - N >= 0 "
               "})\nvisitSet ({ [x, y, z] : -__tv1 + N - 1 >= 0 } union "
-              "{ [i, 0, k] : __tv0 - N >= 0 })\n", 
+              "{ [i, 0, k] : __tv0 - N >= 0 })\n",
               v->returnResult());
     //std::cout << v->returnResult();
 
@@ -3473,7 +3477,7 @@ TEST_F(SetRelationTest, addUFConstraintsTest){
   {
     Set* s = new Set("{[i,j] : index(i) <= j && j < index(i+1)}");
     Set* result = s->addUFConstraints("index","<=", "diagptr");
-    
+
     EXPECT_EQ("{ [i, j] : j - index(i) >= 0 && diagptr(i) - index(i) >= 0 "
               "&& diagptr(i + 1) - index(i + 1) >= 0 && -j + index(i + 1) - "
               "1 >= 0 }",
@@ -3486,9 +3490,9 @@ TEST_F(SetRelationTest, addUFConstraintsTest){
   {
     Relation* r = new Relation("{[i,j]->[k] : index(i) <= j && "
         "j < index(i+1) && diagptr(v+1)<k && k<indexptr(i)}");
-    
+
     Relation* result1 = r->addUFConstraints("index",">", "diagptr");
-    
+
     EXPECT_EQ("{ [i, j] -> [k] : j - index(i) >= 0 && -j + index(i + 1) "
               "- 1 >= 0 && -k + indexptr(i) - 1 >= 0 && k - diagptr(v + "
               "1) - 1 >= 0 && -diagptr(i) + index(i) + 1 >= 0 && -diagpt"
@@ -3503,13 +3507,13 @@ TEST_F(SetRelationTest, addUFConstraintsTest){
               "&& j - index(i) >= 0 && -j + index(i + 1) - 1 >= 0 && -k + "
               "indexptr(i) - 1 >= 0 && k - diagptr(v + 1) - 1 >= 0 }",
               result2->prettyPrintString());
-    
+
     delete r;
     delete result1;
     delete result2;
   }
- 
-              
+
+
 }
 
 #pragma mark addConstraintsDueToMonotonicity
@@ -3532,9 +3536,9 @@ TEST_F(SetRelationTest, addConstraintsDueToMonotonicity){
                             "f(i)<G && f(j)<G && "
                             "0<=i && i<G && 0<=j && j<G &&"
                             "f(i)<f(j) && i<j}");
-    
+
     EXPECT_EQ(expected->prettyPrintString(), result->prettyPrintString());
-    
+
     delete s;
     delete copyS;
     delete result;
@@ -3549,9 +3553,9 @@ TEST_F(SetRelationTest, addConstraintsDueToMonotonicity){
                             "f(i)<G && f(j)<G && "
                             "0<=i && i<G && 0<=j && j<G &&"
                             "f(i)<f(j) && i<j}");
-                            
+
     EXPECT_EQ(expected->prettyPrintString(), result->prettyPrintString());
-    
+
     delete s;
     delete copyS;
     delete result;
@@ -3570,9 +3574,9 @@ TEST_F(SetRelationTest, addConstraintsDueToMonotonicity){
                             "g(i)<G && g(j)<G && "
                             "0<=i && i<G && 0<=j && j<G &&"
                             "g(i)<g(j) && i<j}");
-                            
+
     EXPECT_EQ(expected->prettyPrintString(), result->prettyPrintString());
-    
+
     delete s;
     delete copyS;
     delete result;
@@ -3583,7 +3587,7 @@ TEST_F(SetRelationTest, addConstraintsDueToMonotonicity){
   }
 
 }
-#endif 
+#endif
 
 //*********************** Testing isUFCallParam  ***************************
 
@@ -3605,7 +3609,7 @@ TEST_F(SetRelationTest, isUFCallParam) {
    //  Test case for r2
    string org_tup("11001100");
    string ins_tup("00000000");
- 
+
    int ar = r2->arity();
    for(int i = 0 ; i < ar ; i++)
    {
@@ -3627,7 +3631,7 @@ TEST_F(SetRelationTest, isUFCallParam) {
    //  Test case for r1
    string org_tup_r1("1011");
    string ins_tup_r1("0000");
- 
+
    int ar_r1 = r1->arity();
    for(int i = 0 ; i < ar_r1 ; i++)
    {
@@ -3693,10 +3697,10 @@ TEST_F(SetRelationTest, boundDomainRange) {
 
     iegenlib::setCurrEnv();
     iegenlib::appendCurrEnv("col",
-        new Set("{[i]:0<=i &&i<m}"), 
+        new Set("{[i]:0<=i &&i<m}"),
         new Set("{[j]:0<=j &&j<n}"), true, iegenlib::Monotonic_NONE);
     iegenlib::appendCurrEnv("idx",
-        new Set("{[i]:0<=i &&i<n}"), 
+        new Set("{[i]:0<=i &&i<n}"),
         new Set("{[j]:0<=j &&j<m}"), true, iegenlib::Monotonic_NONE);
 
     Set *s = new Set("[n] -> { [i,j,ip,jp] : i = col(jp) "
@@ -3760,10 +3764,10 @@ TEST_F(SetRelationTest, superAffineSet) {
 
     iegenlib::setCurrEnv();
     iegenlib::appendCurrEnv("col",
-        new Set("{[i,t]:0<=i && i< m && 0<=t && t< m}"), 
+        new Set("{[i,t]:0<=i && i< m && 0<=t && t< m}"),
         new Set("{[j]:0<=j &&j<n}"), true, iegenlib::Monotonic_NONE);
     iegenlib::appendCurrEnv("idx",
-        new Set("{[i]:0<=i &&i<n}"), 
+        new Set("{[i]:0<=i &&i<n}"),
         new Set("{[j]:0<=j &&j<m}"), true, iegenlib::Monotonic_NONE);
 
     iegenlib::UFCallMap *ufcmap = new iegenlib::UFCallMap();
@@ -3837,10 +3841,10 @@ TEST_F(SetRelationTest, reverseAffineSubstitution) {
 
     iegenlib::setCurrEnv();
     iegenlib::appendCurrEnv("col",
-        new Set("{[i,t]:0<=i && i< m && 0<=t && t< m}"), 
+        new Set("{[i,t]:0<=i && i< m && 0<=t && t< m}"),
         new Set("{[j]:0<=j &&j<n}"), true, iegenlib::Monotonic_NONE);
     iegenlib::appendCurrEnv("idx",
-        new Set("{[i]:0<=i &&i<n}"), 
+        new Set("{[i]:0<=i &&i<n}"),
         new Set("{[j]:0<=j &&j<m}"), true, iegenlib::Monotonic_NONE);
 
     iegenlib::UFCallMap *ufcmap = new iegenlib::UFCallMap();
@@ -3916,16 +3920,16 @@ TEST_F(SetRelationTest, projectOut) {
 
     iegenlib::setCurrEnv();
     iegenlib::appendCurrEnv("col",
-        new Set("{[i]:0<=i &&i<n}"), 
+        new Set("{[i]:0<=i &&i<n}"),
         new Set("{[j]:0<=j &&j<n}"), true, iegenlib::Monotonic_NONE);
     iegenlib::appendCurrEnv("idx",
-        new Set("{[i]:0<=i &&i<n}"), 
+        new Set("{[i]:0<=i &&i<n}"),
         new Set("{[j]:0<=j &&j<n}"), true, iegenlib::Monotonic_NONE);
     iegenlib::appendCurrEnv("row",
-        new Set("{[i]:0<=i &&i<n}"), 
+        new Set("{[i]:0<=i &&i<n}"),
         new Set("{[j]:0<=j &&j<n}"), true, iegenlib::Monotonic_NONE);
     iegenlib::appendCurrEnv("diag",
-        new Set("{[i]:0<=i &&i<n}"), 
+        new Set("{[i]:0<=i &&i<n}"),
         new Set("{[j]:0<=j &&j<n}"), true, iegenlib::Monotonic_NONE);
 
    // Note that, current project_out function first checks to see
@@ -3936,14 +3940,14 @@ TEST_F(SetRelationTest, projectOut) {
    // Additionally, we add the constraints that are due to domain
    //  and range info of all UFCall terms in the Set/Relation, before calling project out,
    //  for instance:
-   //  if we have: col( x ) + y > 5    then  
+   //  if we have: col( x ) + y > 5    then
    //                             ldb <= x <= udb and lrb <= col(x) <= urb
    //              will be added to constraints.
    //              * ldb = lower domain bound, urb = upper range bound
 
     Relation *r1 = new Relation("{ [i,k] -> [ip,kp] :  i = kp and col(i) < n"
                                      " and i < ip and diag(col(i))+1 <= k }");
-    Relation *r2; 
+    Relation *r2;
 
     Relation *ex_r1 = new Relation("{ [i] -> [ip] : i < ip  and "
      "0 <= i and i < n and col(i) >= 0 and diag(col(i)) >= 0 and"
@@ -3988,14 +3992,14 @@ TEST_F(SetRelationTest, projectOut) {
   s2 = s1->projectOut(1);     // 1 == index of 'j'
 
   if ( s2 ){
-     delete s1;               // removing old s1    
+     delete s1;               // removing old s1
      s1 = s2;
   }
   // Projecting out 'ip' from s1
   s2 = s1->projectOut(1);     // 1 == index of 'ip' (in new results)
 
   if ( s2 ){
-     delete s1;               // removing old s1    
+     delete s1;               // removing old s1
      s1 = s2;
   }
 //   std::cout << std::endl << "s1 = " << s1->toISLString() << std::endl;
@@ -4013,16 +4017,16 @@ TEST_F(SetRelationTest, debuggingForILU){
 
     iegenlib::setCurrEnv();
     iegenlib::appendCurrEnv("colidx",
-            new Set("{[i]:0<=i &&i<nnz}"),         // Domain 
+            new Set("{[i]:0<=i &&i<nnz}"),         // Domain
             new Set("{[j]:0<=j &&j<m}"),           // Range
             false,                                 // Not bijective.
             iegenlib::Monotonic_NONE               // no monotonicity
             );
     iegenlib::appendCurrEnv("rowptr",
-        new Set("{[i]:0<=i &&i<m}"), 
+        new Set("{[i]:0<=i &&i<m}"),
         new Set("{[j]:0<=j &&j<nnz}"), false, iegenlib::Monotonic_Increasing);
     iegenlib::appendCurrEnv("diagptr",
-        new Set("{[i]:0<=i &&i<m}"), 
+        new Set("{[i]:0<=i &&i<m}"),
         new Set("{[j]:0<=j &&j<nnz}"), false, iegenlib::Monotonic_Increasing);
 
    Set *islEqSet = new Set("{[i,ip,k,kp]: "
@@ -4032,10 +4036,10 @@ TEST_F(SetRelationTest, debuggingForILU){
    // Also normalization adds in the domain and range bounds for UF.
    Set *ex_islEqSet = new Set("{[i,ip,k,kp]:  i = colidx(kp) "
                                 "&& 0<=kp && kp<nnz "
-                                "&& 0<=colidx(kp) && colidx(kp)<m}"); 
+                                "&& 0<=colidx(kp) && colidx(kp)<m}");
 
    // Check and see if ISL library adds equality when we pass a set through it
-   // with a < b+1 and b < a+1 constraints. Results should have a = b.   
+   // with a < b+1 and b < a+1 constraints. Results should have a = b.
    islEqSet->normalize();
    EXPECT_EQ( ex_islEqSet->toISLString() , islEqSet->toISLString() );
 
@@ -4093,16 +4097,16 @@ TEST_F(SetRelationTest, numUFCallConstsMustRemove){
 
     iegenlib::setCurrEnv();
     iegenlib::appendCurrEnv("colidx",
-            new Set("{[i]:0<=i &&i<nnz}"),         // Domain 
+            new Set("{[i]:0<=i &&i<nnz}"),         // Domain
             new Set("{[j]:0<=j &&j<m}"),           // Range
             false,                                 // Not bijective.
             iegenlib::Monotonic_NONE               // no monotonicity
             );
     iegenlib::appendCurrEnv("rowptr",
-        new Set("{[i]:0<=i &&i<m}"), 
+        new Set("{[i]:0<=i &&i<m}"),
         new Set("{[j]:0<=j &&j<nnz}"), false, iegenlib::Monotonic_Increasing);
     iegenlib::appendCurrEnv("diagptr",
-        new Set("{[i]:0<=i &&i<m}"), 
+        new Set("{[i]:0<=i &&i<m}"),
         new Set("{[j]:0<=j &&j<nnz}"), false, iegenlib::Monotonic_Increasing);
 
     Set *F1 = new Set("[m] -> {[i,ip,k,kp]: i < ip"
@@ -4139,16 +4143,16 @@ TEST_F(SetRelationTest, removeUFCallConsts){
 
     iegenlib::setCurrEnv();
     iegenlib::appendCurrEnv("colidx",
-            new Set("{[i]:0<=i &&i<nnz}"),         // Domain 
+            new Set("{[i]:0<=i &&i<nnz}"),         // Domain
             new Set("{[j]:0<=j &&j<m}"),           // Range
             false,                                 // Not bijective.
             iegenlib::Monotonic_NONE               // no monotonicity
             );
     iegenlib::appendCurrEnv("rowptr",
-        new Set("{[i]:0<=i &&i<m}"), 
+        new Set("{[i]:0<=i &&i<m}"),
         new Set("{[j]:0<=j &&j<nnz}"), false, iegenlib::Monotonic_Increasing);
     iegenlib::appendCurrEnv("diagptr",
-        new Set("{[i]:0<=i &&i<m}"), 
+        new Set("{[i]:0<=i &&i<m}"),
         new Set("{[j]:0<=j &&j<nnz}"), false, iegenlib::Monotonic_Increasing);
 
     Set *F1 = new Set("[m] -> {[i,ip,k,kp]: i < ip"
@@ -4194,7 +4198,7 @@ TEST_F(SetRelationTest, removeUFCallConsts){
                        " && diagptr(colidx(k)) = rowptr(1+colidx(kp))"
 
                                      " && k = kp}");
-   
+
    // Adding domain and range constraints before removing UFCall constraints
    Set *extendedF2 = F2->boundDomainRange();
    extendedF2->removeUFCallConsts(2);
@@ -4222,7 +4226,7 @@ TEST_F(SetRelationTest, removeUFCallConsts){
 
    EXPECT_EQ( ex_F2->toISLString() , extendedF2->toISLString() );
 
-//std::cout<<"\n\nF1 = "<<F1->toISLString()<<"\n\n"; 
+//std::cout<<"\n\nF1 = "<<F1->toISLString()<<"\n\n";
 
    delete F1;
    delete ex1_F1;
@@ -4238,16 +4242,16 @@ TEST_F(SetRelationTest, domainInfoT){
 
     iegenlib::setCurrEnv();
     iegenlib::appendCurrEnv("colidx",
-            new Set("{[i]:0<=i &&i<nnz}"),         // Domain 
+            new Set("{[i]:0<=i &&i<nnz}"),         // Domain
             new Set("{[j]:0<=j &&j<m}"),           // Range
             false,                                 // Not bijective.
             iegenlib::Monotonic_NONE               // no monotonicity
             );
     iegenlib::appendCurrEnv("rowptr",
-        new Set("{[i]:0<=i &&i<m}"), 
+        new Set("{[i]:0<=i &&i<m}"),
         new Set("{[j]:0<=j &&j<nnz}"), false, iegenlib::Monotonic_Increasing);
     iegenlib::appendCurrEnv("diagptr",
-        new Set("{[i]:0<=i &&i<m}"), 
+        new Set("{[i]:0<=i &&i<m}"),
         new Set("{[j]:0<=j &&j<nnz}"), false, iegenlib::Monotonic_Increasing);
 
     Set *F1 = new Set("[m] -> {[i,ip,k,kp]: i < ip"
@@ -4263,7 +4267,7 @@ TEST_F(SetRelationTest, domainInfoT){
     json data;
 
     Set *res = F1->domainInfo(data, 0);
-  
+
 }
 */
 
@@ -4273,16 +4277,16 @@ TEST_F(SetRelationTest, getString){
 
     iegenlib::setCurrEnv();
     iegenlib::appendCurrEnv("colidx",
-            new Set("{[i]:0<=i &&i<nnz}"),         // Domain 
+            new Set("{[i]:0<=i &&i<nnz}"),         // Domain
             new Set("{[j]:0<=j &&j<m}"),           // Range
             false,                                 // Not bijective.
             iegenlib::Monotonic_NONE               // no monotonicity
             );
     iegenlib::appendCurrEnv("rowptr",
-        new Set("{[i]:0<=i &&i<m}"), 
+        new Set("{[i]:0<=i &&i<m}"),
         new Set("{[j]:0<=j &&j<nnz}"), false, iegenlib::Monotonic_Increasing);
     iegenlib::appendCurrEnv("diagptr",
-        new Set("{[i]:0<=i &&i<m}"), 
+        new Set("{[i]:0<=i &&i<m}"),
         new Set("{[j]:0<=j &&j<nnz}"), false, iegenlib::Monotonic_Increasing);
 
     Set *s1 = new Set("[m] -> {[i,ip,k,kp]: i < ip"
@@ -4302,7 +4306,7 @@ TEST_F(SetRelationTest, getString){
                                       "&& rowptr(ip) <= kp && i < ip && i < m && ip < m "
                                       "&& k + 10 < diagptr(i) }")
                      , s1->getString());
-    
+
     EXPECT_EQ( *s1_ex , *s1 );
 
     Set *s2 = new Set("[m] -> {[i,ip,k,kp]: i < ip && 0 < m"
@@ -4329,12 +4333,12 @@ TEST_F(SetRelationTest, getString){
     EXPECT_EQ( string("{ [i, k] -> [ip, kp] : rowptr(colidx(k) + 1) = diagptr(colidx(k)) "
                                           "&& rowptr(colidx(kp) + 1) = diagptr(colidx(k)) "
                                           "&& kp = k + 3 && 0 <= i && 0 <= ip && rowptr(i) <= k "
-                                          "&& ip <= 10 && i < ip && i < m && k <= diagptr(i) + 9 }") 
+                                          "&& ip <= 10 && i < ip && i < m && k <= diagptr(i) + 9 }")
                       , rel1->getString());
     EXPECT_EQ( *rel1_ex , *rel1 );
 
 
-   //std::cout << "\n\n--- getString --- \n\nSet = " 
+   //std::cout << "\n\n--- getString --- \n\nSet = "
    //          << s->getString()<<"\n\nRelation = "<<rel->getString()<<"\n\n";
 
    delete s1;
@@ -4349,16 +4353,16 @@ TEST_F(SetRelationTest, getZ3form){
 
     iegenlib::setCurrEnv();
     iegenlib::appendCurrEnv("colidx",
-            new Set("{[i]:0<=i &&i<nnz}"),         // Domain 
+            new Set("{[i]:0<=i &&i<nnz}"),         // Domain
             new Set("{[j]:0<=j &&j<m}"),           // Range
             false,                                 // Not bijective.
             iegenlib::Monotonic_NONE               // no monotonicity
             );
     iegenlib::appendCurrEnv("rowptr",
-        new Set("{[i]:0<=i &&i<m}"), 
+        new Set("{[i]:0<=i &&i<m}"),
         new Set("{[j]:0<=j &&j<nnz}"), false, iegenlib::Monotonic_Increasing);
     iegenlib::appendCurrEnv("diagptr",
-        new Set("{[i]:0<=i &&i<m}"), 
+        new Set("{[i]:0<=i &&i<m}"),
         new Set("{[j]:0<=j &&j<nnz}"), false, iegenlib::Monotonic_Increasing);
 
     Set *s1 = new Set("[m] -> {[i,ip,k,kp]: i < ip"
@@ -4367,8 +4371,8 @@ TEST_F(SetRelationTest, getZ3form){
                        " && diagptr(colidx(k)) = rowptr(1+colidx(k))"
                                      " && k-3 = kp}");
 
-    // UFSyms and VarSyms get populated with uninterpreted function symbols (UFSymbols),  
-    // and symbolic constants found in the set. Then later when a driver actually  
+    // UFSyms and VarSyms get populated with uninterpreted function symbols (UFSymbols),
+    // and symbolic constants found in the set. Then later when a driver actually
     // generating a z3 file it can use them to define global variables and UFSymbols.
 
     std::set<std::string> UFSyms;
@@ -4378,17 +4382,17 @@ TEST_F(SetRelationTest, getZ3form){
 //    for(int i = 0 ; i < constrants.size(); i++)
 //      std::cout<<"\n"<<constrants[i]<<"\n";
 
-    // !! SparseConstraints::getZ3form returns a vector of strings that include 
-    //    constraints represented in SMT-LIB format that SMT solvers like z3 
-    //    gets as input. This can be used to check the satisfiability of 
+    // !! SparseConstraints::getZ3form returns a vector of strings that include
+    //    constraints represented in SMT-LIB format that SMT solvers like z3
+    //    gets as input. This can be used to check the satisfiability of
     //    an IEGenLib Set/Relation with a SMT solver. The returned list
     //    also includes tuple variable declarations, however they do not include UFSymbol
     //    and global variable declarations. This is because, when checking satisfiability of
     //    a set, we usually also want to define some user defined assertions along side original
     //    constraints. The assertions might have UFSymbols and global variables of their
-    //    own that original constraints do not. We can put their UFSymbols and globals into 
+    //    own that original constraints do not. We can put their UFSymbols and globals into
     //    UFSyms, and VarSyms std::set that SparseConstraints::getZ3form returns by reference,
-    //    and then a driver function can declare all the UFSymbols and globals at the beginning of 
+    //    and then a driver function can declare all the UFSymbols and globals at the beginning of
     //    the input file that it is going to generate and pass to a SMT solver.
 
     EXPECT_EQ( string("(declare-const i Int)") , constrants[0] ); // Just defining i variable
@@ -4397,12 +4401,13 @@ TEST_F(SetRelationTest, getZ3form){
     EXPECT_EQ( string("(declare-const kp Int)" ) , constrants[3] ); // Just defining i variable
 
     EXPECT_EQ( string("(assert (! (= (rowptr (+ (colidx k) 1))"
-                      " (diagptr (colidx k))) :named c11) )") , constrants[4] ); // defining diagptr(colidx(k)) = rowptr(1+colidx(k)) 
+                      " (diagptr (colidx k))) :named c11) )") , constrants[4] ); // defining diagptr(colidx(k)) = rowptr(1+colidx(k))
     EXPECT_EQ( string("(assert (! (= (+ kp 3) k) :named c12) )") , constrants[5] ); // defining i < ip
     EXPECT_EQ( string("(assert (! (<= 0 ip) :named c13) )") , constrants[6] ); // defining 0 <= ip
     EXPECT_EQ( string("(assert (! (<= ip m) :named c14) )") , constrants[7] ); // defining ip <= m
     EXPECT_EQ( string("(assert (! (< i ip) :named c15) )") , constrants[8] ); // defining i < ip
     EXPECT_EQ( string("(assert (! (< (+ k 10) (diagptr i)) :named c16) )") , constrants[9] ); // defining k+10 < diagptr(i)
-    
+
    delete s1;
 }
+
