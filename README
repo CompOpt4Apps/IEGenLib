@@ -36,10 +36,14 @@ If you want to do a quick build, just run:
     ./configure
     make
     make test
+    make install
  
 This will install into a directory IEGenLib/iegenlib
 Set IEGEN_HOME to /full/path/to/IEGenLib/iegen
 
+If you are using bash then the command to set an environment variable is:
+
+export IEGEN_HOME="full/path/to/IEGenLib/iegen"
 
 ---- B. Replicating relation simplification result from the SC 2016 paper ---
 
