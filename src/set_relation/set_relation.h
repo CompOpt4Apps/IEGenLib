@@ -495,8 +495,6 @@ public:
     bool operator<( const Set& other) const;
     
     std::string toDotString() const;
-    
-    std::string codeGen() const;
 
     //! For all conjunctions, sets them to the given tuple declaration.
     //! If there are some constants that don't agree then throws exception.
