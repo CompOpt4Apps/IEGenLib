@@ -4433,6 +4433,17 @@ TEST_F(SetRelationTest, RestrictDomainTest){
                " - 1 >= 0 && -j + NC - 1 >= 0 }",restrictRel2->
                prettyPrintString());
 
+
+     Relation *rel2 = new Relation("{[l] -> [k]: 1 <= i and i <= 10 and k = i + 1}");
+     Set * set2 = new Set("{[i,l]: 5 <= i and i <= 25 and l = row(i)}");
+
+     // expect exception
+     EXPECT_ANY_THROW(rel2->Restrict(set2));
+
      delete restrictRel;
+     delete rel1;
+     delete rel2;
+     delete set1;
+     delete set2;
      delete restrictRel2;
 }
