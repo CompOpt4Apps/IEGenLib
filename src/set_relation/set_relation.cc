@@ -193,6 +193,29 @@ void Conjunction::reset() {
     mInequalities.clear();
 }
 
+//! Restrict this (interpreted as a Relation) to rhs, which is interpreted
+//! as a set.
+//! r = { x -> y : C }
+//! s = { z : D }
+//! r(s) = { z -> y : D && C[z/x]  }
+//! \param rhs
+//! \return
+Conjunction *Conjunction::Restrict(const Conjunction *rhs) const {
+    // copy in all of the constraints from ourselves
+    Conjunction* retval = new Conjunction(*this);
+
+    // then get equalities and equalities from rhs
+    for (std::list<Exp*>::const_iterator i=rhs->mEqualities.begin();
+         i != rhs->mEqualities.end(); i++) {
+        retval->addEquality((*i)->clone());
+    }
+    for (std::list<Exp*>::const_iterator i=rhs->mInequalities.begin();
+         i != rhs->mInequalities.end(); i++ ) {
+        retval->addInequality((*i)->clone());
+    }
+    return retval;
+}
+
 Conjunction::~Conjunction() {
     reset();
 }
@@ -2232,6 +2255,50 @@ Relation* Relation::Intersect(const Relation* rhs) const{
     return result;
 }
 
+/*!
+ * Restrict a set with a relation. Returns a new
+ * Relation which the caller is responsible for
+ * deallocating
+ *
+ * @param rhs
+ * @return
+ */
+Relation * Relation::Restrict(const Set *rhs) const {
+    int setArity = rhs->arity();
+    int relInArity = this->inArity();
+    int relOutArity = this->outArity();
+    if (relInArity != setArity){
+        throw assert_exception("Relation::Restrict: mismatched arities");
+    }
+    // x -> y \element r (retVal) iff x -> y \element r1 (this)
+    // and x \element S (rhs)
+    Relation * retVal = new Relation(setArity,relOutArity);
+
+
+    // rhs tuple Decl = [a,b], lhs tuple Decl = [i,j] -> [n] = [i,j,n]
+    // Result tuple input declaration should be sets tuple
+    // declaration. Result tuple Decl = [a,b] -> [n] = [a,b,n].
+    TupleDecl tupleDecl = this->getTupleDecl();
+    for(int i =0; i < setArity ; i++){
+        tupleDecl.copyTupleElem(rhs->getTupleDecl(),i,i);
+    }
+
+    // Have to do cross product restrict in both sets.
+    for(std::list<Conjunction*>::const_iterator it =
+            this->conjunctionBegin(); it != this->conjunctionEnd(); it++){
+        for(std::list<Conjunction*>::const_iterator it2 =
+                rhs->conjunctionBegin(); it2 != rhs->conjunctionEnd(); it2++) {
+            Conjunction * conj = (*it)->Restrict(*it2);
+            if (conj){
+                conj->setTupleDecl(tupleDecl);
+                retVal->addConjunction(conj);
+            }else{
+                throw assert_exception("Relation::Restrict: failed in conjunction");
+            }
+        }
+    }
+    return retVal;
+}
 
 /*! Inverse this relation. Returns a new Relation,
 **    which the caller is responsible for deallocating.
@@ -2362,6 +2429,8 @@ void Conjunction::acceptVisitor(Visitor *v) {
     }
     v->postVisitConjunction(this);
 }
+
+
 
 //! Visitor design pattern, see Visitor.h for usage
 void SparseConstraints::acceptVisitor(Visitor *v) {
@@ -4014,6 +4083,7 @@ string Relation::getString(bool generic)
 
     return result;
 }
+
 
 
 

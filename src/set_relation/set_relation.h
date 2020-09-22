@@ -176,6 +176,10 @@ public:
     //! \param innerArity
     Conjunction *Compose(const Conjunction *rhs, int innerArity) const;
 
+
+
+
+
     //! Apply this (interpreted as a Relation) to rhs, which is interpreted
     //! as a set.
     //! r = { x -> y : x = G(y) && C }
@@ -193,6 +197,15 @@ public:
     ** \param rhs (not adopted)
     */
     Conjunction* Intersect(const Conjunction* rhs) const;
+
+    //! Restrict this (interpreted as a Relation) to rhs, which is interpreted
+    //! as a set.
+    //! r = { x -> y : C }
+    //! s = { z : D }
+    //! r(s) = { z -> y : D && C[z/x]  }
+    //! \param rhs
+    //! \return
+    Conjunction* Restrict (const Conjunction* rhs) const;
 
     /*! Treating this Conjunction like a domain or range.  Creates
     ** a new set where passed in tuple expression is
@@ -707,6 +720,15 @@ public:
     ** \param rhs (not adopted)
     */
     Relation *Intersect(const Relation* rhs) const;
+
+    /*!
+     * Restrict a set with a relation. Returns a new
+     * Relation which the caller is responsible for
+     * deallocating
+     * @param rhs
+     * @return
+     */
+    Relation * Restrict (const Set* rhs) const;
 
     /*! Create the inverse of this relation. Returns a new Relation,
     **    which the caller is responsible for deallocating.

@@ -1,5 +1,4 @@
-/*!
- * \file set_relation_test.cc
+ /* file set_relation_test.cc
  *
  * \brief Set and Relation tests.
  *
@@ -2408,6 +2407,8 @@ TEST_F(SetRelationTest, SetIntersect) {
 }
 */
 
+
+
 #pragma mark SetTupleIterator
 // Checking that get all tuple variables in correct order.
 TEST_F(SetRelationTest, SetTupleIterator) {
@@ -4410,4 +4411,28 @@ TEST_F(SetRelationTest, getZ3form){
 
    delete s1;
 }
+// Test restrict operations.
 
+TEST_F(SetRelationTest, RestrictDomainTest){
+    Relation *rel = new Relation("{[l] -> [k]: 1 <= i and i <= 10 and k = i + 1}");
+    Set * set = new Set("{[i]: 5 <= i and i <= 25}");
+    Relation * restrictRel = rel->Restrict(set);
+
+    EXPECT_EQ( "{ [i] -> [k] : k - i - 1 = 0 && -i + 25 >= 0 && "
+               "i - 5 >= 0 && -i + 10 >= 0 && i - 1 >= 0 }",
+               restrictRel->prettyPrintString());
+
+     auto set1 = new Set("{[i,j]: i >= 0 and i < NR and"
+                          " j >= 0 and j < NC and Ad(i,j) > 0}");
+     auto rel1 = new Relation("{[i,j] -> [n]:"
+                                    " row(n) = i and col(n) = j and  i >= 0 and "
+                                    " i < NR and j >= 0 and j < NC}");
+     Relation* restrictRel2 = rel1->Restrict(set1);
+     EXPECT_EQ("{ [i, j] -> [n] : i - row(n) = 0 && j - col(n) = 0"
+               " && i >= 0 && j >= 0 && Ad(i, j) - 1 >= 0 && -i + NR"
+               " - 1 >= 0 && -j + NC - 1 >= 0 }",restrictRel2->
+               prettyPrintString());
+
+     delete restrictRel;
+     delete restrictRel2;
+}
