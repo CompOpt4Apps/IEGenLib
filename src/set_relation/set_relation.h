@@ -202,7 +202,7 @@ public:
     //! as a set.
     //! r = { x -> y : C }
     //! s = { z : D }
-    //! r(s) = { z -> y : D && C[z/x]  }
+    //! r(s) = { x -> y : D && C[x/z]  }
     //! \param rhs
     //! \return
     Conjunction* Restrict (const Conjunction* rhs) const;

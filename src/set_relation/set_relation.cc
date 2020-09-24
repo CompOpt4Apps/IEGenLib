@@ -197,7 +197,7 @@ void Conjunction::reset() {
 //! as a set.
 //! r = { x -> y : C }
 //! s = { z : D }
-//! r(s) = { z -> y : D && C[z/x]  }
+//! r(s) = { x -> y : D && C[x/z]  }
 //! \param rhs
 //! \return
 Conjunction *Conjunction::Restrict(const Conjunction *rhs) const {
@@ -213,6 +213,9 @@ Conjunction *Conjunction::Restrict(const Conjunction *rhs) const {
          i != rhs->mInequalities.end(); i++ ) {
         retval->addInequality((*i)->clone());
     }
+
+
+
     return retval;
 }
 
@@ -2275,13 +2278,6 @@ Relation * Relation::Restrict(const Set *rhs) const {
     Relation * retVal = new Relation(setArity,relOutArity);
 
 
-    // rhs tuple Decl = [a,b], lhs tuple Decl = [i,j] -> [n] = [i,j,n]
-    // Result tuple input declaration should be sets tuple
-    // declaration. Result tuple Decl = [a,b] -> [n] = [a,b,n].
-    TupleDecl tupleDecl = this->getTupleDecl();
-    for(int i =0; i < setArity ; i++){
-        tupleDecl.copyTupleElem(rhs->getTupleDecl(),i,i);
-    }
 
     // Have to do cross product restrict in both sets.
     for(std::list<Conjunction*>::const_iterator it =
@@ -2290,7 +2286,6 @@ Relation * Relation::Restrict(const Set *rhs) const {
                 rhs->conjunctionBegin(); it2 != rhs->conjunctionEnd(); it2++) {
             Conjunction * conj = (*it)->Restrict(*it2);
             if (conj){
-                conj->setTupleDecl(tupleDecl);
                 retVal->addConjunction(conj);
             }else{
                 throw assert_exception("Relation::Restrict: failed in conjunction");

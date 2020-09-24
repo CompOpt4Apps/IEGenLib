@@ -4418,9 +4418,10 @@ TEST_F(SetRelationTest, RestrictDomainTest){
     Set * set = new Set("{[i]: 5 <= i and i <= 25}");
     Relation * restrictRel = rel->Restrict(set);
 
-    EXPECT_EQ( "{ [i] -> [k] : k - i - 1 = 0 && -i + 25 >= 0 && "
-               "i - 5 >= 0 && -i + 10 >= 0 && i - 1 >= 0 }",
-               restrictRel->prettyPrintString());
+    EXPECT_EQ( "{ [l] -> [k] : __tv1 - i - 1 = 0 && -__tv0"
+               " + 25 >= 0 && __tv0 - 5 >= 0 && -i + 10"
+               " >= 0 && i - 1 >= 0 }",
+               restrictRel->toString());
 
      auto set1 = new Set("{[i,j]: i >= 0 and i < NR and"
                           " j >= 0 and j < NC and Ad(i,j) > 0}");
