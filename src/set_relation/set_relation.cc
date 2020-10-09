@@ -198,7 +198,7 @@ void Conjunction::reset() {
 //! r = { x -> y : C }
 //! s = { z : D }
 //! r(s) = { x -> y : D && C[x/z]  }
-//! \param rh dependentStack.top();s
+//! \param rhs
 //! \return
 Conjunction *Conjunction::Restrict(const Conjunction *rhs) const {
     // copy in all of the constraints from ourselves
