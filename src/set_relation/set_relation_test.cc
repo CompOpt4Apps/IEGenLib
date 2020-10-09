@@ -4414,13 +4414,13 @@ TEST_F(SetRelationTest, getZ3form){
 // Test restrict operations.
 
 TEST_F(SetRelationTest, RestrictDomainTest){
-    Relation *rel = new Relation("{[l] -> [k]: 1 <= i and i <= 10 and k = i + 1}");
+    Relation *rel = new Relation("{[l] -> [k]: 1 <= n and n <= 10 and k = n + 1}");
     Set * set = new Set("{[i]: 5 <= i and i <= 25}");
     Relation * restrictRel = rel->Restrict(set);
 
-    EXPECT_EQ( "{ [l] -> [k] : __tv1 - i - 1 = 0 && -__tv0"
-               " + 25 >= 0 && __tv0 - 5 >= 0 && -i + 10"
-               " >= 0 && i - 1 >= 0 }",
+    EXPECT_EQ( "{ [l] -> [k] : __tv1 - n - 1 = 0"
+               " && -__tv0 + 25 >= 0 && __tv0 - 5 >= 0"
+               " && -n + 10 >= 0 && n - 1 >= 0 }",
                restrictRel->toString());
 
      auto set1 = new Set("{[i,j]: i >= 0 and i < NR and"

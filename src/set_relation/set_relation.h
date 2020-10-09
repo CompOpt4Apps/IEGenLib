@@ -725,6 +725,9 @@ public:
      * Restrict a set with a relation. Returns a new
      * Relation which the caller is responsible for
      * deallocating
+     *  r = { x -> y : C }
+     * s = { z : D }
+     *  r(s) = { x -> y : D && C[x/z]  }
      * @param rhs
      * @return
      */
