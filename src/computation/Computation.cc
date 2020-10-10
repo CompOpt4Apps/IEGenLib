@@ -78,19 +78,19 @@ StmtInfo::StmtInfo(
     std::vector<std::pair<std::string, std::string>> dataReadsStrs,
     std::vector<std::pair<std::string, std::string>> dataWritesStrs)
     : stmtSourceCode(stmtSourceCode) {
-    iterationSpace = std::make_unique<Set>(iterationSpaceStr);
+    iterationSpace = std::unique_ptr<Set>(new Set(iterationSpaceStr));
     executionSchedule =
-        std::make_unique<Relation>(executionScheduleStr);
+        std::unique_ptr<Relation>(new Relation(executionScheduleStr));
     for (const auto& readInfo : dataReadsStrs) {
         dataReads.push_back(
             {readInfo.first,
-             std::make_unique<Relation>(readInfo.second)});
+             std::unique_ptr<Relation>(new Relation(readInfo.second))});
     }
-        for (const auto& writeInfo : dataWritesStrs) {
-            dataWrites.push_back(
-                {writeInfo.first,
-                 std::make_unique<Relation>(writeInfo.second)});
-        }
+    for (const auto& writeInfo : dataWritesStrs) {
+        dataWrites.push_back(
+            {writeInfo.first,
+             std::unique_ptr<Relation>(new Relation(writeInfo.second))});
+    }
 };
 
 }  // namespace iegenlib
