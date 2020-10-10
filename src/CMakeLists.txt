@@ -32,28 +32,28 @@ message(STATUS "Building Python bindings: ${BUILD_PYTHON_YESNO}")
 file(GLOB_RECURSE iegenlib_SOURCES *.cc)
 file(GLOB_RECURSE iegenlib_t_SOURCES *test.cc)
 
-## remove the tests from the regular list 
+## remove the tests from the regular list
 list(REMOVE_ITEM iegenlib_SOURCES ${iegenlib_t_SOURCES})
 
 ## remove anything with a main function
-list(REMOVE_ITEM iegenlib_SOURCES 
+list(REMOVE_ITEM iegenlib_SOURCES
 	${IEGENLIB_SOURCE_DIR}/src/iegenlib_calc.cc)
-list(REMOVE_ITEM iegenlib_SOURCES 
+list(REMOVE_ITEM iegenlib_SOURCES
 	${IEGENLIB_SOURCE_DIR}/src/cpp_api_example.cc)
-list(REMOVE_ITEM iegenlib_SOURCES 
+list(REMOVE_ITEM iegenlib_SOURCES
 	${IEGENCC_SOURCE_DIR}/src/iegenlib/iegenlib_calc.cc)
-list(REMOVE_ITEM iegenlib_SOURCES 
+list(REMOVE_ITEM iegenlib_SOURCES
 	${IEGENCC_SOURCE_DIR}/src/iegenlib/cpp_api_example.cc)
 
-list(REMOVE_ITEM iegenlib_SOURCES 
+list(REMOVE_ITEM iegenlib_SOURCES
 	${IEGENLIB_SOURCE_DIR}/src/drivers/DEPRECATED_simplifyDriver.cc)
 
-list(REMOVE_ITEM iegenlib_SOURCES 
+list(REMOVE_ITEM iegenlib_SOURCES
 	${IEGENLIB_SOURCE_DIR}/src/drivers/simplification.cc)
-list(REMOVE_ITEM iegenlib_SOURCES 
+list(REMOVE_ITEM iegenlib_SOURCES
 	${IEGENLIB_SOURCE_DIR}/src/drivers/superAffSet.cc)
 
-list(REMOVE_ITEM iegenlib_SOURCES 
+list(REMOVE_ITEM iegenlib_SOURCES
 	${IEGENLIB_SOURCE_DIR}/src/drivers/subSetDriver.cc)
 
 ############################### STEP 2 ########################################
@@ -96,14 +96,15 @@ endif()
 include_directories(.)
 include_directories(parser)
 include_directories(set_relation)
+include_directories(computation)
 include_directories(util)
 
 ## set the compile flags
-SET_SOURCE_FILES_PROPERTIES(${iegenlib_SOURCES} 
-	                    PROPERTIES 
+SET_SOURCE_FILES_PROPERTIES(${iegenlib_SOURCES}
+	                    PROPERTIES
 			    COMPILE_FLAGS "-Wall -Wno-unknown-pragmas")
-SET_SOURCE_FILES_PROPERTIES(${iegenlib_t_SOURCES} 
-	                    PROPERTIES 
+SET_SOURCE_FILES_PROPERTIES(${iegenlib_t_SOURCES}
+	                    PROPERTIES
 			    COMPILE_FLAGS "-Wall -Wno-unknown-pragmas")
 
 ## create the library
@@ -155,7 +156,7 @@ install(TARGETS iegenlib_t
 	RUNTIME DESTINATION bin)
 
 #Install the header files
-install(DIRECTORY ./ 
+install(DIRECTORY ./
 	DESTINATION include/iegenlib
 	FILES_MATCHING PATTERN "*.h"
 	PATTERN ".svn" EXCLUDE)
@@ -167,15 +168,15 @@ install(DIRECTORY ./parser/jsoncons/
 	PATTERN ".svn" EXCLUDE)
 
 #Install the oracle files for testing dot output
-install(DIRECTORY ./set_relation/dotTest 
+install(DIRECTORY ./set_relation/dotTest
         DESTINATION ${CMAKE_INSTALL_PREFIX}/test_data
-	FILES_MATCHING 
+	FILES_MATCHING
 	PATTERN "*.in.*"
         PATTERN "*.sh"
         PATTERN ".svn" EXCLUDE)
 
 # print install message
-install (CODE "MESSAGE (\"\n\nSet IEGEN_HOME to ${CMAKE_INSTALL_PREFIX}\n\n\")")                                                          
+install (CODE "MESSAGE (\"\n\nSet IEGEN_HOME to ${CMAKE_INSTALL_PREFIX}\n\n\")")
 ############################### STEP 5 ########################################
 ######################  Add testing Code ######################################
 
@@ -192,5 +193,5 @@ add_custom_command(TARGET run_iegen_tests POST_BUILD
 
 ## add the test executable as a test in ctest
 add_test(iegenlib_unit_test iegenlib_t)
-set_property(TEST iegenlib_unit_test 
+set_property(TEST iegenlib_unit_test
 	     PROPERTY ENVIRONMENT "IEGEN_HOME=${PROJECT_BINARY_DIR}")
