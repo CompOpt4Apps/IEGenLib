@@ -1,3 +1,23 @@
+/*!
+ * \file Computation.cc
+ *
+ * \brief Implementation of the Computation and StmtInfo structs.
+ *
+ * The Computation struct is the SPF representation of a logical computation.
+ * It contains a StmtInfo struct for each statement, which in turn contains
+ * information about that statement as mathematical objects.
+ * Originally part of spf-ie.
+ *
+ * \date Started: 10/09/20
+ *
+ * \authors Anna Rift
+ *
+ * Copyright (c) 2020, University of Arizona <br>
+ * Copyright (c) 2020, Boise State University <br>
+ * All rights reserved. <br>
+ * See ../../COPYING for details. <br>
+ */
+
 #include "Computation.h"
 
 #include <iostream>

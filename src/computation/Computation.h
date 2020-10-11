@@ -11,6 +11,11 @@
  * \date Started: 10/09/20
  *
  * \authors Anna Rift
+ *
+ * Copyright (c) 2020, University of Arizona <br>
+ * Copyright (c) 2020, Boise State University <br>
+ * All rights reserved. <br>
+ * See ../../COPYING for details. <br>
  */
 
 #ifndef COMPUTATION_H_
