@@ -195,9 +195,11 @@ void Conjunction::reset() {
 
 //! Restrict this (interpreted as a Relation) to rhs, which is interpreted
 //! as a set.
+//! Returns a new conjunction which the caller is responsible for
+//! deallocating.
 //! r = { x -> y : C }
 //! s = { z : D }
-//! r(s) = { x -> y : D && C[x/z]  }
+//! r \ s  = { x -> y : D[x/z] && C  }
 //! \param rhs
 //! \return
 Conjunction *Conjunction::Restrict(const Conjunction *rhs) const {
