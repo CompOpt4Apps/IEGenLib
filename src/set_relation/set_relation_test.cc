@@ -1,19 +1,20 @@
- /* file set_relation_test.cc
- *
- * \brief Set and Relation tests.
- *
- * This file is to test all of the Set and Relation classes, along with the
- * related Conjunction class.
- *
- * \date Started: 3/28/12
- *
- * \authors Michelle Strout, Joseph Strout, Mahdi Soltan Mohammadi
- *
- * Copyright (c) 2012, 2013 Colorado State University <br>
- * Copyright (c) 2015-2016, University of Arizona <br>
- * All rights reserved. <br>
- * See ../../COPYING for details. <br>
- */
+/*!
+* \file set_relation_test.cc
+*
+* \brief Set and Relation tests.
+*
+* This file is to test all of the Set and Relation classes, along with the
+* related Conjunction class.
+*
+* \date Started: 3/28/12
+*
+* \authors Michelle Strout, Joseph Strout, Mahdi Soltan Mohammadi
+*
+* Copyright (c) 2012, 2013 Colorado State University <br>
+* Copyright (c) 2015-2016, University of Arizona <br>
+* All rights reserved. <br>
+* See ../../COPYING for details. <br>
+*/
 
 #include "set_relation.h"
 #include "expression.h"
@@ -4414,6 +4415,8 @@ TEST_F(SetRelationTest, getZ3form){
 // Test restrict operations.
 
 TEST_F(SetRelationTest, RestrictDomainTest){
+
+    // Test with valid Relation and Set.
     Relation *rel = new Relation("{[l] -> [k]: 1 <= n and n <= 10 and k = n + 1}");
     Set * set = new Set("{[i]: 5 <= i and i <= 25}");
     Relation * restrictRel = rel->Restrict(set);
@@ -4423,6 +4426,16 @@ TEST_F(SetRelationTest, RestrictDomainTest){
                " && -n + 10 >= 0 && n - 1 >= 0 }",
                restrictRel->toString());
 
+    // Test with valid relation and set.
+
+    Relation * rel3 = new Relation("{[i]->[k]: i < k and i =0}");
+    Set * set3 = new Set("{[i]: n < 10}");
+    Relation * restrictRel3 = rel3->Restrict(set3);
+    EXPECT_EQ("{ [i] -> [k] : i = 0 &&"
+              " -n + 9 >= 0 && -i + k - 1 >= 0 }",restrictRel3->prettyPrintString());
+
+
+    // Test with Dense -> COO example.
      auto set1 = new Set("{[i,j]: i >= 0 and i < NR and"
                           " j >= 0 and j < NC and Ad(i,j) > 0}");
      auto rel1 = new Relation("{[i,j] -> [n]:"
@@ -4435,16 +4448,23 @@ TEST_F(SetRelationTest, RestrictDomainTest){
                prettyPrintString());
 
 
-     Relation *rel2 = new Relation("{[l] -> [k]: 1 <= i and i <= 10 and k = i + 1}");
-     Set * set2 = new Set("{[i,l]: 5 <= i and i <= 25 and l = row(i)}");
+     // Test with Relation and set with mismatched arities.
+     Relation *rel2 = new Relation(
+             "{[l] -> [k]: 1 <= i and i <= 10 and k = i + 1}");
+     Set * set2 = new Set(
+             "{[i,l]: 5 <= i and i <= 25 and l = row(i)}");
 
-     // expect exception
-     EXPECT_ANY_THROW(rel2->Restrict(set2));
+     // Expect exception about arity mismatch.
+     EXPECT_THROW(rel2->Restrict(set2),
+                  iegenlib::assert_exception );
 
      delete restrictRel;
      delete rel1;
      delete rel2;
+     delete rel3;
      delete set1;
      delete set2;
+     delete set3;
      delete restrictRel2;
+     delete restrictRel3;
 }
