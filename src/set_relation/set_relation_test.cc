@@ -4417,17 +4417,24 @@ TEST_F(SetRelationTest, getZ3form){
 TEST_F(SetRelationTest, RestrictDomainTest){
 
     // Test with valid Relation and Set.
+    // rel = { [l] -> [k] : 1 <= n && n <= 10 && k = n + 1 }
+    // set = { [i]: 5 <= i && i <= 25 }
+    // expected result
+    // rel \ set = { [l] -> [k] : 1 <= n && n <= 10 && k = n + 1 && 5 <= i && i <= 25}
     Relation *rel = new Relation("{[l] -> [k]: 1 <= n and n <= 10 and k = n + 1}");
     Set * set = new Set("{[i]: 5 <= i and i <= 25}");
     Relation * restrictRel = rel->Restrict(set);
 
-    EXPECT_EQ( "{ [l] -> [k] : __tv1 - n - 1 = 0"
-               " && -__tv0 + 25 >= 0 && __tv0 - 5 >= 0"
-               " && -n + 10 >= 0 && n - 1 >= 0 }",
-               restrictRel->toString());
+    EXPECT_EQ( "{ [l] -> [k] : k - n - 1 = 0"
+               " && -l + 25 >= 0 && l - 5 >= 0 &&"
+               " -n + 10 >= 0 && n - 1 >= 0 }",
+               restrictRel->prettyPrintString());
 
     // Test with valid relation and set.
-
+    // rel = { [i] -> [k] : 1 < k && i = 0}
+    // set = { [i]: n < 10 }
+    // expected result
+    // rel \ set = { [i] -> [k] : 1 < k && i = 10 && n < 10}
     Relation * rel3 = new Relation("{[i]->[k]: i < k and i =0}");
     Set * set3 = new Set("{[i]: n < 10}");
     Relation * restrictRel3 = rel3->Restrict(set3);
@@ -4435,7 +4442,7 @@ TEST_F(SetRelationTest, RestrictDomainTest){
               " -n + 9 >= 0 && -i + k - 1 >= 0 }",restrictRel3->prettyPrintString());
 
 
-    // Test with Dense -> COO example.
+
      auto set1 = new Set("{[i,j]: i >= 0 and i < NR and"
                           " j >= 0 and j < NC and Ad(i,j) > 0}");
      auto rel1 = new Relation("{[i,j] -> [n]:"
