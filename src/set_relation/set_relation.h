@@ -729,10 +729,10 @@ public:
     ** deallocating
     **  r = { x -> y : C }
     ** s = { z : D }
-    **  r \ s  = { x -> y : D[x/z] && C  }
+    **  r \ s  = { x -> y : D[z/x] && C  }
     **
     ** @param rhs
-    *# @return
+    ** @return
     */
 
     Relation * Restrict (const Set* rhs) const;

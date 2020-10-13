@@ -2265,8 +2265,8 @@ Relation* Relation::Intersect(const Relation* rhs) const{
    * Relation which the caller is responsible for
    * deallocating
    *  r = { x -> y : C }
-   * s = { z : D }
-   *  r \ s  = { x -> y : D[x/z] && C  }
+   *  s = { z : D }
+   *  r \ s  = { x -> y : D[z/x] && C  }
    *
    * @param rhs
    * @return
