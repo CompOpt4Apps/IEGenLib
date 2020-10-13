@@ -1,7 +1,7 @@
 /*!
  * \file Computation.cc
  *
- * \brief Implementation of the Computation and StmtInfo structs.
+ * \brief Implementation of the Computation and StmtInfo classes.
  *
  * The Computation struct is the SPF representation of a logical computation.
  * It contains a StmtInfo struct for each statement, which in turn contains
@@ -41,13 +41,14 @@ void Computation::printInfo() {
     std::ostringstream dataSpacesOutput;
 
     for (const auto& it : stmtsInfoMap) {
-        stmts << it.first << ": " << it.second.stmtSourceCode << "\n";
-        iterSpaces << it.first << ": "
+        std::string stmtName = "S" + std::to_string(it.first);
+        stmts << stmtName << ": " << it.second.stmtSourceCode << "\n";
+        iterSpaces << stmtName << ": "
                    << it.second.iterationSpace->prettyPrintString() << "\n";
-        execSchedules << it.first << ": "
+        execSchedules << stmtName << ": "
                       << it.second.executionSchedule->prettyPrintString()
                       << "\n";
-        dataReads << it.first << ":";
+        dataReads << stmtName << ":";
         if (it.second.dataReads.empty()) {
             dataReads << " none";
         } else {
@@ -59,7 +60,7 @@ void Computation::printInfo() {
             dataReads << "}";
         }
         dataReads << "\n";
-        dataWrites << it.first << ":";
+        dataWrites << stmtName << ":";
         if (it.second.dataWrites.empty()) {
             dataWrites << " none";
         } else {
@@ -88,6 +89,87 @@ void Computation::printInfo() {
     std::cout << "\nArray reads:\n" << dataReads.str();
     std::cout << "\nArray writes:\n" << dataWrites.str();
     std::cout << "\n";
+}
+
+void Computation::clear() {
+    dataSpaces.clear();
+    stmtsInfoMap.clear();
+}
+
+std::unordered_set<std::string> Computation::getDataSpaces() {
+    return dataSpaces;
+}
+
+std::string Computation::getStmtSource(unsigned int stmtNumber) {
+    return stmtsInfoMap[stmtNumber].stmtSourceCode;
+}
+
+void Computation::setStmtSource(unsigned int stmtNumber, std::string source) {
+    stmtsInfoMap[stmtNumber].stmtSourceCode = source;
+}
+
+std::string Computation::getIterSpace(unsigned int stmtNumber) {
+    return stmtsInfoMap[stmtNumber].iterationSpace->prettyPrintString();
+}
+
+void Computation::setIterSpace(unsigned int stmtNumber,
+                               std::string newIterationSpaceStr) {
+    stmtsInfoMap[stmtNumber].iterationSpace =
+        std::unique_ptr<Set>(new Set(newIterationSpaceStr));
+}
+
+std::string Computation::getExecSched(unsigned int stmtNumber) {
+    return stmtsInfoMap[stmtNumber].executionSchedule->prettyPrintString();
+}
+
+void Computation::setExecSched(unsigned int stmtNumber,
+                               std::string newExecutionScheduleStr) {
+    stmtsInfoMap[stmtNumber].executionSchedule =
+        std::unique_ptr<Relation>(new Relation(newExecutionScheduleStr));
+}
+
+std::vector<std::pair<std::string, std::string>> Computation::getDataReads(
+    unsigned int stmtNumber) {
+    std::vector<std::pair<std::string, std::string>> result;
+    for (const auto& readInfo : stmtsInfoMap[stmtNumber].dataReads) {
+        result.push_back({it.first, it.second->prettyPrintString()});
+    }
+    return result;
+}
+
+void Computation::addDataRead(unsigned int stmtNumber, unsigned int index,
+                              std::string dataSpace, std::string readRelStr) {
+    dataSpaces.emplace(dataSpace);
+    stmtsInfoMap[stmtNumber].dataReads.emplace(
+        stmtsInfoMap[stmtNumber].dataReads->begin() + index,
+        {dataSpace, std::unique_ptr<Relation>(new Relation(readRelStr))});
+}
+
+void Computation::removeDataRead(unsigned int stmtNumber, unsigned int index) {
+    stmtsInfoMap[stmtNumber].dataReads->erase(
+        stmtsInfoMap[stmtNumber].dataReads->begin() + index);
+}
+
+std::vector<std::pair<std::string, std::string>> Computation::getDataWrites(
+    unsigned int stmtNumber) {
+    std::vector<std::pair<std::string, std::string>> result;
+    for (const auto& writeInfo : stmtsInfoMap[stmtNumber].dataWrites) {
+        result.push_back({it.first, it.second->prettyPrintString()});
+    }
+    return result;
+}
+
+void Computation::addDataWrite(unsigned int stmtNumber, unsigned int index,
+                               std::string dataSpace, std::string writeRelStr) {
+    dataSpaces.emplace(dataSpace);
+    stmtsInfoMap[stmtNumber].dataWrites.emplace(
+        stmtsInfoMap[stmtNumber].dataWrites->begin() + index,
+        {dataSpace, std::unique_ptr<Relation>(new Relation(writeRelStr))});
+}
+
+void Computation::removeDataWrite(unsigned int stmtNumber, unsigned int index) {
+    stmtsInfoMap[stmtNumber].dataWrites->erase(
+        stmtsInfoMap[stmtNumber].dataWrites->begin() + index);
 }
 
 /* StmtInfo */
