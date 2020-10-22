@@ -77,24 +77,22 @@ class Computation {
         unsigned int stmtNumber);
 
     //! Add a read to a statement
-    void addDataRead(unsigned int stmtNumber, std::string dataSpace,
-                     std::string readRelStr);
+    void addDataRead(unsigned int stmtNumber, unsigned int index,
+                     std::string dataSpace, std::string readRelStr);
 
     //! Remove a read from a statement
-    void removeDataRead(unsigned int stmtNumber, std::string dataSpace,
-                        std::string readRelStr);
+    void removeDataRead(unsigned int stmtNumber, unsigned int index);
 
     //! Get the writes for a statement
     std::vector<std::pair<std::string, std::string>> getDataWrites(
         unsigned int stmtNumber);
 
     //! Add a write to a statement
-    void addDataWrite(unsigned int stmtNumber, std::string dataSpace,
-                      std::string writeRelStr);
+    void addDataWrite(unsigned int stmtNumber, unsigned int index,
+                      std::string dataSpace, std::string writeRelStr);
 
     //! Remove a write from a statement
-    void removeDataWrite(unsigned int stmtNumber, std::string dataSpace,
-                         std::string writeRelStr);
+    void removeDataWrite(unsigned int stmtNumber, unsigned int index);
 
    private:
     //! Data spaces accessed in the computation
@@ -119,7 +117,6 @@ class StmtInfo {
              std::vector<std::pair<std::string, std::string>> dataReadsStrs,
              std::vector<std::pair<std::string, std::string>> dataWritesStrs);
 
-   private:
     //! Source code of the statement, for debugging purposes
     std::string stmtSourceCode;
     //! Iteration space of a statement
