@@ -40,10 +40,10 @@ Computation& Computation::operator=(const Computation& other) {
 }
 
 void Computation::addStmt(const Stmt& stmt) {
-    stmtsInfoMap.emplace(currentStmtNum++, Stmt(stmt));
+    stmtsInfoMap.emplace(numStmts++, Stmt(stmt));
 }
 
-Stmt* Computation::getStmt(unsigned int index) {
+const Stmt* Computation::getStmt(unsigned int index) const {
     return &stmtsInfoMap.at(index);
 }
 
@@ -51,9 +51,11 @@ void Computation::addDataSpace(std::string dataSpaceName) {
     dataSpaces.emplace(dataSpaceName);
 }
 
-std::unordered_set<std::string> Computation::getDataSpaces() {
+std::unordered_set<std::string> Computation::getDataSpaces() const {
     return dataSpaces;
 }
+
+unsigned int Computation::getNumStmts() const { return numStmts; }
 
 void Computation::printInfo() const {
     std::ostringstream stmtsOutput;

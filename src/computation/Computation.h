@@ -44,7 +44,7 @@ class Stmt;
 class Computation {
    public:
     //! Construct an empty Computation
-    Computation() : currentStmtNum(0){};
+    Computation() : numStmts(0){};
 
     //! Copy constructor
     Computation(const Computation& other);
@@ -56,12 +56,15 @@ class Computation {
     //! Statements are numbered sequentially from 0 as they are inserted
     void addStmt(const Stmt& stmt);
     //! Get a statement by index
-    Stmt* getStmt(unsigned int index);
+    const Stmt* getStmt(unsigned int index) const;
 
     //! Add a data space to this Computation
     void addDataSpace(std::string dataSpaceName);
     //! Get data spaces
-    std::unordered_set<std::string> getDataSpaces();
+    std::unordered_set<std::string> getDataSpaces() const;
+
+    //! Get the number of statements in this Computation
+    unsigned int getNumStmts() const;
 
     //! Print out all the information represented in this Computation for
     //! debug purposes
@@ -83,8 +86,8 @@ class Computation {
     std::map<unsigned int, Stmt> stmtsInfoMap;
     //! Data spaces accessed in the computation
     std::unordered_set<std::string> dataSpaces;
-    //! Number to be assigned to the next inserted statement
-    unsigned int currentStmtNum;
+    //! Number of statements in this Computation
+    unsigned int numStmts;
 };
 
 /*!
