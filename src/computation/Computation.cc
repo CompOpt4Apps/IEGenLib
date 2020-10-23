@@ -233,7 +233,7 @@ void Stmt::setDataReads(
 
 std::vector<std::pair<std::string, Relation*>> Stmt::getDataWrites() const {
     std::vector<std::pair<std::string, Relation*>> result;
-    for (const auto& writeInfo : dataReads) {
+    for (const auto& writeInfo : dataWrites) {
         result.push_back({writeInfo.first, writeInfo.second.get()});
     }
     return result;
@@ -241,7 +241,7 @@ std::vector<std::pair<std::string, Relation*>> Stmt::getDataWrites() const {
 
 void Stmt::setDataWrites(
     std::vector<std::pair<std::string, std::string>> dataWritesStrs) {
-    dataReads.clear();
+    dataWrites.clear();
     for (const auto& writeInfo : dataWritesStrs) {
         dataWrites.push_back(
             {writeInfo.first,
