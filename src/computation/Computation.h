@@ -29,6 +29,7 @@
 #include <vector>
 
 #include "set_relation/set_relation.h"
+#include "set_relation/environment.h"
 
 namespace iegenlib {
 
@@ -61,6 +62,9 @@ class Computation {
 
     //! Clear all data from this Computation
     void clear();
+
+    //! Environment used by this Computation
+    Environment env;
 
     //! Data spaces accessed in the computation
     std::unordered_set<std::string> dataSpaces;
