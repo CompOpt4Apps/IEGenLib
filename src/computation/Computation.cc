@@ -1,10 +1,10 @@
 /*!
  * \file Computation.cc
  *
- * \brief Implementation of the Computation and StmtInfo classes.
+ * \brief Implementation of the Computation and Stmt classes.
  *
- * The Computation struct is the SPF representation of a logical computation.
- * It contains a StmtInfo struct for each statement, which in turn contains
+ * The Computation class is the SPF representation of a logical computation.
+ * It contains a Stmt class for each statement, which in turn contains
  * information about that statement as mathematical objects.
  * Originally part of spf-ie.
  *
@@ -32,47 +32,59 @@ namespace iegenlib {
 
 /* Computation */
 
-void Computation::printInfo() {
-    std::ostringstream stmts;
-    std::ostringstream iterSpaces;
-    std::ostringstream execSchedules;
-    std::ostringstream dataReads;
-    std::ostringstream dataWrites;
+void Computation::printInfo() const {
+    std::ostringstream stmtsOutput;
+    std::ostringstream iterSpacesOutput;
+    std::ostringstream execSchedulesOutput;
+    std::ostringstream dataReadsOutput;
+    std::ostringstream dataWritesOutput;
     std::ostringstream dataSpacesOutput;
 
     for (const auto& it : stmtsInfoMap) {
         std::string stmtName = "S" + std::to_string(it.first);
-        stmts << stmtName << ": " << it.second.stmtSourceCode << "\n";
-        iterSpaces << stmtName << ": "
-                   << it.second.iterationSpace->prettyPrintString() << "\n";
-        execSchedules << stmtName << ": "
-                      << it.second.executionSchedule->prettyPrintString()
-                      << "\n";
-        dataReads << stmtName << ":";
-        if (it.second.dataReads.empty()) {
-            dataReads << " none";
+        // stmt source code
+        stmtsOutput << stmtName << ": " << it.second.getStmtSourceCode()
+                    << "\n";
+        // iter spaces
+        iterSpacesOutput << stmtName << ": "
+                         << it.second.getIterationSpace()->prettyPrintString()
+                         << "\n";
+        // exec schedules
+        execSchedulesOutput
+            << stmtName << ": "
+            << it.second.getExecutionSchedule()->prettyPrintString() << "\n";
+        // data reads
+        auto dataReads = it.second.getDataReads();
+        dataReadsOutput << stmtName << ":";
+        if (dataReads.empty()) {
+            dataReadsOutput << " none";
         } else {
-            dataReads << "{\n";
-            for (const auto& read_it : it.second.dataReads) {
-                dataReads << "    " << read_it.first << ": "
-                          << read_it.second->prettyPrintString() << "\n";
+            dataReadsOutput << "{\n";
+            for (const auto& read_it : dataReads) {
+                dataReadsOutput << "    " << read_it.first << ": "
+                                << read_it.second->prettyPrintString() << "\n";
             }
-            dataReads << "}";
+            dataReadsOutput << "}";
         }
-        dataReads << "\n";
-        dataWrites << stmtName << ":";
-        if (it.second.dataWrites.empty()) {
-            dataWrites << " none";
+        dataReadsOutput << "\n";
+        // data writes
+        auto dataWrites = it.second.getDataWrites();
+        dataWritesOutput << stmtName << ":";
+        if (dataWrites.empty()) {
+            dataWritesOutput << " none";
         } else {
-            dataWrites << "{\n";
-            for (const auto& write_it : it.second.dataWrites) {
-                dataWrites << "    " << write_it.first << ": "
-                           << write_it.second->prettyPrintString() << "\n";
+            dataWritesOutput << "{\n";
+            for (const auto& write_it : dataWrites) {
+                dataWritesOutput << "    " << write_it.first << ": "
+                                 << write_it.second->prettyPrintString()
+                                 << "\n";
             }
-            dataWrites << "}";
+            dataWritesOutput << "}";
         }
-        dataWrites << "\n";
+        dataWritesOutput << "\n";
     }
+
+    // data spaces
     dataSpacesOutput << "{";
     for (const auto& it : dataSpaces) {
         if (it != *dataSpaces.begin()) {
@@ -82,13 +94,38 @@ void Computation::printInfo() {
     }
     dataSpacesOutput << "}\n";
 
-    std::cout << "Statements:\n" << stmts.str();
-    std::cout << "\nIteration spaces:\n" << iterSpaces.str();
-    std::cout << "\nExecution schedules:\n" << execSchedules.str();
+    std::cout << "Statements:\n" << stmtsOutput.str();
+    std::cout << "\nIteration spaces:\n" << iterSpacesOutput.str();
+    std::cout << "\nExecution schedules:\n" << execSchedulesOutput.str();
     std::cout << "\nData spaces: " << dataSpacesOutput.str();
-    std::cout << "\nArray reads:\n" << dataReads.str();
-    std::cout << "\nArray writes:\n" << dataWrites.str();
+    std::cout << "\nArray reads:\n" << dataReadsOutput.str();
+    std::cout << "\nArray writes:\n" << dataWritesOutput.str();
     std::cout << "\n";
+}
+
+bool Computation::isComplete() const {
+    std::unordered_set<std::string> dataSpacesActuallyAccessed;
+    for (const auto& stmtEntry : stmtsInfoMap) {
+        // check completeness of each statement
+        if (!stmtEntry.second.isComplete()) {
+            return false;
+        }
+
+        // collect all data space accesses
+        for (const auto& readInfo : stmtEntry.second.getDataReads()) {
+            dataSpacesActuallyAccessed.emplace(readInfo.first);
+        }
+        for (const auto& writeInfo : stmtEntry.second.getDataWrites()) {
+            dataSpacesActuallyAccessed.emplace(writeInfo.first);
+        }
+    }
+
+    // check that list of data spaces matches those accessed in statements
+    if (dataSpaces != dataSpacesActuallyAccessed) {
+        return false;
+    }
+
+    return true;
 }
 
 void Computation::clear() {
@@ -96,94 +133,12 @@ void Computation::clear() {
     stmtsInfoMap.clear();
 }
 
-std::unordered_set<std::string> Computation::getDataSpaces() {
-    return dataSpaces;
-}
+/* Stmt */
 
-std::string Computation::getStmtSource(unsigned int stmtNumber) {
-    return stmtsInfoMap.at(stmtNumber).stmtSourceCode;
-}
-
-void Computation::setStmtSource(unsigned int stmtNumber, std::string source) {
-    stmtsInfoMap.at(stmtNumber).stmtSourceCode = source;
-}
-
-std::string Computation::getIterSpace(unsigned int stmtNumber) {
-    return stmtsInfoMap.at(stmtNumber).iterationSpace->prettyPrintString();
-}
-
-void Computation::setIterSpace(unsigned int stmtNumber,
-                               std::string newIterationSpaceStr) {
-    stmtsInfoMap.at(stmtNumber).iterationSpace =
-        std::unique_ptr<Set>(new Set(newIterationSpaceStr));
-}
-
-std::string Computation::getExecSched(unsigned int stmtNumber) {
-    return stmtsInfoMap.at(stmtNumber).executionSchedule->prettyPrintString();
-}
-
-void Computation::setExecSched(unsigned int stmtNumber,
-                               std::string newExecutionScheduleStr) {
-    stmtsInfoMap.at(stmtNumber).executionSchedule =
-        std::unique_ptr<Relation>(new Relation(newExecutionScheduleStr));
-}
-
-std::vector<std::pair<std::string, std::string>> Computation::getDataReads(
-    unsigned int stmtNumber) {
-    std::vector<std::pair<std::string, std::string>> result;
-    for (const auto& readInfo : stmtsInfoMap.at(stmtNumber).dataReads) {
-        result.push_back(
-            {readInfo.first, readInfo.second->prettyPrintString()});
-    }
-    return result;
-}
-
-void Computation::addDataRead(unsigned int stmtNumber, unsigned int index,
-                              std::string dataSpace, std::string readRelStr) {
-    dataSpaces.emplace(dataSpace);
-    stmtsInfoMap.at(stmtNumber)
-        .dataReads.insert(
-            stmtsInfoMap.at(stmtNumber).dataReads.begin() + index,
-            {dataSpace, std::unique_ptr<Relation>(new Relation(readRelStr))});
-}
-
-void Computation::removeDataRead(unsigned int stmtNumber, unsigned int index) {
-    stmtsInfoMap.at(stmtNumber)
-        .dataReads.erase(stmtsInfoMap.at(stmtNumber).dataReads.begin() + index);
-}
-
-std::vector<std::pair<std::string, std::string>> Computation::getDataWrites(
-    unsigned int stmtNumber) {
-    std::vector<std::pair<std::string, std::string>> result;
-    for (const auto& writeInfo : stmtsInfoMap.at(stmtNumber).dataWrites) {
-        result.push_back(
-            {writeInfo.first, writeInfo.second->prettyPrintString()});
-    }
-    return result;
-}
-
-void Computation::addDataWrite(unsigned int stmtNumber, unsigned int index,
-                               std::string dataSpace, std::string writeRelStr) {
-    dataSpaces.emplace(dataSpace);
-    stmtsInfoMap.at(stmtNumber)
-        .dataWrites.insert(
-            stmtsInfoMap.at(stmtNumber).dataWrites.begin() + index,
-            {dataSpace, std::unique_ptr<Relation>(new Relation(writeRelStr))});
-}
-
-void Computation::removeDataWrite(unsigned int stmtNumber, unsigned int index) {
-    stmtsInfoMap.at(stmtNumber)
-        .dataWrites.erase(stmtsInfoMap.at(stmtNumber).dataWrites.begin() +
-                          index);
-}
-
-/* StmtInfo */
-
-StmtInfo::StmtInfo(
-    std::string stmtSourceCode, std::string iterationSpaceStr,
-    std::string executionScheduleStr,
-    std::vector<std::pair<std::string, std::string>> dataReadsStrs,
-    std::vector<std::pair<std::string, std::string>> dataWritesStrs)
+Stmt::Stmt(std::string stmtSourceCode, std::string iterationSpaceStr,
+           std::string executionScheduleStr,
+           std::vector<std::pair<std::string, std::string>> dataReadsStrs,
+           std::vector<std::pair<std::string, std::string>> dataWritesStrs)
     : stmtSourceCode(stmtSourceCode) {
     iterationSpace = std::unique_ptr<Set>(new Set(iterationSpaceStr));
     executionSchedule =
@@ -199,5 +154,44 @@ StmtInfo::StmtInfo(
              std::unique_ptr<Relation>(new Relation(writeInfo.second))});
     }
 };
+
+bool Stmt::isComplete() const {
+    return !stmtSourceCode.empty() && iterationSpace && executionSchedule;
+}
+
+std::string Stmt::getStmtSourceCode() const { return stmtSourceCode; }
+
+void Stmt::setStmtSourceCode(std::string newStmtSourceCode) {
+    this->stmtSourceCode = newStmtSourceCode;
+}
+
+Set* Stmt::getIterationSpace() const { return iterationSpace.get(); }
+
+void Stmt::setIterationSpace(std::string newIterationSpaceStr) {
+    this->iterationSpace = std::unique_ptr<Set>(new Set(newIterationSpaceStr));
+}
+
+Relation* Stmt::getExecutionSchedule() const { return executionSchedule.get(); }
+
+void Stmt::setExecutionSchedule(std::string newExecutionScheduleStr) {
+    this->executionSchedule =
+        std::unique_ptr<Relation>(new Relation(newExecutionScheduleStr));
+}
+
+std::vector<std::pair<std::string, Relation*>> Stmt::getDataReads() const {
+    std::vector<std::pair<std::string, Relation*>> result;
+    for (const auto& readInfo : dataReads) {
+        result.push_back({readInfo.first, readInfo.second.get()});
+    }
+    return result;
+}
+
+std::vector<std::pair<std::string, Relation*>> Stmt::getDataWrites() const {
+    std::vector<std::pair<std::string, Relation*>> result;
+    for (const auto& writeInfo : dataReads) {
+        result.push_back({writeInfo.first, writeInfo.second.get()});
+    }
+    return result;
+}
 
 }  // namespace iegenlib
