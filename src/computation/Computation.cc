@@ -39,6 +39,22 @@ Computation& Computation::operator=(const Computation& other) {
     this->stmtsInfoMap = other.stmtsInfoMap;
 }
 
+void Computation::addStmt(const Stmt& stmt) {
+    stmtsInfoMap.emplace(currentStmtNum++, Stmt(stmt));
+}
+
+Stmt* Computation::getStmt(unsigned int index) {
+    return &stmtsInfoMap.at(index);
+}
+
+void Computation::addDataSpace(std::string dataSpaceName) {
+    dataSpaces.emplace(dataSpaceName);
+}
+
+std::unordered_set<std::string> Computation::getDataSpaces() {
+    return dataSpaces;
+}
+
 void Computation::printInfo() const {
     std::ostringstream stmtsOutput;
     std::ostringstream iterSpacesOutput;
@@ -145,21 +161,12 @@ void Computation::clear() {
 Stmt::Stmt(std::string stmtSourceCode, std::string iterationSpaceStr,
            std::string executionScheduleStr,
            std::vector<std::pair<std::string, std::string>> dataReadsStrs,
-           std::vector<std::pair<std::string, std::string>> dataWritesStrs)
-    : stmtSourceCode(stmtSourceCode) {
-    iterationSpace = std::unique_ptr<Set>(new Set(iterationSpaceStr));
-    executionSchedule =
-        std::unique_ptr<Relation>(new Relation(executionScheduleStr));
-    for (const auto& readInfo : dataReadsStrs) {
-        dataReads.push_back(
-            {readInfo.first,
-             std::unique_ptr<Relation>(new Relation(readInfo.second))});
-    }
-    for (const auto& writeInfo : dataWritesStrs) {
-        dataWrites.push_back(
-            {writeInfo.first,
-             std::unique_ptr<Relation>(new Relation(writeInfo.second))});
-    }
+           std::vector<std::pair<std::string, std::string>> dataWritesStrs) {
+    setStmtSourceCode(stmtSourceCode);
+    setIterationSpace(iterationSpaceStr);
+    setExecutionSchedule(executionScheduleStr);
+    setDataReads(dataReadsStrs);
+    setDataWrites(dataWritesStrs);
 };
 
 Stmt::Stmt(const Stmt& other) { *this = other; }
@@ -212,12 +219,32 @@ std::vector<std::pair<std::string, Relation*>> Stmt::getDataReads() const {
     return result;
 }
 
+void Stmt::setDataReads(
+    std::vector<std::pair<std::string, std::string>> dataReadsStrs) {
+    dataReads.clear();
+    for (const auto& readInfo : dataReadsStrs) {
+        dataReads.push_back(
+            {readInfo.first,
+             std::unique_ptr<Relation>(new Relation(readInfo.second))});
+    }
+}
+
 std::vector<std::pair<std::string, Relation*>> Stmt::getDataWrites() const {
     std::vector<std::pair<std::string, Relation*>> result;
     for (const auto& writeInfo : dataReads) {
         result.push_back({writeInfo.first, writeInfo.second.get()});
     }
     return result;
+}
+
+void Stmt::setDataWrites(
+    std::vector<std::pair<std::string, std::string>> dataWritesStrs) {
+    dataReads.clear();
+    for (const auto& writeInfo : dataWritesStrs) {
+        dataWrites.push_back(
+            {writeInfo.first,
+             std::unique_ptr<Relation>(new Relation(writeInfo.second))});
+    }
 }
 
 }  // namespace iegenlib

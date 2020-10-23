@@ -28,8 +28,8 @@
 #include <utility>
 #include <vector>
 
-#include "set_relation/set_relation.h"
 #include "set_relation/environment.h"
+#include "set_relation/set_relation.h"
 
 namespace iegenlib {
 
@@ -44,13 +44,24 @@ class Stmt;
 class Computation {
    public:
     //! Construct an empty Computation
-    Computation(){};
+    Computation() : currentStmtNum(0){};
 
     //! Copy constructor
     Computation(const Computation& other);
 
     //! Assignment operator (copy)
     Computation& operator=(const Computation& other);
+
+    //! Add a statement to this Computation.
+    //! Statements are numbered sequentially from 0 as they are inserted
+    void addStmt(const Stmt& stmt);
+    //! Get a statement by index
+    Stmt* getStmt(unsigned int index);
+
+    //! Add a data space to this Computation
+    void addDataSpace(std::string dataSpaceName);
+    //! Get data spaces
+    std::unordered_set<std::string> getDataSpaces();
 
     //! Print out all the information represented in this Computation for
     //! debug purposes
@@ -66,11 +77,14 @@ class Computation {
     //! Environment used by this Computation
     Environment env;
 
-    //! Data spaces accessed in the computation
-    std::unordered_set<std::string> dataSpaces;
+   private:
     //! Map of statement names (numbers) -> the statement's corresponding
     //! information
     std::map<unsigned int, Stmt> stmtsInfoMap;
+    //! Data spaces accessed in the computation
+    std::unordered_set<std::string> dataSpaces;
+    //! Number to be assigned to the next inserted statement
+    unsigned int currentStmtNum;
 };
 
 /*!
@@ -117,9 +131,15 @@ class Stmt {
 
     //! Get the reads of the statement
     std::vector<std::pair<std::string, Relation*>> getDataReads() const;
+    //! Set the reads of the statement
+    void setDataReads(
+        std::vector<std::pair<std::string, std::string>> dataReadsStrs);
 
     //! Get the writes of the statement
     std::vector<std::pair<std::string, Relation*>> getDataWrites() const;
+    //! Set the writes of the statement
+    void setDataWrites(
+        std::vector<std::pair<std::string, std::string>> dataWritesStrs);
 
    private:
     //! Source code of the statement, for debugging purposes
