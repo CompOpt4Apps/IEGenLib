@@ -32,6 +32,13 @@ namespace iegenlib {
 
 /* Computation */
 
+Computation::Computation(const Computation& other) { *this = other; }
+
+Computation& Computation::operator=(const Computation& other) {
+    this->dataSpaces = other.dataSpaces;
+    this->stmtsInfoMap = other.stmtsInfoMap;
+}
+
 void Computation::printInfo() const {
     std::ostringstream stmtsOutput;
     std::ostringstream iterSpacesOutput;
@@ -154,6 +161,25 @@ Stmt::Stmt(std::string stmtSourceCode, std::string iterationSpaceStr,
              std::unique_ptr<Relation>(new Relation(writeInfo.second))});
     }
 };
+
+Stmt::Stmt(const Stmt& other) { *this = other; }
+
+Stmt& Stmt::operator=(const Stmt& other) {
+    this->stmtSourceCode = other.stmtSourceCode;
+    this->iterationSpace = std::unique_ptr<Set>(new Set(*other.iterationSpace));
+    this->executionSchedule =
+        std::unique_ptr<Relation>(new Relation(*other.executionSchedule));
+    for (const auto& readInfo : other.dataReads) {
+        this->dataReads.push_back(
+            {readInfo.first,
+             std::unique_ptr<Relation>(new Relation(*readInfo.second))});
+    }
+    for (const auto& writeInfo : other.dataWrites) {
+        this->dataWrites.push_back(
+            {writeInfo.first,
+             std::unique_ptr<Relation>(new Relation(*writeInfo.second))});
+    }
+}
 
 bool Stmt::isComplete() const {
     return !stmtSourceCode.empty() && iterationSpace && executionSchedule;

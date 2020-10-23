@@ -42,6 +42,15 @@ class Stmt;
  */
 class Computation {
    public:
+    //! Construct an empty Computation
+    Computation(){};
+
+    //! Copy constructor
+    Computation(const Computation& other);
+
+    //! Assignment operator (copy)
+    Computation& operator=(const Computation& other);
+
     //! Print out all the information represented in this Computation for
     //! debug purposes
     void printInfo() const;
@@ -77,6 +86,12 @@ class Stmt {
          std::string executionScheduleStr,
          std::vector<std::pair<std::string, std::string>> dataReadsStrs,
          std::vector<std::pair<std::string, std::string>> dataWritesStrs);
+
+    //! Copy constructor
+    Stmt(const Stmt& other);
+
+    //! Assignment operator (copy)
+    Stmt& operator=(const Stmt& other);
 
     //! Get whether or not all necessary information for this Stmt is set
     bool isComplete() const;
