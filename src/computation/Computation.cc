@@ -39,6 +39,14 @@ Computation& Computation::operator=(const Computation& other) {
     this->stmtsInfoMap = other.stmtsInfoMap;
 }
 
+bool Computation::operator==(const Computation& other) const {
+    // while comparing the number of statements is not strictly necessary since
+    // actual statements are compared as well, it is done as future-proofing
+    return (this->numStmts == other.numStmts &&
+            this->dataSpaces == other.dataSpaces &&
+            this->stmtsInfoMap == other.stmtsInfoMap);
+}
+
 Stmt* Computation::addStmt(const Stmt& stmt) {
     stmtsInfoMap.emplace(numStmts, Stmt(stmt));
     Stmt* newStmt = getStmt(numStmts);
@@ -191,6 +199,36 @@ Stmt& Stmt::operator=(const Stmt& other) {
             {writeInfo.first,
              std::unique_ptr<Relation>(new Relation(*writeInfo.second))});
     }
+}
+
+bool Stmt::operator==(const Stmt& other) const {
+    // compare source code, iter space and exec schedule
+    if (!(this->stmtSourceCode == other.stmtSourceCode &&
+          *this->iterationSpace == *other.iterationSpace &&
+          *this->executionSchedule == *other.executionSchedule)) {
+        return false;
+    }
+
+    // compare data accesses, first by number then contents
+    if (this->dataReads.size() != other.dataReads.size() ||
+        this->dataWrites.size() != other.dataWrites.size()) {
+        return false;
+    }
+    for (auto i = 0; i < this->dataReads.size(); ++i) {
+        if (!(this->dataReads[i].first == other.dataReads[i].first &&
+              *this->dataReads[i].second == *other.dataReads[i].second)) {
+            return false;
+        }
+    }
+    for (auto i = 0; i < this->dataWrites.size(); ++i) {
+        if (!(this->dataWrites[i].first == other.dataWrites[i].first &&
+              *this->dataWrites[i].second == *other.dataWrites[i].second)) {
+            return false;
+        }
+        i++;
+    }
+
+    return true;
 }
 
 bool Stmt::isComplete() const {

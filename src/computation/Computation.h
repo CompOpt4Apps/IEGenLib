@@ -52,6 +52,9 @@ class Computation {
     //! Assignment operator (copy)
     Computation& operator=(const Computation& other);
 
+    //! Equality operator
+    bool operator==(const Computation& other) const;
+
     //! Add a statement to this Computation and get a pointer to it.
     //! Statements are numbered sequentially from 0 as they are inserted
     Stmt* addStmt(const Stmt& stmt);
@@ -113,6 +116,10 @@ class Stmt {
 
     //! Assignment operator (copy)
     Stmt& operator=(const Stmt& other);
+
+    //! Equality operator
+    //! Checks equality, NOT mathematical equivalence
+    bool operator==(const Stmt& other) const;
 
     //! Get whether or not all necessary information for this Stmt is set
     bool isComplete() const;
