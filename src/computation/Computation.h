@@ -21,7 +21,6 @@
 #ifndef COMPUTATION_H_
 #define COMPUTATION_H_
 
-#include <map>
 #include <memory>
 #include <string>
 #include <unordered_set>
@@ -44,7 +43,7 @@ class Stmt;
 class Computation {
    public:
     //! Construct an empty Computation
-    Computation() : numStmts(0){};
+    Computation(){};
 
     //! Copy constructor
     Computation(const Computation& other);
@@ -84,13 +83,10 @@ class Computation {
     Environment env;
 
    private:
-    //! Map of statement names (numbers) -> the statement's corresponding
-    //! information
-    std::map<unsigned int, Stmt> stmtsInfoMap;
+    //! Information on all statements in the Computation
+    std::vector<Stmt> stmts;
     //! Data spaces accessed in the computation
     std::unordered_set<std::string> dataSpaces;
-    //! Number of statements in this Computation
-    unsigned int numStmts;
 };
 
 /*!

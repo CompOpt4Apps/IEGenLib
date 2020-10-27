@@ -36,27 +36,19 @@ Computation::Computation(const Computation& other) { *this = other; }
 
 Computation& Computation::operator=(const Computation& other) {
     this->dataSpaces = other.dataSpaces;
-    this->stmtsInfoMap = other.stmtsInfoMap;
+    this->stmts = other.stmts;
 }
 
 bool Computation::operator==(const Computation& other) const {
-    // while comparing the number of statements is not strictly necessary since
-    // actual statements are compared as well, it is done as future-proofing
-    return (this->numStmts == other.numStmts &&
-            this->dataSpaces == other.dataSpaces &&
-            this->stmtsInfoMap == other.stmtsInfoMap);
+    return (this->dataSpaces == other.dataSpaces && this->stmts == other.stmts);
 }
 
 Stmt* Computation::addStmt(const Stmt& stmt) {
-    stmtsInfoMap.emplace(numStmts, Stmt(stmt));
-    Stmt* newStmt = getStmt(numStmts);
-    numStmts++;
-    return newStmt;
+    stmts.push_back(Stmt(stmt));
+    return getStmt(stmts.size() - 1);
 }
 
-Stmt* Computation::getStmt(unsigned int index) {
-    return &stmtsInfoMap.at(index);
-}
+Stmt* Computation::getStmt(unsigned int index) { return &stmts.at(index); }
 
 void Computation::addDataSpace(std::string dataSpaceName) {
     dataSpaces.emplace(dataSpaceName);
@@ -66,7 +58,7 @@ std::unordered_set<std::string> Computation::getDataSpaces() const {
     return dataSpaces;
 }
 
-unsigned int Computation::getNumStmts() const { return numStmts; }
+unsigned int Computation::getNumStmts() const { return stmts.size(); }
 
 void Computation::printInfo() const {
     std::ostringstream stmtsOutput;
@@ -76,21 +68,20 @@ void Computation::printInfo() const {
     std::ostringstream dataWritesOutput;
     std::ostringstream dataSpacesOutput;
 
-    for (const auto& it : stmtsInfoMap) {
-        std::string stmtName = "S" + std::to_string(it.first);
+    int stmtNum = 0;
+    for (const auto& it : stmts) {
+        std::string stmtName = "S" + std::to_string(stmtNum);
         // stmt source code
-        stmtsOutput << stmtName << ": " << it.second.getStmtSourceCode()
-                    << "\n";
+        stmtsOutput << stmtName << ": " << it.getStmtSourceCode() << "\n";
         // iter spaces
         iterSpacesOutput << stmtName << ": "
-                         << it.second.getIterationSpace()->prettyPrintString()
-                         << "\n";
+                         << it.getIterationSpace()->prettyPrintString() << "\n";
         // exec schedules
-        execSchedulesOutput
-            << stmtName << ": "
-            << it.second.getExecutionSchedule()->prettyPrintString() << "\n";
+        execSchedulesOutput << stmtName << ": "
+                            << it.getExecutionSchedule()->prettyPrintString()
+                            << "\n";
         // data reads
-        auto dataReads = it.second.getDataReads();
+        auto dataReads = it.getDataReads();
         dataReadsOutput << stmtName << ":";
         if (dataReads.empty()) {
             dataReadsOutput << " none";
@@ -104,7 +95,7 @@ void Computation::printInfo() const {
         }
         dataReadsOutput << "\n";
         // data writes
-        auto dataWrites = it.second.getDataWrites();
+        auto dataWrites = it.getDataWrites();
         dataWritesOutput << stmtName << ":";
         if (dataWrites.empty()) {
             dataWritesOutput << " none";
@@ -118,6 +109,7 @@ void Computation::printInfo() const {
             dataWritesOutput << "}";
         }
         dataWritesOutput << "\n";
+        stmtNum++;
     }
 
     // data spaces
@@ -141,17 +133,17 @@ void Computation::printInfo() const {
 
 bool Computation::isComplete() const {
     std::unordered_set<std::string> dataSpacesActuallyAccessed;
-    for (const auto& stmtEntry : stmtsInfoMap) {
+    for (const auto& stmt : stmts) {
         // check completeness of each statement
-        if (!stmtEntry.second.isComplete()) {
+        if (!stmt.isComplete()) {
             return false;
         }
 
         // collect all data space accesses
-        for (const auto& readInfo : stmtEntry.second.getDataReads()) {
+        for (const auto& readInfo : stmt.getDataReads()) {
             dataSpacesActuallyAccessed.emplace(readInfo.first);
         }
-        for (const auto& writeInfo : stmtEntry.second.getDataWrites()) {
+        for (const auto& writeInfo : stmt.getDataWrites()) {
             dataSpacesActuallyAccessed.emplace(writeInfo.first);
         }
     }
@@ -166,7 +158,7 @@ bool Computation::isComplete() const {
 
 void Computation::clear() {
     dataSpaces.clear();
-    stmtsInfoMap.clear();
+    stmts.clear();
 }
 
 /* Stmt */
