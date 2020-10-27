@@ -52,11 +52,11 @@ class Computation {
     //! Assignment operator (copy)
     Computation& operator=(const Computation& other);
 
-    //! Add a statement to this Computation.
+    //! Add a statement to this Computation and get a pointer to it.
     //! Statements are numbered sequentially from 0 as they are inserted
-    void addStmt(const Stmt& stmt);
+    Stmt* addStmt(const Stmt& stmt);
     //! Get a statement by index
-    const Stmt* getStmt(unsigned int index) const;
+    Stmt* getStmt(unsigned int index);
 
     //! Add a data space to this Computation
     void addDataSpace(std::string dataSpaceName);

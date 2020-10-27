@@ -39,11 +39,14 @@ Computation& Computation::operator=(const Computation& other) {
     this->stmtsInfoMap = other.stmtsInfoMap;
 }
 
-void Computation::addStmt(const Stmt& stmt) {
-    stmtsInfoMap.emplace(numStmts++, Stmt(stmt));
+Stmt* Computation::addStmt(const Stmt& stmt) {
+    stmtsInfoMap.emplace(numStmts, Stmt(stmt));
+    Stmt* newStmt = getStmt(numStmts);
+    numStmts++;
+    return newStmt;
 }
 
-const Stmt* Computation::getStmt(unsigned int index) const {
+Stmt* Computation::getStmt(unsigned int index) {
     return &stmtsInfoMap.at(index);
 }
 
