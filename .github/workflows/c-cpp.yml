@@ -1,4 +1,4 @@
-name: C/C++ CI build
+name: build/test
 
 on: [push, pull_request]
 
@@ -8,10 +8,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
-    defaults:
-      run:
-        shell: bash
+        os: [ubuntu-latest]
+    # defaults:
+    #   run:
+    #     shell: bash
     steps:
     - uses: actions/checkout@v2
     - name: configure
