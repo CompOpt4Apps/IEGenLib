@@ -1,10 +1,6 @@
 name: C/C++ CI
 
-on:
-  push:
-    branches: [ master, improve-computation-api ]
-  pull_request:
-    branches: [ master ]
+on: [push, pull_request]
 
 jobs:
   build:
@@ -19,5 +15,7 @@ jobs:
       run: make
     - name: make install
       run: make install
-    - name: make test
+    - name: set IEGEN_HOME
+      run: echo "IEGEN_HOME=$GITHUB_WORKSPACE/iegen" >> $GITHUB_ENV
+    - name: run tests
       run: ./build/bin/iegenlib_t
