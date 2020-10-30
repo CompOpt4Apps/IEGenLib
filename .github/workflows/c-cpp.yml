@@ -1,0 +1,26 @@
+name: build/test
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+    # defaults:
+    #   run:
+    #     shell: bash
+    steps:
+    - uses: actions/checkout@v2
+    - name: configure
+      run: ./configure
+    - name: make
+      run: make
+    - name: make install
+      run: make install
+    - name: set IEGEN_HOME
+      run: echo "IEGEN_HOME=$GITHUB_WORKSPACE/iegen" >> $GITHUB_ENV
+    - name: run tests
+      run: ./build/bin/iegenlib_t
