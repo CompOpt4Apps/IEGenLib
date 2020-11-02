@@ -135,17 +135,23 @@ class Stmt {
     //! Set the execution schedule, constructing it from the given string
     void setExecutionSchedule(std::string newExecutionScheduleStr);
 
-    //! Get the reads of the statement
-    std::vector<std::pair<std::string, Relation*>> getDataReads() const;
-    //! Set the reads of the statement
-    void setDataReads(
-        std::vector<std::pair<std::string, std::string>> dataReadsStrs);
+    //! Add a data read
+    void addRead(std::string dataSpace, std::string relationStr);
+    //! Get the number of data reads for this statement
+    unsigned int getNumReads() const;
+    //! Get a data read's data space by index
+    std::string getReadDataSpace(unsigned int index) const;
+    //! Get a data read's relation by index
+    Relation* getReadRelation(unsigned int index) const;
 
-    //! Get the writes of the statement
-    std::vector<std::pair<std::string, Relation*>> getDataWrites() const;
-    //! Set the writes of the statement
-    void setDataWrites(
-        std::vector<std::pair<std::string, std::string>> dataWritesStrs);
+    //! Add a data write
+    void addWrite(std::string dataSpace, std::string relationStr);
+    //! Get the number of data writes for this statement
+    unsigned int getNumWrites() const;
+    //! Get a data write's data space by index
+    std::string getWriteDataSpace(unsigned int index) const;
+    //! Get a data write's relation by index
+    Relation* getWriteRelation(unsigned int index) const;
 
    private:
     //! Source code of the statement, for debugging purposes

@@ -81,29 +81,30 @@ void Computation::printInfo() const {
                             << it.getExecutionSchedule()->prettyPrintString()
                             << "\n";
         // data reads
-        auto dataReads = it.getDataReads();
+        unsigned int numReads = it.getNumReads();
         dataReadsOutput << stmtName << ":";
-        if (dataReads.empty()) {
+        if (numReads == 0) {
             dataReadsOutput << " none";
         } else {
             dataReadsOutput << "{\n";
-            for (const auto& read_it : dataReads) {
-                dataReadsOutput << "    " << read_it.first << ": "
-                                << read_it.second->prettyPrintString() << "\n";
+            for (unsigned int i = 0; i < numReads; ++i) {
+                dataReadsOutput << "    " << it.getReadDataSpace(i) << ": "
+                                << it.getReadRelation(i)->prettyPrintString()
+                                << "\n";
             }
             dataReadsOutput << "}";
         }
         dataReadsOutput << "\n";
         // data writes
-        auto dataWrites = it.getDataWrites();
+        unsigned int numWrites = it.getNumWrites();
         dataWritesOutput << stmtName << ":";
-        if (dataWrites.empty()) {
+        if (numWrites == 0) {
             dataWritesOutput << " none";
         } else {
             dataWritesOutput << "{\n";
-            for (const auto& write_it : dataWrites) {
-                dataWritesOutput << "    " << write_it.first << ": "
-                                 << write_it.second->prettyPrintString()
+            for (unsigned int i = 0; i < numWrites; ++i) {
+                dataWritesOutput << "    " << it.getReadDataSpace(i) << ": "
+                                 << it.getReadRelation(i)->prettyPrintString()
                                  << "\n";
             }
             dataWritesOutput << "}";
@@ -140,11 +141,11 @@ bool Computation::isComplete() const {
         }
 
         // collect all data space accesses
-        for (const auto& readInfo : stmt.getDataReads()) {
-            dataSpacesActuallyAccessed.emplace(readInfo.first);
+        for (unsigned int i = 0; i < stmt.getNumReads(); ++i) {
+            dataSpacesActuallyAccessed.emplace(stmt.getReadDataSpace(i));
         }
-        for (const auto& writeInfo : stmt.getDataWrites()) {
-            dataSpacesActuallyAccessed.emplace(writeInfo.first);
+        for (unsigned int i = 0; i < stmt.getNumWrites(); ++i) {
+            dataSpacesActuallyAccessed.emplace(stmt.getWriteDataSpace(i));
         }
     }
 
@@ -170,8 +171,16 @@ Stmt::Stmt(std::string stmtSourceCode, std::string iterationSpaceStr,
     setStmtSourceCode(stmtSourceCode);
     setIterationSpace(iterationSpaceStr);
     setExecutionSchedule(executionScheduleStr);
-    setDataReads(dataReadsStrs);
-    setDataWrites(dataWritesStrs);
+    for (const auto& readInfo : dataReadsStrs) {
+        dataReads.push_back(
+            {readInfo.first,
+             std::unique_ptr<Relation>(new Relation(readInfo.second))});
+    }
+    for (const auto& writeInfo : dataWritesStrs) {
+        dataWrites.push_back(
+            {writeInfo.first,
+             std::unique_ptr<Relation>(new Relation(writeInfo.second))});
+    }
 };
 
 Stmt::Stmt(const Stmt& other) { *this = other; }
@@ -246,40 +255,34 @@ void Stmt::setExecutionSchedule(std::string newExecutionScheduleStr) {
         std::unique_ptr<Relation>(new Relation(newExecutionScheduleStr));
 }
 
-std::vector<std::pair<std::string, Relation*>> Stmt::getDataReads() const {
-    std::vector<std::pair<std::string, Relation*>> result;
-    for (const auto& readInfo : dataReads) {
-        result.push_back({readInfo.first, readInfo.second.get()});
-    }
-    return result;
+void Stmt::addRead(std::string dataSpace, std::string relationStr) {
+    dataReads.push_back(
+        {dataSpace, std::unique_ptr<Relation>(new Relation(relationStr))});
 }
 
-void Stmt::setDataReads(
-    std::vector<std::pair<std::string, std::string>> dataReadsStrs) {
-    dataReads.clear();
-    for (const auto& readInfo : dataReadsStrs) {
-        dataReads.push_back(
-            {readInfo.first,
-             std::unique_ptr<Relation>(new Relation(readInfo.second))});
-    }
+unsigned int Stmt::getNumReads() const { return dataReads.size(); }
+
+std::string Stmt::getReadDataSpace(unsigned int index) const {
+    return dataReads.at(index).first;
 }
 
-std::vector<std::pair<std::string, Relation*>> Stmt::getDataWrites() const {
-    std::vector<std::pair<std::string, Relation*>> result;
-    for (const auto& writeInfo : dataWrites) {
-        result.push_back({writeInfo.first, writeInfo.second.get()});
-    }
-    return result;
+Relation* Stmt::getReadRelation(unsigned int index) const {
+    return dataReads.at(index).second.get();
 }
 
-void Stmt::setDataWrites(
-    std::vector<std::pair<std::string, std::string>> dataWritesStrs) {
-    dataWrites.clear();
-    for (const auto& writeInfo : dataWritesStrs) {
-        dataWrites.push_back(
-            {writeInfo.first,
-             std::unique_ptr<Relation>(new Relation(writeInfo.second))});
-    }
+void Stmt::addWrite(std::string dataSpace, std::string relationStr) {
+    dataWrites.push_back(
+        {dataSpace, std::unique_ptr<Relation>(new Relation(relationStr))});
+}
+
+unsigned int Stmt::getNumWrites() const { return dataWrites.size(); }
+
+std::string Stmt::getWriteDataSpace(unsigned int index) const {
+    return dataWrites.at(index).first;
+}
+
+Relation* Stmt::getWriteRelation(unsigned int index) const {
+    return dataWrites.at(index).second.get();
 }
 
 }  // namespace iegenlib
