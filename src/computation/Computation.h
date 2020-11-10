@@ -1,10 +1,10 @@
 /*!
  * \file Computation.h
  *
- * \brief Declarations for the Computation and StmtInfo classes.
+ * \brief Declarations for the Computation and Stmt classes.
  *
  * The Computation class is the SPF representation of a logical computation.
- * It contains a StmtInfo class for each statement, which in turn contains
+ * It contains a Stmt class for each statement, which in turn contains
  * information about that statement as mathematical objects.
  * Originally part of spf-ie.
  *
@@ -21,18 +21,18 @@
 #ifndef COMPUTATION_H_
 #define COMPUTATION_H_
 
-#include <map>
 #include <memory>
 #include <string>
 #include <unordered_set>
 #include <utility>
 #include <vector>
 
+#include "set_relation/environment.h"
 #include "set_relation/set_relation.h"
 
 namespace iegenlib {
 
-class StmtInfo;
+class Stmt;
 
 /*!
  * \class Computation
@@ -42,81 +42,118 @@ class StmtInfo;
  */
 class Computation {
    public:
+    //! Construct an empty Computation
+    Computation(){};
+
+    //! Copy constructor
+    Computation(const Computation& other);
+
+    //! Assignment operator (copy)
+    Computation& operator=(const Computation& other);
+
+    //! Equality operator
+    bool operator==(const Computation& other) const;
+
+    //! Add a statement to this Computation and get a pointer to it.
+    //! Statements are numbered sequentially from 0 as they are inserted
+    Stmt* addStmt(const Stmt& stmt);
+    //! Get a statement by index
+    Stmt* getStmt(unsigned int index);
+
+    //! Add a data space to this Computation
+    void addDataSpace(std::string dataSpaceName);
+    //! Get data spaces
+    std::unordered_set<std::string> getDataSpaces() const;
+
+    //! Get the number of statements in this Computation
+    unsigned int getNumStmts() const;
+
     //! Print out all the information represented in this Computation for
     //! debug purposes
-    void printInfo();
+    void printInfo() const;
+
+    //! Get whether this Computation's required information is filled out,
+    //! including that of the Stmts it contains
+    bool isComplete() const;
 
     //! Clear all data from this Computation
     void clear();
 
-    //! Get the  data spaces used in this Computation
-    std::unordered_set<std::string> getDataSpaces();
-
-    //! Get the source code for a given statement
-    std::string getStmtSource(unsigned int stmtNumber);
-
-    //! Set the source code for a given statement
-    void setStmtSource(unsigned int stmtNumber, std::string newSource);
-
-    //! Get the iteration space (pretty printed) for a statement
-    std::string getIterSpace(unsigned int stmtNumber);
-
-    //! Set the iteration space for a statement
-    void setIterSpace(unsigned int stmtNumber,
-                      std::string newIterationSpaceStr);
-
-    //! Get the execution schedule (pretty printed) for a statement
-    std::string getExecSched(unsigned int stmtNumber);
-
-    //! Set the execution schedule for a statement
-    void setExecSched(unsigned int stmtNumber,
-                      std::string newExecutionScheduleStr);
-
-    //! Get the reads for a statement
-    std::vector<std::pair<std::string, std::string>> getDataReads(
-        unsigned int stmtNumber);
-
-    //! Add a read to a statement
-    void addDataRead(unsigned int stmtNumber, unsigned int index,
-                     std::string dataSpace, std::string readRelStr);
-
-    //! Remove a read from a statement
-    void removeDataRead(unsigned int stmtNumber, unsigned int index);
-
-    //! Get the writes for a statement
-    std::vector<std::pair<std::string, std::string>> getDataWrites(
-        unsigned int stmtNumber);
-
-    //! Add a write to a statement
-    void addDataWrite(unsigned int stmtNumber, unsigned int index,
-                      std::string dataSpace, std::string writeRelStr);
-
-    //! Remove a write from a statement
-    void removeDataWrite(unsigned int stmtNumber, unsigned int index);
+    //! Environment used by this Computation
+    Environment env;
 
    private:
+    //! Information on all statements in the Computation
+    std::vector<Stmt> stmts;
     //! Data spaces accessed in the computation
     std::unordered_set<std::string> dataSpaces;
-    //! Map of statement names (numbers) -> the statement's corresponding
-    //! information
-    std::map<unsigned int, StmtInfo> stmtsInfoMap;
 };
 
 /*!
- * \class StmtInfo
+ * \class Stmt
  *
  * \brief Information attached to a statement represented as mathematical
  * objects.
  */
-class StmtInfo {
+class Stmt {
    public:
-    //! Construct a StmtInfo given strings that will be used to construct each
-    //! set/relation.
-    StmtInfo(std::string stmtSourceCode, std::string iterationSpaceStr,
-             std::string executionScheduleStr,
-             std::vector<std::pair<std::string, std::string>> dataReadsStrs,
-             std::vector<std::pair<std::string, std::string>> dataWritesStrs);
+    //! Construct an empty Stmt
+    Stmt(){};
 
+    //! Construct a complete Stmt, given strings that will be used to
+    //! construct each set/relation.
+    Stmt(std::string stmtSourceCode, std::string iterationSpaceStr,
+         std::string executionScheduleStr,
+         std::vector<std::pair<std::string, std::string>> dataReadsStrs,
+         std::vector<std::pair<std::string, std::string>> dataWritesStrs);
+
+    //! Copy constructor
+    Stmt(const Stmt& other);
+
+    //! Assignment operator (copy)
+    Stmt& operator=(const Stmt& other);
+
+    //! Equality operator
+    //! Checks equality, NOT mathematical equivalence
+    bool operator==(const Stmt& other) const;
+
+    //! Get whether or not all necessary information for this Stmt is set
+    bool isComplete() const;
+
+    //! Get the source code of the statement
+    std::string getStmtSourceCode() const;
+    //! Set the source code of the statement
+    void setStmtSourceCode(std::string newStmtSourceCode);
+
+    //! Get the iteration space Set
+    Set* getIterationSpace() const;
+    //! Set the iteration space, constructing it from the given string
+    void setIterationSpace(std::string newIterationSpaceStr);
+
+    //! Get the execution schedule Relation
+    Relation* getExecutionSchedule() const;
+    //! Set the execution schedule, constructing it from the given string
+    void setExecutionSchedule(std::string newExecutionScheduleStr);
+
+    //! Add a data read
+    void addRead(std::string dataSpace, std::string relationStr);
+    //! Get the number of data reads for this statement
+    unsigned int getNumReads() const;
+    //! Get a data read's data space by index
+    std::string getReadDataSpace(unsigned int index) const;
+    //! Get a data read's relation by index
+    Relation* getReadRelation(unsigned int index) const;
+
+    //! Add a data write
+    void addWrite(std::string dataSpace, std::string relationStr);
+    //! Get the number of data writes for this statement
+    unsigned int getNumWrites() const;
+    //! Get a data write's data space by index
+    std::string getWriteDataSpace(unsigned int index) const;
+    //! Get a data write's relation by index
+    Relation* getWriteRelation(unsigned int index) const;
+
+   private:
     //! Source code of the statement, for debugging purposes
     std::string stmtSourceCode;
     //! Iteration space of a statement
