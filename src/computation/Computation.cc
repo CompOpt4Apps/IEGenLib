@@ -278,11 +278,26 @@ void Stmt::addWrite(std::string dataSpace, std::string relationStr) {
 unsigned int Stmt::getNumWrites() const { return dataWrites.size(); }
 
 std::string Stmt::getWriteDataSpace(unsigned int index) const {
-    return dataWrites.at(index).first;
+   return dataWrites.at(index).first;
 }
 
 Relation* Stmt::getWriteRelation(unsigned int index) const {
     return dataWrites.at(index).second.get();
 }
 
+std::string Computation::codeGen() {
+    try {
+          CodeGen cg($2->first, $2->second, *$3);
+          CG_result *cgr = cg.buildAST();
+          if (cgr != NULL) {
+             std::string s = cgr->printString();
+             std::cout << s << std::endl;
+             delete cgr;
+           }
+            else
+            std::cout << "/* empty */" << std::endl;
+        } catch (const std::exception &e) {
+              std::cout << e.what() << std::endl;
+        }
+}
 }  // namespace iegenlib
