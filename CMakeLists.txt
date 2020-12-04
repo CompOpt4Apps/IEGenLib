@@ -30,9 +30,18 @@ ExternalProject_Add(libgmp
     CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/lib/gmp/configure --prefix=${CMAKE_CURRENT_SOURCE_DIR}/lib/installed --disable-shared --with-pic
     BUILD_COMMAND ${MAKE})
 
+ExternalProject_Add(lib-omega
+    GIT_REPOSITORY "https://github.com/BoiseState-AdaptLab/omega"
+    GIT_TAG "27b997e1bf643c8414716106b73b9b069cc4e8af"
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/omega
+    BUILD_IN_SOURCE ON
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND make depend
+    )
+
 ExternalProject_Add(lib-isl
     DOWNLOAD_COMMAND ""
-    DEPENDS libgmp
+    DEPENDS libgmp lib-omega
     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/isl
     CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/lib/isl/configure --prefix=${CMAKE_CURRENT_SOURCE_DIR}/lib/installed --with-int=imath-32 --disable-shared --with-pic
     BUILD_COMMAND ${MAKE})
@@ -41,6 +50,8 @@ ExternalProject_Add(lib-isl
 include_directories(${IEGENLIB_SOURCE_DIR}/lib/installed/include)
 link_directories( "${IEGENLIB_SOURCE_DIR}/lib/installed/lib" )
 include_directories(${IEGENLIB_SOURCE_DIR}/lib/gtest/include)
+include_directories(${IEGENLIB_SOURCE_DIR}/lib/omega/include)
+link_directories(${IEGENLIB_SOURCE_DIR}/lib/omega/lib)
 
 ## gtest is added through lib (our source through src)
 add_subdirectory(lib)
