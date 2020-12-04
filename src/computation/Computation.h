@@ -43,6 +43,8 @@ class Stmt;
  */
 class Computation {
    public:
+    
+    
     //! Construct an empty Computation
     Computation(){};
 
@@ -84,6 +86,9 @@ class Computation {
 
     //! Environment used by this Computation
     Environment env;
+    
+    //! Method generates c code.
+    std::string codeGen();
 
    private:
     //! Information on all statements in the Computation
