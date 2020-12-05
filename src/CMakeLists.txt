@@ -112,30 +112,30 @@ add_library(iegenlib STATIC ${iegenlib_SOURCES})
 
 #Compile and link the iegenlib_calc executable
 add_executable(iegenlib_calc iegenlib_calc.cc)
-target_link_libraries(iegenlib_calc iegenlib isl omega codegen gmp ${CMAKE_THREAD_LIBS_INIT})
-target_link_libraries(iegenlib_calc isl omega codegen gmp)
+target_link_libraries(iegenlib_calc iegenlib isl codegen omega gmp ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(iegenlib_calc isl codegen omega gmp)
 
 cmake_policy(SET CMP0037 OLD)
 #Compile and link the simplifyDriver executable
 add_executable(../bin/simplifyDriver drivers/simplification.cc)
-target_link_libraries(../bin/simplifyDriver iegenlib isl omega codegen gmp)
+target_link_libraries(../bin/simplifyDriver iegenlib isl codegen omega gmp)
 
 cmake_policy(SET CMP0037 OLD)
 #Compile and link the superAffSet executable
 add_executable(../bin/superAffSet drivers/superAffSet.cc)
-target_link_libraries(../bin/superAffSet iegenlib isl omega codegen gmp)
+target_link_libraries(../bin/superAffSet iegenlib isl codegen omega gmp)
 
 cmake_policy(SET CMP0037 OLD)
 #Compile and link the subSetDriver executable
 add_executable(../bin/subSetDriver drivers/subSetDriver.cc)
-target_link_libraries(../bin/subSetDriver iegenlib isl omega codegen gmp)
+target_link_libraries(../bin/subSetDriver iegenlib isl codegen omega gmp)
 
 
 ### this executable hold our unit tests
 add_executable(iegenlib_t ${iegenlib_SOURCES} ${iegenlib_t_SOURCES})
 #Tell included gtest headers to NOT use tuple support.
 add_definitions(-DGTEST_HAS_TR1_TUPLE=0)
-target_link_libraries(iegenlib_t gtest isl omega codegen gmp)
+target_link_libraries(iegenlib_t gtest isl codegen omega gmp)
 
 #Process subdirectories
 add_subdirectory(bindings)

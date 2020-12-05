@@ -32,12 +32,14 @@ ExternalProject_Add(libgmp
 
 ExternalProject_Add(lib-omega
     GIT_REPOSITORY "https://github.com/BoiseState-AdaptLab/omega"
-    GIT_TAG "27b997e1bf643c8414716106b73b9b069cc4e8af"
+    GIT_TAG "4db232215a67e2708218ff4c0dda06807c9ba45f"
     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/omega
     BUILD_IN_SOURCE ON
     CONFIGURE_COMMAND ""
+    # building requires running make depend, then make
     BUILD_COMMAND make depend
-    )
+    COMMAND make
+)
 
 ExternalProject_Add(lib-isl
     DOWNLOAD_COMMAND ""
