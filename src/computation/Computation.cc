@@ -292,12 +292,13 @@ std::string Computation::codeGen() {
         std::vector<omega::Relation> iterSpaces;
         omega::CodeGen cg(transforms, iterSpaces);
         omega::CG_result* cgr = cg.buildAST();
-        if (cgr != NULL) {
+        if (cgr) {
             std::string s = cgr->printString();
-            std::cout << s << std::endl;
             delete cgr;
-        } else
-            std::cout << "/* empty */" << std::endl;
+            return s;
+        } else {
+            return "/* empty */";
+        }
     } catch (const std::exception& e) {
         std::cout << e.what() << std::endl;
     }
