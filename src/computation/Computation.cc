@@ -26,7 +26,7 @@
 #include <utility>
 #include <vector>
 
-#include "codegen.h"
+#include <codegen.h>
 #include "set_relation/set_relation.h"
 
 namespace iegenlib {
@@ -290,6 +290,7 @@ std::string Computation::codeGen() {
     try {
         std::vector<omega::Relation> transforms;
         std::vector<omega::Relation> iterSpaces;
+
         omega::CodeGen cg(transforms, iterSpaces);
         omega::CG_result* cgr = cg.buildAST();
         if (cgr) {
