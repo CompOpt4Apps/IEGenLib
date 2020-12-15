@@ -21,19 +21,92 @@
 #ifndef COMPUTATION_H_
 #define COMPUTATION_H_
 
+#include <list>
 #include <map>
 #include <memory>
+#include <sstream>
 #include <string>
 #include <unordered_set>
 #include <utility>
 #include <vector>
 
+#include "set_relation/Visitor.h"
 #include "set_relation/environment.h"
 #include "set_relation/set_relation.h"
 
 namespace iegenlib {
 
 class Stmt;
+
+/*!
+ * \class VisitorFindUFReplacements
+ *
+ * \brief Visitor used to build a list of replacement names/formats for UF calls
+ * that Omega doesn't support.
+ */
+class VisitorFindUFReplacements : public Visitor {
+   private:
+    //! next number to use in creating unique names
+    int nextReplacementNumber = 0;
+    //! 'from' and 'to' string for each UF call macro we need
+    std::map<std::string, std::string>* macros;
+    //! string replacements to make from original UF call name -> mangled
+    //! version
+    std::map<std::string, std::string>* nameReplacements;
+
+   public:
+    VisitorFindUFReplacements(
+        std::map<std::string, std::string>* iMacros,
+        std::map<std::string, std::string>* iReplacements) {
+        macros = iMacros;
+        nameReplacements = iReplacements;
+    }
+
+    void preVisitUFCallTerm(UFCallTerm* callTerm) {
+        if (callTerm->numArgs() != 1) {
+            throw assert_exception(
+                "VisitorFindUFReplacements: Only 1-arg UF calls supported");
+        }
+        Exp* paramExp = callTerm->getParamExp(0);
+
+        // set up outputs
+        std::ostringstream os_replaceFrom;
+        std::ostringstream os_replaceTo;
+        std::string replacementName =
+            callTerm->name() + "_" + std::to_string(nextReplacementNumber++);
+        os_replaceFrom << replacementName << "(";
+        os_replaceTo << callTerm->name() << "(";
+        // loop through all terms, adding them into the 'to' and 'from'
+        // appropriately
+        std::list<Term*> terms = paramExp->getTermList();
+        int paramNumber = 0;
+        bool addedToOutput = false;
+        bool addedToInput = false;
+        for (const auto& term : terms) {
+            if (term->isConst()) {
+                // add the term to the function call, without making an input
+                // param for it
+                os_replaceTo << (addedToOutput ? "+" : "") << "("
+                             << term->toString() << ")";
+            } else {
+                // add the term to both the written and actual function call
+                os_replaceFrom << (addedToInput ? "," : "") << "p"
+                               << paramNumber;
+                os_replaceTo << (addedToOutput ? "+" : "") << "p"
+                             << paramNumber;
+                paramNumber++;
+                addedToInput = true;
+            }
+            addedToOutput = true;
+        }
+        os_replaceFrom << ")";
+        os_replaceTo << ")";
+
+        // save results for this UF call
+        macros->emplace(os_replaceFrom.str(), os_replaceTo.str());
+        nameReplacements->emplace(callTerm->name(), replacementName);
+    }
+};
 
 /*!
  * \class Computation
@@ -43,8 +116,6 @@ class Stmt;
  */
 class Computation {
    public:
-    
-    
     //! Construct an empty Computation
     Computation(){};
 
@@ -86,7 +157,7 @@ class Computation {
 
     //! Environment used by this Computation
     Environment env;
-    
+
     //! Method generates c code.
     std::string codeGen();
 
@@ -98,7 +169,7 @@ class Computation {
 };
 
 //! Prints the dotFile for the Computation structure
-    
+
 /*!
  * \class Stmt
  *

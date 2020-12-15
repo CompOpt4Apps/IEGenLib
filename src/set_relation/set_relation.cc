@@ -5,7 +5,7 @@
  *
  * \date Started: 3/28/12
  *
- * \authors Michelle Strout, Joe Strout, and Mahdi Soltan Mohammadi 
+ * \authors Michelle Strout, Joe Strout, and Mahdi Soltan Mohammadi
  *
  * Copyright (c) 2012, Colorado State University <br>
  * Copyright (c) 2015-2016, University of Arizona <br>
@@ -17,6 +17,7 @@
 #include "UFCallMap.h"
 #include "Visitor.h"
 #include <stack>
+#include <string>
 #include <map>
 #include <assert.h>
 
@@ -35,9 +36,9 @@ string passSetStrThruISL(string sstr){
   return islStr;
 }
 
-//! Runs an Affine Union Set* (string) through ISL 
+//! Runs an Affine Union Set* (string) through ISL
 //  and returns the resulting set as a string
-//  * Union Set is a set of polyhedrals that may live in different space 
+//  * Union Set is a set of polyhedrals that may live in different space
 //    (may have different tuple declaration)
 string passUnionSetStrThruISL(string sstr){
 
@@ -77,13 +78,13 @@ Set* passSetThruISL(Set* s){
   string islStr =  islSetToString ( islStringToSet(sstr,ctx), ctx );
   isl_ctx_free(ctx);
 
-  // We need to revert changes that isl applies to Tuple Declaration because of 
+  // We need to revert changes that isl applies to Tuple Declaration because of
   // equality constrains. We do this purely using string manipulation.
   // Ex:
   //     sstr      = { [i1, i2, i3] : i1 = col_i_ and ...}  ** dots (...) can
-  //     islStr    = { [col_i_, i2, i3] : ...}              ** be different 
+  //     islStr    = { [col_i_, i2, i3] : ...}              ** be different
   //     corrected = { [i1, i2, i3] : i1 = col_i_ and ...}  ** constraints
-  // For more detail refer to revertISLTupDeclToOrig function's comments. 
+  // For more detail refer to revertISLTupDeclToOrig function's comments.
   int inArity = s->arity(), outArity = 0;
   string corrected = revertISLTupDeclToOrig( sstr, islStr, inArity, outArity);
   Set* result = new Set(corrected);
@@ -116,9 +117,9 @@ Set* islSetProjectOut(Set* s, unsigned pos) {
 
     // Using isl to project out tuple variable #pos
     isl_ctx *ctx = isl_ctx_alloc();
-    string islStr = islSetToString ( 
-                 isl_set_project_out(islStringToSet(sstr,ctx), 
-                                     isl_dim_out, pos, 1), ctx 
+    string islStr = islSetToString (
+                 isl_set_project_out(islStringToSet(sstr,ctx),
+                                     isl_dim_out, pos, 1), ctx
                  );
     isl_ctx_free(ctx);
 
@@ -311,7 +312,7 @@ void Conjunction::setTupleDecl( TupleDecl tuple_decl ) {
     // Iterate through tuple declaration we already have to
     // see if the changes are compatible.  Change entries in given
     // tuple_decl if we already have a constant.
-    for (unsigned int i=0; (i<mTupleDecl.size()) && (i<tuple_decl.size()); i++) 
+    for (unsigned int i=0; (i<mTupleDecl.size()) && (i<tuple_decl.size()); i++)
     {
         if (mTupleDecl.elemIsConst(i) && tuple_decl.elemIsConst(i)
                 && mTupleDecl.elemToString(i)!=tuple_decl.elemToString(i)) {
@@ -322,7 +323,7 @@ void Conjunction::setTupleDecl( TupleDecl tuple_decl ) {
             tuple_decl.copyTupleElem(mTupleDecl, i, i);
         }
     }
-    
+
     // copy possibly modified tuple declaration over our current tuple decl
     mTupleDecl = tuple_decl;
 }
@@ -334,7 +335,7 @@ TupleDecl Conjunction::getTupleDecl(  ) const {
 
 //! Concatenates the two tuple declarations into one.
 //! Consumes the passed in tuple_decl.
-void Conjunction::setTupleDecl( TupleDecl tuple_decl_in, 
+void Conjunction::setTupleDecl( TupleDecl tuple_decl_in,
         TupleDecl tuple_decl_out ) {
 
     TupleDecl concatTuple = tuple_decl_in.concat(tuple_decl_out );
@@ -473,7 +474,7 @@ void Conjunction::copyConstraintsFrom(const Conjunction *source) {
 }
 
 /*! Substitute each factor (i.e. the non-coefficient
-** part of a term) with the expression mapped to that factor 
+** part of a term) with the expression mapped to that factor
 ** in all our equalities and inequalities.
 ** Calls cleanup at end to resort constraints.
 ** \param searchTermToSubExp (none of the Term* or Exp* are adopted)
@@ -730,9 +731,9 @@ Conjunction::Compose(const Conjunction *rhs, int innerArity) const {
     bool rhsIsFunction = rhs->isFunction(rhsInArity);
     bool lhsIsFunctionInverse = isFunctionInverse(lhsInArity);
     bool rhsIsFunctionInverse = rhs->isFunctionInverse(rhsInArity);
-    
+
     // Check that we can do compose.
-    if (!( (lhsIsFunction && rhsIsFunction) || 
+    if (!( (lhsIsFunction && rhsIsFunction) ||
            (lhsIsFunctionInverse && rhsIsFunctionInverse) ) ) {
         // If none of the above apply, we can't compose.
         // Should never happen, since we require all relations to
@@ -745,17 +746,17 @@ Conjunction::Compose(const Conjunction *rhs, int innerArity) const {
                             " rhsIsFunction:" << rhsIsFunction <<
                             " rhsIsFunctionInverse:" <<rhsIsFunctionInverse;
         throw assert_exception(ss.str());
-    }           
+    }
 
     // Set up the resulting conjunction, using input tuple variables
     // from the RHS, and output tuple variables from the LHS, and putting
     // the inner arity variables off the end (we truncate those at the end).
     // e.g. {[a,b,c] -> [e,f]} compose {[i]->[a,b,c]}
     // result will be {[i] -> [e,f, a,b,c]}
-    Conjunction *result = new Conjunction( 
+    Conjunction *result = new Conjunction(
         finalInArity +  finalOutArity + innerArity);
     result->mInArity = finalInArity;
-    
+
     // get copies of lhs and rhs to line up their tuple vars with result
     // e.g. if lhs = {[a,b,c]->[e,f]} then lhs_copy = {[ , e, f, a, b, c]}
     Conjunction* lhs_copy = new Conjunction(*this);
@@ -782,10 +783,10 @@ Conjunction::Compose(const Conjunction *rhs, int innerArity) const {
 
     // copy the constraints from both into result
     result->copyConstraintsFrom(rhs_copy);
-    result->copyConstraintsFrom(lhs_copy);    
+    result->copyConstraintsFrom(lhs_copy);
 
     // Keep track of variable names so we don't have collisions
-    // in the result tuple declarations.  
+    // in the result tuple declarations.
     // First get used var names from result input tuple.
     std::set<std::string> takenNames;
     for (int i=0; i<finalInArity; i++) {
@@ -801,7 +802,7 @@ Conjunction::Compose(const Conjunction *rhs, int innerArity) const {
     }
     // Not going to name the inner arity tuple variables off the end
     // so they will have default names.  They are going away anyway
-    // do don't need names.    
+    // do don't need names.
     // done with lhs_copy and rhs_copy
     delete lhs_copy;
     delete rhs_copy;
@@ -811,7 +812,7 @@ Conjunction::Compose(const Conjunction *rhs, int innerArity) const {
     // rhs = { x -> y : y = F2(x) && C2 }
     // lhs compose rhs = { x -> z : z=F1(F2(x)) && C1[v/F2(x)] && C2[y/F2(x)] }
     // Recall in result everything has been shifted so have x z v=y
-    // F1 substitution is already there so just do F2 substitution 
+    // F1 substitution is already there so just do F2 substitution
     // to replace all v and y variables.
     if (lhsIsFunction and rhsIsFunction) {
         // Keep track of required substitutions.
@@ -826,7 +827,7 @@ Conjunction::Compose(const Conjunction *rhs, int innerArity) const {
             Exp* F2_j = result->findFunction(rhsIdx, 0, rhsInArity-1);
             submapF2.insertPair(t, F2_j);
         }
-        
+
         result->substituteInConstraints(submapF2);
 
     // Compose Case 2: both relations are function inverses
@@ -834,7 +835,7 @@ Conjunction::Compose(const Conjunction *rhs, int innerArity) const {
     // rhs = { x -> y : x = G2(y) && C2 }
     // lhs compose rhs = { x -> z : x=G2(G1(z)) && C1[v/G1(z)] && C2[y/G1(z)] }
     // Recall in result everything has been shifted so have x z v=y
-    // G2 substitution is already there so just do G1 substitution 
+    // G2 substitution is already there so just do G1 substitution
     // to replace all v and y variables.
     } else if (lhsIsFunctionInverse and rhsIsFunctionInverse) {
         // Keep track of required substitutions.
@@ -846,12 +847,12 @@ Conjunction::Compose(const Conjunction *rhs, int innerArity) const {
             int lhsIdx = finalInArity + finalOutArity + j;
             Term* t = result->mTupleDecl.elemCreateTerm(lhsIdx, lhsIdx);
             // v_j = G1_j(z)
-            Exp* G1_j = result->findFunction(lhsIdx, 
+            Exp* G1_j = result->findFunction(lhsIdx,
                 finalInArity, finalInArity+finalOutArity-1);
-                
+
             submapG1.insertPair(t, G1_j);
         }
-        
+
         result->substituteInConstraints(submapG1);
     }
 
@@ -898,13 +899,13 @@ void Conjunction::pushConstConstraintsToTupleDecl() {
     for (std::list<Exp*>::const_iterator iter=mEqualities.begin();
                 iter != mEqualities.end(); iter++ ) {
         Exp* e = *iter;
-        
+
         // For each tuple variable solve for that tuple var in expression.
         // If result is a constant then keep that mapping of tuple var
         // index to constant and keep track of Exp as one we want
         // to erase from constraints.
         for (int i=0; i<arity(); i++) {
-                    
+
             if (! mTupleDecl.elemIsConst(i)) {
                 // solve for the tuple variable in expression
                 Term* t = mTupleDecl.elemCreateTerm(i,i);
@@ -913,7 +914,7 @@ void Conjunction::pushConstConstraintsToTupleDecl() {
                 if (solution && solution->equalsZero()) {
                     tupleIndexToConst[i] = 0;
                     equalitiesToRemove.insert(*e);
-                } 
+                }
                 else if (solution && (t=solution->getTerm()) && t->isConst() ) {
                     tupleIndexToConst[i] = t->coefficient();
                     equalitiesToRemove.insert(*e);
@@ -922,14 +923,14 @@ void Conjunction::pushConstConstraintsToTupleDecl() {
             }
         }
     }
-        
+
     // Now go set the tuple variables to constants where necessary
     std::map<unsigned int,int>::iterator mapIter;
     for (mapIter = tupleIndexToConst.begin();
             mapIter != tupleIndexToConst.end(); mapIter++) {
         mTupleDecl.setTupleElem(mapIter->first, mapIter->second );
     }
-    
+
     // Finally remove all those constant equality expressions.
     for (std::list<Exp*>::iterator iter=mEqualities.begin();
                 iter != mEqualities.end(); ) {
@@ -985,13 +986,13 @@ Conjunction *Conjunction::Apply(const Conjunction *rhs) const {
         shiftResultVars[i] = i-lhsInArity;
     }
     result->remapTupleVars(shiftResultVars);
-    
+
     // Need to do shift the tuple variables in set
-    // and in relation so that they all with tuple variables 
+    // and in relation so that they all with tuple variables
     // in the result.
     // e.g. shift [a,b,c] to [ , , a, b, c] so they line up with
     // i,j,k in result tuple declaration [t,v,i,j,k]
-    // Shift tuple variables in the 
+    // Shift tuple variables in the
     Conjunction *rhs_copy = new Conjunction(*rhs);
     rhs_copy->pushConstToConstraints();
     std::vector<int> shiftRHSVars(rhs->arity());
@@ -1022,12 +1023,12 @@ Conjunction *Conjunction::Apply(const Conjunction *rhs) const {
         // D[z_i/G_i(y)] and C[x_i/G_i(y)]
         // substituting function in constraints for set and result
         Term* t = result->mTupleDecl.elemCreateTerm(i,i);
-        submap.insertPair(t,G_i); 
+        submap.insertPair(t,G_i);
     }
 
     // perform the substitution on all z_i and x_i vars at once
-    result->substituteInConstraints(submap); 
-    
+    result->substituteInConstraints(submap);
+
     // Remove the input tuple vars for relation from end of result set.
     // e.g. [t,v,i,j,k] should become [t,v]
     // Create a new truncated tuple declaration
@@ -1250,10 +1251,10 @@ Conjunction* Conjunction::Intersect(const Conjunction* rhs) const {
 ** a new set where passed in tuple expression is
 ** bound assuming this domain, or range.
 ** User must deallocate returned Conjunction.
-** 
+**
 ** \param tuple_exp Expression tuple to bound.  Could just have one elem.
-** 
-** \return Conjunction will contain all bounds on expressions 
+**
+** \return Conjunction will contain all bounds on expressions
 **         in tuple expression.  Will have no tuple variables.
 */
 Conjunction* Conjunction::boundTupleExp(const TupleExpTerm& tuple_exp) const {
@@ -1265,16 +1266,16 @@ Conjunction* Conjunction::boundTupleExp(const TupleExpTerm& tuple_exp) const {
 
     // Create a zero arity conjunction.
     Conjunction* retval = new Conjunction(0);
-    
+
     // copy all constraints from a clone of ourselves that has had
     // constant values pushed to the constraints
     Conjunction* dup = new Conjunction(*this);
     dup->pushConstToConstraints();
     retval->copyConstraintsFrom(dup);
-    
+
     // then create bounds by substituting expressions in tuple_exp
     // into the expressions in copy of self in retval.
-    // Has to be done in order because 
+    // Has to be done in order because
     SubMap submap;
     for (unsigned int i=0; i<tuple_exp.size(); i++) {
         Term * t = dup->mTupleDecl.elemCreateTerm(i, i);
@@ -1369,8 +1370,8 @@ void Conjunction::cleanUp() {
 }
 
 /*!
-** Group together all equality expressions that 
-** are parts of the same UFCallTerm, IOW i=f(k)[0] and 
+** Group together all equality expressions that
+** are parts of the same UFCallTerm, IOW i=f(k)[0] and
 ** j=f(k)[1] should become (i,j) = f(k).
 */
 void Conjunction::groupIndexedUFCalls() {
@@ -1396,7 +1397,7 @@ void Conjunction::groupIndexedUFCalls() {
             // tuple index before
             // Store off the equality expression.
             UFCallTerm* nonindexed = uf_call_ptr->nonIndexedClone();
-            ufcallAndIndex2Exp[*nonindexed][uf_call_ptr->tupleIndex()] 
+            ufcallAndIndex2Exp[*nonindexed][uf_call_ptr->tupleIndex()]
                 = ret_exp;
             delete nonindexed;
             delete uf_call_ptr;
@@ -1407,7 +1408,7 @@ void Conjunction::groupIndexedUFCalls() {
             i++;  // must increment iterator if not remove expression
         }
     }
-    
+
     // Loop through return expressions we found and see if have all
     // for a particular UFCall.  If do then replace them all with
     // a single equality.  If don't, then have to put them all back in.
@@ -1442,7 +1443,7 @@ void Conjunction::groupIndexedUFCalls() {
         // otherwise we have to put all the equalities back in
         else {
             std::map<int,Exp*>::iterator indexIter;
-            for (indexIter=index2retexp.begin(); 
+            for (indexIter=index2retexp.begin();
                     indexIter!=index2retexp.end(); indexIter++) {
                 Exp* ret_exp = indexIter->second;
                 ret_exp->multiplyBy(-1);
@@ -1453,7 +1454,7 @@ void Conjunction::groupIndexedUFCalls() {
             }
         }
     }
-    
+
 }
 
 
@@ -1498,7 +1499,7 @@ bool SparseConstraints::operator<(const SparseConstraints& other) const {
     std::list<Conjunction*>::const_iterator otherIter;
     otherIter = other.mConjunctions.begin();
     thisIter = mConjunctions.begin();
-    
+
     while ( thisIter != mConjunctions.end() ) {
         //compare values
         if (**thisIter < **otherIter) { return true; }
@@ -1545,7 +1546,7 @@ TupleDecl SparseConstraints::getTupleDecl(  ) const {
 //! If there are some constants that don't agree then throws exception.
 //! If replacing a constant with a variable ignores the substitution
 //! in that conjunction.
-void SparseConstraints::setTupleDecl( TupleDecl tuple_decl_in, 
+void SparseConstraints::setTupleDecl( TupleDecl tuple_decl_in,
                                       TupleDecl tuple_decl_out ) {
 
     for (std::list<Conjunction*>::iterator i=mConjunctions.begin();
@@ -1604,10 +1605,10 @@ std::string SparseConstraints::toString(int aritySplit) const {
     }
 
     // If there are no conjunctions then indicate we have an empty set
-    // by printing out generic arity tuple declarations and FALSE as 
+    // by printing out generic arity tuple declarations and FALSE as
     // a constraint.
     if (mConjunctions.size()==0) {
-        ss << "{ " 
+        ss << "{ "
            << TupleDecl::sDefaultTupleDecl(arity()).toString(true,aritySplit)
            << " : FALSE }";
     }
@@ -1680,6 +1681,43 @@ std::string SparseConstraints::toISLString(int aritySplit) const {
     return ss.str();
 }
 
+std::string SparseConstraints::toOmegaString(int aritySplit) const {
+
+    // collect all symbolic/parameter variable names
+    // and print the declaration for the symbolics
+    std::stringstream ss;
+    StringIterator * symIter;
+    bool foundSymbols = false;
+    for (std::list<Conjunction*>::const_iterator i=mConjunctions.begin();
+            i != mConjunctions.end(); i++) {
+        symIter = (*i)->getSymbolIterator();
+        while (symIter->hasNext()) {
+            // print out start of symbol declaration at first symbol
+            if (foundSymbols == false) {
+                ss << "symbolic ";
+                foundSymbols = true;
+                // print the symbol declaration itself
+                ss << symIter->next();
+            // later symbols will have a comma and then var name
+            } else {
+                ss << ", " << symIter->next();
+            }
+        }
+        delete symIter;
+    }
+    // finish off declaration if there were symbols
+    if (foundSymbols) {
+        ss << "; ";
+    }
+
+    // do a typical prettyPrint
+    ss << prettyPrintString(aritySplit);
+
+    ss << ";";
+
+    return ss.str();
+}
+
 
 std::string SparseConstraints::toDotString() const{
     std::stringstream result;
@@ -1704,7 +1742,7 @@ StringIterator* SparseConstraints::getTupleIterator() const {
 }
 
 /*! Substitute each factor (i.e. the non-coefficient
-** part of a term) with the expression mapped to that factor 
+** part of a term) with the expression mapped to that factor
 ** in all our equalities and inequalities.
 ** None of the Term's in the map can be constant or an exception will
 ** be thrown.
@@ -1712,9 +1750,9 @@ StringIterator* SparseConstraints::getTupleIterator() const {
 ** but it is cleaned up.  What does that mean?
 ** \param searchTermToSubExp (none of the Term* or Exp* are adopted)
 */
-void 
+void
 SparseConstraints::substituteInConstraints(SubMap& searchTermToSubExp) {
-        
+
     searchTermToSubExp.startIter();
     while ( searchTermToSubExp.hasNext() ) {
         Term* search = searchTermToSubExp.next();
@@ -1801,27 +1839,27 @@ std::set<Exp> SparseConstraints::constraintsDifference(SparseConstraints* A){
   for (std::list<Exp*>::const_iterator it=eqB.begin(); it != eqB.end(); it++){
     found = 0;
     for (std::list<Exp*>::const_iterator jt=eqA.begin(); jt != eqA.end(); jt++){
-      if( (*(*it)) == (*(*jt)) ){ 
+      if( (*(*it)) == (*(*jt)) ){
         found = 1;
         break;
       }
     }
     if(!found){
       diffSet.insert( *(*it) );
-    }  
+    }
   }
 
   for (std::list<Exp*>::const_iterator it=ineqB.begin(); it != ineqB.end(); it++){
     found = 0;
     for (std::list<Exp*>::const_iterator jt=ineqA.begin(); jt != ineqA.end(); jt++){
-      if( (*(*it)) == (*(*jt)) ){ 
+      if( (*(*it)) == (*(*jt)) ){
         found = 1;
         break;
       }
     }
     if(!found){
       diffSet.insert( *(*it) );
-    }  
+    }
   }
 
   return diffSet;
@@ -1845,7 +1883,7 @@ Set::Set(int arity) : SparseConstraints(), mArity(arity) {
     addConjunction(new Conjunction(TupleDecl::sDefaultTupleDecl(arity)));
 }
 
-//! Creates a set with the specified tuple declaration.  
+//! Creates a set with the specified tuple declaration.
 //! It starts with no constraints so all tuples of that arity belong in it.
 Set::Set(TupleDecl tdecl) : SparseConstraints(), mArity(tdecl.size()) {
     addConjunction(new Conjunction(tdecl));
@@ -1860,7 +1898,7 @@ Set& Set::operator=(const Set& other) {
     return *this;
 }
 /*! Equal operator.
-** 
+**
 ** @param other, object to be compared
 */
 bool Set::operator==( const Set& other) const {
@@ -1915,16 +1953,16 @@ Set* Set::Union(const Set* rhs) const{
     }
 
     Set *result = new Set(mArity);
-    
+
     // If both sets have no conjunctions then they are both empty sets
     // and so this set needs to be empty as well.  Removing default
     // conjunction before adding in conjunctions of other sets.
-    if (result->mConjunctions.size()==1 
+    if (result->mConjunctions.size()==1
             && ! result->mConjunctions.front()->hasConstraints()) {
         delete result->mConjunctions.front();
         result->mConjunctions.clear();
     }
-    
+
     // Add in conjunctions from lhs/this set.
     for (std::list<Conjunction*>::const_iterator i=mConjunctions.begin();
         i != mConjunctions.end(); i++) {
@@ -1972,7 +2010,7 @@ Set* Set::Intersect(const Set* rhs) const{
 ** a new set where passed in tuple expression is
 ** bound assuming this domain, or range.
 ** User must deallocate returned Set.
-** 
+**
 ** \param tuple_exp Expression tuple to bound.  Could just have one elem.
 **
 ** \return Set will contain all bounds on expressions in tuple expression.
@@ -1994,27 +2032,27 @@ void Set::normalize(bool bdr) {
 
     // Sometimes to provide arguments of an UFC like sigma(a1, a2, ...)
     // we use another UFC that is not indexed like left(f). Here, the
-    // expanded form would look like this: 
-    //                         sigma(left(f)[0], left(f)[1], ...) 
+    // expanded form would look like this:
+    //                         sigma(left(f)[0], left(f)[1], ...)
     // indexUFCs() would create the expanded format for normalization purposes.
     indexUFCs();
 
     // Create variable names for UF calls.
     UFCallMap* uf_call_map = new UFCallMap();
-    
+
     // Replace uf calls with the variables to create an affine superset.
     Set* superset_copy = superAffineSet(uf_call_map,bdr);
 
     // Send affine super set to ISL and let it normalize it.
     Set* superset_normalized = passSetThruISL(superset_copy);
- 
+
      // Reverse the substitution of vars for uf calls.
-    Set* normalized_copy 
+    Set* normalized_copy
         = superset_normalized->reverseAffineSubstitution(uf_call_map);
-   
+
     // Replace self with the normalized copy.
     *this = *normalized_copy;
-        
+
     // Cleanup
     delete normalized_copy;
     delete uf_call_map;
@@ -2056,11 +2094,11 @@ Relation& Relation::operator=(const Set& other) {
                                "impossible arity match");
 	}
 	mOutArity = other.arity() - mInArity;
-	
+
     reset();
     for (std::list<Conjunction*>::const_iterator i=other.mConjunctions.begin();
                 i != other.mConjunctions.end(); i++) {
-        // copy Set's conjunction with Relation's inArity     
+        // copy Set's conjunction with Relation's inArity
         Conjunction* c = new Conjunction((*i)->arity(), mInArity);
         c->setTupleDecl((*i)->getTupleDecl());
         c->copyConstraintsFrom(*i);
@@ -2076,9 +2114,9 @@ Relation& Relation::operator=(const Set& other) {
 **      if self < other return false
 **      if other < self return false
 **      return true
-**   
+**
 ** @param other, object to be compared
-*/   
+*/
 bool Relation::operator==( const Relation& other) const {
 
     if( (*this) < other){
@@ -2105,7 +2143,7 @@ bool Relation::operator<( const Relation& other) const {
     if ((*this).mOutArity < other.mOutArity){ return true; }
     if ((*this).mOutArity > other.mOutArity){ return false; }
     //Conjunctions
-    return (static_cast<SparseConstraints>(*this) < 
+    return (static_cast<SparseConstraints>(*this) <
             static_cast<SparseConstraints>(other));
 }
 
@@ -2322,13 +2360,13 @@ Relation* Relation::Inverse() const{
 */
 bool Relation::isFunction() const {
     bool result = true;
-    
+
     // Each conjunction must be a function
     for (std::list<Conjunction*>::const_iterator i=mConjunctions.begin();
         i != mConjunctions.end(); i++) {
         result = result && (*i)->isFunction(inArity());
     }
-    
+
     return result;
 }
 
@@ -2337,13 +2375,13 @@ bool Relation::isFunction() const {
 */
 bool Relation::isFunctionInverse() const {
     bool result = true;
-    
+
     // Each conjunction must be a function
     for (std::list<Conjunction*>::const_iterator i=mConjunctions.begin();
         i != mConjunctions.end(); i++) {
         result = result && (*i)->isFunctionInverse(inArity());
     }
-    
+
     return result;
 }
 
@@ -2376,14 +2414,14 @@ void Relation::normalize(bool bdr) {
 
     // Sometimes to provide arguments of an UFC like sigma(a1, a2, ...)
     // we use another UFC that is not indexed like left(f). Here, the
-    // expanded form would look like this: 
-    //                         sigma(left(f)[0], left(f)[1], ...) 
+    // expanded form would look like this:
+    //                         sigma(left(f)[0], left(f)[1], ...)
     // indexUFCs() would create the expanded format for normalization purposes.
     indexUFCs();
 
     // Create variable names for UF calls.
     UFCallMap* uf_call_map = new UFCallMap();
-    
+
     // Replace uf calls with the variables to create an affine superset.
     Relation* superset_copy = superAffineRelation(uf_call_map,bdr);
 
@@ -2391,12 +2429,12 @@ void Relation::normalize(bool bdr) {
     Relation* superset_normalized = passRelationThruISL(superset_copy);
 
      // Reverse the substitution of vars for uf calls.
-    Relation* normalized_copy 
+    Relation* normalized_copy
         = superset_normalized->reverseAffineSubstitution(uf_call_map);
 
     // Replace self with the normalized copy.
     *this = *normalized_copy;
-        
+
     // Cleanup
     delete normalized_copy;
     delete uf_call_map;
@@ -2404,7 +2442,7 @@ void Relation::normalize(bool bdr) {
     delete superset_normalized;
 }
 
-            
+
 
 /******************************************************************************/
 
@@ -2416,7 +2454,7 @@ void Relation::normalize(bool bdr) {
 //! Visitor design pattern, see Visitor.h for usage
 void Conjunction::acceptVisitor(Visitor *v) {
     v->preVisitConjunction(this);
-    
+
     std::list<Exp*>::iterator expIter = mEqualities.begin();
     while (expIter != mEqualities.end()) {
         (*expIter)->acceptVisitor(v);
@@ -2464,7 +2502,7 @@ void Relation::acceptVisitor(Visitor *v) {
 /*! Vistor Class used for indexing, non-indexing UFCs
 **  Sometimes to provide arguments of an UFC like sigma(a1, a2, ...)
 **  we use another UFC that is not indexed like left(f). Here, the
-**  expanded form would look like this: 
+**  expanded form would look like this:
 **                                sigma(left(f)[0], left(f)[1], ...)
 */
 class VisitorIndexUFC : public Visitor {
@@ -2472,29 +2510,29 @@ class VisitorIndexUFC : public Visitor {
     VisitorIndexUFC(){}
     //! For each UFC adds Domain & Range constraints to addedConstSet
     void postVisitUFCallTerm(UFCallTerm * t){
-           
+
         Set * s = queryDomainCurrEnv( t->name() );
         int act_nArg = s->arity();
         int cur_nArg = t->numArgs();
- 
+
         if( cur_nArg == 1 && act_nArg > 1){
-            
+
             Exp* par = t->getParamExp(0);
             Term *ta = par->getTerm();
             if( !(ta) || !(ta->type()=="UFCallTerm") ){
                 throw assert_exception("VisitorIndexUFC: Null or non UFC tuple argument");
             }
             UFCallTerm* uft = dynamic_cast<UFCallTerm*>(ta);
- 
+
             UFCallTerm new_ufc(t->coefficient(), t->name() , act_nArg);
             for(int i = 0 ; i < act_nArg ; i++){
                 UFCallTerm* temp = dynamic_cast<UFCallTerm*>( uft->clone() );
                 temp->setTupleIndex(i);
-                Exp *ae = new Exp(); 
+                Exp *ae = new Exp();
                 ae->addTerm( temp );
                 new_ufc.setParamExp(i,ae);
             }
-            *t = new_ufc;               
+            *t = new_ufc;
         }
     }
 };
@@ -2537,7 +2575,7 @@ class VisitorIsUFCallParam : public Visitor {
         mSeenTupleVar = false;
     }
     void postVisitExp(iegenlib::Exp * e) {
-        // An expression that is not an inequality or 
+        // An expression that is not an inequality or
         // an equality is a parameter to a UFCall.
 
         if (e->isExpression() and mSeenTupleVar) {
@@ -2592,7 +2630,7 @@ void VisitorBoundDomainRange::preVisitUFCallTerm(UFCallTerm * t){
     UFCallTerm *uf_call = new UFCallTerm(*t);
     uf_call->setCoefficient(1);
 
-   // Bounding argument expressions of UFCalls by their domain, 
+   // Bounding argument expressions of UFCalls by their domain,
    // and adding them as inequalities to constraints set
    {
     // Create a TupleExpTerm from the parameter expressions.
@@ -2610,7 +2648,7 @@ void VisitorBoundDomainRange::preVisitUFCallTerm(UFCallTerm * t){
     // The constraintSet returned by boundTupleExp will not have any
     // tuple variables. We want the tuple variable declaration to line up.
     constraintSet->setTupleDecl( addedConstSet->getTupleDecl() );
-    
+
     // Intersect the new set of constraints with the existing constraints.
     Set* mCC = addedConstSet;     // pointer to current set
     addedConstSet = mCC->Intersect(constraintSet);
@@ -2620,14 +2658,14 @@ void VisitorBoundDomainRange::preVisitUFCallTerm(UFCallTerm * t){
     delete domain;
    }
 
-   // Bounding UFCalls by their range, 
+   // Bounding UFCalls by their range,
    // and adding them as inequalities to constraints set
    {
     // look up range for uninterpreted function
     Set* range = iegenlib::queryRangeCurrEnv(uf_call->name());
-    
+
     // Assuming that uf call and its range align.
-    if (! uf_call->isIndexed() 
+    if (! uf_call->isIndexed()
         && ((unsigned)range->arity() != uf_call->size()) ) {
         throw assert_exception("Set::boundDomainRange: "
         "ufcall returning fewer dimensions than declared range");
@@ -2635,13 +2673,13 @@ void VisitorBoundDomainRange::preVisitUFCallTerm(UFCallTerm * t){
 
     // For each dimension of the return value create a instance
     TupleExpTerm tuple_exp(uf_call->size());
-    
+
     // Determine what the output arity of this particular UF call is
     // taking into consideration that it could be indexed.
     unsigned int out_arity = range->arity();
 
-    for (unsigned int i=0; i<out_arity; i++) {    
-        // Create a temporary variable and maintain correspondence 
+    for (unsigned int i=0; i<out_arity; i++) {
+        // Create a temporary variable and maintain correspondence
         // with UFCallTerm.  Add one more tuple var to constraints.
         UFCallTerm* indexed_uf_call;
         if (out_arity==1) {
@@ -2650,11 +2688,11 @@ void VisitorBoundDomainRange::preVisitUFCallTerm(UFCallTerm * t){
             indexed_uf_call = new UFCallTerm(*uf_call);
             indexed_uf_call->setTupleIndex( i );
         }
-        
+
         // Create a TupleExpTerm from the new temporary var.
         Exp* tuple_var_exp = new Exp();
         tuple_var_exp->addTerm(indexed_uf_call);
-        tuple_exp.setExpElem(i,tuple_var_exp);   
+        tuple_exp.setExpElem(i,tuple_var_exp);
     }
 
     // have the range create the constraints and store those constraints
@@ -2662,7 +2700,7 @@ void VisitorBoundDomainRange::preVisitUFCallTerm(UFCallTerm * t){
 
     // Same as Domain
     constraintSet->setTupleDecl( addedConstSet->getTupleDecl() );
-    
+
     // Intersect the new set of constraints with the existing constraints.
     Set* mCC = addedConstSet;     // pointer to current set
     addedConstSet = mCC->Intersect(constraintSet);
@@ -2683,7 +2721,7 @@ Set* Set::boundDomainRange()
 {
     Set* s = new Set(*this);
     VisitorBoundDomainRange *v = new VisitorBoundDomainRange();
-    
+
     s->acceptVisitor(v);
 
     delete v;
@@ -2699,7 +2737,7 @@ Relation* Relation::boundDomainRange()
 {
     Relation* r = new Relation(*this);
     VisitorBoundDomainRange *v = new VisitorBoundDomainRange();
-    
+
     r->acceptVisitor(v);
 
     delete v;
@@ -2751,12 +2789,12 @@ class VisitorSuperAffineSet : public Visitor {
          void preVisitVarTerm(VarTerm * t){
              if( ufcDepth == 0 ){ affineExp->addTerm( t->clone() ); }
          }
-         void preVisitTupleExpTerm(TupleExpTerm * t){ 
+         void preVisitTupleExpTerm(TupleExpTerm * t){
              if( ufcDepth == 0 ){ affineExp->addTerm( t->clone() ); }
          }
          /*! Intialize an affineExp if Exp is not a UFCall argument
          ** If this is a argument to a UFCall, we don't want to modify it.
-         ** This is because A(B(i+1)) gets replaced with A_B_iP1__ without 
+         ** This is because A(B(i+1)) gets replaced with A_B_iP1__ without
          ** doing anything about B(i+1). And keep in mind that we have already
          ** added constraints related to function B's domain and range.
          */
@@ -2765,17 +2803,17 @@ class VisitorSuperAffineSet : public Visitor {
                  ufcDepth++; // We are iterating over an UFC's arguments
              }else{
                  ufcDepth = 0;
-                 affineExp = new Exp();  
+                 affineExp = new Exp();
              }
          }
          /*! We don't care about e's that are argument to an UFCall
          **  Nonetheless, we should set visit = true, because of the nested
          **  expressions: we are care about the whole expression i = row(j+1)
          **  but not the sub-expression (j+1) that an is argument to row.
-         */ 
+         */
          void postVisitExp(iegenlib::Exp * e){
              // we are finished iterating arguments of an UFC
-             if( e->isExpression() ){ 
+             if( e->isExpression() ){
                  ufcDepth--;   // Consider the fact that UFCs can be nested
                  return;
              }
@@ -2832,7 +2870,7 @@ Set* Set::superAffineSet(UFCallMap* ufcmap, bool boundUFCs)
 
     result = new Set (*this);
     // There is no conjunction, so nothing to do
-    if( result->getNumConjuncts() == 0 ){  
+    if( result->getNumConjuncts() == 0 ){
        return result;   // Just return a copy of the Set
     }
     delete result;
@@ -2842,9 +2880,9 @@ Set* Set::superAffineSet(UFCallMap* ufcmap, bool boundUFCs)
 
     VisitorSuperAffineSet* v = new VisitorSuperAffineSet(ufcmap);
     copySet->acceptVisitor( v );
-    
+
     result = (v->getSet());
-    
+
     delete copySet;
     delete v;
 
@@ -2915,7 +2953,7 @@ class VisitorReverseAffineSubstitution : public Visitor {
          void preVisitUFCallTerm(UFCallTerm * t){
              throw assert_exception("VisitorReverseAffineSubstitution: \
                              An UFCall term found in affine set!");
-         } 
+         }
          void preVisitTupleVarTerm(TupleVarTerm * t){
              if(visit){ nonAffineExp->addTerm( t->clone() ); }
          }
@@ -2930,7 +2968,7 @@ class VisitorReverseAffineSubstitution : public Visitor {
                  }
              }
          }
-         void preVisitTupleExpTerm(TupleExpTerm * t){ 
+         void preVisitTupleExpTerm(TupleExpTerm * t){
              if(visit){ nonAffineExp->addTerm( t->clone() ); }
          }
          /*! Intialize an nonAffineExp if Exp is not a UFCall argument
@@ -2941,12 +2979,12 @@ class VisitorReverseAffineSubstitution : public Visitor {
                  visit = false;
              } else {
                  visit = true;
-                 nonAffineExp = new Exp();  
+                 nonAffineExp = new Exp();
              }
          }
          /*! There cannot be argument to UFCalls in affine set, since there
-         **  cannot be UFCalls in affine set. preVisitUFCallTerm for details 
-         */ 
+         **  cannot be UFCalls in affine set. preVisitUFCallTerm for details
+         */
          void postVisitExp(iegenlib::Exp * e){
              if( e->isExpression() ){
                  // we need visit = true for nested expressions
@@ -3000,10 +3038,10 @@ class VisitorReverseAffineSubstitution : public Visitor {
 */
 Set* Set::reverseAffineSubstitution(UFCallMap* ufcmap)
 {
-    VisitorReverseAffineSubstitution* v = 
+    VisitorReverseAffineSubstitution* v =
                   new VisitorReverseAffineSubstitution(ufcmap);
     this->acceptVisitor( v );
-    
+
     Set* result = (v->getSet());
     delete v;
 
@@ -3013,7 +3051,7 @@ Set* Set::reverseAffineSubstitution(UFCallMap* ufcmap)
 //! Same as Set
 Relation* Relation::reverseAffineSubstitution(UFCallMap* ufcmap)
 {
-    VisitorReverseAffineSubstitution* v = 
+    VisitorReverseAffineSubstitution* v =
                   new VisitorReverseAffineSubstitution(ufcmap);
     this->acceptVisitor( v );
 
@@ -3044,14 +3082,14 @@ class VisitorProjectOut : public Visitor {
         // Adjust inArity for after projection
         if( tvar < ia && ia != 0 ){
             ia--;
-        } 
+        }
         inArity = ia;
     }
     // Projects out tuple varrable No. tvar from current conjunction
     // And adds it to mNewConj
     void postVisitConjunction(iegenlib::Conjunction* c){
         Conjunction* cc = new Conjunction( *c );
-        
+
         cc->setInArity(0);
         Set * cs = new Set(cc->arity() );
         cs->addConjunction(cc);
@@ -3081,7 +3119,7 @@ class VisitorProjectOut : public Visitor {
     }
     //! Add Conjunctions in mnewConj to newRelation
     void postVisitRelation(iegenlib::Relation * r){
-        // Adjusting new in and out arity depending projected tvar 
+        // Adjusting new in and out arity depending projected tvar
         int ia = r->inArity(), oa = r->outArity();
         if( tvar < ia ){
             ia--;
@@ -3139,8 +3177,8 @@ Set* Set::projectOut(int tvar)
     if (isUFCallParam(tvar)){
       return NULL;
     }
-    
-    // Geting a map of UFCalls 
+
+    // Geting a map of UFCalls
     iegenlib::UFCallMap *ufcmap = new UFCallMap();;
     // Getting the super affine set of constraints with no UFCallTerms
     Set* sup_s = this->superAffineSet(ufcmap, false);
@@ -3161,7 +3199,7 @@ Set* Set::projectOut(int tvar)
     delete sup_s;
     delete cv;
     delete pv;
-   
+
     return result;
 }
 
@@ -3179,8 +3217,8 @@ Relation* Relation::projectOut(int tvar)
     if (isUFCallParam(tvar)){
       return NULL;
     }
-    
-    // Geting a map of UFCalls 
+
+    // Geting a map of UFCalls
     iegenlib::UFCallMap *ufcmap = new UFCallMap();
     // Getting the super affine set of constraints with no UFCallTerms
     Relation* sup_r = this->superAffineRelation(ufcmap, false);
@@ -3201,7 +3239,7 @@ Relation* Relation::projectOut(int tvar)
     delete sup_r;
     delete cv;
     delete pv;
-   
+
     return result;
 }
 
@@ -3209,7 +3247,7 @@ Relation* Relation::projectOut(int tvar)
 #pragma mark -
 /*************** VisitorNumUFCallConstsMustRemove *****************************/
 /*! Vistor Class used in numUFCallConstsMustRemove
-** 
+**
 */
 class VisitorNumUFCallConstsMustRemove : public Visitor {
   private:
@@ -3221,7 +3259,7 @@ class VisitorNumUFCallConstsMustRemove : public Visitor {
 
   public:
     VisitorNumUFCallConstsMustRemove(int tupleID, std::set<Exp>& iignore)
-                  : mTupleID(tupleID), ignore(iignore),   
+                  : mTupleID(tupleID), ignore(iignore),
                   seenTupleVar(false), UFCLevel(0), count(0){}
 
     virtual ~VisitorNumUFCallConstsMustRemove(){ }
@@ -3243,7 +3281,7 @@ class VisitorNumUFCallConstsMustRemove : public Visitor {
         }
     }
     void postVisitExp(iegenlib::Exp * e) {
-        // 
+        //
         if( e->isExpression() ){
              UFCLevel--;
         } else if ( seenTupleVar) {
@@ -3267,7 +3305,7 @@ int SparseConstraints::numUFCallConstsMustRemove(int i, std::set<Exp>& ignore)
 
     int count = v->getCount();
     delete v;
-    
+
     return count;
 }
 
@@ -3307,7 +3345,7 @@ class VisitorRemoveUFCallConsts : public Visitor {
         }
     }
     void postVisitExp(iegenlib::Exp * e) {
-        // 
+        //
         if( e->isExpression() ){
              UFCLevel--;
         } else if ( !seenTupleVar ) {
@@ -3347,7 +3385,7 @@ class VisitorRemoveUFCallConsts : public Visitor {
 void SparseConstraints::removeUFCallConsts(int i)
 {
     VisitorRemoveUFCallConsts* v = new VisitorRemoveUFCallConsts(i);
-    
+
     this->acceptVisitor(v);
 
     SparseConstraints* result = v->getSparseConstraints();
@@ -3359,7 +3397,7 @@ void SparseConstraints::removeUFCallConsts(int i)
 
 //! This function is implementation of a heuristic algorithm to remove
 //  expensive contranits from the set.
-void SparseConstraints::removeExpensiveConstraints(std::set<int> parallelTvs, 
+void SparseConstraints::removeExpensiveConstraints(std::set<int> parallelTvs,
                               int mNumConstsToRemove , std::set<Exp> ignore )
 {
     int lastTV = this->arity()-1, nConstsToRemove = 0;
@@ -3384,7 +3422,7 @@ void SparseConstraints::removeExpensiveConstraints(std::set<int> parallelTvs,
 /*! This function simplifies constraints of non-affine sets that
 **  are targeted for level set parallelism. These sets are representative
 **  of data access dependency relations. For level set parallelism,
-**  we need to create an optimized inspector code that checks 
+**  we need to create an optimized inspector code that checks
 **  data dependency based these constraints in run time. This function is
 **  implementation of Simplification Algorithm that simplifies dependency
 **  relations, so we can generate optimized inspector code from constraint sets.
@@ -3404,7 +3442,7 @@ Set* Set::simplifyForPartialParallel(std::set<int> parallelTvs )
 
 //    result->normalize();
 
-    // Projecting out any tuple variable that are not argument to a UFCall 
+    // Projecting out any tuple variable that are not argument to a UFCall
     // starting from inner most loops. We also do not project out indecies
     // specified in parallelTvs, since they are going to be parallelized.
     // [i1,i1p,i2, i2p, ...] :  we keep i1 and i1p
@@ -3414,12 +3452,12 @@ Set* Set::simplifyForPartialParallel(std::set<int> parallelTvs )
         if ( parallelTvs.find(i) != parallelTvs.end() ){
             continue;
         }
-    
+
         // Project out if it is not an UFCall argument
-        temp = result->projectOut(i); 
+        temp = result->projectOut(i);
 
         if ( temp ){
-            delete result;  
+            delete result;
             result = temp;
         }
 
@@ -3429,7 +3467,7 @@ Set* Set::simplifyForPartialParallel(std::set<int> parallelTvs )
         }
     }
 
-    return result;    
+    return result;
 }
 
 /*! Same as Set.
@@ -3446,8 +3484,8 @@ Relation* Relation::simplifyForPartialParallel(std::set<int> parallelTvs)
 //    // Adding constraints dut to Monotonicity of UFCs (if any exists)
 //    result = this->addConstraintsDueToMonotonicity();
 //    delete copyRelation;
-    
-    // Projecting out any tuple variable that are not argument to a UFCall 
+
+    // Projecting out any tuple variable that are not argument to a UFCall
     // starting from inner most loops. We also do not project out first 2 loops
     // that are outer most loops, since they are going to be parallelized.
     // [i1,i1p,i2, i2p, ...] :  we keep i1 and i1p
@@ -3456,12 +3494,12 @@ Relation* Relation::simplifyForPartialParallel(std::set<int> parallelTvs)
         if ( parallelTvs.find(i) != parallelTvs.end() ){
             continue;
         }
-    
+
         // Project out if it is not an UFCall argument
-        temp = result->projectOut(i); 
+        temp = result->projectOut(i);
 
         if ( temp ){
-            delete result;        
+            delete result;
             result = temp;
         }
 
@@ -3470,7 +3508,7 @@ Relation* Relation::simplifyForPartialParallel(std::set<int> parallelTvs)
         }
     }
 
-    return result;    
+    return result;
 }
 
 
@@ -3485,7 +3523,7 @@ Relation* Relation::simplifyForPartialParallel(std::set<int> parallelTvs)
 */
 class VisitorGatherAllParameters : public Visitor {
   private:
-    std::set<Exp> instExps; 
+    std::set<Exp> instExps;
 
   public:
     VisitorGatherAllParameters(){}
@@ -3495,7 +3533,7 @@ class VisitorGatherAllParameters : public Visitor {
         instExps.insert( *(t->getParamExp(0)) );
     }
 
-    std::set<Exp> getExps() { 
+    std::set<Exp> getExps() {
         return instExps;
     }
 };
@@ -3503,42 +3541,42 @@ class VisitorGatherAllParameters : public Visitor {
 /* We get a rule looking like:
 **   forall x1, x2: x1 <= x2 -> f(x1) <= g(x2)
 ** Note, left side (x1 <= x2), and right side (f(x1) <= g(x2))
-** are stored as separate sets like: 
+** are stored as separate sets like:
 **  {[x1,x2]: x1 <= x2}
 **  {[x1,x2]: f(x1) < g(x2)}
-** We want to replace x1 and x2 with expressions like: i, col(j), ... 
+** We want to replace x1 and x2 with expressions like: i, col(j), ...
 ** and returned instantiated rule, for instance:
-   if we have 
+   if we have
      rule: forall x1, x2: x1 <= x2 -> f(x1) <= g(x2)
      x1 = i   and x2 = col(j)
    we want to return:
       < i <= col(j) , f(i) <= g(col(j)) >
 */
 std::pair <std::string,std::string> instantiate(
-          UniQuantRule* uqRule, Exp x1, Exp x2, 
+          UniQuantRule* uqRule, Exp x1, Exp x2,
           UFCallMap *ufcmap, TupleDecl origTupleDecl){
-  
+
   Set *leftSideOfTheRule, *rightSideOfTheRule;
 
   // Create map for substituting uni. quant. vars. in a rule
-  //  with expressions from our list. 
+  //  with expressions from our list.
   SubMap subMap;
   TupleVarTerm *uQV = new TupleVarTerm( 0 );
-  Exp *subExp = new Exp( x1 ); 
+  Exp *subExp = new Exp( x1 );
   subMap.insertPair( uQV , subExp );
   uQV = new TupleVarTerm( 1 );
-  subExp = new Exp( x2 ); 
+  subExp = new Exp( x2 );
   subMap.insertPair( uQV , subExp );
 
-  // Substitute universially quantified variables 
+  // Substitute universially quantified variables
   // with terms from list of terms
   leftSideOfTheRule = new Set ( *(uqRule->getLeftSide()) );
   rightSideOfTheRule = new Set ( *(uqRule->getRightSide()) );
   leftSideOfTheRule->substituteInConstraints( subMap );
   rightSideOfTheRule->substituteInConstraints( subMap );
 
-  // make rule's tuple declaration to match original constraints 
-  leftSideOfTheRule->setTupleDecl(origTupleDecl); 
+  // make rule's tuple declaration to match original constraints
+  leftSideOfTheRule->setTupleDecl(origTupleDecl);
   rightSideOfTheRule->setTupleDecl(origTupleDecl);
 
   // create superAffine sets of left/right sides
@@ -3548,7 +3586,7 @@ std::pair <std::string,std::string> instantiate(
   delete leftSideOfTheRule;
   delete rightSideOfTheRule;
 
-  // we only need the constraint part of left/right sides 
+  // we only need the constraint part of left/right sides
   // that are stored as separate sets.
   srParts subLeftSideParts, subRightSideParts;
   subLeftSideParts = getPartsFromStr(supAffLeft->prettyPrintString());
@@ -3556,7 +3594,7 @@ std::pair <std::string,std::string> instantiate(
   subLeftSideParts.constraints = trim(subLeftSideParts.constraints);
   subRightSideParts.constraints = trim(subRightSideParts.constraints);
   std::string leftStr = "false", rightStr = "false";
-  if(subLeftSideParts.constraints == ""){  leftStr = "true"; } 
+  if(subLeftSideParts.constraints == ""){  leftStr = "true"; }
   else if(subLeftSideParts.constraints == "FALSE"){  leftStr = "false";}
   else { leftStr = subLeftSideParts.constraints; }
   if(subRightSideParts.constraints == ""){ rightStr = "true"; }
@@ -3568,7 +3606,7 @@ std::pair <std::string,std::string> instantiate(
 
 
 // Builds list of symbolic constants from original constraints,
-// super affine set, and instantiations, so we can use it for isl input. 
+// super affine set, and instantiations, so we can use it for isl input.
 //  drOrigSet = original set with domain/range constraints
 //  ufcmap    = list of UFCs from super super affine set, and instantiations
 string symsForInstantiationSet(Set *drOrigSet, UFCallMap *ufcmap ){
@@ -3585,29 +3623,29 @@ string symsForInstantiationSet(Set *drOrigSet, UFCallMap *ufcmap ){
   delete drOrigSet;
   std::string syms = "";
   if( !((ss.str()).empty()) && !((ufcmap->varTermStrList()).empty()) ){
-    syms = "[" + ss.str() + ", " 
-                           + ufcmap->varTermStrList() + "] -> ";    
+    syms = "[" + ss.str() + ", "
+                           + ufcmap->varTermStrList() + "] -> ";
   } else if ( (ufcmap->varTermStrList()).empty() ) {
-    syms = "[" + ss.str() + "] -> ";   
+    syms = "[" + ss.str() + "] -> ";
   } else if ( (ss.str()).empty() ){
-    syms = "[" + ufcmap->varTermStrList() + "] -> "; 
+    syms = "[" + ufcmap->varTermStrList() + "] -> ";
   }
 
   return syms;
 }
 
-// This function creates a isl set from instantiations. The naive way to 
-// do this would be to put all the instantiation inside one Set 
+// This function creates a isl set from instantiations. The naive way to
+// do this would be to put all the instantiation inside one Set
 // and feed it isl. However, that would create a performance bottleneck,
-// since isl has to try to colasce and simplify 
-// lots of disjunctions at the same time. Instead of the naive way 
+// since isl has to try to colasce and simplify
+// lots of disjunctions at the same time. Instead of the naive way
 // this function iteratively adds the useful instantiation.
-isl_set* instantiationSet( srParts supSetParts, 
+isl_set* instantiationSet( srParts supSetParts,
            std::set<std::pair <std::string,std::string>> instantiations,
                                string syms , isl_ctx* ctx){
 
   // Build original Set with all symbolic constants from instantiations
-  string origRel = syms + "{" + supSetParts.tupDecl + " : " + 
+  string origRel = syms + "{" + supSetParts.tupDecl + " : " +
                    supSetParts.constraints + "}";
 
   // Iteratively add useful instantiation utilizing isl functions
@@ -3615,15 +3653,15 @@ isl_set* instantiationSet( srParts supSetParts,
   // This condition is checked at the end of the loop. For most examples
   // visiting everything 2 times must be enough. However, since
   // there might be some unusual example, we put a cap (up to 2 times), so
-  // we would never end up looping many times even in rare occasions. 
+  // we would never end up looping many times even in rare occasions.
   isl_set* set = isl_set_read_from_str(ctx, origRel.c_str() );
   isl_set* old_set = isl_set_copy(set);
   for (int i = 0; i < 2; i++) {
-    for (std::set<std::pair <std::string,std::string>>::iterator 
-          it=instantiations.begin(); it!=instantiations.end(); it++){ 
-      string antecedentStr = syms + "{" + supSetParts.tupDecl + 
+    for (std::set<std::pair <std::string,std::string>>::iterator
+          it=instantiations.begin(); it!=instantiations.end(); it++){
+      string antecedentStr = syms + "{" + supSetParts.tupDecl +
                              " : " + (*it).first + "}";
-      string consequentStr = syms + "{" + supSetParts.tupDecl + 
+      string consequentStr = syms + "{" + supSetParts.tupDecl +
                              " : " + (*it).second + "}";
       // If antecedent is true add the consequent of the instantiation
       int added = 0;
@@ -3638,7 +3676,7 @@ isl_set* instantiationSet( srParts supSetParts,
         }
         isl_set_free(ant_set);
       }
-      // If complement of consequent is true add the complement of antecedent 
+      // If complement of consequent is true add the complement of antecedent
       if (!added) {
         isl_set* con_set = isl_set_read_from_str(ctx, consequentStr.c_str());
         con_set = isl_set_complement(con_set);
@@ -3666,10 +3704,10 @@ isl_set* instantiationSet( srParts supSetParts,
 
 
 /*! Vistor Class for finding only potential useful equalities from set of equalities
-  Potential useful  equalities must directly define at least one tuple variable 
-  in terms of other terms, i.e. tv_i = ...; something like following is not 
-  a potential   useful equality: f(tv_i) = g(tv_j), because both tv_i and tv_j are 
-  parameters to uninterpreted function calls. 
+  Potential useful  equalities must directly define at least one tuple variable
+  in terms of other terms, i.e. tv_i = ...; something like following is not
+  a potential   useful equality: f(tv_i) = g(tv_j), because both tv_i and tv_j are
+  parameters to uninterpreted function calls.
 */
 class VisitorGetUsefulEqs : public Visitor {
   private:
@@ -3679,11 +3717,11 @@ class VisitorGetUsefulEqs : public Visitor {
          Set* uEqsS;
   public:
          VisitorGetUsefulEqs(){UFnestLevel=0;foundTvVar=false;}
-         //! 
+         //!
          void preVisitUFCallTerm(UFCallTerm* t){
            UFnestLevel++;
          }
-         //! 
+         //!
          void postVisitUFCallTerm(UFCallTerm* t){
            UFnestLevel--;
          }
@@ -3701,13 +3739,13 @@ class VisitorGetUsefulEqs : public Visitor {
              uEqsC->addEquality(e->clone());
            }
          }
-         //! 
+         //!
          void preVisitConjunction(Conjunction* c){
            UFnestLevel=0;
            TupleDecl td = c->getTupleDecl();
            uEqsC = new Conjunction(td);
          }
-         //! 
+         //!
          void postVisitConjunction(Conjunction* c){
            TupleDecl td = c->getTupleDecl();
            uEqsS = new Set(td);
@@ -3720,7 +3758,7 @@ class VisitorGetUsefulEqs : public Visitor {
 // Check to see if the isl set is empty (the original Set is UnSat)
 // or, it is not (the original Set is MaySat) in which case extract
 // new equalities and add them to original Set
-Set* checkIslSet(isl_set* set, isl_ctx* ctx, 
+Set* checkIslSet(isl_set* set, isl_ctx* ctx,
                       UFCallMap *ufcmap, Set *origSet ){
   Set *result = NULL;
   if( isl_set_is_empty(set) ){
@@ -3741,7 +3779,7 @@ Set* checkIslSet(isl_set* set, isl_ctx* ctx,
     Set* affineEqs = new Set(i_str);
     Set* eQs = affineEqs->reverseAffineSubstitution(ufcmap);
 
-    // Only keeping equalities that can potentially be useful. 
+    // Only keeping equalities that can potentially be useful.
     VisitorGetUsefulEqs *v = new VisitorGetUsefulEqs();
     eQs->acceptVisitor( v );
 
@@ -3760,25 +3798,25 @@ Set* checkIslSet(isl_set* set, isl_ctx* ctx,
 
 
 /*!
-** This function takes an expression set, and instantiates 
+** This function takes an expression set, and instantiates
 ** quantified rules stored in the environment using them.
-** Although, only the rules that have their type set in 
+** Although, only the rules that have their type set in
 ** the useRule argument are instantiated.
-** An instantiation is of the form: p1 -> q1, 
+** An instantiation is of the form: p1 -> q1,
 ** the output includes set of tuples like (p1,q1).
 */
 std::set<std::pair <std::string,std::string>> ruleInstantiation
-                          (std::set<Exp> instExps, bool *useRule, 
+                          (std::set<Exp> instExps, bool *useRule,
                            TupleDecl origTupleDecl, UFCallMap *ufcmap){
   int noAvalRules = queryNoUniQuantRules();
   UniQuantRule* uqRule;
   std::set<std::pair <std::string,std::string>> instantiations;
-  // If no rules are explicitly specified, we instantiate all of them  
+  // If no rules are explicitly specified, we instantiate all of them
   if (!useRule){
     useRule = new bool[ TheOthers ];
-    for(int i = 0 ; i < TheOthers ; i++ ){ useRule[i] = 1; } 
+    for(int i = 0 ; i < TheOthers ; i++ ){ useRule[i] = 1; }
   }
-  // Instantiating the universially quantified rules available 
+  // Instantiating the universially quantified rules available
   // in the environment one by one, for the ones we want to check
   for(int i = 0 ; i < noAvalRules ; i++ ){
 
@@ -3788,9 +3826,9 @@ std::set<std::pair <std::string,std::string>> ruleInstantiation
     if( !(useRule[uqRule->getType()]) ) continue;
     // Go over our Expression Set (E), and replace uni. quant. vars.
     // in the rule with these expressions.
-    for (std::set<Exp>::iterator it1=instExps.begin(); 
+    for (std::set<Exp>::iterator it1=instExps.begin();
              it1!=instExps.end(); it1++){
-      for (std::set<Exp>::iterator it2=instExps.begin(); 
+      for (std::set<Exp>::iterator it2=instExps.begin();
                it2!=instExps.end(); it2++){
         instantiations.insert(instantiate(uqRule,*it1,*it2,
                               ufcmap,origTupleDecl));
@@ -3802,14 +3840,14 @@ std::set<std::pair <std::string,std::string>> ruleInstantiation
 }
 
 
-// Detect UnSat or MaySat for the set utilizing domain information 
+// Detect UnSat or MaySat for the set utilizing domain information
 // that are stored as universally quantified rules in the environment.
-// To utilize the domain information, the function first gathers all 
-// the parameter expression to all UFCs in the relation, then it uses 
-// those expression to instantiate the quantified rules. Next, it creates 
-// a isl map out of original relation and the instantiate rules. 
-// Finally, it checks to see whither the isl map is empty or not, 
-// in case it is not empty it extract the newly found equalities, 
+// To utilize the domain information, the function first gathers all
+// the parameter expression to all UFCs in the relation, then it uses
+// those expression to instantiate the quantified rules. Next, it creates
+// a isl map out of original relation and the instantiate rules.
+// Finally, it checks to see whither the isl map is empty or not,
+// in case it is not empty it extract the newly found equalities,
 // adds them the original relation and returns the result.
 Set* Set::detectUnsatOrFindEqualities(bool *useRule){
 
@@ -3853,7 +3891,7 @@ Relation* Relation::detectUnsatOrFindEqualities(bool *useRule){
   // Set::detectUnsatOrFindEqualities uses. Therefore, we temporary
   // turn the Relation into a Set by simply changing its tuple declaration
   // using relationStr2SetStr function found in isl_str_manipulation.
-  Set *eqSet = new Set( relationStr2SetStr(prettyPrintString(), 
+  Set *eqSet = new Set( relationStr2SetStr(prettyPrintString(),
                                   inArity(), outArity()) );
   Set *supAffSet = eqSet->superAffineSet(ufcmap);
   srParts supSetParts = getPartsFromStr(supAffSet->prettyPrintString());
@@ -3892,9 +3930,9 @@ class VisitorGetString : public Visitor {
   public:
          VisitorGetString(bool gen){ str = ""; firstConj = firstExp = true; generic = gen;}
 
-         /*! We build our string one expression at a time before visiting 
+         /*! We build our string one expression at a time before visiting
          **  each expression. Note, we cannot build the expression at term
-         **  granularity, because at that level would not know which term 
+         **  granularity, because at that level would not know which term
          **  to put at which side of an inequality.
          */
          void preVisitExp(iegenlib::Exp * e){
@@ -3910,10 +3948,10 @@ class VisitorGetString : public Visitor {
              if(firstExp) firstExp = false;
              else         str += string(" && ");
 
-             // Get list of terms and separate them into 2 lists, 
-             // the ones for the left side and the ones for right side 
+             // Get list of terms and separate them into 2 lists,
+             // the ones for the left side and the ones for right side
              terms = e->getTermList();
-             for (std::list<Term*>::const_iterator i=terms.begin(); 
+             for (std::list<Term*>::const_iterator i=terms.begin();
                   i != terms.end(); ++i) {
                  if( (*i)->isConst() ){
                      haveConstT = true;
@@ -3931,7 +3969,7 @@ class VisitorGetString : public Visitor {
              int tempT = 0;
 
              // print the terms in the left of the inequality ( < or <= )
-             for (std::list<Term*>::const_iterator i=leftSide.begin(); 
+             for (std::list<Term*>::const_iterator i=leftSide.begin();
                   i != leftSide.end(); ++i) {
                  if( ! generic ){
                    str += (*i)->prettyPrintString(aTupleDecl, absValue);
@@ -3941,23 +3979,23 @@ class VisitorGetString : public Visitor {
              }
              // If there is no terms in the left, print 0
              if( leftSide.empty() && !haveConstT ) str += string("0");
-     
+
              if( e->isEquality() ){
                  if( haveConstT && constT  < 0 ){
                      tempT = constT*(-1);
-                     sprintf(buffer, "%d", tempT); 
+                     sprintf(buffer, "%d", tempT);
                      if( leftSide.empty() ) str += string(buffer);
                      else str += string(" + ") + string(buffer);
                  }
                  str += string(" = ");
-             } 
+             }
              // Notice we check if we need < or <=
              else if( e->isInequality()){
                  if( haveConstT && constT < 0 ){
                      tempT = constT*(-1);
                      tempT--;
                      if( tempT != 0 ){
-                         sprintf(buffer, "%d", tempT); 
+                         sprintf(buffer, "%d", tempT);
                          if( leftSide.empty() ) str += string(buffer);
                          else str += string(" + ") + string(buffer);
                      } else if( tempT == 0 && leftSide.empty() ){
@@ -3967,7 +4005,7 @@ class VisitorGetString : public Visitor {
                  } else if( haveConstT && constT > 0 && leftSide.empty() ){
                      tempT = constT*(-1);
                      tempT--;
-                     sprintf(buffer, "%d", tempT); 
+                     sprintf(buffer, "%d", tempT);
                      str += string(buffer);
 
                      str += string(" < ");
@@ -3976,7 +4014,7 @@ class VisitorGetString : public Visitor {
                  }
              }
 
-             for (std::list<Term*>::const_iterator i=rightSide.begin(); 
+             for (std::list<Term*>::const_iterator i=rightSide.begin();
                   i != rightSide.end(); ++i) {
                  if( ! generic ){
                    str += (*i)->prettyPrintString(aTupleDecl, absValue);
@@ -3987,10 +4025,10 @@ class VisitorGetString : public Visitor {
              if( rightSide.empty() && !haveConstT ) str += string("0");
 
              if( e->isEquality() && haveConstT && constT > 0 ){
-                 sprintf(buffer, "%d", constT); 
+                 sprintf(buffer, "%d", constT);
                  if( leftSide.empty() ) str += string(buffer);
                  else str += string(" + ") + string(buffer);
-             } else if( e->isInequality() && haveConstT && 
+             } else if( e->isInequality() && haveConstT &&
                         constT > 0 && !(leftSide.empty()) ){
                  tempT = constT;
                  sprintf(buffer, "%d", tempT);
@@ -3998,7 +4036,7 @@ class VisitorGetString : public Visitor {
                  else str += string(" + ") + string(buffer);
              }
          }
-         //! 
+         //!
          void preVisitConjunction(iegenlib::Conjunction * c){
              aTupleDecl = c->getTupleDecl();
 
@@ -4007,12 +4045,12 @@ class VisitorGetString : public Visitor {
              else          str += string(" union ");
 
              // Start the conjunction's string with tuple
-             str += string("{ ") + 
+             str += string("{ ") +
                     aTupleDecl.toString(true,aritySplit, generic) + string(" : ");
 
              firstExp = true;
          }
-         //! 
+         //!
          void postVisitConjunction(iegenlib::Conjunction * c){
              str += string(" }");
          }
@@ -4022,10 +4060,10 @@ class VisitorGetString : public Visitor {
              aritySplit = 0;
 
              // If there are no conjunctions then indicate we have an empty set
-             // by printing out generic arity tuple declarations and FALSE as 
+             // by printing out generic arity tuple declarations and FALSE as
              // a constraint.
              if (s->getNumConjuncts()==0) {
-                 str = string("{ ") + 
+                 str = string("{ ") +
                        TupleDecl::sDefaultTupleDecl(s->arity()).toString(true) +
                        string(" : FALSE }");
              }
@@ -4035,10 +4073,10 @@ class VisitorGetString : public Visitor {
              aritySplit = r->inArity();
 
              // If there are no conjunctions then indicate we have an empty relation
-             // by printing out generic arity tuple declarations and FALSE as 
+             // by printing out generic arity tuple declarations and FALSE as
              // a constraint.
              if (r->getNumConjuncts()==0) {
-                 str = string("{ ") + 
+                 str = string("{ ") +
                        TupleDecl::sDefaultTupleDecl(r->arity()).toString(true,aritySplit) +
                        string(" : FALSE }");
              }
@@ -4047,15 +4085,15 @@ class VisitorGetString : public Visitor {
          string getString(){ return str; }
 };
 
-/*! 
+/*!
 **  This function generates a string representation of the Set.
 **  There are two differences between this function and other string
 **  genrators, like toString, and prettyPrintSring:
 **  (1) it uses visitor pattern
-**  (2) The generated string is better formatted, for instance while other functions 
-        generate something like following for some set: 
+**  (2) The generated string is better formatted, for instance while other functions
+        generate something like following for some set:
            {[i,j] : i - j = 0 && i - 6 >= 0 && -j + 2 >= 0}
-        This function genrates bellow for the same relation: 
+        This function genrates bellow for the same relation:
            {[i,j] : i = j && 0 <= i && j <= 2}
     For more examples see the getString test case in set_relation_test.cc
 */
@@ -4065,7 +4103,7 @@ string Set::getString(bool generic)
 
     VisitorGetString* v = new VisitorGetString(generic);
     this->acceptVisitor( v );
-    
+
     result = v->getString();
 
     return result;
@@ -4078,7 +4116,7 @@ string Relation::getString(bool generic)
 
     VisitorGetString* v = new VisitorGetString(generic);
     this->acceptVisitor( v );
-    
+
     result = v->getString();
 
     return result;
@@ -4113,8 +4151,8 @@ string int2str(int i){
 }
 class VisitorGetZ3form : public Visitor {
   private:
-         // When we are using this class for generating domain/Range assertion 
-         // we just need the constraints, and we should not generate 
+         // When we are using this class for generating domain/Range assertion
+         // we just need the constraints, and we should not generate
          // the UF symbols definitions to avoid recursive calls.
          bool termDef;
          TupleDecl tupleDecl; // Need this for tuple variable name
@@ -4123,7 +4161,7 @@ class VisitorGetZ3form : public Visitor {
          std::set<std::string> tvTs;
          std::set<std::string> vtTs;
          std::set<std::string> ufsTs;
-         
+
          std::vector<std::string> expZ3Form;
          std::vector<std::string> conjZ3Form;
          std::vector<std::string> z3Form;
@@ -4131,13 +4169,13 @@ class VisitorGetZ3form : public Visitor {
          int constT;
          std::string leftSide;
          std::string rightSide;
-         // Need to consider nested UF Calls, e.g row(col(i)+1)  
+         // Need to consider nested UF Calls, e.g row(col(i)+1)
          int UFnestLevel;
          std::string UFparamT;
          std::string UFparamExp;
 
   public:
-         VisitorGetZ3form(std::set<std::string> inUfsTs, 
+         VisitorGetZ3form(std::set<std::string> inUfsTs,
                           std::set<std::string> inVtTs, bool inTermDef){
            cc = 1;
            termDef = inTermDef;
@@ -4149,7 +4187,7 @@ class VisitorGetZ3form : public Visitor {
            if(UFnestLevel > 0) return;
            constT = t->coefficient();
          }
-         //! 
+         //!
          void preVisitUFCallTerm(UFCallTerm * t){
            ufsTs.insert( t->name() );
            if(UFnestLevel == 0){
@@ -4158,7 +4196,7 @@ class VisitorGetZ3form : public Visitor {
            }
            UFnestLevel++;
          }
-         //! 
+         //!
          void postVisitUFCallTerm(UFCallTerm * t){
            UFnestLevel--;
            std::string str = "("+ t->name() + " " + UFparamExp + ")";
@@ -4195,15 +4233,15 @@ class VisitorGetZ3form : public Visitor {
          }
          //!
          void preVisitExp(iegenlib::Exp * e){
-           if( !(e->isExpression()) ){ 
+           if( !(e->isExpression()) ){
              leftSide = "";
              rightSide = "";
              constT = 0;
              UFnestLevel = 0;
            }
          }
-         /*! 
-         */ 
+         /*!
+         */
          void postVisitExp(iegenlib::Exp * e){
            if( !(e->isExpression()) ) {
              string z3Str = "";
@@ -4220,10 +4258,10 @@ class VisitorGetZ3form : public Visitor {
              if( constT == 0 ){
                z3Str = "(" + comp + " " + leftSide + " " + rightSide + ")";
              } else if ( constT < 0 ){
-               z3Str = "(" + comp + " (+ " + leftSide + " " + 
+               z3Str = "(" + comp + " (+ " + leftSide + " " +
                        int2str((constT*-1)) + ") " + rightSide + ")";
              } else if ( constT > 0 ){
-               z3Str = "(" + comp + " " + leftSide + " (+ " + 
+               z3Str = "(" + comp + " " + leftSide + " (+ " +
                        rightSide + " " + int2str(constT) + ") )";
              }
 
@@ -4238,15 +4276,15 @@ class VisitorGetZ3form : public Visitor {
                UFparamExp = UFparamExp;
              } else {
                UFparamExp = "(+ " + UFparamExp + " " + int2str(cons->coefficient()) + ")";
-             } 
+             }
            }
          }
-         //! 
+         //!
          void preVisitConjunction(iegenlib::Conjunction * c){
              tupleDecl = c->getTupleDecl();
              expZ3Form.clear();
          }
-         //! 
+         //!
          void postVisitConjunction(iegenlib::Conjunction * c){
            if(expZ3Form.size()>0){
              if(termDef){
@@ -4263,11 +4301,11 @@ class VisitorGetZ3form : public Visitor {
              }
            }
          }
-         //! 
+         //!
          void preVisitSparseConstraints(iegenlib::SparseConstraints *sc){
            conjZ3Form.clear();
          }
-         //! 
+         //!
          void postVisitSparseConstraints(iegenlib::SparseConstraints *sc){
 
            if(termDef){
@@ -4290,18 +4328,18 @@ class VisitorGetZ3form : public Visitor {
          std::set<std::string> getVars(){ return vtTs; }
 };
 
-/**! SparseConstraints::getZ3form returns a vector of strings that include 
-//   constraints represented in SMT-LIB format that SMT solvers like z3 
-//   gets as input. This can be used to check the satisfiability of 
+/**! SparseConstraints::getZ3form returns a vector of strings that include
+//   constraints represented in SMT-LIB format that SMT solvers like z3
+//   gets as input. This can be used to check the satisfiability of
 //   an IEGenLib Set/Relation with a SMT solver. The returned list
 //   also includes tuple variable declarations, however they do not include UFSymbol
 //   and global variable declarations. This is because, when checking satisfiability of
 //   a set, we usually also want to define some user defined assertions along side original
 //   constraints. The assertions might have UFSymbols and global variables of their
-//   own that original constraints do not. We can put their UFSymbols and globals into 
+//   own that original constraints do not. We can put their UFSymbols and globals into
 //   UFSyms, and VarSyms std::set that SparseConstraints::getZ3form returns by reference,
-//   and then a driver function can declare all the UFSymbols and globals at the beginning of 
-//   the input file that it is going to generate and pass to a SMT solver. 
+//   and then a driver function can declare all the UFSymbols and globals at the beginning of
+//   the input file that it is going to generate and pass to a SMT solver.
 
      Also note that: UniQuantRule::getZ3form (in environment.h/cc) can be used to get SMT-LIB
      format of an user defined assertion stored in IEGenLib environment about UFSymbols.
@@ -4315,7 +4353,7 @@ std::vector<std::string> SparseConstraints::getZ3form
     VarSyms = v->getVars();
 
     result = v->getZ3Form();
-    
+
     return result;
 }
 

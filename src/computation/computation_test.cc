@@ -23,7 +23,7 @@ using namespace iegenlib;
 
 #pragma mark DenseMVCodeGen
 TEST(ComputationTest, DenseMVCodeGen) {
-    std::string code =
+    std::string originalCode =
         "\
 int i; \
 int j; \
@@ -57,7 +57,8 @@ return 0; \
     comp->addStmt(s3);
     comp->addStmt(s4);
 
-    /* EXPECT_EQ(code, comp->codeGen()); */
+    std::string generatedCode = comp->codeGen();
+    /* EXPECT_EQ(originalCode, generatedCode); */
 
     delete comp;
 }
