@@ -11,7 +11,7 @@
  *
  * \date Started: 3/28/12
  *
- * \authors Michelle Strout, and Mahdi Soltan Mohammadi 
+ * \authors Michelle Strout, and Mahdi Soltan Mohammadi
  *
  * Copyright (c) 2012, Colorado State University <br>
  * Copyright (c) 2015, University of Arizona <br>
@@ -79,7 +79,7 @@ public:
     //! If inarity parameter is outside of feasible range for the existing
     //! existing TupleDecl then throws exception.
     void setInArity(int inarity);
-    
+
     //! Given tuple declaration parameter is adopted.
     //! If there are some constants that don't agree then throws exception.
     //! If replacing a constant with a variable ignores the substitution
@@ -121,7 +121,7 @@ public:
     void copyConstraintsFrom(const Conjunction *source);
 
     /*! Substitute each factor (i.e. the non-coefficient
-    ** part of a term) with the expression mapped to that factor 
+    ** part of a term) with the expression mapped to that factor
     ** in all our equalities and inequalities.
     ** \param searchTermToSubExp (none of the Term* or Exp* are adopted)
     */
@@ -151,18 +151,18 @@ public:
     int arity() const { return mTupleDecl.size(); }
     //! Get/Set inarity, for use with relations
     int inarity() const { return mInArity; }
-    
+
     //! Returns true if the conjunction has at least one equality or inequality
     //! constraints.  If it contains none then this Conjunction is just
     //! representing TRUE.
     bool hasConstraints() const;
 
-    /*! Search among our equality constraints for one that 
+    /*! Search among our equality constraints for one that
     **  defines tupleLocToFind
     **  as a function of only tuple variables in the location range
     **  [startTupleRange, endTupleRange].  Return a new copy of that expression.
     */
-    Exp *findFunction(int tupleLocToFind, int startTupleRange, 
+    Exp *findFunction(int tupleLocToFind, int startTupleRange,
                       int endTupleRange) const;
 
     //! Same as findFunction except that the equality the function is
@@ -213,10 +213,10 @@ public:
     ** a new set where passed in tuple expression is
     ** bound assuming this domain, or range.
     ** User must deallocate returned Conjunction.
-    ** 
+    **
     ** \param tuple_exp Expression tuple to bound. Could just have one elem.
-    ** 
-    ** \return Conjunction will contain all bounds on expressions 
+    **
+    ** \return Conjunction will contain all bounds on expressions
     **         in tuple expression.  Will have no tuple variables.
     */
     Conjunction* boundTupleExp(const TupleExpTerm& tuple_exp) const;
@@ -244,20 +244,20 @@ public:
     /*! Cleans up constraints in the conjunction.
     **  - Removes equality and inequality constraints that are equal to zero
     **  from list of Expressions.
-    **  - Also removes duplicate constraints.  
-    **  
+    **  - Also removes duplicate constraints.
+    **
     **  (FIXME: with normalize will either of these be necessary?)
     **
     */
     void cleanUp();
-    
+
     /*!
-    ** Group together all equality expressions that 
-    ** are parts of the same UFCallTerm, IOW i=f(k)[0] and 
+    ** Group together all equality expressions that
+    ** are parts of the same UFCallTerm, IOW i=f(k)[0] and
     ** j=f(k)[1] should become (i,j) = f(k).
     */
     void groupIndexedUFCalls();
-    
+
     // Want to use these in Relation::isFunction and other so must be public.
     bool isFunction(int inArity) const;
     bool isFunctionInverse(int inArity) const;
@@ -272,7 +272,7 @@ public:
     void setUnsat(){ unsat = true;}
     bool isUnsat(){return unsat;}
 
-    // 
+    //
     SetRelationshipType setRelationship(Conjunction* rightSide);
 
 private:
@@ -330,7 +330,7 @@ public:
     //! addConjunction
     //! \param adoptedconjuction (adopted)
     virtual void addConjunction(Conjunction *adoptedConjunction);
-    
+
     //! Get an iterator to the first conjunction we contain.
     std::list<Conjunction*>::const_iterator conjunctionBegin() const {
     	return mConjunctions.begin();
@@ -364,11 +364,16 @@ public:
         { return toISLString(0); }
     std::string toISLString(int aritySplit) const;
 
+    //! Convert to Omega format (substitute in tuple vars and declare symbolics).
+    virtual std::string toOmegaString() const
+        { return toOmegaString(0); }
+    std::string toOmegaString(int aritySplit) const;
+
     //! Create a graph for visualization with graphviz
     virtual std::string toDotString() const;
 
     /*! Substitute each factor (i.e. the non-coefficient
-    ** part of a term) with the expression mapped to that factor 
+    ** part of a term) with the expression mapped to that factor
     ** in all our equalities and inequalities.
     ** None of the Term's in the map can be constant or an exception will
     ** be thrown.
@@ -376,12 +381,12 @@ public:
     ** but it is cleaned up.  What does that mean?
     ** \param searchTermToSubExp (none of the Term* or Exp* are adopted)
     */
-    void 
+    void
     substituteInConstraints(SubMap& searchTermToSubExp);
 
     //! Remove duplicate constraints and trivial constraints
     void cleanUp();
-    
+
 
     /*! Find any TupleVarTerms in this expression (and subexpressions)
     **  and remap the locations according to the oldToNewLocs vector,
@@ -411,16 +416,16 @@ public:
     **  It also removes such constraints from domainRangeConsts set.
     */
     void removeUFCallConsts(int i);
-   
+
     //! This function is implementation of a heuristic algorithm to remove
     //  expensive contranits from the set.
-    void removeExpensiveConstraints(std::set<int> parallelTvs, 
+    void removeExpensiveConstraints(std::set<int> parallelTvs,
                           int mNumConstsToRemove , std::set<Exp> ignore );
 
     /*! Sometimes to provide arguments of an UFC like sigma(a1, a2, ...)
     **  we use another UFC that is not indexed like left(f). Here, the
-    **  expanded form would look like this: 
-    **                          sigma(left(f)[0], left(f)[1], ...) 
+    **  expanded form would look like this:
+    **                          sigma(left(f)[0], left(f)[1], ...)
     **  indexUFCs() would create the expanded format for normalization purposes.
     */
     void indexUFCs();
@@ -435,39 +440,39 @@ public:
     }
 
     //! Return the number of conjunction
-    int getNumConjuncts(){ return mConjunctions.size(); } 
+    int getNumConjuncts(){ return mConjunctions.size(); }
 
     /**! This function calculates the algorithmic complexity of a Set/Relation
     **   that is representing a data dependence. Also, it takes into
     **   account the fact that the set is meant for dependency analysis
     **   for partial parallelism. Basically, it calculates the complexity of
-    **   efficient inspector that we need to generate for the dependence.  
-    **   Therefore, it considers two things: 
-    **   1) It ignores any tuple variable that we can project out, other 
+    **   efficient inspector that we need to generate for the dependence.
+    **   Therefore, it considers two things:
+    **   1) It ignores any tuple variable that we can project out, other
     **   than those that we want to parallelize.
-    **   2) It takes into account the useful equalities (e.g i = col(jp), 
-    **   where we can get values of i from col(jp)). Nonetheless, note that 
-    **   it does not consider any sort of approximations that 
+    **   2) It takes into account the useful equalities (e.g i = col(jp),
+    **   where we can get values of i from col(jp)). Nonetheless, note that
+    **   it does not consider any sort of approximations that
     **   we might be able to do to further optimize the inspector.
-    **/ 
+    **/
     std::string complexityForPartialParallel(std::set<int> parallelTvs);
 
-    /**! SparseConstraints::getZ3form returns a vector of strings that include 
-    //    constraints represented in SMT-LIB format that SMT solvers like z3 
-    //    gets as input. This can be used to check the satisfiability of 
+    /**! SparseConstraints::getZ3form returns a vector of strings that include
+    //    constraints represented in SMT-LIB format that SMT solvers like z3
+    //    gets as input. This can be used to check the satisfiability of
     //    an IEGenLib Set/Relation with a SMT solver. The returned list
     //    also includes tuple variable declarations, however they do not include UFSymbol
     //    and global variable declarations. This is because, when checking satisfiability of
     //    a set, we usually also want to define some user defined assertions along side original
     //    constraints. The assertions might have UFSymbols and global variables of their
-    //    own that original constraints do not. We can put their UFSymbols and globals into 
+    //    own that original constraints do not. We can put their UFSymbols and globals into
     //    UFSyms, and VarSyms std::set that SparseConstraints::getZ3form returns by reference,
-    //    and then a driver function can declare all the UFSymbols and globals at the beginning of 
-    //    the input file that it is going to generate and pass to a SMT solver. 
+    //    and then a driver function can declare all the UFSymbols and globals at the beginning of
+    //    the input file that it is going to generate and pass to a SMT solver.
     **/
-    std::vector<std::string> getZ3form(std::set<std::string> &UFSyms, 
+    std::vector<std::string> getZ3form(std::set<std::string> &UFSyms,
                   std::set<std::string> &VarSyms, bool termDef = true);
-    
+
 // FIXME: what methods should we have to iterate over conjunctions so
 // this can go back to protected?
 // protected:
@@ -494,13 +499,13 @@ public:
     //! so all tuples of that arity belong in it.
     Set(int arity);
 
-    //! Creates a set with the specified tuple declaration.  
+    //! Creates a set with the specified tuple declaration.
     //! It starts with no constraints so all tuples of that arity belong in it.
     Set(TupleDecl tdecl);
 
     //! Copy constructor
     Set(const Set& other);
-    
+
     ~Set();
 
     Set& operator=(const Set& other);
@@ -508,7 +513,7 @@ public:
     bool operator==( const Set& other) const;
     //! Less than operator.
     bool operator<( const Set& other) const;
-    
+
     std::string toDotString() const;
 
     //! For all conjunctions, sets them to the given tuple declaration.
@@ -534,20 +539,20 @@ public:
     ** \param rhs (not adopted)
     */
     Set *Intersect(const Set* rhs) const;
-      
+
     /*! Treating this Set like a domain or range.  Creates
     ** a new set where passed in tuple expression is
     ** bound assuming this domain, or range.
     ** User must deallocate returned Set.
-    ** 
+    **
     ** \param tuple_exp Expression tuple to bound.  Could just have one elem.
     **
     ** \return Set will contain all bounds on expressions in tuple expression.
     */
-    Set* boundTupleExp(const TupleExpTerm& tuple_exp) const; 
-    
+    Set* boundTupleExp(const TupleExpTerm& tuple_exp) const;
+
     /*! Will create constraints uf1str(e) opstr uf2str(e) for all
-    **  actual parameters that occur for those UFs. 
+    **  actual parameters that occur for those UFs.
     ** See SparseConstraints::addUFConstraintsHelper for more docs.
     **
     ** \param uf1str name of first uninterpreted function
@@ -556,10 +561,10 @@ public:
     **
     ** \return Set will contain new constraints and will be owned by caller
     */
-    Set* addUFConstraints(std::string uf1str, 
+    Set* addUFConstraints(std::string uf1str,
                           std::string opstr, std::string uf2str) const;
-    
-    /*! For UFs declared as having a Monotonicity value (see 
+
+    /*! For UFs declared as having a Monotonicity value (see
     **  MonotonicType in UninterFunc.h) constraints will be
     **  added to parameter expressions as needed.
     **  For example, if we find that f(e1)<f(e2) and f is monotonically
@@ -577,7 +582,7 @@ public:
 
     //! Send through ISL to achieve a canonical form.
     void normalize(bool bdr=true);
-    
+
     //! Visitor design pattern, see Visitor.h for usage
     void acceptVisitor(Visitor *v);
 
@@ -588,10 +593,10 @@ public:
     **  ufcmap: is going to pupulated with UFCs and their eq. symbolic constants
     **          it can be later used to replace back the UFCs with
     **          reverseAffineSubstitution
-    **  boundUFCs: for most purposes we probably want to bound domain and range  
+    **  boundUFCs: for most purposes we probably want to bound domain and range
     **             of UFCalls in a set before turning it into a super affine set.
-    **             However, sometimes it might be desiarable not to do that, 
-    **             e.g in rule instantiation 
+    **             However, sometimes it might be desiarable not to do that,
+    **             e.g in rule instantiation
     **  The function does not own the ufcmap.
     */
     Set* superAffineSet(UFCallMap* ufcmap, bool boundUFCs = true);
@@ -609,7 +614,7 @@ public:
     /*! This function simplifies constraints sets of non-affine sets that
         are targeted for level set parallelism. These sets are representative
         of data access dependency relations. For level set parallelism,
-        we need to create an optimized inspector code that checks 
+        we need to create an optimized inspector code that checks
         data dependency based these constraints in run time. This function is
         implementation of Simplification Algorithm that simplifies dependency
         relations, so we can generate optimized inspector code from constraint sets.
@@ -629,13 +634,13 @@ public:
     int getArity(){ return mArity;}
 
     Set* detectUnsatOrFindEqualities(bool *useRule=NULL);
-    
+
     string getString(bool generic=false);
 
-    // 
+    //
     SetRelationshipType setRelationship(Set* rightSide);
 
-    // 
+    //
     void reOrdTV_OmegaCodeGen(std::set<int> parallelTvs);
     //
     void removeUPs();
@@ -661,13 +666,13 @@ public:
     Relation(const Relation& other);
     Relation& operator=(const Relation& other);
     Relation& operator=(const Set& other);
-    
+
     //! Equals operator
     bool operator==( const Relation& other) const;
-    
+
     //! Less than operator.
     bool operator<( const Relation& other) const;
-    
+
     ~Relation();
 
     //! Convert to a human-readable string.
@@ -758,9 +763,9 @@ public:
     //! addConjunction that checks the Conjunction and Relation arities match
     //! \param adoptedconjuction (adopted)
     void addConjunction(Conjunction *adoptedConjunction);
-    
+
     /*! Will create constraints uf1str(e) opstr uf2str(e) for all
-    **  actual parameters that occur for those UFs. 
+    **  actual parameters that occur for those UFs.
     ** See SparseConstraints::addUFConstraintsHelper for more docs.
     **
     ** \param uf1str name of first uninterpreted function
@@ -769,7 +774,7 @@ public:
     **
     ** \return Relation will contain new constraints and is owned by caller
     */
-    Relation* addUFConstraints(std::string uf1str, 
+    Relation* addUFConstraints(std::string uf1str,
                                std::string opstr, std::string uf2str) const;
 
     /*! Adds constraints due to domain and range of all UFCalls in the
@@ -777,8 +782,8 @@ public:
     **  leaving caller unchanged. User owns the returned Relation object.
     */
     Relation* boundDomainRange();
-    
-    /*! For UFs declared as having a Monotonicity value (see 
+
+    /*! For UFs declared as having a Monotonicity value (see
     **  MonotonicType in UninterFunc.h) constraints will be
     **  added to parameter expressions as needed.
     **  For example, if we find that f(e1)<f(e2) and f is monotonically
@@ -786,7 +791,7 @@ public:
     **
     ** \return Relation will contain new constraints and is owned by caller
     */
-    Relation* addConstraintsDueToMonotonicity() const;    
+    Relation* addConstraintsDueToMonotonicity() const;
 
     //! Send through ISL to achieve a canonical form.
     void normalize(bool bdr=true);
@@ -801,10 +806,10 @@ public:
     **  ufcmap: is going to pupulated with UFCs and their eq. symbolic constants
     **          it can be later used to replace back the UFCs with
     **          reverseAffineSubstitution
-    **  boundUFCs: for most purposes we probably want to bound domain and range  
+    **  boundUFCs: for most purposes we probably want to bound domain and range
     **             of UFCalls in a set before turning it into a super affine set.
-    **             However, sometimes it might be desiarable not to do that, 
-    **             e.g in rule instantiation 
+    **             However, sometimes it might be desiarable not to do that,
+    **             e.g in rule instantiation
     **  The function does not own the ufcmap.
     */
     Relation* superAffineRelation(UFCallMap* ufcmap, bool boundUFCs = true);
@@ -824,7 +829,7 @@ public:
     /*! This function simplifies constraints sets of non-affine sets that
         are targeted for level set parallelism. These sets are representative
         of data access dependency relations. For level set parallelism,
-        we need to create an optimized inspector code that checks 
+        we need to create an optimized inspector code that checks
         data dependency based these constraints in run time. This function is
         implementation of Simplification Algorithm that simplifies dependency
         relations, so we can generate optimized inspector code from constraint sets.
@@ -843,16 +848,16 @@ public:
 
     //
     Relation* detectUnsatOrFindEqualities(bool *useRule=NULL);
-    
+
     //
     string getString(bool generic=false);
 
-    // 
+    //
     SetRelationshipType setRelationship(Relation* rightSide);
 
-    // 
+    //
     SetRelationshipType dataDependenceRelationship(Relation* rightSide, int parallelLoopLevel=0);
-    
+
 private:
     int mInArity;
     int mOutArity;
@@ -866,10 +871,10 @@ string passUnionRelationStrThruISL(string rstr);
 Set* passSetThruISL(Set* s);
 Relation* passRelationThruISL(Relation* r);
 std::pair <std::string,std::string> instantiate(
-          UniQuantRule* uqRule, Exp x1, Exp x2, 
+          UniQuantRule* uqRule, Exp x1, Exp x2,
           UFCallMap *ufcmap, TupleDecl origTupleDecl);
 std::set<std::pair <std::string,std::string>> ruleInstantiation
-                          (std::set<Exp> instExps, bool *useRule, 
+                          (std::set<Exp> instExps, bool *useRule,
                            TupleDecl origTupleDecl, UFCallMap *ufcmap);
 Set* islSetProjectOut(Set* s, unsigned pos);
 }//end namespace iegenlib

@@ -21,18 +21,85 @@
 #ifndef COMPUTATION_H_
 #define COMPUTATION_H_
 
+#include <list>
+#include <map>
 #include <memory>
+#include <sstream>
 #include <string>
 #include <unordered_set>
 #include <utility>
 #include <vector>
 
+#include "set_relation/Visitor.h"
 #include "set_relation/environment.h"
 #include "set_relation/set_relation.h"
 
 namespace iegenlib {
 
 class Stmt;
+
+/*!
+ * \class VisitorFindUFReplacements
+ *
+ * \brief Visitor used to build a list of replacement names for UF calls that
+ * Omega doesn't support.
+ */
+class VisitorFindUFReplacements : public Visitor {
+   private:
+    int nextReplacementNumber = 0;
+    std::map<std::string, std::string>* replacements;
+
+   public:
+    VisitorFindUFReplacements(
+        std::map<std::string, std::string>* iReplacements) {
+        replacements = iReplacements;
+    }
+
+    void postVisitUFCallTerm(UFCallTerm* callTerm) {
+        if (callTerm->numArgs() != 1) {
+            throw assert_exception(
+                "VisitorFindUFReplacements: Only 1-arg UF calls supported");
+        }
+        Exp* paramExp = callTerm->getParamExp(0);
+        std::ostringstream os_replaceFrom;
+        std::ostringstream os_replaceTo;
+        if (paramExp->getTerm()) {
+            // simple replacement in the case of a single term
+            os_replaceFrom << callTerm->name() << "_"
+                           << std::to_string(nextReplacementNumber++) << "(p0)";
+            os_replaceTo << callTerm->name() << "(p0)";
+            replacements->emplace(os_replaceFrom.str(), os_replaceTo.str());
+        } else {
+            // handle multiple terms added together
+            std::list<Term*> terms = paramExp->getTermList();
+            os_replaceFrom << callTerm->name() << "_"
+                           << std::to_string(nextReplacementNumber++) << "(";
+            os_replaceTo << callTerm->name() << "(";
+            int paramNumber = 0;
+            bool addedToOutput = false;
+            bool addedToInput = false;
+            for (const auto& term : terms) {
+                if (term->isConst()) {
+                    // add the term to the function call, without making a param
+                    // for it
+                    os_replaceTo << (addedToOutput ? "+" : "") << "("
+                                 << term->toString() << ")";
+                } else {
+                    os_replaceFrom << (addedToInput ? "," : "") << "p"
+                                   << paramNumber;
+                    os_replaceTo << (addedToOutput ? "+" : "") << "p"
+                                 << paramNumber;
+                    paramNumber++;
+                    addedToInput = true;
+                }
+                addedToOutput = true;
+            }
+            os_replaceFrom << ")";
+            os_replaceTo << ")";
+            replacements->emplace(os_replaceFrom.str(), os_replaceTo.str());
+        }
+    }
+};
 
 /*!
  * \class Computation
@@ -42,8 +109,6 @@ class Stmt;
  */
 class Computation {
    public:
-    
-    
     //! Construct an empty Computation
     Computation(){};
 
@@ -83,7 +148,7 @@ class Computation {
 
     //! Environment used by this Computation
     Environment env;
-    
+
     //! Method generates c code.
     std::string codeGen();
 

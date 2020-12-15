@@ -57,7 +57,7 @@ return 0; \
     comp->addStmt(s3);
     comp->addStmt(s4);
 
-    /* EXPECT_EQ(code, comp->codeGen()); */
+    EXPECT_EQ(code, comp->codeGen());
 
     delete comp;
 }
