@@ -379,7 +379,7 @@ Relation* Stmt::getWriteRelation(unsigned int index) const {
 std::string Computation::codeGen() {
     // temporary test code, should be removed
     Relation* rel = new Relation(
-        "{[i]->[j]: A(i) = i && func(A(i)) = 0 && func(i + 1 + j) = j}");
+        "{[i]->[j]: A(i, 1 + j) = i && func(j+1, i+1) = 0 && func(i + 1 + j) = j}");
     std::map<std::string, std::string> macros;
     std::map<std::string, std::string> replacements;
     VisitorFindUFReplacements* vReplace =
