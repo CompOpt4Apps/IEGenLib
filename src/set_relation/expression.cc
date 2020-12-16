@@ -93,7 +93,7 @@ std::string Term::toString(bool absValue, bool generic) const {
 }
 
 //! Creates a compact string pretty printed.
-std::string 
+std::string
 Term::prettyPrintString(const TupleDecl & aTupleDecl, bool absValue) const {
     std::stringstream ss;
     ss << (absValue ? abs(mCoeff) : mCoeff);
@@ -124,7 +124,7 @@ bool Term::combine(Term* other) {
     if (not factorMatches(*other)) { delete other; return false; }
     mCoeff += other->mCoeff;
     delete other;
-    return true;    
+    return true;
 }
 
 void Term::multiplyBy(int constant) {
@@ -155,14 +155,14 @@ Exp* Term::collapseNestedInvertibleFunctions() const {
 UFCallTerm::UFCallTerm(int coeff, std::string funcName, unsigned int num_args,
                        int tuple_index)
 : Term(coeff), mFuncName(funcName), mNumArgs(num_args),
-  mTupleIndex(tuple_index) 
+  mTupleIndex(tuple_index)
 {
     // Initialize all ptrs in vector to NULL.
     for (unsigned int i=0; i<num_args; i++) {
         mArgs.push_back(NULL);
     }
     setTermType(UFCall);
-    
+
 }
 
 UFCallTerm::UFCallTerm(std::string funcName, unsigned int num_args,
@@ -229,9 +229,9 @@ bool UFCallTerm::operator<(const Term& other) const {
     if (mFuncName > ((UFCallTerm&)other).mFuncName) { return false; }
 
     // Then compare by tuple location (always -1 unless function returns tuple)
-    if (mTupleIndex < ((UFCallTerm&)other).mTupleIndex) 
+    if (mTupleIndex < ((UFCallTerm&)other).mTupleIndex)
     { return true; }
-    if (mTupleIndex > ((UFCallTerm&)other).mTupleIndex) 
+    if (mTupleIndex > ((UFCallTerm&)other).mTupleIndex)
     { return false; }
 
     // Now compare the argument list (as one big string).
@@ -242,10 +242,10 @@ bool UFCallTerm::operator<(const Term& other) const {
     std::stringstream ss2;
     ((UFCallTerm&)other).argsToStream(ss2);
     std::string otherArgs = ss2.str();
-    
+
     if (args < otherArgs) { return true; }
     if (args > otherArgs) { return false; }
-    
+
     // If everything else matches, let the superclass compare by coefficient.
     return Term::operator<(other);
 }
@@ -258,7 +258,7 @@ Term* UFCallTerm::clone() const {
 //! Helper method for toString and operator<.
 void UFCallTerm::argsToStream(std::stringstream& ss, bool generic) const {
     bool firstArg = true;
-    for (std::vector<Exp*>::const_iterator i=mArgs.begin(); 
+    for (std::vector<Exp*>::const_iterator i=mArgs.begin();
             i != mArgs.end(); ++i) {
         if (not firstArg) { ss << ", "; }
         if (*i) { ss << (*i)->toString(generic); }
@@ -271,7 +271,7 @@ void UFCallTerm::argsToStream(std::stringstream& ss, bool generic) const {
 void UFCallTerm::argsToStreamPrettyPrint(
         const TupleDecl & aTupleDecl, std::stringstream& ss) const {
     bool firstArg = true;
-    for (std::vector<Exp*>::const_iterator i=mArgs.begin(); 
+    for (std::vector<Exp*>::const_iterator i=mArgs.begin();
             i != mArgs.end(); ++i) {
         if (not firstArg) { ss << ", "; }
         if (*i) { ss << (*i)->prettyPrintString(aTupleDecl); }
@@ -322,17 +322,26 @@ std::string UFCallTerm::type() const{
     return "UFCallTerm";
 }
 
-//--------------------- UFCalTerm specific methods
+//--------------------- UFCallTerm specific methods
 
 unsigned int UFCallTerm::numArgs() const
 { return mNumArgs; }
+
+void UFCallTerm::resetNumArgs(unsigned int newNumArgs) {
+    mArgs.clear();
+    // fill in new elements as null
+    for (unsigned int i = 0; i < newNumArgs; ++i) {
+        mArgs.push_back(NULL);
+    }
+    mNumArgs = newNumArgs;
+}
 
 //! Set the ith parameter expression to the given pointer.
 void UFCallTerm::setParamExp(unsigned int i, Exp* param_exp) {
     if (i>=mNumArgs) {
         throw assert_exception("UFCallTerm::setParamExp: i is out of bounds");
     }
-    if (mArgs[i]) { 
+    if (mArgs[i]) {
         throw assert_exception("UFCallTerm::setParamExp: param exp being set "
                                 "twice");
     }
@@ -366,9 +375,9 @@ bool UFCallTerm::isIndexed() const {
     // If tuple_loc is -1,
     // then this function call result is not being indexed.
     if (mTupleIndex==-1) { return false; }
-    else { return true; }   
+    else { return true; }
 }
-    
+
 //! Returns the location in a tuple that the return
 //! value is.  For functions that return tuples
 //! of size 1, this is always 0.
@@ -397,11 +406,11 @@ unsigned int UFCallTerm::size() const {
 bool UFCallTerm::factorMatches(const Term& other) const {
     // bail out on the basic inherited check (comparing types)
     if (not Term::factorMatches(other)) { return false; }
-    
+
     // check that the function names match
     const UFCallTerm &ufo = (const UFCallTerm&)other;
     if (mFuncName != ufo.mFuncName) { return false; }
-    
+
     // check that the tuple location matches
     if (tupleIndex() != ufo.tupleIndex()) { return false; }
 
@@ -410,7 +419,7 @@ bool UFCallTerm::factorMatches(const Term& other) const {
     argsToStream(ss1);
     std::stringstream ss2;
     ufo.argsToStream(ss2);
-    return (ss1.str() == ss2.str());    
+    return (ss1.str() == ss2.str());
 }
 
 
@@ -433,16 +442,16 @@ Exp* UFCallTerm::collapseNestedInvertibleFunctions() const {
     Exp* saved_arg = NULL;
     int arg_index = 0;
     bool can_collapse_self = true;
-    for (std::vector<Exp*>::const_iterator i=mArgs.begin(); 
+    for (std::vector<Exp*>::const_iterator i=mArgs.begin();
             i != mArgs.end(); ++i) {
         Exp* arg = *i;
-        
-        // Get the first term to the argument expression.  
-        // Should only have one term. 
+
+        // Get the first term to the argument expression.
+        // Should only have one term.
         Term* t = arg->getTerm();
         if ( (t!=NULL) && t->isUFCall() ) {
             UFCallTerm* ufcallterm = dynamic_cast<UFCallTerm*>(t);
-            
+
             // See if the nested ufcallterm is our inverse
             if (ufcallterm->mFuncName != inverseFuncName) {
                 can_collapse_self = false;
@@ -455,7 +464,7 @@ Exp* UFCallTerm::collapseNestedInvertibleFunctions() const {
                     can_collapse_self = false;
                     break;
                 }
-                
+
                 // check that nested ufcallterm only has one argument
                 if (ufcallterm->mArgs.size() !=1 ) {
                     // FIXME: will we need to handle this case at
@@ -470,24 +479,24 @@ Exp* UFCallTerm::collapseNestedInvertibleFunctions() const {
                 if (arg_index==0) {
                     saved_arg = nestedParam;
                 }
-                // otherwise make sure the argument to the nested function 
+                // otherwise make sure the argument to the nested function
                 // is the same as other nested functions
                 else {
-                    if (not (*nestedParam == *saved_arg)) { 
+                    if (not (*nestedParam == *saved_arg)) {
                         can_collapse_self = false;
                         break;
                     }
                 }
-            
+
             }
-            
+
         }
-        // one of the parameter arguments is not a UFCallTerm 
+        // one of the parameter arguments is not a UFCallTerm
         else {
             can_collapse_self = false;
                         break;
         }
-        
+
         arg_index++;
     }
     if (can_collapse_self) {
@@ -495,22 +504,22 @@ Exp* UFCallTerm::collapseNestedInvertibleFunctions() const {
         Exp* arg = saved_arg;
         retval = arg->collapseNestedInvertibleFunctions();
         retval->multiplyBy(this->coefficient());
-    } else {    
+    } else {
         // did not need to collapse self
         // try to do a recursive collapse on parameters
         retval = new Exp();
-        UFCallTerm* uf_call = new UFCallTerm( this->coefficient(), 
-                         this->mFuncName, mArgs.size(), 
+        UFCallTerm* uf_call = new UFCallTerm( this->coefficient(),
+                         this->mFuncName, mArgs.size(),
                          this->mTupleIndex);
         unsigned int count = 0;
-        for (std::vector<Exp*>::const_iterator i=mArgs.begin(); 
+        for (std::vector<Exp*>::const_iterator i=mArgs.begin();
                 i != mArgs.end(); ++i) {
-            uf_call->setParamExp(count++,     
+            uf_call->setParamExp(count++,
                 (*i)->collapseNestedInvertibleFunctions());
-        } 
+        }
         retval->addTerm( uf_call );
     }
-    
+
     return retval;
 }
 
@@ -557,7 +566,7 @@ Term* TupleVarTerm::clone() const {
 std::string TupleVarTerm::toString(bool absValue, bool generic) const {
     std::stringstream ss;
     coeffToStream(ss, absValue);
-    // IEGenLib parser cannot handle "__" as a start of a variable name 
+    // IEGenLib parser cannot handle "__" as a start of a variable name
     if(!generic){
       ss << "__tv" << mLocation;
     } else {
@@ -583,7 +592,7 @@ std::string TupleVarTerm::prettyPrintString(
 
 //! Returns true if this term can be combined with the given term.
 bool TupleVarTerm::factorMatches(const Term& other) const {
-    return Term::factorMatches(other) 
+    return Term::factorMatches(other)
             and mLocation == ((TupleVarTerm&)other).mLocation;
 }
 
@@ -600,7 +609,7 @@ void TupleVarTerm::remapLocation(const std::vector<int>& oldToNewLocs) {
     } else {
         std::stringstream ss;
         ss << "TupleVarTerm::remapLocation: mLocation = "
-           << mLocation << ", out of range [0," << (oldToNewLocs.size()-1) 
+           << mLocation << ", out of range [0," << (oldToNewLocs.size()-1)
            << "]";
         throw iegenlib::assert_exception(ss.str());
     }
@@ -659,7 +668,7 @@ std::string VarTerm::toString(bool absValue, bool generic) const {
 }
 
 //! Creates a compact string, pretty printed.
-std::string 
+std::string
 VarTerm::prettyPrintString(const TupleDecl & aTupleDecl, bool absValue) const {
     std::stringstream ss;
     coeffToStream(ss, absValue);
@@ -676,7 +685,7 @@ std::string VarTerm::type() const{
 
 //! Returns true if this term can be combined with the given term.
 bool VarTerm::factorMatches(const Term& other) const {
-    return Term::factorMatches(other) 
+    return Term::factorMatches(other)
             and mSymbol == ((VarTerm&)other).mSymbol;
 }
 
@@ -685,7 +694,7 @@ bool VarTerm::factorMatches(const Term& other) const {
 /****************************** TupleExpTerm ********************************/
 
 
-TupleExpTerm::TupleExpTerm(int coeff, unsigned int size) 
+TupleExpTerm::TupleExpTerm(int coeff, unsigned int size)
 : Term(coeff), mSize(size) {
     setTermType(TupleExp);
     // Initialize all ptrs in vector to NULL.
@@ -723,7 +732,7 @@ TupleExpTerm::~TupleExpTerm() {
 //! Copy assignment operator.
 TupleExpTerm& TupleExpTerm::operator=( const TupleExpTerm& other) {
     reset();
-    for (std::vector<Exp*>::const_iterator i=other.mExps.begin(); 
+    for (std::vector<Exp*>::const_iterator i=other.mExps.begin();
                 i != other.mExps.end(); ++i) {
         mExps.push_back((*i)->clone());
     }
@@ -750,9 +759,9 @@ bool TupleExpTerm::operator<( const Term& other) const {
     if (((TupleExpTerm&)other).size() < size()) { return false; }
     // then compare our elements
     std::vector<Exp*>::const_iterator iter=mExps.begin();
-    std::vector<Exp*>::const_iterator 
+    std::vector<Exp*>::const_iterator
         other_iter=((TupleExpTerm&)other).mExps.begin();
-    for (; iter!=mExps.end() && other_iter!=((TupleExpTerm&)other).mExps.end(); 
+    for (; iter!=mExps.end() && other_iter!=((TupleExpTerm&)other).mExps.end();
            ++iter, ++other_iter) {
         if ( *(iter) < *(other_iter) ) { return true; }
         else if ( *(other_iter) < *(iter) ) { return false; }
@@ -762,7 +771,7 @@ bool TupleExpTerm::operator<( const Term& other) const {
     return false;
 }
 
-/*! Combine another tuple expression term 
+/*! Combine another tuple expression term
 **  into this one, if possible, by
 **  adding sub expressions pointwise.
 **
@@ -771,14 +780,14 @@ bool TupleExpTerm::operator<( const Term& other) const {
 */
 bool TupleExpTerm::combine(Term* other) {
     if (not factorMatches(*other)) { delete other; return false; }
-    
+
     // Must have another TupleExpTerm and it must be the same size
     TupleExpTerm* other_texp = dynamic_cast<TupleExpTerm*>(other);
     if (!other_texp || other_texp->size()!=size() ) {
         throw assert_exception("TupleExpTerm::combine: "
             "something wrong with other tuple expression term");
     }
-    
+
     // Take our individual expressions and multiply them
     // by our coefficient and change our coefficient to 1.
     for (unsigned int i=0; i<mSize; i++) {
@@ -819,7 +828,7 @@ std::string TupleExpTerm::toString(bool absValue, bool generic) const {
 
 //! In comma-separated list of expressions,
 //! replaces any tuple var instances with given tuple var decl.
-std::string TupleExpTerm::prettyPrintString(const TupleDecl & aTupleDecl, 
+std::string TupleExpTerm::prettyPrintString(const TupleDecl & aTupleDecl,
         bool absValue) const {
     std::stringstream ss;
     ss << "( ";
@@ -850,7 +859,7 @@ std::string TupleExpTerm::type() const {
 void TupleExpTerm::setExpElem(unsigned int exp_index, Exp* exp) {
     if (exp_index>=mSize) {
         throw assert_exception("Attempt to set expression out of tuple bounds");
-    } else if (mExps[exp_index]) { 
+    } else if (mExps[exp_index]) {
         throw assert_exception("UFCallTerm::setParamExp: param exp being set "
                                 "twice");
     } else {
@@ -887,7 +896,7 @@ unsigned int TupleExpTerm::size() const {
 bool TupleExpTerm::factorMatches(const Term& other) const {
     // bail out on the basic inherited check (comparing types)
     if (not Term::factorMatches(other)) { return false; }
-    
+
     // check that number of expressions in the term matches
     const TupleExpTerm &tuple_exp = (const TupleExpTerm&)other;
     if (size() != tuple_exp.size()) { return false; }
@@ -913,7 +922,7 @@ void Exp::reset() {
 //! Copy assignment
 Exp& Exp::operator=(const Exp& other) {
     reset();
-    for (std::list<Term*>::const_iterator i=other.mTerms.begin(); 
+    for (std::list<Term*>::const_iterator i=other.mTerms.begin();
                 i != other.mTerms.end(); ++i) {
         mTerms.push_back((*i)->clone());
     }
@@ -939,7 +948,7 @@ std::string Exp::toString(bool generic) const {
     // FIXME does the line just below go in other
     // toString() or prettyPrintString methods?
     if(mTerms.size() == 0) return "0";
-    for (std::list<Term*>::const_iterator i=mTerms.begin(); 
+    for (std::list<Term*>::const_iterator i=mTerms.begin();
             i != mTerms.end(); ++i) {
         bool absValue = false;
         if (not firstTerm) {
@@ -957,12 +966,12 @@ std::string Exp::toString(bool generic) const {
 }
 
 //! Creates a compact string, pretty printed.
-std::string 
-Exp::prettyPrintString(const TupleDecl & aTupleDecl) const 
+std::string
+Exp::prettyPrintString(const TupleDecl & aTupleDecl) const
 {
     std::string result;
     bool firstTerm = true;
-    for (std::list<Term*>::const_iterator i=mTerms.begin(); 
+    for (std::list<Term*>::const_iterator i=mTerms.begin();
             i != mTerms.end(); ++i) {
         bool absValue = false;
         if (not firstTerm) {
@@ -981,7 +990,7 @@ Exp::prettyPrintString(const TupleDecl & aTupleDecl) const
     std::string result_left, result_right, result;
     result_left = result_right = std::string("0");
     bool firstTerm_left = true,firstTerm_right = true;
-    for (std::list<Term*>::const_iterator i=mTerms.begin(); 
+    for (std::list<Term*>::const_iterator i=mTerms.begin();
             i != mTerms.end(); ++i) {
         if ((*i)->coefficient() < 0) {
             if (firstTerm_left) result_left = (*i)->prettyPrintString(aTupleDecl, true);
@@ -989,7 +998,7 @@ Exp::prettyPrintString(const TupleDecl & aTupleDecl) const
             firstTerm_left = false;
         } else {
             if (firstTerm_right) result_right = (*i)->prettyPrintString(aTupleDecl, true);
-            result_right += " + " + (*i)->prettyPrintString(aTupleDecl, true); 
+            result_right += " + " + (*i)->prettyPrintString(aTupleDecl, true);
             firstTerm_right = false;
         }
     }
@@ -1033,7 +1042,7 @@ void Exp::addTerm(Term *term) {
             return;
         }
     }
-    
+
     // We could neither combine this term with an existing one, nor
     // find a term that comes after it in the sort order.  So, just
     // append it to the end of the list.
@@ -1042,7 +1051,7 @@ void Exp::addTerm(Term *term) {
 
 //! Add another expression to this one
 void Exp::addExp(Exp *exp) {
-    for (std::list<Term*>::const_iterator i=exp->mTerms.begin(); 
+    for (std::list<Term*>::const_iterator i=exp->mTerms.begin();
                 i != exp->mTerms.end(); ++i) {
         addTerm((*i)->clone());
     }
@@ -1053,7 +1062,7 @@ void Exp::addExp(Exp *exp) {
 void Exp::multiplyBy(int constant) {
     for (std::list<Term*>::iterator i=mTerms.begin(); i != mTerms.end(); ++i) {
         (*i)->multiplyBy(constant);
-    }   
+    }
 }
 
 //! Return whether all coefficients in this expression are
@@ -1074,18 +1083,18 @@ void Exp::divideBy(int divisor) {
 }
 
 /* Search this Exp for the given factor.  The cloned Term that is returned
-   can have a coefficient other than 1.  The factor param should have 
+   can have a coefficient other than 1.  The factor param should have
    a coefficient of 1.  Returns NULL if a matching Term is not found.
 */
 Term* Exp::findMatchingFactor(const Term & factor) const {
-                           
+
     if(factor.coefficient()!=1){
         std::stringstream ss;
-        ss << "coefficient to factor is " << factor.coefficient() 
+        ss << "coefficient to factor is " << factor.coefficient()
            << " it is required to be 1";
         throw iegenlib::assert_exception(ss.str());
     }
-    
+
     Term* matchingFactor = NULL;
     for (std::list<Term*>::const_iterator i=mTerms.begin(); i != mTerms.end(); ++i) {
         const Term* t = *i;
@@ -1110,7 +1119,7 @@ Exp* Exp::solveForFactor(Term* factor_ptr) const {
 
     if(factor_ptr->coefficient()!=1){
         std::stringstream ss;
-        ss << "coefficient to factor is " << factor_ptr->coefficient() 
+        ss << "coefficient to factor is " << factor_ptr->coefficient()
            << " it is required to be 1";
         throw iegenlib::assert_exception(ss.str());
     }
@@ -1127,16 +1136,16 @@ Exp* Exp::solveForFactor(Term* factor_ptr) const {
         if (factorExposedExp) {
             matchingFactor = factorExposedExp->findMatchingFactor(*factor_ptr);
         }
-    } 
+    }
     // If we succeeded, be happy and move on.
     else {
         factorExposedExp = clone(); // clone "this" expression
     }
-    
+
     // If we found a matching factor.
     // Check that the rest of the expression divisible by the
     // coefficient for the matchingFactor.
-    //  eg. r - 3*g( s ), if g is invertible, g_inv(r) = 3*s, 
+    //  eg. r - 3*g( s ), if g is invertible, g_inv(r) = 3*s,
     //      can't solve for x since rest of expression not divisible by 3
     if (matchingFactor!=NULL && isDivisible(matchingFactor->coefficient()) ) {
 
@@ -1152,7 +1161,7 @@ Exp* Exp::solveForFactor(Term* factor_ptr) const {
     else {
         delete factor_ptr;
     }
-    
+
     return factorExposedExp;
 }
 
@@ -1163,7 +1172,7 @@ Exp* Exp::solveForFactor(Term* factor_ptr) const {
 //!     this Exp: __tv0 + x + f( y )
 //!     factor: y
 //!     returns: y - f_inv(-_tv0 - x)
-//!     
+//!
 //! If can't expose the given factor, then returns NULL.
 //! Owns given factor but caller is responsible for deallocating
 //! space for returned expression.
@@ -1171,16 +1180,16 @@ Exp* Exp::invertFuncToExposeFactor(Term * factor_ptr) const {
     Exp* retval = NULL;
 
     UFCallTerm* foundUFC = NULL;
-    
+
     // Search through terms in this expression.
     std::string inverseFuncName = "";
     for (std::list<Term*>::const_iterator i=mTerms.begin();
                 i != mTerms.end(); ++i) {
         Term* t = (*i);
-    
+
         // Is the term a UFCallTerm?  If not keep looking.
         if (not t->isUFCall()) {continue;}
-        
+
         // Does the UFCallTerm depend on our factor?
         // IOW is the factor part of one of its parameter expressions?
         // If not keep looking.
@@ -1189,12 +1198,12 @@ Exp* Exp::invertFuncToExposeFactor(Term * factor_ptr) const {
         bool dependsOnFactor = texp->dependsOn(*factor_ptr);
         delete texp;
         if (not dependsOnFactor) {continue;}
-        
+
         // Is the function invertible?  If not keep looking.
         UFCallTerm* callptr = dynamic_cast<UFCallTerm*>(t);
         inverseFuncName = iegenlib::queryInverseCurrEnv(callptr->name());
         if (inverseFuncName.empty()) { continue; }
-        
+
         // If all of the above questions are answered yes, then
         // we will be able to expose the factor in question.
         // FIXME: what if the factor shows up in another function argument?
@@ -1207,7 +1216,7 @@ Exp* Exp::invertFuncToExposeFactor(Term * factor_ptr) const {
         //        whose result is being passed to this function?
         foundUFC = (UFCallTerm*)(callptr->clone());
     }
-    
+
     // If found a UFCallTerm that depends on our factor and that function
     // is invertible, then invert the function and create an expresion
     // where the factor is exposed.
@@ -1278,13 +1287,13 @@ void Exp::substitute(SubMap& searchTermToSubExp) {
     std::list<Term*>::iterator i=mTerms.begin();
     while (i != mTerms.end()) {
         Term *t = *i;
-        
+
         // Lookup term in the substitution map
         Exp* sub = searchTermToSubExp.subExp(t);
         // Found a matching term.
         if (sub!=NULL) {
-            // We've found a matching term in substition map.  
-            // Note the coefficient for this term and then remove 
+            // We've found a matching term in substition map.
+            // Note the coefficient for this term and then remove
             // it from the list for the expression.
             int foundCoefficient = t->coefficient();
             // Note that we don't increment i here; it already points
@@ -1295,8 +1304,8 @@ void Exp::substitute(SubMap& searchTermToSubExp) {
             Exp *product = sub->clone();
             product->multiplyBy(foundCoefficient);
             addedTerms->addExp(product);
-            
-        } else { 
+
+        } else {
             // clone term and remove from original expression
             Term* term_clone = t->clone();
             i = mTerms.erase(i);  // removing term from current exp
@@ -1356,7 +1365,7 @@ Exp* Exp::collapseNestedInvertibleFunctions() const {
     for (std::list<Term*>::const_iterator i=mTerms.begin();
                 i != mTerms.end(); i++) {
         retval->addExp( (*i)->collapseNestedInvertibleFunctions() );
-    }   
+    }
     return retval;
 }
 
@@ -1368,7 +1377,7 @@ bool Exp::dependsOn(const Term& factor) const {
                 i != mTerms.end(); i++) {
         if ((*i)->factorMatches(factor)) {
             // We found the matching term.
-            return true;            
+            return true;
         } else {
             // This term doesn't match, but maybe it contains other
             // expressions that we need to search recursively.
@@ -1473,14 +1482,14 @@ bool Exp::operator<( const Exp& other) const {
     if (other.mTerms.size() < mTerms.size()) { return false; }
     // then compare our elements
     std::list<Term*>::const_iterator otherIter = other.mTerms.begin();
-    std::list<Term*>::const_iterator myIter = mTerms.begin(); 
+    std::list<Term*>::const_iterator myIter = mTerms.begin();
     while ( myIter != mTerms.end() ) {
         //compare values
         if (**myIter < **otherIter) { return true; }
         if (**otherIter < **myIter) { return false; }
         //our values are equal, continue
         ++myIter;
-        ++otherIter; 
+        ++otherIter;
     }
     //all our elements are equal, so we're not less than other
     return false;
@@ -1526,7 +1535,7 @@ void Exp::remapTupleVars(const std::vector<int>& oldToNewLocs) {
             }
         }
     }
-    
+
     // We do one pass through all the terms and all TupleVarTerms map
     // themselves to a new location as specified.
     // Since we only do one pass we don't have __tv0 mapping to __tv3 and
@@ -1574,7 +1583,7 @@ bool Exp::isConst() const {
 
 //! Returns true if we have something like: 2 = 0
 bool Exp::isContradiction() const {
-    if ( this->mTerms.size()==1 && 
+    if ( this->mTerms.size()==1 &&
          (this->mTerms.front()->isConst() && this->mTerms.front()->coefficient() != 0) && (getExpType() == Equality) ) {
         return true;
     } else {
@@ -1598,7 +1607,7 @@ Term* Exp::getTerm() const {
 //! Otherwise return NULL.
 //! This expression still owns the Term.
 Term* Exp::getConstTerm() const {
-    for (std::list<Term*>::const_iterator i=mTerms.begin(); 
+    for (std::list<Term*>::const_iterator i=mTerms.begin();
             i != mTerms.end(); i++) {
         Term* t = (*i);
         if (t->isConst()) {
@@ -1670,7 +1679,7 @@ std::string Exp::toDotString(int parent_id, int & next_id) const {
 
     // Self
     result << this->toDotString(next_id);
-    
+
     return result.str();
 }
 
@@ -1684,13 +1693,13 @@ StringIterator* Exp::getSymbolIterator() const {
                 i != mTerms.end(); i++) {
 
         VarTerm *varTerm = dynamic_cast<VarTerm*>(*i);
-        
+
         // If have a var term then put in the set of symbols
         if (varTerm) {
             symbolSet.insert( varTerm->symbol() );
-            
+
         } else {
-        
+
             // Recurse if needed.
             if ((*i)->isUFCall()) {
                 UFCallTerm *callTerm = dynamic_cast<UFCallTerm*>(*i);
@@ -1718,11 +1727,11 @@ StringIterator* Exp::getSymbolIterator() const {
                     delete subSymIter;
                 }
             }
-            
+
         }
     }
 
-    return new StringIterator( symbolSet ); 
+    return new StringIterator( symbolSet );
 }
 
 #pragma mark -
