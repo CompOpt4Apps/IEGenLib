@@ -15,7 +15,7 @@
  * All rights reserved. <br>
  * See ../../COPYING for details. <br>
  */
- 
+
 #ifndef EXPRESSION_H_
 #define EXPRESSION_H_
 
@@ -76,19 +76,19 @@ public:
     //! Creates a compact string, pretty printed.
     //! \param aTupleDecl name or constant for each tuple var
     //! \param absValue Will use absolute value of coeff if true.
-    virtual std::string prettyPrintString(const TupleDecl & aTupleDecl, 
+    virtual std::string prettyPrintString(const TupleDecl & aTupleDecl,
         bool absValue = false) const;
-    
+
     //! Creates a brief compact string to help with DOT output.
     //! \param absValue Will use absolute value of coeff if true.
     virtual std::string toDotString(bool absValue = false) const;
 
     //! Get the coefficient of this term.
     int coefficient() const { return mCoeff; }
-    
+
     //! Set the coefficient of this term.
     void setCoefficient(int coeff) { mCoeff = coeff; }
-    
+
     //! Returns true if the Term is really a UFCallTerm.
     virtual bool isUFCall() const { return false; }
 
@@ -108,15 +108,15 @@ public:
 
     //! Multiply the coefficient by a constant.
     void multiplyBy(int constant);
-    
+
     //! Divide the coefficient by a constant.
     void divideBy(int divisor);
-    
+
     //--------------------- methods for the use in expression
 
     //! Returns true if this term can be combined with the given term.
     virtual bool factorMatches(const Term& other) const;
-    
+
     /*! Combine another term into this one, if possible, by
     **  adding coefficients of corresponding factors.
     **
@@ -124,14 +124,14 @@ public:
     ** \return true if other was combined with this one; false otherwise
     */
     virtual bool combine(Term* other);
-    
+
     //! Returns string of subclass type.
     virtual std::string type() const;
-    
+
     //! Return a new Exp with all nested functions such as
     //! f ( f_inv ( i ) ) changed to i.
     virtual Exp* collapseNestedInvertibleFunctions() const;
-    
+
     //! Visitor design pattern, see Visitor.h for usage
     virtual void acceptVisitor(Visitor *v);
 
@@ -143,7 +143,7 @@ protected:
 
     //! \param absValue Will use absolute value of coeff if true.
     void coeffToStream(std::stringstream& ss, bool absValue) const;
-    
+
 private:
     int mCoeff;
     termtype mTermType;
@@ -167,7 +167,7 @@ public:
     ** \param coeff -- coefficient for the call
     ** \param funcName -- function to call
     ** \param num_args -- number of arguments the function call will have
-    ** \param args -- arguments for the function call 
+    ** \param args -- arguments for the function call
     **                (adopted)
     ** \param tuple_loc -- index value if function returns a tuple
     **                     and is being indexed,
@@ -178,7 +178,7 @@ public:
     ** then the UFCallTerm type is a tuple.  size() will indicate size
     ** of tuple being returned.
     */
-    UFCallTerm(int coeff, std::string funcName, unsigned int num_args, 
+    UFCallTerm(int coeff, std::string funcName, unsigned int num_args,
                int tuple_loc=-1);
 
     //! Convenience constructor, assumes coeff = 1
@@ -207,7 +207,7 @@ public:
     //! Replaces any tuple var instances with given tuple var decl.
     //! \param aTupleDecl name or constant for each tuple var
     //! \param absValue Will use absolute value of coeff if true.
-    std::string prettyPrintString(const TupleDecl & aTupleDecl, 
+    std::string prettyPrintString(const TupleDecl & aTupleDecl,
         bool absValue = false) const;
 
     //! Creates a brief compact string to help with DOT output.
@@ -227,11 +227,15 @@ public:
 
     //! Returns the number of arguments for the call.
     unsigned int numArgs() const;
-    
+
+    //! Reset the number of arguments for the call.
+    //! Deletes previous argument expressions.
+    void resetNumArgs(unsigned int newNumArgs);
+
     //! Set the ith parameter expression to the given pointer.
     //! This UFCallTerm becomes owner of the expression.
     void setParamExp(unsigned int i, Exp* param_exp);
-    
+
     //! Returns a pointer to the ith parameter expression.
     //! This UFCallTerm still owns the pointer.
     Exp* getParamExp(unsigned int i) const;
@@ -239,18 +243,18 @@ public:
     //! Indicate if the function return value is being
     //! indexed.
     bool isIndexed() const;
-    
+
     //! Returns a UFCallTerm that is identical except it is
     //! not indexed.
     UFCallTerm* nonIndexedClone() const;
-    
+
     //! Returns the index in a tuple that the return
     //! value is.  For functions that return tuples
     //! of size 1, this is always 0.
     //! If the function return is not being indexed this
     //! will also be zero.  Use in coordination with isIndexed().
     int tupleIndex() const;
-    
+
     //! Enables the tuple index to be set.
     void setTupleIndex(unsigned int idx);
 
@@ -261,7 +265,7 @@ public:
 
     //! Returns the function name as a string.
     std::string name() const { return mFuncName; }
-    
+
     //! Enables the function name to be set.
     void setName(std::string n) { mFuncName = n; }
 
@@ -273,7 +277,7 @@ public:
 
     //! Returns true if this term can be combined with the given term.
     bool factorMatches(const Term& other) const;
-    
+
     //! Visitor design pattern, see Visitor.h for usage
     void acceptVisitor(Visitor *v);
 
@@ -303,7 +307,7 @@ public:
     //! Convenience constructor, assumes coeff = 1
     inline TupleVarTerm(int location)
     : Term(1), mLocation(location) { setTermType(TupleVar); }
-    
+
     //! Copy constructor
     TupleVarTerm(const TupleVarTerm& other);
 
@@ -332,7 +336,7 @@ public:
     //! Returns true if the Term is a const
     bool isConst() const { return false; }
 
-    // Returns location of TV 
+    // Returns location of TV
     int tvloc(){return mLocation;}
 
     //--------------------- methods for the use in expression
@@ -360,13 +364,13 @@ private:
 class VarTerm : public Term {
 public:
     //! Constructor
-    inline VarTerm(int coeff, std::string symbol) 
+    inline VarTerm(int coeff, std::string symbol)
     : Term(coeff), mSymbol(symbol) { setTermType(SymConst); }
 
     //! Convenience constructor, assumes coeff = 1
-    inline VarTerm(std::string symbol) 
+    inline VarTerm(std::string symbol)
     : Term(1), mSymbol(symbol) { setTermType(SymConst); }
-    
+
     //! Copy constructor
     VarTerm(const VarTerm& other);
 
@@ -419,9 +423,9 @@ private:
  *  Modeled somewhat off of UFCallTerm but also off TupleDecl in
  *  terms of not exposing how expressions are stored.
  *
- *  Memory management: the TupleExpTerm assumes ownership of any 
+ *  Memory management: the TupleExpTerm assumes ownership of any
  *  expressions it contains,
- *  copies those when the TupleExpTerm itself is copied, 
+ *  copies those when the TupleExpTerm itself is copied,
  *  and deletes them when the TupleExpTerm is destroyed.
  */
 class TupleExpTerm : public Term {
@@ -442,20 +446,20 @@ public:
 
     //! Convenience constructor, assumes coeff = 1
     TupleExpTerm(unsigned int size);
-    
+
     //! Copy constructor.
     TupleExpTerm( const TupleExpTerm& other );
-    
+
     //! Copy assignment operator.
     TupleExpTerm& operator=( const TupleExpTerm& other);
-    
+
     //! Less than operator.
     bool operator<( const Term& other) const;
-    
+
     //! Equality operator.
     //bool operator==( const TupleExpTerm& other) const;
 
-    /*! Combine another tuple expression term 
+    /*! Combine another tuple expression term
     **  into this one, if possible, by
     **  adding sub expressions pointwise.
     **
@@ -473,7 +477,7 @@ public:
 
     //! In comma-separated list of expressions,
     //! replaces any tuple var instances with given tuple var decl.
-    std::string prettyPrintString(const TupleDecl & aTupleDecl, 
+    std::string prettyPrintString(const TupleDecl & aTupleDecl,
         bool absValue = false) const;
 
     //! Creates a brief compact string to help with DOT output.
@@ -498,8 +502,8 @@ public:
     Exp* getExpElem(unsigned int exp_index);
 
     //! Returns a clone of the specified expression.
-    Exp* cloneExp(unsigned int exp_index) const;        
-  
+    Exp* cloneExp(unsigned int exp_index) const;
+
     // Number of entries in the tuple.
     unsigned int size() const;
 
@@ -553,8 +557,8 @@ public:
     //! Add a term to this expression.
     //! /param term (adopted)
     void addTerm(Term* term);
-    
-    //! Add another expression to this one.  
+
+    //! Add another expression to this one.
     //! /param term (adopted)
     void addExp(Exp* exp);
 
@@ -567,10 +571,10 @@ public:
 
     //! Divide all coefficients and the constant term by the given divisor.
     void divideBy(int divisor);
-   
+
     //! Assumes the equality Exp=0 and solves for the given factor.
     //! FIXME: should only work on equality expressions.  Really?
-    //! /param factor (adopted) 
+    //! /param factor (adopted)
     Exp* solveForFactor(Term* factor) const;
 
     /*! Search this expression for the given factor and invert a function
@@ -585,7 +589,7 @@ public:
     //! part of a term), which is its key.
     //void substitute(const std::map<Term*,Exp*>& searchTermToSubExp);
     void substitute(SubMap& searchTermToSubExp);
-    
+
     /*! Normalize this expression for use in an equality expression.
     **  This is called when we know this expression is equal to zero;
     **  in that case, it's valid to multiply the whole expression by
@@ -595,7 +599,7 @@ public:
     */
     //! FIXME: should only work on equality expressions.
     void normalizeForEquality();
-    
+
     //! Return a new Exp with all nested functions such as
     //! f ( f_inv ( i ) ) changed to i.
     Exp* collapseNestedInvertibleFunctions() const;
@@ -604,7 +608,7 @@ public:
     **  (including within UFCallTerm arguments, recursively).
     */
     bool dependsOn(const Term& factor) const;
-    
+
     /*! Returns true if this expression contains a UFCallTerm
     **  that is being indexed.
     */
@@ -619,16 +623,16 @@ public:
     **  only a constant term equal to 0.
     */
     bool equalsZero() const;
-    
+
     //! Returns true if this expression equals the given term.
     bool operator==(const Term& other) const;
-    
+
     //! Less than operator.
     bool operator<( const Exp& other) const;
-    
+
     //! Equality operator.
     bool operator==( const Exp& other) const;
-    
+
     /*! Find any TupleVarTerms in this expression (and subexpressions)
     **  and remap the locations according to the oldToNewLocs vector,
     **  where oldToNewLocs[i] = j means that old location i becomes new
@@ -638,7 +642,7 @@ public:
     **  remapped.
     */
     void remapTupleVars(const std::vector<int>& oldToNewLocs);
-    
+
     //! Calls the ExpCase for the visitor design pattern
     //void apply(SRVisitor* visitor) const { }
 
@@ -671,7 +675,7 @@ public:
     //! Otherwise returns NULL.
     //! this still owns Term.
     Term* getTerm() const;
-    
+
     //! Return Term* for constant term if there is one.
     //! Otherwise return NULL.
     //! This expression still owns the Term.
@@ -691,7 +695,7 @@ public:
 
     //! Visitor design pattern, see Visitor.h for usage
     void acceptVisitor(Visitor *v);
-    
+
     //! Get a list of pointers to the terms in this expression.
     //! All pointers in this list are still owned by the expression.
     //! Caller should NOT modify expressions or delete them.
@@ -704,13 +708,13 @@ protected:
 
 private:
     /*! Search this Exp for the given factor.  The cloned Term that is returned
-       can have a coefficient other than 1.  The factor param should have 
+       can have a coefficient other than 1.  The factor param should have
        a coefficient of 1.  Returns NULL if a matching Term is not found.
     */
-    Term* findMatchingFactor(const Term & factor) const;        
+    Term* findMatchingFactor(const Term & factor) const;
 
     std::list<Term*> mTerms;
-    exptype mExpType; 
+    exptype mExpType;
 
 };
 

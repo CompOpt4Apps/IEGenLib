@@ -378,18 +378,24 @@ Relation* Stmt::getWriteRelation(unsigned int index) const {
 
 std::string Computation::codeGen() {
     // temporary test code, should be removed
-    Relation* rel = new Relation(
-        "{[i]->[j]: A(i, 1 + j) = i && func(j+1, i+1) = 0 && func(i + 1 + j) = j}");
+    Relation* originalRel = new Relation(
+        "{[i]->[j]: A(i, 1 + j) = i && func(j+1, i+1) = 0 && B(i + 1 + j) = "
+        "j}");
     std::map<std::string, std::string> macros;
-    std::map<std::string, std::string> replacements;
     VisitorFindUFReplacements* vReplace =
-        new VisitorFindUFReplacements(&macros, &replacements);
-    rel->acceptVisitor(vReplace);
+        new VisitorFindUFReplacements(&macros);
+    Relation* copyRel = new Relation(*originalRel);
+    // modify relation in-place to use corrected UF calls
+    copyRel->acceptVisitor(vReplace);
     std::ostringstream os;
     for (const auto& rule : macros) {
         os << "#define " << rule.first << " " << rule.second << "\n";
     }
     std::cout << os.str();
+    std::cout << copyRel->toOmegaString() << "\n";
+    delete originalRel;
+    delete copyRel;
+    delete vReplace;
 
     try {
         std::vector<omega::Relation> transforms;

@@ -50,24 +50,21 @@ class VisitorFindUFReplacements : public Visitor {
     int nextReplacementNumber = 0;
     //! 'from' and 'to' string for each UF call macro we need
     std::map<std::string, std::string>* macros;
-    //! string replacements to make from original UF call name -> mangled
-    //! version
-    std::map<std::string, std::string>* nameReplacements;
 
    public:
-    VisitorFindUFReplacements(
-        std::map<std::string, std::string>* iMacros,
-        std::map<std::string, std::string>* iReplacements) {
+    VisitorFindUFReplacements(std::map<std::string, std::string>* iMacros) {
         macros = iMacros;
-        nameReplacements = iReplacements;
     }
 
     void preVisitUFCallTerm(UFCallTerm* callTerm) {
-        // set up outputs
-        std::ostringstream os_replaceFrom;
-        std::ostringstream os_replaceTo;
+        // set new function name
         std::string replacementName =
             callTerm->name() + "_" + std::to_string(nextReplacementNumber++);
+        callTerm->setName(replacementName);
+
+        // set up macro outputs
+        std::ostringstream os_replaceFrom;
+        std::ostringstream os_replaceTo;
         os_replaceFrom << replacementName << "(";
         os_replaceTo << callTerm->name() << "(";
 
@@ -76,6 +73,8 @@ class VisitorFindUFReplacements : public Visitor {
         int paramNumber = 0;
         bool haveAddedToOutput;
         bool haveAddedToInput;
+        Exp* paramExp;
+        std::vector<Term*> termsToSave;
         unsigned int i;
         for (i = 0; i < callTerm->numArgs(); ++i) {
             // loop through all terms, adding them into the 'to' and 'from'
@@ -85,8 +84,9 @@ class VisitorFindUFReplacements : public Visitor {
             if (pastFirstParam) {
                 os_replaceTo << ",";
             }
-            std::list<Term*> terms = callTerm->getParamExp(i)->getTermList();
-            for (const auto& term : terms) {
+            paramExp = callTerm->getParamExp(i);
+            std::list<Term*> originalTerms = paramExp->getTermList();
+            for (const auto& term : originalTerms) {
                 if (term->isConst()) {
                     // add the term to the function call, without making an
                     // input param for it
@@ -99,6 +99,7 @@ class VisitorFindUFReplacements : public Visitor {
                         << "p" << paramNumber;
                     os_replaceTo << (haveAddedToOutput ? "+" : "") << "p"
                                  << paramNumber;
+                    termsToSave.push_back(std::move(term->clone()));
                     paramNumber++;
                     haveAddedToInput = true;
                 }
@@ -107,12 +108,20 @@ class VisitorFindUFReplacements : public Visitor {
             pastFirstParam = true;
         }
 
+        // rewrite argument list, one arg per term in original call args
+        callTerm->resetNumArgs(termsToSave.size());
+        i = 0;
+        for (const auto& savedTerm : termsToSave) {
+            Exp* newParamExp = new Exp();
+            newParamExp->addTerm(savedTerm);
+            callTerm->setParamExp(i, newParamExp);
+            i++;
+        }
+
+        // complete outputs for this UF call
         os_replaceFrom << ")";
         os_replaceTo << ")";
-
-        // save results for this UF call
         macros->emplace(os_replaceFrom.str(), os_replaceTo.str());
-        nameReplacements->emplace(callTerm->name(), replacementName);
     }
 };
 
