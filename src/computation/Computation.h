@@ -63,12 +63,6 @@ class VisitorFindUFReplacements : public Visitor {
     }
 
     void preVisitUFCallTerm(UFCallTerm* callTerm) {
-        if (callTerm->numArgs() != 1) {
-            throw assert_exception(
-                "VisitorFindUFReplacements: Only 1-arg UF calls supported");
-        }
-        Exp* paramExp = callTerm->getParamExp(0);
-
         // set up outputs
         std::ostringstream os_replaceFrom;
         std::ostringstream os_replaceTo;
@@ -76,29 +70,43 @@ class VisitorFindUFReplacements : public Visitor {
             callTerm->name() + "_" + std::to_string(nextReplacementNumber++);
         os_replaceFrom << replacementName << "(";
         os_replaceTo << callTerm->name() << "(";
-        // loop through all terms, adding them into the 'to' and 'from'
-        // appropriately
-        std::list<Term*> terms = paramExp->getTermList();
+
+        // process every parameter
+        bool pastFirstParam = false;
         int paramNumber = 0;
-        bool addedToOutput = false;
-        bool addedToInput = false;
-        for (const auto& term : terms) {
-            if (term->isConst()) {
-                // add the term to the function call, without making an input
-                // param for it
-                os_replaceTo << (addedToOutput ? "+" : "") << "("
-                             << term->toString() << ")";
-            } else {
-                // add the term to both the written and actual function call
-                os_replaceFrom << (addedToInput ? "," : "") << "p"
-                               << paramNumber;
-                os_replaceTo << (addedToOutput ? "+" : "") << "p"
-                             << paramNumber;
-                paramNumber++;
-                addedToInput = true;
+        bool haveAddedToOutput;
+        bool haveAddedToInput;
+        unsigned int i;
+        for (i = 0; i < callTerm->numArgs(); ++i) {
+            // loop through all terms, adding them into the 'to' and 'from'
+            // appropriately
+            haveAddedToInput = false;
+            haveAddedToOutput = false;
+            if (pastFirstParam) {
+                os_replaceTo << ",";
             }
-            addedToOutput = true;
+            std::list<Term*> terms = callTerm->getParamExp(i)->getTermList();
+            for (const auto& term : terms) {
+                if (term->isConst()) {
+                    // add the term to the function call, without making an
+                    // input param for it
+                    os_replaceTo << (haveAddedToOutput ? "+" : "") << "("
+                                 << term->toString() << ")";
+                } else {
+                    // add the term to both the input and output function call
+                    os_replaceFrom
+                        << ((pastFirstParam || haveAddedToInput) ? "," : "")
+                        << "p" << paramNumber;
+                    os_replaceTo << (haveAddedToOutput ? "+" : "") << "p"
+                                 << paramNumber;
+                    paramNumber++;
+                    haveAddedToInput = true;
+                }
+                haveAddedToOutput = true;
+            }
+            pastFirstParam = true;
         }
+
         os_replaceFrom << ")";
         os_replaceTo << ")";
 
