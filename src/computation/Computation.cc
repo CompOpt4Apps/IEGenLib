@@ -291,15 +291,16 @@ std::string Computation::codeGen() {
     // temporary test code, should be removed
     Relation* rel = new Relation(
         "{[i]->[j]: A(i) = i && func(A(i)) = 0 && func(i + 1 + j) = j}");
+    std::map<std::string, std::string> macros;
     std::map<std::string, std::string> replacements;
     VisitorFindUFReplacements* vReplace =
-        new VisitorFindUFReplacements(&replacements);
+        new VisitorFindUFReplacements(&macros, &replacements);
     rel->acceptVisitor(vReplace);
     std::ostringstream os;
-    for (const auto& rule : replacements) {
+    for (const auto& rule : macros) {
         os << "#define " << rule.first << " " << rule.second << "\n";
     }
-    return os.str();
+    std::cout << os.str();
 
     try {
         std::vector<omega::Relation> transforms;

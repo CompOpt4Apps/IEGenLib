@@ -17,6 +17,7 @@
 #include "UFCallMap.h"
 #include "Visitor.h"
 #include <stack>
+#include <string>
 #include <map>
 #include <assert.h>
 
@@ -1711,6 +1712,8 @@ std::string SparseConstraints::toOmegaString(int aritySplit) const {
 
     // do a typical prettyPrint
     ss << prettyPrintString(aritySplit);
+
+    ss << ";";
 
     return ss.str();
 }

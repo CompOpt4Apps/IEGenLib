@@ -41,63 +41,70 @@ class Stmt;
 /*!
  * \class VisitorFindUFReplacements
  *
- * \brief Visitor used to build a list of replacement names for UF calls that
- * Omega doesn't support.
+ * \brief Visitor used to build a list of replacement names/formats for UF calls
+ * that Omega doesn't support.
  */
 class VisitorFindUFReplacements : public Visitor {
    private:
+    //! next number to use in creating unique names
     int nextReplacementNumber = 0;
-    std::map<std::string, std::string>* replacements;
+    //! 'from' and 'to' string for each UF call macro we need
+    std::map<std::string, std::string>* macros;
+    //! string replacements to make from original UF call name -> mangled
+    //! version
+    std::map<std::string, std::string>* nameReplacements;
 
    public:
     VisitorFindUFReplacements(
+        std::map<std::string, std::string>* iMacros,
         std::map<std::string, std::string>* iReplacements) {
-        replacements = iReplacements;
+        macros = iMacros;
+        nameReplacements = iReplacements;
     }
 
-    void postVisitUFCallTerm(UFCallTerm* callTerm) {
+    void preVisitUFCallTerm(UFCallTerm* callTerm) {
         if (callTerm->numArgs() != 1) {
             throw assert_exception(
                 "VisitorFindUFReplacements: Only 1-arg UF calls supported");
         }
         Exp* paramExp = callTerm->getParamExp(0);
+
+        // set up outputs
         std::ostringstream os_replaceFrom;
         std::ostringstream os_replaceTo;
-        if (paramExp->getTerm()) {
-            // simple replacement in the case of a single term
-            os_replaceFrom << callTerm->name() << "_"
-                           << std::to_string(nextReplacementNumber++) << "(p0)";
-            os_replaceTo << callTerm->name() << "(p0)";
-            replacements->emplace(os_replaceFrom.str(), os_replaceTo.str());
-        } else {
-            // handle multiple terms added together
-            std::list<Term*> terms = paramExp->getTermList();
-            os_replaceFrom << callTerm->name() << "_"
-                           << std::to_string(nextReplacementNumber++) << "(";
-            os_replaceTo << callTerm->name() << "(";
-            int paramNumber = 0;
-            bool addedToOutput = false;
-            bool addedToInput = false;
-            for (const auto& term : terms) {
-                if (term->isConst()) {
-                    // add the term to the function call, without making a param
-                    // for it
-                    os_replaceTo << (addedToOutput ? "+" : "") << "("
-                                 << term->toString() << ")";
-                } else {
-                    os_replaceFrom << (addedToInput ? "," : "") << "p"
-                                   << paramNumber;
-                    os_replaceTo << (addedToOutput ? "+" : "") << "p"
-                                 << paramNumber;
-                    paramNumber++;
-                    addedToInput = true;
-                }
-                addedToOutput = true;
+        std::string replacementName =
+            callTerm->name() + "_" + std::to_string(nextReplacementNumber++);
+        os_replaceFrom << replacementName << "(";
+        os_replaceTo << callTerm->name() << "(";
+        // loop through all terms, adding them into the 'to' and 'from'
+        // appropriately
+        std::list<Term*> terms = paramExp->getTermList();
+        int paramNumber = 0;
+        bool addedToOutput = false;
+        bool addedToInput = false;
+        for (const auto& term : terms) {
+            if (term->isConst()) {
+                // add the term to the function call, without making an input
+                // param for it
+                os_replaceTo << (addedToOutput ? "+" : "") << "("
+                             << term->toString() << ")";
+            } else {
+                // add the term to both the written and actual function call
+                os_replaceFrom << (addedToInput ? "," : "") << "p"
+                               << paramNumber;
+                os_replaceTo << (addedToOutput ? "+" : "") << "p"
+                             << paramNumber;
+                paramNumber++;
+                addedToInput = true;
             }
-            os_replaceFrom << ")";
-            os_replaceTo << ")";
-            replacements->emplace(os_replaceFrom.str(), os_replaceTo.str());
+            addedToOutput = true;
         }
+        os_replaceFrom << ")";
+        os_replaceTo << ")";
+
+        // save results for this UF call
+        macros->emplace(os_replaceFrom.str(), os_replaceTo.str());
+        nameReplacements->emplace(callTerm->name(), replacementName);
     }
 };
 
