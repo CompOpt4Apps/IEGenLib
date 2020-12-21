@@ -1,8 +1,8 @@
-# Install script for directory: /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/doc
+# Install script for directory: /mnt/c/Users/shivi/Desktop/IEGenLib/doc
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/iegen")
+  set(CMAKE_INSTALL_PREFIX "/mnt/c/Users/shivi/Desktop/IEGenLib/iegen")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 

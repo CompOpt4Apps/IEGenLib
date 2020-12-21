@@ -1,8 +1,8 @@
-# Install script for directory: /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib
+# Install script for directory: /mnt/c/Users/shivi/Desktop/IEGenLib/lib
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/iegen")
+  set(CMAKE_INSTALL_PREFIX "/mnt/c/Users/shivi/Desktop/IEGenLib/iegen")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
@@ -39,7 +39,7 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/lib/gtest/cmake_install.cmake")
+  include("/mnt/c/Users/shivi/Desktop/IEGenLib/build/lib/gtest/cmake_install.cmake")
 
 endif()
 

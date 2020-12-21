@@ -10,7 +10,7 @@ The output was:
 
 Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "a.out"
 
-The C compiler identification is GNU, found in "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/3.10.2/CompilerIdC/a.out"
+The C compiler identification is GNU, found in "/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/3.10.2/CompilerIdC/a.out"
 
 Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" succeeded.
 Compiler: /usr/bin/c++ 
@@ -23,33 +23,33 @@ The output was:
 
 Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "a.out"
 
-The CXX compiler identification is GNU, found in "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/3.10.2/CompilerIdCXX/a.out"
+The CXX compiler identification is GNU, found in "/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/3.10.2/CompilerIdCXX/a.out"
 
 Determining if the C compiler works passed with the following output:
-Change Dir: /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp
+Change Dir: /mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp
 
-Run Build Command:"/usr/bin/make" "cmTC_4ffa8/fast"
-/usr/bin/make -f CMakeFiles/cmTC_4ffa8.dir/build.make CMakeFiles/cmTC_4ffa8.dir/build
-make[1]: Entering directory '/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp'
-Building C object CMakeFiles/cmTC_4ffa8.dir/testCCompiler.c.o
-/usr/bin/cc    -o CMakeFiles/cmTC_4ffa8.dir/testCCompiler.c.o   -c /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp/testCCompiler.c
-Linking C executable cmTC_4ffa8
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_4ffa8.dir/link.txt --verbose=1
-/usr/bin/cc      -rdynamic CMakeFiles/cmTC_4ffa8.dir/testCCompiler.c.o  -o cmTC_4ffa8 
-make[1]: Leaving directory '/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp'
+Run Build Command:"/usr/bin/make" "cmTC_c51d0/fast"
+/usr/bin/make -f CMakeFiles/cmTC_c51d0.dir/build.make CMakeFiles/cmTC_c51d0.dir/build
+make[1]: Entering directory '/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_c51d0.dir/testCCompiler.c.o
+/usr/bin/cc    -o CMakeFiles/cmTC_c51d0.dir/testCCompiler.c.o   -c /mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp/testCCompiler.c
+Linking C executable cmTC_c51d0
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_c51d0.dir/link.txt --verbose=1
+/usr/bin/cc      -rdynamic CMakeFiles/cmTC_c51d0.dir/testCCompiler.c.o  -o cmTC_c51d0 
+make[1]: Leaving directory '/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp'
 
 
 Detecting C compiler ABI info compiled with the following output:
-Change Dir: /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp
+Change Dir: /mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp
 
-Run Build Command:"/usr/bin/make" "cmTC_2c128/fast"
-/usr/bin/make -f CMakeFiles/cmTC_2c128.dir/build.make CMakeFiles/cmTC_2c128.dir/build
-make[1]: Entering directory '/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp'
-Building C object CMakeFiles/cmTC_2c128.dir/CMakeCCompilerABI.c.o
-/usr/bin/cc    -o CMakeFiles/cmTC_2c128.dir/CMakeCCompilerABI.c.o   -c /usr/share/cmake-3.10/Modules/CMakeCCompilerABI.c
-Linking C executable cmTC_2c128
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_2c128.dir/link.txt --verbose=1
-/usr/bin/cc     -v -rdynamic CMakeFiles/cmTC_2c128.dir/CMakeCCompilerABI.c.o  -o cmTC_2c128 
+Run Build Command:"/usr/bin/make" "cmTC_f09ff/fast"
+/usr/bin/make -f CMakeFiles/cmTC_f09ff.dir/build.make CMakeFiles/cmTC_f09ff.dir/build
+make[1]: Entering directory '/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_f09ff.dir/CMakeCCompilerABI.c.o
+/usr/bin/cc    -o CMakeFiles/cmTC_f09ff.dir/CMakeCCompilerABI.c.o   -c /usr/share/cmake-3.10/Modules/CMakeCCompilerABI.c
+Linking C executable cmTC_f09ff
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_f09ff.dir/link.txt --verbose=1
+/usr/bin/cc     -v -rdynamic CMakeFiles/cmTC_f09ff.dir/CMakeCCompilerABI.c.o  -o cmTC_f09ff 
 Using built-in specs.
 COLLECT_GCC=/usr/bin/cc
 COLLECT_LTO_WRAPPER=/usr/lib/gcc/x86_64-linux-gnu/7/lto-wrapper
@@ -61,24 +61,24 @@ Thread model: posix
 gcc version 7.4.0 (Ubuntu 7.4.0-1ubuntu1~18.04.1) 
 COMPILER_PATH=/usr/lib/gcc/x86_64-linux-gnu/7/:/usr/lib/gcc/x86_64-linux-gnu/7/:/usr/lib/gcc/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/7/:/usr/lib/gcc/x86_64-linux-gnu/
 LIBRARY_PATH=/usr/lib/gcc/x86_64-linux-gnu/7/:/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/7/../../../../lib/:/lib/x86_64-linux-gnu/:/lib/../lib/:/usr/lib/x86_64-linux-gnu/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-linux-gnu/7/../../../:/lib/:/usr/lib/
-COLLECT_GCC_OPTIONS='-v' '-rdynamic' '-o' 'cmTC_2c128' '-mtune=generic' '-march=x86-64'
- /usr/lib/gcc/x86_64-linux-gnu/7/collect2 -plugin /usr/lib/gcc/x86_64-linux-gnu/7/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-linux-gnu/7/lto-wrapper -plugin-opt=-fresolution=/tmp/ccJHKY5N.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --sysroot=/ --build-id --eh-frame-hdr -m elf_x86_64 --hash-style=gnu --as-needed -export-dynamic -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -z now -z relro -o cmTC_2c128 /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/Scrt1.o /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crti.o /usr/lib/gcc/x86_64-linux-gnu/7/crtbeginS.o -L/usr/lib/gcc/x86_64-linux-gnu/7 -L/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu -L/usr/lib/gcc/x86_64-linux-gnu/7/../../../../lib -L/lib/x86_64-linux-gnu -L/lib/../lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/7/../../.. CMakeFiles/cmTC_2c128.dir/CMakeCCompilerABI.c.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /usr/lib/gcc/x86_64-linux-gnu/7/crtendS.o /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crtn.o
-COLLECT_GCC_OPTIONS='-v' '-rdynamic' '-o' 'cmTC_2c128' '-mtune=generic' '-march=x86-64'
-make[1]: Leaving directory '/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp'
+COLLECT_GCC_OPTIONS='-v' '-rdynamic' '-o' 'cmTC_f09ff' '-mtune=generic' '-march=x86-64'
+ /usr/lib/gcc/x86_64-linux-gnu/7/collect2 -plugin /usr/lib/gcc/x86_64-linux-gnu/7/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-linux-gnu/7/lto-wrapper -plugin-opt=-fresolution=/tmp/ccdCae6j.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --sysroot=/ --build-id --eh-frame-hdr -m elf_x86_64 --hash-style=gnu --as-needed -export-dynamic -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -z now -z relro -o cmTC_f09ff /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/Scrt1.o /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crti.o /usr/lib/gcc/x86_64-linux-gnu/7/crtbeginS.o -L/usr/lib/gcc/x86_64-linux-gnu/7 -L/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu -L/usr/lib/gcc/x86_64-linux-gnu/7/../../../../lib -L/lib/x86_64-linux-gnu -L/lib/../lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/7/../../.. CMakeFiles/cmTC_f09ff.dir/CMakeCCompilerABI.c.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /usr/lib/gcc/x86_64-linux-gnu/7/crtendS.o /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crtn.o
+COLLECT_GCC_OPTIONS='-v' '-rdynamic' '-o' 'cmTC_f09ff' '-mtune=generic' '-march=x86-64'
+make[1]: Leaving directory '/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp'
 
 
 Parsed C implicit link information from above output:
   link line regex: [^( *|.*[/\])(ld|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\]+-)?ld|collect2)[^/\]*( |$)]
-  ignore line: [Change Dir: /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp]
+  ignore line: [Change Dir: /mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp]
   ignore line: []
-  ignore line: [Run Build Command:"/usr/bin/make" "cmTC_2c128/fast"]
-  ignore line: [/usr/bin/make -f CMakeFiles/cmTC_2c128.dir/build.make CMakeFiles/cmTC_2c128.dir/build]
-  ignore line: [make[1]: Entering directory '/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp']
-  ignore line: [Building C object CMakeFiles/cmTC_2c128.dir/CMakeCCompilerABI.c.o]
-  ignore line: [/usr/bin/cc    -o CMakeFiles/cmTC_2c128.dir/CMakeCCompilerABI.c.o   -c /usr/share/cmake-3.10/Modules/CMakeCCompilerABI.c]
-  ignore line: [Linking C executable cmTC_2c128]
-  ignore line: [/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_2c128.dir/link.txt --verbose=1]
-  ignore line: [/usr/bin/cc     -v -rdynamic CMakeFiles/cmTC_2c128.dir/CMakeCCompilerABI.c.o  -o cmTC_2c128 ]
+  ignore line: [Run Build Command:"/usr/bin/make" "cmTC_f09ff/fast"]
+  ignore line: [/usr/bin/make -f CMakeFiles/cmTC_f09ff.dir/build.make CMakeFiles/cmTC_f09ff.dir/build]
+  ignore line: [make[1]: Entering directory '/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp']
+  ignore line: [Building C object CMakeFiles/cmTC_f09ff.dir/CMakeCCompilerABI.c.o]
+  ignore line: [/usr/bin/cc    -o CMakeFiles/cmTC_f09ff.dir/CMakeCCompilerABI.c.o   -c /usr/share/cmake-3.10/Modules/CMakeCCompilerABI.c]
+  ignore line: [Linking C executable cmTC_f09ff]
+  ignore line: [/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_f09ff.dir/link.txt --verbose=1]
+  ignore line: [/usr/bin/cc     -v -rdynamic CMakeFiles/cmTC_f09ff.dir/CMakeCCompilerABI.c.o  -o cmTC_f09ff ]
   ignore line: [Using built-in specs.]
   ignore line: [COLLECT_GCC=/usr/bin/cc]
   ignore line: [COLLECT_LTO_WRAPPER=/usr/lib/gcc/x86_64-linux-gnu/7/lto-wrapper]
@@ -90,13 +90,13 @@ Parsed C implicit link information from above output:
   ignore line: [gcc version 7.4.0 (Ubuntu 7.4.0-1ubuntu1~18.04.1) ]
   ignore line: [COMPILER_PATH=/usr/lib/gcc/x86_64-linux-gnu/7/:/usr/lib/gcc/x86_64-linux-gnu/7/:/usr/lib/gcc/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/7/:/usr/lib/gcc/x86_64-linux-gnu/]
   ignore line: [LIBRARY_PATH=/usr/lib/gcc/x86_64-linux-gnu/7/:/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/7/../../../../lib/:/lib/x86_64-linux-gnu/:/lib/../lib/:/usr/lib/x86_64-linux-gnu/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-linux-gnu/7/../../../:/lib/:/usr/lib/]
-  ignore line: [COLLECT_GCC_OPTIONS='-v' '-rdynamic' '-o' 'cmTC_2c128' '-mtune=generic' '-march=x86-64']
-  link line: [ /usr/lib/gcc/x86_64-linux-gnu/7/collect2 -plugin /usr/lib/gcc/x86_64-linux-gnu/7/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-linux-gnu/7/lto-wrapper -plugin-opt=-fresolution=/tmp/ccJHKY5N.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --sysroot=/ --build-id --eh-frame-hdr -m elf_x86_64 --hash-style=gnu --as-needed -export-dynamic -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -z now -z relro -o cmTC_2c128 /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/Scrt1.o /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crti.o /usr/lib/gcc/x86_64-linux-gnu/7/crtbeginS.o -L/usr/lib/gcc/x86_64-linux-gnu/7 -L/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu -L/usr/lib/gcc/x86_64-linux-gnu/7/../../../../lib -L/lib/x86_64-linux-gnu -L/lib/../lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/7/../../.. CMakeFiles/cmTC_2c128.dir/CMakeCCompilerABI.c.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /usr/lib/gcc/x86_64-linux-gnu/7/crtendS.o /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crtn.o]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-rdynamic' '-o' 'cmTC_f09ff' '-mtune=generic' '-march=x86-64']
+  link line: [ /usr/lib/gcc/x86_64-linux-gnu/7/collect2 -plugin /usr/lib/gcc/x86_64-linux-gnu/7/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-linux-gnu/7/lto-wrapper -plugin-opt=-fresolution=/tmp/ccdCae6j.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --sysroot=/ --build-id --eh-frame-hdr -m elf_x86_64 --hash-style=gnu --as-needed -export-dynamic -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -z now -z relro -o cmTC_f09ff /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/Scrt1.o /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crti.o /usr/lib/gcc/x86_64-linux-gnu/7/crtbeginS.o -L/usr/lib/gcc/x86_64-linux-gnu/7 -L/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu -L/usr/lib/gcc/x86_64-linux-gnu/7/../../../../lib -L/lib/x86_64-linux-gnu -L/lib/../lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/7/../../.. CMakeFiles/cmTC_f09ff.dir/CMakeCCompilerABI.c.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /usr/lib/gcc/x86_64-linux-gnu/7/crtendS.o /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crtn.o]
     arg [/usr/lib/gcc/x86_64-linux-gnu/7/collect2] ==> ignore
     arg [-plugin] ==> ignore
     arg [/usr/lib/gcc/x86_64-linux-gnu/7/liblto_plugin.so] ==> ignore
     arg [-plugin-opt=/usr/lib/gcc/x86_64-linux-gnu/7/lto-wrapper] ==> ignore
-    arg [-plugin-opt=-fresolution=/tmp/ccJHKY5N.res] ==> ignore
+    arg [-plugin-opt=-fresolution=/tmp/ccdCae6j.res] ==> ignore
     arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
     arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
     arg [-plugin-opt=-pass-through=-lc] ==> ignore
@@ -116,7 +116,7 @@ Parsed C implicit link information from above output:
     arg [-znow] ==> ignore
     arg [-zrelro] ==> ignore
     arg [-o] ==> ignore
-    arg [cmTC_2c128] ==> ignore
+    arg [cmTC_f09ff] ==> ignore
     arg [/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/Scrt1.o] ==> ignore
     arg [/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crti.o] ==> ignore
     arg [/usr/lib/gcc/x86_64-linux-gnu/7/crtbeginS.o] ==> ignore
@@ -128,7 +128,7 @@ Parsed C implicit link information from above output:
     arg [-L/usr/lib/x86_64-linux-gnu] ==> dir [/usr/lib/x86_64-linux-gnu]
     arg [-L/usr/lib/../lib] ==> dir [/usr/lib/../lib]
     arg [-L/usr/lib/gcc/x86_64-linux-gnu/7/../../..] ==> dir [/usr/lib/gcc/x86_64-linux-gnu/7/../../..]
-    arg [CMakeFiles/cmTC_2c128.dir/CMakeCCompilerABI.c.o] ==> ignore
+    arg [CMakeFiles/cmTC_f09ff.dir/CMakeCCompilerABI.c.o] ==> ignore
     arg [-lgcc] ==> lib [gcc]
     arg [--push-state] ==> ignore
     arg [--as-needed] ==> ignore
@@ -158,17 +158,17 @@ Parsed C implicit link information from above output:
 
 
 Detecting C [-std=c11] compiler features compiled with the following output:
-Change Dir: /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp
+Change Dir: /mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp
 
-Run Build Command:"/usr/bin/make" "cmTC_0db03/fast"
-/usr/bin/make -f CMakeFiles/cmTC_0db03.dir/build.make CMakeFiles/cmTC_0db03.dir/build
-make[1]: Entering directory '/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp'
-Building C object CMakeFiles/cmTC_0db03.dir/feature_tests.c.o
-/usr/bin/cc   -std=c11 -o CMakeFiles/cmTC_0db03.dir/feature_tests.c.o   -c /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/feature_tests.c
-Linking C executable cmTC_0db03
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_0db03.dir/link.txt --verbose=1
-/usr/bin/cc      -rdynamic CMakeFiles/cmTC_0db03.dir/feature_tests.c.o  -o cmTC_0db03 
-make[1]: Leaving directory '/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp'
+Run Build Command:"/usr/bin/make" "cmTC_cf0ba/fast"
+/usr/bin/make -f CMakeFiles/cmTC_cf0ba.dir/build.make CMakeFiles/cmTC_cf0ba.dir/build
+make[1]: Entering directory '/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_cf0ba.dir/feature_tests.c.o
+/usr/bin/cc   -std=c11 -o CMakeFiles/cmTC_cf0ba.dir/feature_tests.c.o   -c /mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/feature_tests.c
+Linking C executable cmTC_cf0ba
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_cf0ba.dir/link.txt --verbose=1
+/usr/bin/cc      -rdynamic CMakeFiles/cmTC_cf0ba.dir/feature_tests.c.o  -o cmTC_cf0ba 
+make[1]: Leaving directory '/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp'
 
 
     Feature record: C_FEATURE:1c_function_prototypes
@@ -178,17 +178,17 @@ make[1]: Leaving directory '/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-imp
 
 
 Detecting C [-std=c99] compiler features compiled with the following output:
-Change Dir: /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp
+Change Dir: /mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp
 
-Run Build Command:"/usr/bin/make" "cmTC_3e211/fast"
-/usr/bin/make -f CMakeFiles/cmTC_3e211.dir/build.make CMakeFiles/cmTC_3e211.dir/build
-make[1]: Entering directory '/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp'
-Building C object CMakeFiles/cmTC_3e211.dir/feature_tests.c.o
-/usr/bin/cc   -std=c99 -o CMakeFiles/cmTC_3e211.dir/feature_tests.c.o   -c /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/feature_tests.c
-Linking C executable cmTC_3e211
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_3e211.dir/link.txt --verbose=1
-/usr/bin/cc      -rdynamic CMakeFiles/cmTC_3e211.dir/feature_tests.c.o  -o cmTC_3e211 
-make[1]: Leaving directory '/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp'
+Run Build Command:"/usr/bin/make" "cmTC_88a8d/fast"
+/usr/bin/make -f CMakeFiles/cmTC_88a8d.dir/build.make CMakeFiles/cmTC_88a8d.dir/build
+make[1]: Entering directory '/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_88a8d.dir/feature_tests.c.o
+/usr/bin/cc   -std=c99 -o CMakeFiles/cmTC_88a8d.dir/feature_tests.c.o   -c /mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/feature_tests.c
+Linking C executable cmTC_88a8d
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_88a8d.dir/link.txt --verbose=1
+/usr/bin/cc      -rdynamic CMakeFiles/cmTC_88a8d.dir/feature_tests.c.o  -o cmTC_88a8d 
+make[1]: Leaving directory '/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp'
 
 
     Feature record: C_FEATURE:1c_function_prototypes
@@ -198,17 +198,17 @@ make[1]: Leaving directory '/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-imp
 
 
 Detecting C [-std=c90] compiler features compiled with the following output:
-Change Dir: /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp
+Change Dir: /mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp
 
-Run Build Command:"/usr/bin/make" "cmTC_9a502/fast"
-/usr/bin/make -f CMakeFiles/cmTC_9a502.dir/build.make CMakeFiles/cmTC_9a502.dir/build
-make[1]: Entering directory '/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp'
-Building C object CMakeFiles/cmTC_9a502.dir/feature_tests.c.o
-/usr/bin/cc   -std=c90 -o CMakeFiles/cmTC_9a502.dir/feature_tests.c.o   -c /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/feature_tests.c
-Linking C executable cmTC_9a502
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_9a502.dir/link.txt --verbose=1
-/usr/bin/cc      -rdynamic CMakeFiles/cmTC_9a502.dir/feature_tests.c.o  -o cmTC_9a502 
-make[1]: Leaving directory '/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp'
+Run Build Command:"/usr/bin/make" "cmTC_029ac/fast"
+/usr/bin/make -f CMakeFiles/cmTC_029ac.dir/build.make CMakeFiles/cmTC_029ac.dir/build
+make[1]: Entering directory '/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_029ac.dir/feature_tests.c.o
+/usr/bin/cc   -std=c90 -o CMakeFiles/cmTC_029ac.dir/feature_tests.c.o   -c /mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/feature_tests.c
+Linking C executable cmTC_029ac
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_029ac.dir/link.txt --verbose=1
+/usr/bin/cc      -rdynamic CMakeFiles/cmTC_029ac.dir/feature_tests.c.o  -o cmTC_029ac 
+make[1]: Leaving directory '/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp'
 
 
     Feature record: C_FEATURE:1c_function_prototypes
@@ -216,30 +216,30 @@ make[1]: Leaving directory '/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-imp
     Feature record: C_FEATURE:0c_static_assert
     Feature record: C_FEATURE:0c_variadic_macros
 Determining if the CXX compiler works passed with the following output:
-Change Dir: /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp
+Change Dir: /mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp
 
-Run Build Command:"/usr/bin/make" "cmTC_57c6b/fast"
-/usr/bin/make -f CMakeFiles/cmTC_57c6b.dir/build.make CMakeFiles/cmTC_57c6b.dir/build
-make[1]: Entering directory '/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp'
-Building CXX object CMakeFiles/cmTC_57c6b.dir/testCXXCompiler.cxx.o
-/usr/bin/c++     -o CMakeFiles/cmTC_57c6b.dir/testCXXCompiler.cxx.o -c /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp/testCXXCompiler.cxx
-Linking CXX executable cmTC_57c6b
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_57c6b.dir/link.txt --verbose=1
-/usr/bin/c++       -rdynamic CMakeFiles/cmTC_57c6b.dir/testCXXCompiler.cxx.o  -o cmTC_57c6b 
-make[1]: Leaving directory '/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp'
+Run Build Command:"/usr/bin/make" "cmTC_411e9/fast"
+/usr/bin/make -f CMakeFiles/cmTC_411e9.dir/build.make CMakeFiles/cmTC_411e9.dir/build
+make[1]: Entering directory '/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_411e9.dir/testCXXCompiler.cxx.o
+/usr/bin/c++     -o CMakeFiles/cmTC_411e9.dir/testCXXCompiler.cxx.o -c /mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp/testCXXCompiler.cxx
+Linking CXX executable cmTC_411e9
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_411e9.dir/link.txt --verbose=1
+/usr/bin/c++       -rdynamic CMakeFiles/cmTC_411e9.dir/testCXXCompiler.cxx.o  -o cmTC_411e9 
+make[1]: Leaving directory '/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp'
 
 
 Detecting CXX compiler ABI info compiled with the following output:
-Change Dir: /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp
+Change Dir: /mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp
 
-Run Build Command:"/usr/bin/make" "cmTC_ccd73/fast"
-/usr/bin/make -f CMakeFiles/cmTC_ccd73.dir/build.make CMakeFiles/cmTC_ccd73.dir/build
-make[1]: Entering directory '/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp'
-Building CXX object CMakeFiles/cmTC_ccd73.dir/CMakeCXXCompilerABI.cpp.o
-/usr/bin/c++     -o CMakeFiles/cmTC_ccd73.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake-3.10/Modules/CMakeCXXCompilerABI.cpp
-Linking CXX executable cmTC_ccd73
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_ccd73.dir/link.txt --verbose=1
-/usr/bin/c++      -v -rdynamic CMakeFiles/cmTC_ccd73.dir/CMakeCXXCompilerABI.cpp.o  -o cmTC_ccd73 
+Run Build Command:"/usr/bin/make" "cmTC_b2d80/fast"
+/usr/bin/make -f CMakeFiles/cmTC_b2d80.dir/build.make CMakeFiles/cmTC_b2d80.dir/build
+make[1]: Entering directory '/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_b2d80.dir/CMakeCXXCompilerABI.cpp.o
+/usr/bin/c++     -o CMakeFiles/cmTC_b2d80.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake-3.10/Modules/CMakeCXXCompilerABI.cpp
+Linking CXX executable cmTC_b2d80
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_b2d80.dir/link.txt --verbose=1
+/usr/bin/c++      -v -rdynamic CMakeFiles/cmTC_b2d80.dir/CMakeCXXCompilerABI.cpp.o  -o cmTC_b2d80 
 Using built-in specs.
 COLLECT_GCC=/usr/bin/c++
 COLLECT_LTO_WRAPPER=/usr/lib/gcc/x86_64-linux-gnu/7/lto-wrapper
@@ -251,24 +251,24 @@ Thread model: posix
 gcc version 7.4.0 (Ubuntu 7.4.0-1ubuntu1~18.04.1) 
 COMPILER_PATH=/usr/lib/gcc/x86_64-linux-gnu/7/:/usr/lib/gcc/x86_64-linux-gnu/7/:/usr/lib/gcc/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/7/:/usr/lib/gcc/x86_64-linux-gnu/
 LIBRARY_PATH=/usr/lib/gcc/x86_64-linux-gnu/7/:/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/7/../../../../lib/:/lib/x86_64-linux-gnu/:/lib/../lib/:/usr/lib/x86_64-linux-gnu/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-linux-gnu/7/../../../:/lib/:/usr/lib/
-COLLECT_GCC_OPTIONS='-v' '-rdynamic' '-o' 'cmTC_ccd73' '-shared-libgcc' '-mtune=generic' '-march=x86-64'
- /usr/lib/gcc/x86_64-linux-gnu/7/collect2 -plugin /usr/lib/gcc/x86_64-linux-gnu/7/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-linux-gnu/7/lto-wrapper -plugin-opt=-fresolution=/tmp/cc54mbwa.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --sysroot=/ --build-id --eh-frame-hdr -m elf_x86_64 --hash-style=gnu --as-needed -export-dynamic -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -z now -z relro -o cmTC_ccd73 /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/Scrt1.o /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crti.o /usr/lib/gcc/x86_64-linux-gnu/7/crtbeginS.o -L/usr/lib/gcc/x86_64-linux-gnu/7 -L/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu -L/usr/lib/gcc/x86_64-linux-gnu/7/../../../../lib -L/lib/x86_64-linux-gnu -L/lib/../lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/7/../../.. CMakeFiles/cmTC_ccd73.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/lib/gcc/x86_64-linux-gnu/7/crtendS.o /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crtn.o
-COLLECT_GCC_OPTIONS='-v' '-rdynamic' '-o' 'cmTC_ccd73' '-shared-libgcc' '-mtune=generic' '-march=x86-64'
-make[1]: Leaving directory '/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp'
+COLLECT_GCC_OPTIONS='-v' '-rdynamic' '-o' 'cmTC_b2d80' '-shared-libgcc' '-mtune=generic' '-march=x86-64'
+ /usr/lib/gcc/x86_64-linux-gnu/7/collect2 -plugin /usr/lib/gcc/x86_64-linux-gnu/7/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-linux-gnu/7/lto-wrapper -plugin-opt=-fresolution=/tmp/ccYXba12.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --sysroot=/ --build-id --eh-frame-hdr -m elf_x86_64 --hash-style=gnu --as-needed -export-dynamic -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -z now -z relro -o cmTC_b2d80 /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/Scrt1.o /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crti.o /usr/lib/gcc/x86_64-linux-gnu/7/crtbeginS.o -L/usr/lib/gcc/x86_64-linux-gnu/7 -L/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu -L/usr/lib/gcc/x86_64-linux-gnu/7/../../../../lib -L/lib/x86_64-linux-gnu -L/lib/../lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/7/../../.. CMakeFiles/cmTC_b2d80.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/lib/gcc/x86_64-linux-gnu/7/crtendS.o /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crtn.o
+COLLECT_GCC_OPTIONS='-v' '-rdynamic' '-o' 'cmTC_b2d80' '-shared-libgcc' '-mtune=generic' '-march=x86-64'
+make[1]: Leaving directory '/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp'
 
 
 Parsed CXX implicit link information from above output:
   link line regex: [^( *|.*[/\])(ld|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\]+-)?ld|collect2)[^/\]*( |$)]
-  ignore line: [Change Dir: /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp]
+  ignore line: [Change Dir: /mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp]
   ignore line: []
-  ignore line: [Run Build Command:"/usr/bin/make" "cmTC_ccd73/fast"]
-  ignore line: [/usr/bin/make -f CMakeFiles/cmTC_ccd73.dir/build.make CMakeFiles/cmTC_ccd73.dir/build]
-  ignore line: [make[1]: Entering directory '/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp']
-  ignore line: [Building CXX object CMakeFiles/cmTC_ccd73.dir/CMakeCXXCompilerABI.cpp.o]
-  ignore line: [/usr/bin/c++     -o CMakeFiles/cmTC_ccd73.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake-3.10/Modules/CMakeCXXCompilerABI.cpp]
-  ignore line: [Linking CXX executable cmTC_ccd73]
-  ignore line: [/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_ccd73.dir/link.txt --verbose=1]
-  ignore line: [/usr/bin/c++      -v -rdynamic CMakeFiles/cmTC_ccd73.dir/CMakeCXXCompilerABI.cpp.o  -o cmTC_ccd73 ]
+  ignore line: [Run Build Command:"/usr/bin/make" "cmTC_b2d80/fast"]
+  ignore line: [/usr/bin/make -f CMakeFiles/cmTC_b2d80.dir/build.make CMakeFiles/cmTC_b2d80.dir/build]
+  ignore line: [make[1]: Entering directory '/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp']
+  ignore line: [Building CXX object CMakeFiles/cmTC_b2d80.dir/CMakeCXXCompilerABI.cpp.o]
+  ignore line: [/usr/bin/c++     -o CMakeFiles/cmTC_b2d80.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake-3.10/Modules/CMakeCXXCompilerABI.cpp]
+  ignore line: [Linking CXX executable cmTC_b2d80]
+  ignore line: [/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_b2d80.dir/link.txt --verbose=1]
+  ignore line: [/usr/bin/c++      -v -rdynamic CMakeFiles/cmTC_b2d80.dir/CMakeCXXCompilerABI.cpp.o  -o cmTC_b2d80 ]
   ignore line: [Using built-in specs.]
   ignore line: [COLLECT_GCC=/usr/bin/c++]
   ignore line: [COLLECT_LTO_WRAPPER=/usr/lib/gcc/x86_64-linux-gnu/7/lto-wrapper]
@@ -280,13 +280,13 @@ Parsed CXX implicit link information from above output:
   ignore line: [gcc version 7.4.0 (Ubuntu 7.4.0-1ubuntu1~18.04.1) ]
   ignore line: [COMPILER_PATH=/usr/lib/gcc/x86_64-linux-gnu/7/:/usr/lib/gcc/x86_64-linux-gnu/7/:/usr/lib/gcc/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/7/:/usr/lib/gcc/x86_64-linux-gnu/]
   ignore line: [LIBRARY_PATH=/usr/lib/gcc/x86_64-linux-gnu/7/:/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/7/../../../../lib/:/lib/x86_64-linux-gnu/:/lib/../lib/:/usr/lib/x86_64-linux-gnu/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-linux-gnu/7/../../../:/lib/:/usr/lib/]
-  ignore line: [COLLECT_GCC_OPTIONS='-v' '-rdynamic' '-o' 'cmTC_ccd73' '-shared-libgcc' '-mtune=generic' '-march=x86-64']
-  link line: [ /usr/lib/gcc/x86_64-linux-gnu/7/collect2 -plugin /usr/lib/gcc/x86_64-linux-gnu/7/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-linux-gnu/7/lto-wrapper -plugin-opt=-fresolution=/tmp/cc54mbwa.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --sysroot=/ --build-id --eh-frame-hdr -m elf_x86_64 --hash-style=gnu --as-needed -export-dynamic -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -z now -z relro -o cmTC_ccd73 /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/Scrt1.o /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crti.o /usr/lib/gcc/x86_64-linux-gnu/7/crtbeginS.o -L/usr/lib/gcc/x86_64-linux-gnu/7 -L/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu -L/usr/lib/gcc/x86_64-linux-gnu/7/../../../../lib -L/lib/x86_64-linux-gnu -L/lib/../lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/7/../../.. CMakeFiles/cmTC_ccd73.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/lib/gcc/x86_64-linux-gnu/7/crtendS.o /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crtn.o]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-rdynamic' '-o' 'cmTC_b2d80' '-shared-libgcc' '-mtune=generic' '-march=x86-64']
+  link line: [ /usr/lib/gcc/x86_64-linux-gnu/7/collect2 -plugin /usr/lib/gcc/x86_64-linux-gnu/7/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-linux-gnu/7/lto-wrapper -plugin-opt=-fresolution=/tmp/ccYXba12.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --sysroot=/ --build-id --eh-frame-hdr -m elf_x86_64 --hash-style=gnu --as-needed -export-dynamic -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -z now -z relro -o cmTC_b2d80 /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/Scrt1.o /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crti.o /usr/lib/gcc/x86_64-linux-gnu/7/crtbeginS.o -L/usr/lib/gcc/x86_64-linux-gnu/7 -L/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu -L/usr/lib/gcc/x86_64-linux-gnu/7/../../../../lib -L/lib/x86_64-linux-gnu -L/lib/../lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/7/../../.. CMakeFiles/cmTC_b2d80.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/lib/gcc/x86_64-linux-gnu/7/crtendS.o /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crtn.o]
     arg [/usr/lib/gcc/x86_64-linux-gnu/7/collect2] ==> ignore
     arg [-plugin] ==> ignore
     arg [/usr/lib/gcc/x86_64-linux-gnu/7/liblto_plugin.so] ==> ignore
     arg [-plugin-opt=/usr/lib/gcc/x86_64-linux-gnu/7/lto-wrapper] ==> ignore
-    arg [-plugin-opt=-fresolution=/tmp/cc54mbwa.res] ==> ignore
+    arg [-plugin-opt=-fresolution=/tmp/ccYXba12.res] ==> ignore
     arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
     arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
     arg [-plugin-opt=-pass-through=-lc] ==> ignore
@@ -306,7 +306,7 @@ Parsed CXX implicit link information from above output:
     arg [-znow] ==> ignore
     arg [-zrelro] ==> ignore
     arg [-o] ==> ignore
-    arg [cmTC_ccd73] ==> ignore
+    arg [cmTC_b2d80] ==> ignore
     arg [/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/Scrt1.o] ==> ignore
     arg [/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crti.o] ==> ignore
     arg [/usr/lib/gcc/x86_64-linux-gnu/7/crtbeginS.o] ==> ignore
@@ -318,7 +318,7 @@ Parsed CXX implicit link information from above output:
     arg [-L/usr/lib/x86_64-linux-gnu] ==> dir [/usr/lib/x86_64-linux-gnu]
     arg [-L/usr/lib/../lib] ==> dir [/usr/lib/../lib]
     arg [-L/usr/lib/gcc/x86_64-linux-gnu/7/../../..] ==> dir [/usr/lib/gcc/x86_64-linux-gnu/7/../../..]
-    arg [CMakeFiles/cmTC_ccd73.dir/CMakeCXXCompilerABI.cpp.o] ==> ignore
+    arg [CMakeFiles/cmTC_b2d80.dir/CMakeCXXCompilerABI.cpp.o] ==> ignore
     arg [-lstdc++] ==> lib [stdc++]
     arg [-lm] ==> lib [m]
     arg [-lgcc_s] ==> lib [gcc_s]
@@ -344,17 +344,17 @@ Parsed CXX implicit link information from above output:
 
 
 Detecting CXX [-std=c++1z] compiler features compiled with the following output:
-Change Dir: /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp
+Change Dir: /mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp
 
-Run Build Command:"/usr/bin/make" "cmTC_28ee5/fast"
-/usr/bin/make -f CMakeFiles/cmTC_28ee5.dir/build.make CMakeFiles/cmTC_28ee5.dir/build
-make[1]: Entering directory '/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp'
-Building CXX object CMakeFiles/cmTC_28ee5.dir/feature_tests.cxx.o
-/usr/bin/c++    -std=c++1z -o CMakeFiles/cmTC_28ee5.dir/feature_tests.cxx.o -c /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/feature_tests.cxx
-Linking CXX executable cmTC_28ee5
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_28ee5.dir/link.txt --verbose=1
-/usr/bin/c++       -rdynamic CMakeFiles/cmTC_28ee5.dir/feature_tests.cxx.o  -o cmTC_28ee5 
-make[1]: Leaving directory '/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp'
+Run Build Command:"/usr/bin/make" "cmTC_0d08f/fast"
+/usr/bin/make -f CMakeFiles/cmTC_0d08f.dir/build.make CMakeFiles/cmTC_0d08f.dir/build
+make[1]: Entering directory '/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_0d08f.dir/feature_tests.cxx.o
+/usr/bin/c++    -std=c++1z -o CMakeFiles/cmTC_0d08f.dir/feature_tests.cxx.o -c /mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/feature_tests.cxx
+Linking CXX executable cmTC_0d08f
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_0d08f.dir/link.txt --verbose=1
+/usr/bin/c++       -rdynamic CMakeFiles/cmTC_0d08f.dir/feature_tests.cxx.o  -o cmTC_0d08f 
+make[1]: Leaving directory '/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp'
 
 
     Feature record: CXX_FEATURE:1cxx_aggregate_default_initializers
@@ -417,17 +417,17 @@ make[1]: Leaving directory '/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-imp
 
 
 Detecting CXX [-std=c++14] compiler features compiled with the following output:
-Change Dir: /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp
+Change Dir: /mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp
 
-Run Build Command:"/usr/bin/make" "cmTC_f77b5/fast"
-/usr/bin/make -f CMakeFiles/cmTC_f77b5.dir/build.make CMakeFiles/cmTC_f77b5.dir/build
-make[1]: Entering directory '/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp'
-Building CXX object CMakeFiles/cmTC_f77b5.dir/feature_tests.cxx.o
-/usr/bin/c++    -std=c++14 -o CMakeFiles/cmTC_f77b5.dir/feature_tests.cxx.o -c /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/feature_tests.cxx
-Linking CXX executable cmTC_f77b5
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_f77b5.dir/link.txt --verbose=1
-/usr/bin/c++       -rdynamic CMakeFiles/cmTC_f77b5.dir/feature_tests.cxx.o  -o cmTC_f77b5 
-make[1]: Leaving directory '/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp'
+Run Build Command:"/usr/bin/make" "cmTC_8512b/fast"
+/usr/bin/make -f CMakeFiles/cmTC_8512b.dir/build.make CMakeFiles/cmTC_8512b.dir/build
+make[1]: Entering directory '/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_8512b.dir/feature_tests.cxx.o
+/usr/bin/c++    -std=c++14 -o CMakeFiles/cmTC_8512b.dir/feature_tests.cxx.o -c /mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/feature_tests.cxx
+Linking CXX executable cmTC_8512b
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_8512b.dir/link.txt --verbose=1
+/usr/bin/c++       -rdynamic CMakeFiles/cmTC_8512b.dir/feature_tests.cxx.o  -o cmTC_8512b 
+make[1]: Leaving directory '/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp'
 
 
     Feature record: CXX_FEATURE:1cxx_aggregate_default_initializers
@@ -490,17 +490,17 @@ make[1]: Leaving directory '/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-imp
 
 
 Detecting CXX [-std=c++11] compiler features compiled with the following output:
-Change Dir: /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp
+Change Dir: /mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp
 
-Run Build Command:"/usr/bin/make" "cmTC_a8cf3/fast"
-/usr/bin/make -f CMakeFiles/cmTC_a8cf3.dir/build.make CMakeFiles/cmTC_a8cf3.dir/build
-make[1]: Entering directory '/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp'
-Building CXX object CMakeFiles/cmTC_a8cf3.dir/feature_tests.cxx.o
-/usr/bin/c++    -std=c++11 -o CMakeFiles/cmTC_a8cf3.dir/feature_tests.cxx.o -c /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/feature_tests.cxx
-Linking CXX executable cmTC_a8cf3
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_a8cf3.dir/link.txt --verbose=1
-/usr/bin/c++       -rdynamic CMakeFiles/cmTC_a8cf3.dir/feature_tests.cxx.o  -o cmTC_a8cf3 
-make[1]: Leaving directory '/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp'
+Run Build Command:"/usr/bin/make" "cmTC_e3f30/fast"
+/usr/bin/make -f CMakeFiles/cmTC_e3f30.dir/build.make CMakeFiles/cmTC_e3f30.dir/build
+make[1]: Entering directory '/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_e3f30.dir/feature_tests.cxx.o
+/usr/bin/c++    -std=c++11 -o CMakeFiles/cmTC_e3f30.dir/feature_tests.cxx.o -c /mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/feature_tests.cxx
+Linking CXX executable cmTC_e3f30
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_e3f30.dir/link.txt --verbose=1
+/usr/bin/c++       -rdynamic CMakeFiles/cmTC_e3f30.dir/feature_tests.cxx.o  -o cmTC_e3f30 
+make[1]: Leaving directory '/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp'
 
 
     Feature record: CXX_FEATURE:0cxx_aggregate_default_initializers
@@ -563,17 +563,17 @@ make[1]: Leaving directory '/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-imp
 
 
 Detecting CXX [-std=c++98] compiler features compiled with the following output:
-Change Dir: /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp
+Change Dir: /mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp
 
-Run Build Command:"/usr/bin/make" "cmTC_878ef/fast"
-/usr/bin/make -f CMakeFiles/cmTC_878ef.dir/build.make CMakeFiles/cmTC_878ef.dir/build
-make[1]: Entering directory '/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp'
-Building CXX object CMakeFiles/cmTC_878ef.dir/feature_tests.cxx.o
-/usr/bin/c++    -std=c++98 -o CMakeFiles/cmTC_878ef.dir/feature_tests.cxx.o -c /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/feature_tests.cxx
-Linking CXX executable cmTC_878ef
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_878ef.dir/link.txt --verbose=1
-/usr/bin/c++       -rdynamic CMakeFiles/cmTC_878ef.dir/feature_tests.cxx.o  -o cmTC_878ef 
-make[1]: Leaving directory '/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp'
+Run Build Command:"/usr/bin/make" "cmTC_00687/fast"
+/usr/bin/make -f CMakeFiles/cmTC_00687.dir/build.make CMakeFiles/cmTC_00687.dir/build
+make[1]: Entering directory '/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_00687.dir/feature_tests.cxx.o
+/usr/bin/c++    -std=c++98 -o CMakeFiles/cmTC_00687.dir/feature_tests.cxx.o -c /mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/feature_tests.cxx
+Linking CXX executable cmTC_00687
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_00687.dir/link.txt --verbose=1
+/usr/bin/c++       -rdynamic CMakeFiles/cmTC_00687.dir/feature_tests.cxx.o  -o cmTC_00687 
+make[1]: Leaving directory '/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp'
 
 
     Feature record: CXX_FEATURE:0cxx_aggregate_default_initializers
@@ -634,30 +634,30 @@ make[1]: Leaving directory '/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-imp
     Feature record: CXX_FEATURE:0cxx_variadic_macros
     Feature record: CXX_FEATURE:0cxx_variadic_templates
 Determining if the include file pthread.h exists passed with the following output:
-Change Dir: /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp
+Change Dir: /mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp
 
-Run Build Command:"/usr/bin/make" "cmTC_280f7/fast"
-/usr/bin/make -f CMakeFiles/cmTC_280f7.dir/build.make CMakeFiles/cmTC_280f7.dir/build
-make[1]: Entering directory '/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp'
-Building C object CMakeFiles/cmTC_280f7.dir/CheckIncludeFile.c.o
-/usr/bin/cc    -o CMakeFiles/cmTC_280f7.dir/CheckIncludeFile.c.o   -c /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp/CheckIncludeFile.c
-Linking C executable cmTC_280f7
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_280f7.dir/link.txt --verbose=1
-/usr/bin/cc      -rdynamic CMakeFiles/cmTC_280f7.dir/CheckIncludeFile.c.o  -o cmTC_280f7 
-make[1]: Leaving directory '/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp'
+Run Build Command:"/usr/bin/make" "cmTC_5e2fb/fast"
+/usr/bin/make -f CMakeFiles/cmTC_5e2fb.dir/build.make CMakeFiles/cmTC_5e2fb.dir/build
+make[1]: Entering directory '/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_5e2fb.dir/CheckIncludeFile.c.o
+/usr/bin/cc    -o CMakeFiles/cmTC_5e2fb.dir/CheckIncludeFile.c.o   -c /mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp/CheckIncludeFile.c
+Linking C executable cmTC_5e2fb
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_5e2fb.dir/link.txt --verbose=1
+/usr/bin/cc      -rdynamic CMakeFiles/cmTC_5e2fb.dir/CheckIncludeFile.c.o  -o cmTC_5e2fb 
+make[1]: Leaving directory '/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp'
 
 
 Determining if the function pthread_create exists in the pthread passed with the following output:
-Change Dir: /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp
+Change Dir: /mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp
 
-Run Build Command:"/usr/bin/make" "cmTC_09ffd/fast"
-/usr/bin/make -f CMakeFiles/cmTC_09ffd.dir/build.make CMakeFiles/cmTC_09ffd.dir/build
-make[1]: Entering directory '/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp'
-Building C object CMakeFiles/cmTC_09ffd.dir/CheckFunctionExists.c.o
-/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=pthread_create   -o CMakeFiles/cmTC_09ffd.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.10/Modules/CheckFunctionExists.c
-Linking C executable cmTC_09ffd
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_09ffd.dir/link.txt --verbose=1
-/usr/bin/cc  -DCHECK_FUNCTION_EXISTS=pthread_create    -rdynamic CMakeFiles/cmTC_09ffd.dir/CheckFunctionExists.c.o  -o cmTC_09ffd -lpthread 
-make[1]: Leaving directory '/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp'
+Run Build Command:"/usr/bin/make" "cmTC_b623d/fast"
+/usr/bin/make -f CMakeFiles/cmTC_b623d.dir/build.make CMakeFiles/cmTC_b623d.dir/build
+make[1]: Entering directory '/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_b623d.dir/CheckFunctionExists.c.o
+/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=pthread_create   -o CMakeFiles/cmTC_b623d.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.10/Modules/CheckFunctionExists.c
+Linking C executable cmTC_b623d
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_b623d.dir/link.txt --verbose=1
+/usr/bin/cc  -DCHECK_FUNCTION_EXISTS=pthread_create    -rdynamic CMakeFiles/cmTC_b623d.dir/CheckFunctionExists.c.o  -o cmTC_b623d -lpthread 
+make[1]: Leaving directory '/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp'
 
 

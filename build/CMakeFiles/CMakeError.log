@@ -1,24 +1,24 @@
 Determining if the pthread_create exist failed with the following output:
-Change Dir: /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp
+Change Dir: /mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp
 
-Run Build Command:"/usr/bin/make" "cmTC_16166/fast"
-/usr/bin/make -f CMakeFiles/cmTC_16166.dir/build.make CMakeFiles/cmTC_16166.dir/build
-make[1]: Entering directory '/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp'
-Building C object CMakeFiles/cmTC_16166.dir/CheckSymbolExists.c.o
-/usr/bin/cc    -o CMakeFiles/cmTC_16166.dir/CheckSymbolExists.c.o   -c /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c
-Linking C executable cmTC_16166
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_16166.dir/link.txt --verbose=1
-/usr/bin/cc      -rdynamic CMakeFiles/cmTC_16166.dir/CheckSymbolExists.c.o  -o cmTC_16166 
-CMakeFiles/cmTC_16166.dir/CheckSymbolExists.c.o: In function `main':
+Run Build Command:"/usr/bin/make" "cmTC_7b9a0/fast"
+/usr/bin/make -f CMakeFiles/cmTC_7b9a0.dir/build.make CMakeFiles/cmTC_7b9a0.dir/build
+make[1]: Entering directory '/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_7b9a0.dir/CheckSymbolExists.c.o
+/usr/bin/cc    -o CMakeFiles/cmTC_7b9a0.dir/CheckSymbolExists.c.o   -c /mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c
+Linking C executable cmTC_7b9a0
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_7b9a0.dir/link.txt --verbose=1
+/usr/bin/cc      -rdynamic CMakeFiles/cmTC_7b9a0.dir/CheckSymbolExists.c.o  -o cmTC_7b9a0 
+CMakeFiles/cmTC_7b9a0.dir/CheckSymbolExists.c.o: In function `main':
 CheckSymbolExists.c:(.text+0x1b): undefined reference to `pthread_create'
 collect2: error: ld returned 1 exit status
-CMakeFiles/cmTC_16166.dir/build.make:97: recipe for target 'cmTC_16166' failed
-make[1]: *** [cmTC_16166] Error 1
-make[1]: Leaving directory '/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp'
-Makefile:126: recipe for target 'cmTC_16166/fast' failed
-make: *** [cmTC_16166/fast] Error 2
+CMakeFiles/cmTC_7b9a0.dir/build.make:97: recipe for target 'cmTC_7b9a0' failed
+make[1]: *** [cmTC_7b9a0] Error 1
+make[1]: Leaving directory '/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp'
+Makefile:126: recipe for target 'cmTC_7b9a0/fast' failed
+make: *** [cmTC_7b9a0/fast] Error 2
 
-File /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c:
+File /mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c:
 /* */
 #include <pthread.h>
 
@@ -34,22 +34,22 @@ int main(int argc, char** argv)
 }
 
 Determining if the function pthread_create exists in the pthreads failed with the following output:
-Change Dir: /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp
+Change Dir: /mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp
 
-Run Build Command:"/usr/bin/make" "cmTC_5ff92/fast"
-/usr/bin/make -f CMakeFiles/cmTC_5ff92.dir/build.make CMakeFiles/cmTC_5ff92.dir/build
-make[1]: Entering directory '/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp'
-Building C object CMakeFiles/cmTC_5ff92.dir/CheckFunctionExists.c.o
-/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=pthread_create   -o CMakeFiles/cmTC_5ff92.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.10/Modules/CheckFunctionExists.c
-Linking C executable cmTC_5ff92
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_5ff92.dir/link.txt --verbose=1
-/usr/bin/cc  -DCHECK_FUNCTION_EXISTS=pthread_create    -rdynamic CMakeFiles/cmTC_5ff92.dir/CheckFunctionExists.c.o  -o cmTC_5ff92 -lpthreads 
+Run Build Command:"/usr/bin/make" "cmTC_1fc34/fast"
+/usr/bin/make -f CMakeFiles/cmTC_1fc34.dir/build.make CMakeFiles/cmTC_1fc34.dir/build
+make[1]: Entering directory '/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_1fc34.dir/CheckFunctionExists.c.o
+/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=pthread_create   -o CMakeFiles/cmTC_1fc34.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.10/Modules/CheckFunctionExists.c
+Linking C executable cmTC_1fc34
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_1fc34.dir/link.txt --verbose=1
+/usr/bin/cc  -DCHECK_FUNCTION_EXISTS=pthread_create    -rdynamic CMakeFiles/cmTC_1fc34.dir/CheckFunctionExists.c.o  -o cmTC_1fc34 -lpthreads 
 /usr/bin/ld: cannot find -lpthreads
 collect2: error: ld returned 1 exit status
-CMakeFiles/cmTC_5ff92.dir/build.make:97: recipe for target 'cmTC_5ff92' failed
-make[1]: *** [cmTC_5ff92] Error 1
-make[1]: Leaving directory '/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/CMakeTmp'
-Makefile:126: recipe for target 'cmTC_5ff92/fast' failed
-make: *** [cmTC_5ff92/fast] Error 2
+CMakeFiles/cmTC_1fc34.dir/build.make:97: recipe for target 'cmTC_1fc34' failed
+make[1]: *** [cmTC_1fc34] Error 1
+make[1]: Leaving directory '/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/CMakeTmp'
+Makefile:126: recipe for target 'cmTC_1fc34/fast' failed
+make: *** [cmTC_1fc34/fast] Error 2
 
 

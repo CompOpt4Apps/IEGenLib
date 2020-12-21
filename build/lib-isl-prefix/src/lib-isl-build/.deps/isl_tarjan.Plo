@@ -1,5 +1,4 @@
-isl_tarjan.lo: \
- /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/isl_tarjan.c \
+isl_tarjan.lo: /mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/isl_tarjan.c \
  /usr/include/stdc-predef.h /usr/include/stdlib.h \
  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
  /usr/include/features.h /usr/include/x86_64-linux-gnu/sys/cdefs.h \
@@ -40,7 +39,7 @@ isl_tarjan.lo: \
  /usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h \
  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
  /usr/include/x86_64-linux-gnu/bits/stdlib.h \
- /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/include/isl/ctx.h \
+ /mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/include/isl/ctx.h \
  /usr/include/stdio.h /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
  /usr/include/x86_64-linux-gnu/bits/libio.h \
@@ -51,8 +50,8 @@ isl_tarjan.lo: \
  /usr/include/x86_64-linux-gnu/bits/sys_errlist.h \
  /usr/include/x86_64-linux-gnu/bits/stdio.h \
  /usr/include/x86_64-linux-gnu/bits/stdio2.h \
- /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/include/isl/arg.h \
- /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/isl_tarjan.h
+ /mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/include/isl/arg.h \
+ /mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/isl_tarjan.h
 
 /usr/include/stdc-predef.h:
 
@@ -140,7 +139,7 @@ isl_tarjan.lo: \
 
 /usr/include/x86_64-linux-gnu/bits/stdlib.h:
 
-/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/include/isl/ctx.h:
+/mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/include/isl/ctx.h:
 
 /usr/include/stdio.h:
 
@@ -164,6 +163,6 @@ isl_tarjan.lo: \
 
 /usr/include/x86_64-linux-gnu/bits/stdio2.h:
 
-/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/include/isl/arg.h:
+/mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/include/isl/arg.h:
 
-/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/isl_tarjan.h:
+/mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/isl_tarjan.h:

@@ -6,7 +6,7 @@ CXX_FLAGS = -std=c++11 -fPIC -std=c++11 -O0 -g
 
 CXX_DEFINES = -DGTEST_HAS_TR1_TUPLE=0
 
-CXX_INCLUDES = -I/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/installed/include -I/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gtest/include -I/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/src/. -I/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/src/parser -I/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/src/set_relation -I/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/src/computation -I/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/src/util 
+CXX_INCLUDES = -I/mnt/c/Users/shivi/Desktop/IEGenLib/lib/installed/include -I/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gtest/include -I/mnt/c/Users/shivi/Desktop/IEGenLib/src/. -I/mnt/c/Users/shivi/Desktop/IEGenLib/src/parser -I/mnt/c/Users/shivi/Desktop/IEGenLib/src/set_relation -I/mnt/c/Users/shivi/Desktop/IEGenLib/src/computation -I/mnt/c/Users/shivi/Desktop/IEGenLib/src/util 
 
 # Custom flags: src/CMakeFiles/iegenlib.dir/computation/Computation.cc.o_FLAGS = -Wall -Wno-unknown-pragmas
 

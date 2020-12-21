@@ -66,7 +66,7 @@ cout << "Stmt2 initialised" << "\n";
 //Calling toDot() on the Computation structure
 fstream dotFileStream;
 cout << "Entering toDot()" << "\n";
-MyComp.toDot(dotFileStream);
+MyComp.toDot(dotFileStream,"Example.txt");
 
 
 }

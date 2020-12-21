@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api
+CMAKE_SOURCE_DIR = /mnt/c/Users/shivi/Desktop/IEGenLib
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build
+CMAKE_BINARY_DIR = /mnt/c/Users/shivi/Desktop/IEGenLib/build
 
 # Include any dependencies generated for this target.
 include tutorial/CMakeFiles/sparse_format_example.dir/depend.make
@@ -59,16 +59,16 @@ include tutorial/CMakeFiles/sparse_format_example.dir/flags.make
 
 tutorial/CMakeFiles/sparse_format_example.dir/sparse_format_example.cc.o: tutorial/CMakeFiles/sparse_format_example.dir/flags.make
 tutorial/CMakeFiles/sparse_format_example.dir/sparse_format_example.cc.o: ../tutorial/sparse_format_example.cc
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object tutorial/CMakeFiles/sparse_format_example.dir/sparse_format_example.cc.o"
-	cd /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/tutorial && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/sparse_format_example.dir/sparse_format_example.cc.o -c /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/tutorial/sparse_format_example.cc
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object tutorial/CMakeFiles/sparse_format_example.dir/sparse_format_example.cc.o"
+	cd /mnt/c/Users/shivi/Desktop/IEGenLib/build/tutorial && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/sparse_format_example.dir/sparse_format_example.cc.o -c /mnt/c/Users/shivi/Desktop/IEGenLib/tutorial/sparse_format_example.cc
 
 tutorial/CMakeFiles/sparse_format_example.dir/sparse_format_example.cc.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/sparse_format_example.dir/sparse_format_example.cc.i"
-	cd /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/tutorial && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/tutorial/sparse_format_example.cc > CMakeFiles/sparse_format_example.dir/sparse_format_example.cc.i
+	cd /mnt/c/Users/shivi/Desktop/IEGenLib/build/tutorial && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/c/Users/shivi/Desktop/IEGenLib/tutorial/sparse_format_example.cc > CMakeFiles/sparse_format_example.dir/sparse_format_example.cc.i
 
 tutorial/CMakeFiles/sparse_format_example.dir/sparse_format_example.cc.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/sparse_format_example.dir/sparse_format_example.cc.s"
-	cd /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/tutorial && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/tutorial/sparse_format_example.cc -o CMakeFiles/sparse_format_example.dir/sparse_format_example.cc.s
+	cd /mnt/c/Users/shivi/Desktop/IEGenLib/build/tutorial && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/c/Users/shivi/Desktop/IEGenLib/tutorial/sparse_format_example.cc -o CMakeFiles/sparse_format_example.dir/sparse_format_example.cc.s
 
 tutorial/CMakeFiles/sparse_format_example.dir/sparse_format_example.cc.o.requires:
 
@@ -92,8 +92,8 @@ bin/sparse_format_example: tutorial/CMakeFiles/sparse_format_example.dir/sparse_
 bin/sparse_format_example: tutorial/CMakeFiles/sparse_format_example.dir/build.make
 bin/sparse_format_example: src/libiegenlib.a
 bin/sparse_format_example: tutorial/CMakeFiles/sparse_format_example.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable ../bin/sparse_format_example"
-	cd /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/tutorial && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/sparse_format_example.dir/link.txt --verbose=$(VERBOSE)
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable ../bin/sparse_format_example"
+	cd /mnt/c/Users/shivi/Desktop/IEGenLib/build/tutorial && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/sparse_format_example.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
 tutorial/CMakeFiles/sparse_format_example.dir/build: bin/sparse_format_example
@@ -105,10 +105,10 @@ tutorial/CMakeFiles/sparse_format_example.dir/requires: tutorial/CMakeFiles/spar
 .PHONY : tutorial/CMakeFiles/sparse_format_example.dir/requires
 
 tutorial/CMakeFiles/sparse_format_example.dir/clean:
-	cd /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/tutorial && $(CMAKE_COMMAND) -P CMakeFiles/sparse_format_example.dir/cmake_clean.cmake
+	cd /mnt/c/Users/shivi/Desktop/IEGenLib/build/tutorial && $(CMAKE_COMMAND) -P CMakeFiles/sparse_format_example.dir/cmake_clean.cmake
 .PHONY : tutorial/CMakeFiles/sparse_format_example.dir/clean
 
 tutorial/CMakeFiles/sparse_format_example.dir/depend:
-	cd /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/tutorial /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/tutorial /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/tutorial/CMakeFiles/sparse_format_example.dir/DependInfo.cmake --color=$(COLOR)
+	cd /mnt/c/Users/shivi/Desktop/IEGenLib/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /mnt/c/Users/shivi/Desktop/IEGenLib /mnt/c/Users/shivi/Desktop/IEGenLib/tutorial /mnt/c/Users/shivi/Desktop/IEGenLib/build /mnt/c/Users/shivi/Desktop/IEGenLib/build/tutorial /mnt/c/Users/shivi/Desktop/IEGenLib/build/tutorial/CMakeFiles/sparse_format_example.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : tutorial/CMakeFiles/sparse_format_example.dir/depend
 

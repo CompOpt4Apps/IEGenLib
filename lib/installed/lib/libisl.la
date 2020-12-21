@@ -38,4 +38,4 @@ dlopen=''
 dlpreopen=''
 
 # Directory that this library needs to be installed in:
-libdir='/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/installed/lib'
+libdir='/mnt/c/Users/shivi/Desktop/IEGenLib/lib/installed/lib'

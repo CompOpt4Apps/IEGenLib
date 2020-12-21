@@ -1,10 +1,10 @@
 imath_wrap/imrat.lo: \
- /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/imath_wrap/imrat.c \
+ /mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/imath_wrap/imrat.c \
  /usr/include/stdc-predef.h \
- /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/imath_wrap/wrap.h \
- /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/imath_wrap/../imath/imrat.c \
- /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/imath_wrap/../imath/imrat.h \
- /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/imath_wrap/../imath/imath.h \
+ /mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/imath_wrap/wrap.h \
+ /mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/imath_wrap/../imath/imrat.c \
+ /mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/imath_wrap/../imath/imrat.h \
+ /mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/imath_wrap/../imath/imath.h \
  /usr/lib/gcc/x86_64-linux-gnu/7/include/stdint.h /usr/include/stdint.h \
  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
  /usr/include/features.h /usr/include/x86_64-linux-gnu/sys/cdefs.h \
@@ -62,13 +62,13 @@ imath_wrap/imrat.lo: \
 
 /usr/include/stdc-predef.h:
 
-/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/imath_wrap/wrap.h:
+/mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/imath_wrap/wrap.h:
 
-/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/imath_wrap/../imath/imrat.c:
+/mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/imath_wrap/../imath/imrat.c:
 
-/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/imath_wrap/../imath/imrat.h:
+/mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/imath_wrap/../imath/imrat.h:
 
-/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/imath_wrap/../imath/imath.h:
+/mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/imath_wrap/../imath/imath.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/7/include/stdint.h:
 

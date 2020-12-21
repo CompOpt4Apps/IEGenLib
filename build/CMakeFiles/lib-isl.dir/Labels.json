@@ -2,34 +2,34 @@
 	"sources" : 
 	[
 		{
-			"file" : "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/lib-isl"
+			"file" : "/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/lib-isl"
 		},
 		{
-			"file" : "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/lib-isl.rule"
+			"file" : "/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/lib-isl.rule"
 		},
 		{
-			"file" : "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/lib-isl-complete.rule"
+			"file" : "/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/lib-isl-complete.rule"
 		},
 		{
-			"file" : "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/lib-isl-prefix/src/lib-isl-stamp/lib-isl-install.rule"
+			"file" : "/mnt/c/Users/shivi/Desktop/IEGenLib/build/lib-isl-prefix/src/lib-isl-stamp/lib-isl-install.rule"
 		},
 		{
-			"file" : "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/lib-isl-prefix/src/lib-isl-stamp/lib-isl-mkdir.rule"
+			"file" : "/mnt/c/Users/shivi/Desktop/IEGenLib/build/lib-isl-prefix/src/lib-isl-stamp/lib-isl-mkdir.rule"
 		},
 		{
-			"file" : "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/lib-isl-prefix/src/lib-isl-stamp/lib-isl-download.rule"
+			"file" : "/mnt/c/Users/shivi/Desktop/IEGenLib/build/lib-isl-prefix/src/lib-isl-stamp/lib-isl-download.rule"
 		},
 		{
-			"file" : "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/lib-isl-prefix/src/lib-isl-stamp/lib-isl-update.rule"
+			"file" : "/mnt/c/Users/shivi/Desktop/IEGenLib/build/lib-isl-prefix/src/lib-isl-stamp/lib-isl-update.rule"
 		},
 		{
-			"file" : "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/lib-isl-prefix/src/lib-isl-stamp/lib-isl-patch.rule"
+			"file" : "/mnt/c/Users/shivi/Desktop/IEGenLib/build/lib-isl-prefix/src/lib-isl-stamp/lib-isl-patch.rule"
 		},
 		{
-			"file" : "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/lib-isl-prefix/src/lib-isl-stamp/lib-isl-configure.rule"
+			"file" : "/mnt/c/Users/shivi/Desktop/IEGenLib/build/lib-isl-prefix/src/lib-isl-stamp/lib-isl-configure.rule"
 		},
 		{
-			"file" : "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/lib-isl-prefix/src/lib-isl-stamp/lib-isl-build.rule"
+			"file" : "/mnt/c/Users/shivi/Desktop/IEGenLib/build/lib-isl-prefix/src/lib-isl-stamp/lib-isl-build.rule"
 		}
 	],
 	"target" : 

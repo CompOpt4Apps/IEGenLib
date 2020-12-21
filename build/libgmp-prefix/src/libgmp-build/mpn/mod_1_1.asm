@@ -1,1 +1,1 @@
-/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp/mpn/x86_64/mod_1_1.asm
+/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/mpn/x86_64/mod_1_1.asm

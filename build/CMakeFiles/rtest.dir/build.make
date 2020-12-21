@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api
+CMAKE_SOURCE_DIR = /mnt/c/Users/shivi/Desktop/IEGenLib
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build
+CMAKE_BINARY_DIR = /mnt/c/Users/shivi/Desktop/IEGenLib/build
 
 # Utility rule file for rtest.
 
@@ -57,7 +57,7 @@ CMakeFiles/rtest: iegen_lib_test
 
 
 iegen_lib_test: bin/iegenlib_t
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Run iegenlib tests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Run iegenlib tests"
 	IEGEN_HOME=. src/iegenlib_t
 
 rtest: CMakeFiles/rtest
@@ -76,6 +76,6 @@ CMakeFiles/rtest.dir/clean:
 .PHONY : CMakeFiles/rtest.dir/clean
 
 CMakeFiles/rtest.dir/depend:
-	cd /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/rtest.dir/DependInfo.cmake --color=$(COLOR)
+	cd /mnt/c/Users/shivi/Desktop/IEGenLib/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /mnt/c/Users/shivi/Desktop/IEGenLib /mnt/c/Users/shivi/Desktop/IEGenLib /mnt/c/Users/shivi/Desktop/IEGenLib/build /mnt/c/Users/shivi/Desktop/IEGenLib/build /mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/rtest.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/rtest.dir/depend
 

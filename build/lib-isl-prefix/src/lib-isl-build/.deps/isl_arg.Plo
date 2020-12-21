@@ -1,5 +1,4 @@
-isl_arg.lo: \
- /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/isl_arg.c \
+isl_arg.lo: /mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/isl_arg.c \
  /usr/include/stdc-predef.h /usr/include/stdio.h \
  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
  /usr/include/features.h /usr/include/x86_64-linux-gnu/sys/cdefs.h \
@@ -55,10 +54,10 @@ isl_arg.lo: \
  /usr/include/strings.h \
  /usr/include/x86_64-linux-gnu/bits/strings_fortified.h \
  /usr/include/x86_64-linux-gnu/bits/string_fortified.h \
- /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/include/isl/arg.h \
- /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/include/isl/ctx.h \
+ /mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/include/isl/arg.h \
+ /mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/include/isl/ctx.h \
  isl_config.h \
- /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/isl_config_post.h
+ /mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/isl_config_post.h
 
 /usr/include/stdc-predef.h:
 
@@ -180,10 +179,10 @@ isl_arg.lo: \
 
 /usr/include/x86_64-linux-gnu/bits/string_fortified.h:
 
-/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/include/isl/arg.h:
+/mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/include/isl/arg.h:
 
-/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/include/isl/ctx.h:
+/mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/include/isl/ctx.h:
 
 isl_config.h:
 
-/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/isl_config_post.h:
+/mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/isl_config_post.h:

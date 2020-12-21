@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api
+CMAKE_SOURCE_DIR = /mnt/c/Users/shivi/Desktop/IEGenLib
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build
+CMAKE_BINARY_DIR = /mnt/c/Users/shivi/Desktop/IEGenLib/build
 
 # Utility rule file for libgmp.
 
@@ -64,52 +64,52 @@ CMakeFiles/libgmp-complete: libgmp-prefix/src/libgmp-stamp/libgmp-patch
 CMakeFiles/libgmp-complete: libgmp-prefix/src/libgmp-stamp/libgmp-configure
 CMakeFiles/libgmp-complete: libgmp-prefix/src/libgmp-stamp/libgmp-build
 CMakeFiles/libgmp-complete: libgmp-prefix/src/libgmp-stamp/libgmp-install
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Completed 'libgmp'"
-	/usr/bin/cmake -E make_directory /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles
-	/usr/bin/cmake -E touch /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/libgmp-complete
-	/usr/bin/cmake -E touch /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/libgmp-prefix/src/libgmp-stamp/libgmp-done
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Completed 'libgmp'"
+	/usr/bin/cmake -E make_directory /mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles
+	/usr/bin/cmake -E touch /mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/libgmp-complete
+	/usr/bin/cmake -E touch /mnt/c/Users/shivi/Desktop/IEGenLib/build/libgmp-prefix/src/libgmp-stamp/libgmp-done
 
 libgmp-prefix/src/libgmp-stamp/libgmp-install: libgmp-prefix/src/libgmp-stamp/libgmp-build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Performing install step for 'libgmp'"
-	cd /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/libgmp-prefix/src/libgmp-build && $(MAKE) install
-	cd /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/libgmp-prefix/src/libgmp-build && /usr/bin/cmake -E touch /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/libgmp-prefix/src/libgmp-stamp/libgmp-install
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Performing install step for 'libgmp'"
+	cd /mnt/c/Users/shivi/Desktop/IEGenLib/build/libgmp-prefix/src/libgmp-build && $(MAKE) install
+	cd /mnt/c/Users/shivi/Desktop/IEGenLib/build/libgmp-prefix/src/libgmp-build && /usr/bin/cmake -E touch /mnt/c/Users/shivi/Desktop/IEGenLib/build/libgmp-prefix/src/libgmp-stamp/libgmp-install
 
 libgmp-prefix/src/libgmp-stamp/libgmp-mkdir:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Creating directories for 'libgmp'"
-	/usr/bin/cmake -E make_directory /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp
-	/usr/bin/cmake -E make_directory /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/libgmp-prefix/src/libgmp-build
-	/usr/bin/cmake -E make_directory /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/libgmp-prefix
-	/usr/bin/cmake -E make_directory /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/libgmp-prefix/tmp
-	/usr/bin/cmake -E make_directory /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/libgmp-prefix/src/libgmp-stamp
-	/usr/bin/cmake -E make_directory /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/libgmp-prefix/src
-	/usr/bin/cmake -E touch /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/libgmp-prefix/src/libgmp-stamp/libgmp-mkdir
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Creating directories for 'libgmp'"
+	/usr/bin/cmake -E make_directory /mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp
+	/usr/bin/cmake -E make_directory /mnt/c/Users/shivi/Desktop/IEGenLib/build/libgmp-prefix/src/libgmp-build
+	/usr/bin/cmake -E make_directory /mnt/c/Users/shivi/Desktop/IEGenLib/build/libgmp-prefix
+	/usr/bin/cmake -E make_directory /mnt/c/Users/shivi/Desktop/IEGenLib/build/libgmp-prefix/tmp
+	/usr/bin/cmake -E make_directory /mnt/c/Users/shivi/Desktop/IEGenLib/build/libgmp-prefix/src/libgmp-stamp
+	/usr/bin/cmake -E make_directory /mnt/c/Users/shivi/Desktop/IEGenLib/build/libgmp-prefix/src
+	/usr/bin/cmake -E touch /mnt/c/Users/shivi/Desktop/IEGenLib/build/libgmp-prefix/src/libgmp-stamp/libgmp-mkdir
 
 libgmp-prefix/src/libgmp-stamp/libgmp-download: libgmp-prefix/src/libgmp-stamp/libgmp-mkdir
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "No download step for 'libgmp'"
-	cd /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/libgmp-prefix/src && /usr/bin/cmake -E echo_append
-	cd /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/libgmp-prefix/src && /usr/bin/cmake -E touch /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/libgmp-prefix/src/libgmp-stamp/libgmp-download
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "No download step for 'libgmp'"
+	cd /mnt/c/Users/shivi/Desktop/IEGenLib/build/libgmp-prefix/src && /usr/bin/cmake -E echo_append
+	cd /mnt/c/Users/shivi/Desktop/IEGenLib/build/libgmp-prefix/src && /usr/bin/cmake -E touch /mnt/c/Users/shivi/Desktop/IEGenLib/build/libgmp-prefix/src/libgmp-stamp/libgmp-download
 
 libgmp-prefix/src/libgmp-stamp/libgmp-update: libgmp-prefix/src/libgmp-stamp/libgmp-download
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "No update step for 'libgmp'"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "No update step for 'libgmp'"
 	/usr/bin/cmake -E echo_append
-	/usr/bin/cmake -E touch /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/libgmp-prefix/src/libgmp-stamp/libgmp-update
+	/usr/bin/cmake -E touch /mnt/c/Users/shivi/Desktop/IEGenLib/build/libgmp-prefix/src/libgmp-stamp/libgmp-update
 
 libgmp-prefix/src/libgmp-stamp/libgmp-patch: libgmp-prefix/src/libgmp-stamp/libgmp-download
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "No patch step for 'libgmp'"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "No patch step for 'libgmp'"
 	/usr/bin/cmake -E echo_append
-	/usr/bin/cmake -E touch /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/libgmp-prefix/src/libgmp-stamp/libgmp-patch
+	/usr/bin/cmake -E touch /mnt/c/Users/shivi/Desktop/IEGenLib/build/libgmp-prefix/src/libgmp-stamp/libgmp-patch
 
 libgmp-prefix/src/libgmp-stamp/libgmp-configure: libgmp-prefix/tmp/libgmp-cfgcmd.txt
 libgmp-prefix/src/libgmp-stamp/libgmp-configure: libgmp-prefix/src/libgmp-stamp/libgmp-update
 libgmp-prefix/src/libgmp-stamp/libgmp-configure: libgmp-prefix/src/libgmp-stamp/libgmp-patch
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Performing configure step for 'libgmp'"
-	cd /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/libgmp-prefix/src/libgmp-build && /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp/configure --prefix=/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/installed --disable-shared --with-pic
-	cd /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/libgmp-prefix/src/libgmp-build && /usr/bin/cmake -E touch /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/libgmp-prefix/src/libgmp-stamp/libgmp-configure
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Performing configure step for 'libgmp'"
+	cd /mnt/c/Users/shivi/Desktop/IEGenLib/build/libgmp-prefix/src/libgmp-build && /mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/configure --prefix=/mnt/c/Users/shivi/Desktop/IEGenLib/lib/installed --disable-shared --with-pic
+	cd /mnt/c/Users/shivi/Desktop/IEGenLib/build/libgmp-prefix/src/libgmp-build && /usr/bin/cmake -E touch /mnt/c/Users/shivi/Desktop/IEGenLib/build/libgmp-prefix/src/libgmp-stamp/libgmp-configure
 
 libgmp-prefix/src/libgmp-stamp/libgmp-build: libgmp-prefix/src/libgmp-stamp/libgmp-configure
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Performing build step for 'libgmp'"
-	cd /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/libgmp-prefix/src/libgmp-build && $(MAKE)
-	cd /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/libgmp-prefix/src/libgmp-build && /usr/bin/cmake -E touch /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/libgmp-prefix/src/libgmp-stamp/libgmp-build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Performing build step for 'libgmp'"
+	cd /mnt/c/Users/shivi/Desktop/IEGenLib/build/libgmp-prefix/src/libgmp-build && $(MAKE)
+	cd /mnt/c/Users/shivi/Desktop/IEGenLib/build/libgmp-prefix/src/libgmp-build && /usr/bin/cmake -E touch /mnt/c/Users/shivi/Desktop/IEGenLib/build/libgmp-prefix/src/libgmp-stamp/libgmp-build
 
 libgmp: CMakeFiles/libgmp
 libgmp: CMakeFiles/libgmp-complete
@@ -134,6 +134,6 @@ CMakeFiles/libgmp.dir/clean:
 .PHONY : CMakeFiles/libgmp.dir/clean
 
 CMakeFiles/libgmp.dir/depend:
-	cd /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/libgmp.dir/DependInfo.cmake --color=$(COLOR)
+	cd /mnt/c/Users/shivi/Desktop/IEGenLib/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /mnt/c/Users/shivi/Desktop/IEGenLib /mnt/c/Users/shivi/Desktop/IEGenLib /mnt/c/Users/shivi/Desktop/IEGenLib/build /mnt/c/Users/shivi/Desktop/IEGenLib/build /mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/libgmp.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/libgmp.dir/depend
 

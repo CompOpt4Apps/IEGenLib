@@ -6,5 +6,5 @@ CXX_FLAGS = -std=c++11 -fPIC -std=c++11 -O0 -g
 
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/installed/include -I/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gtest/include -I/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/tutorial/../iegen/include/iegenlib 
+CXX_INCLUDES = -I/mnt/c/Users/shivi/Desktop/IEGenLib/lib/installed/include -I/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gtest/include -I/mnt/c/Users/shivi/Desktop/IEGenLib/tutorial/../iegen/include/iegenlib 
 

@@ -1,7 +1,6 @@
-isl_version.lo: \
- /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/isl_version.c \
+isl_version.lo: /mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/isl_version.c \
  /usr/include/stdc-predef.h isl_config.h \
- /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/isl_config_post.h \
+ /mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/isl_config_post.h \
  /usr/include/strings.h /usr/include/features.h \
  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
@@ -17,7 +16,7 @@ isl_version.lo: \
 
 isl_config.h:
 
-/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/isl_config_post.h:
+/mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/isl_config_post.h:
 
 /usr/include/strings.h:
 

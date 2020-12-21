@@ -13,7 +13,7 @@
 # PARTICULAR PURPOSE.
 
 
-VPATH = /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/doc
+VPATH = /mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/doc
 am__is_gnu_make = { \
   if test -z '$(MAKELEVEL)'; then \
     false; \
@@ -135,13 +135,13 @@ am__can_run_installinfo = \
 am__tagged_files = $(HEADERS) $(SOURCES) $(TAGS_FILES) $(LISP)
 am__DIST_COMMON = $(srcdir)/Makefile.in
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
-ACLOCAL = ${SHELL} /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/missing aclocal-1.15
+ACLOCAL = ${SHELL} /mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/missing aclocal-1.15
 AMTAR = $${TAR-tar}
 AM_DEFAULT_VERBOSITY = 0
 AR = ar
-AUTOCONF = ${SHELL} /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/missing autoconf
-AUTOHEADER = ${SHELL} /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/missing autoheader
-AUTOMAKE = ${SHELL} /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/missing automake-1.15
+AUTOCONF = ${SHELL} /mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/missing autoconf
+AUTOHEADER = ${SHELL} /mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/missing autoheader
+AUTOMAKE = ${SHELL} /mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/missing automake-1.15
 AWK = gawk
 CC = gcc
 CCDEPMODE = depmode=gcc3
@@ -185,10 +185,10 @@ LIB_CLANG_EDIT =
 LIPO = 
 LN_S = ln -s
 LTLIBOBJS = 
-MAKEINFO = ${SHELL} /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/missing makeinfo
+MAKEINFO = ${SHELL} /mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/missing makeinfo
 MANIFEST_TOOL = :
 MKDIR_P = /bin/mkdir -p
-MP_CPPFLAGS = -std=gnu99 -I/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/imath_wrap
+MP_CPPFLAGS = -std=gnu99 -I/mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/imath_wrap
 MP_LDFLAGS = 
 MP_LIBS = 
 NM = /usr/bin/nm -B
@@ -216,10 +216,10 @@ SHELL = /bin/bash
 STRIP = strip
 VERSION = 0.16.1
 WARNING_FLAGS = 
-abs_builddir = /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/lib-isl-prefix/src/lib-isl-build/doc
-abs_srcdir = /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/doc
-abs_top_builddir = /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/lib-isl-prefix/src/lib-isl-build
-abs_top_srcdir = /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl
+abs_builddir = /mnt/c/Users/shivi/Desktop/IEGenLib/build/lib-isl-prefix/src/lib-isl-build/doc
+abs_srcdir = /mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/doc
+abs_top_builddir = /mnt/c/Users/shivi/Desktop/IEGenLib/build/lib-isl-prefix/src/lib-isl-build
+abs_top_srcdir = /mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl
 ac_ct_AR = ar
 ac_ct_CC = gcc
 ac_ct_CXX = g++
@@ -249,7 +249,7 @@ host_vendor = unknown
 htmldir = ${docdir}
 includedir = ${prefix}/include
 infodir = ${datarootdir}/info
-install_sh = ${SHELL} /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/install-sh
+install_sh = ${SHELL} /mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/install-sh
 libdir = ${exec_prefix}/lib
 libexecdir = ${exec_prefix}/libexec
 llvm_config_found = 
@@ -261,18 +261,18 @@ oldincludedir = /usr/include
 pdfdir = ${docdir}
 pkgconfig_libdir = ${libdir}/pkgconfig
 pkgconfig_libfile = isl.pc
-prefix = /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/installed
+prefix = /mnt/c/Users/shivi/Desktop/IEGenLib/lib/installed
 program_transform_name = s,x,x,
 psdir = ${docdir}
 runstatedir = ${localstatedir}/run
 sbindir = ${exec_prefix}/sbin
 sharedstatedir = ${prefix}/com
-srcdir = /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/doc
+srcdir = /mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/doc
 sysconfdir = ${prefix}/etc
 target_alias = 
 top_build_prefix = ../
 top_builddir = ..
-top_srcdir = /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl
+top_srcdir = /mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl
 versioninfo = 16:1:1
 CLEANFILES = \
 	manual.toc \

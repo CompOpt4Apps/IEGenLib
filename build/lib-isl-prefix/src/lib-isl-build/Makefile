@@ -17,7 +17,7 @@
 
 
 
-VPATH = /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl
+VPATH = /mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl
 am__is_gnu_make = { \
   if test -z '$(MAKELEVEL)'; then \
     false; \
@@ -653,13 +653,13 @@ distuninstallcheck_listfiles = find . -type f -print
 am__distuninstallcheck_listfiles = $(distuninstallcheck_listfiles) \
   | sed 's|^\./|$(prefix)/|' | grep -v '$(infodir)/dir$$'
 distcleancheck_listfiles = find . -type f -print
-ACLOCAL = ${SHELL} /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/missing aclocal-1.15
+ACLOCAL = ${SHELL} /mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/missing aclocal-1.15
 AMTAR = $${TAR-tar}
 AM_DEFAULT_VERBOSITY = 0
 AR = ar
-AUTOCONF = ${SHELL} /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/missing autoconf
-AUTOHEADER = ${SHELL} /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/missing autoheader
-AUTOMAKE = ${SHELL} /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/missing automake-1.15
+AUTOCONF = ${SHELL} /mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/missing autoconf
+AUTOHEADER = ${SHELL} /mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/missing autoheader
+AUTOMAKE = ${SHELL} /mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/missing automake-1.15
 AWK = gawk
 CC = gcc
 CCDEPMODE = depmode=gcc3
@@ -703,10 +703,10 @@ LIB_CLANG_EDIT =
 LIPO = 
 LN_S = ln -s
 LTLIBOBJS = 
-MAKEINFO = ${SHELL} /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/missing makeinfo
+MAKEINFO = ${SHELL} /mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/missing makeinfo
 MANIFEST_TOOL = :
 MKDIR_P = /bin/mkdir -p
-MP_CPPFLAGS = -std=gnu99 -I/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/imath_wrap
+MP_CPPFLAGS = -std=gnu99 -I/mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/imath_wrap
 MP_LDFLAGS = 
 MP_LIBS = 
 NM = /usr/bin/nm -B
@@ -734,10 +734,10 @@ SHELL = /bin/bash
 STRIP = strip
 VERSION = 0.16.1
 WARNING_FLAGS = 
-abs_builddir = /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/lib-isl-prefix/src/lib-isl-build
-abs_srcdir = /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl
-abs_top_builddir = /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/lib-isl-prefix/src/lib-isl-build
-abs_top_srcdir = /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl
+abs_builddir = /mnt/c/Users/shivi/Desktop/IEGenLib/build/lib-isl-prefix/src/lib-isl-build
+abs_srcdir = /mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl
+abs_top_builddir = /mnt/c/Users/shivi/Desktop/IEGenLib/build/lib-isl-prefix/src/lib-isl-build
+abs_top_srcdir = /mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl
 ac_ct_AR = ar
 ac_ct_CC = gcc
 ac_ct_CXX = g++
@@ -767,7 +767,7 @@ host_vendor = unknown
 htmldir = ${docdir}
 includedir = ${prefix}/include
 infodir = ${datarootdir}/info
-install_sh = ${SHELL} /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/install-sh
+install_sh = ${SHELL} /mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/install-sh
 libdir = ${exec_prefix}/lib
 libexecdir = ${exec_prefix}/libexec
 llvm_config_found = 
@@ -779,18 +779,18 @@ oldincludedir = /usr/include
 pdfdir = ${docdir}
 pkgconfig_libdir = ${libdir}/pkgconfig
 pkgconfig_libfile = isl.pc
-prefix = /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/installed
+prefix = /mnt/c/Users/shivi/Desktop/IEGenLib/lib/installed
 program_transform_name = s,x,x,
 psdir = ${docdir}
 runstatedir = ${localstatedir}/run
 sbindir = ${exec_prefix}/sbin
 sharedstatedir = ${prefix}/com
-srcdir = /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl
+srcdir = /mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl
 sysconfdir = ${prefix}/etc
 target_alias = 
 top_build_prefix = 
 top_builddir = .
-top_srcdir = /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl
+top_srcdir = /mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl
 versioninfo = 16:1:1
 #MAYBE_INTERFACE = interface
 SUBDIRS = . $(MAYBE_INTERFACE) doc
@@ -816,7 +816,7 @@ DEPRECATED_SRC =
 #MP_INCLUDE_H = include/isl/val_gmp.h
 MP_INCLUDE_H = 
 ##GET_MEMORY_FUNCTIONS = mp_get_memory_functions.c
-AM_CPPFLAGS = -I. -I$(srcdir) -I$(srcdir)/include -Iinclude/ -std=gnu99 -I/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/imath_wrap
+AM_CPPFLAGS = -I. -I$(srcdir) -I$(srcdir)/include -Iinclude/ -std=gnu99 -I/mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/imath_wrap
 AM_CFLAGS = 
 libisl_la_SOURCES = \
 	$(MP_SRC) \

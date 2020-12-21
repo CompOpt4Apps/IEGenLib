@@ -1,10 +1,10 @@
 imath_wrap/gmp_compat.lo: \
- /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/imath_wrap/gmp_compat.c \
+ /mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/imath_wrap/gmp_compat.c \
  /usr/include/stdc-predef.h \
- /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/imath_wrap/wrap.h \
- /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/imath_wrap/../imath/gmp_compat.c \
- /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/imath_wrap/../imath/gmp_compat.h \
- /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/imath_wrap/../imath/imath.h \
+ /mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/imath_wrap/wrap.h \
+ /mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/imath_wrap/../imath/gmp_compat.c \
+ /mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/imath_wrap/../imath/gmp_compat.h \
+ /mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/imath_wrap/../imath/imath.h \
  /usr/lib/gcc/x86_64-linux-gnu/7/include/stdint.h /usr/include/stdint.h \
  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
  /usr/include/features.h /usr/include/x86_64-linux-gnu/sys/cdefs.h \
@@ -23,7 +23,7 @@ imath_wrap/gmp_compat.lo: \
  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
  /usr/include/linux/limits.h \
  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
- /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/imath_wrap/../imath/imrat.h \
+ /mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/imath_wrap/../imath/imrat.h \
  /usr/lib/gcc/x86_64-linux-gnu/7/include/stddef.h /usr/include/stdlib.h \
  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
@@ -62,13 +62,13 @@ imath_wrap/gmp_compat.lo: \
 
 /usr/include/stdc-predef.h:
 
-/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/imath_wrap/wrap.h:
+/mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/imath_wrap/wrap.h:
 
-/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/imath_wrap/../imath/gmp_compat.c:
+/mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/imath_wrap/../imath/gmp_compat.c:
 
-/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/imath_wrap/../imath/gmp_compat.h:
+/mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/imath_wrap/../imath/gmp_compat.h:
 
-/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/imath_wrap/../imath/imath.h:
+/mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/imath_wrap/../imath/imath.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/7/include/stdint.h:
 
@@ -112,7 +112,7 @@ imath_wrap/gmp_compat.lo: \
 
 /usr/include/x86_64-linux-gnu/bits/posix2_lim.h:
 
-/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/imath_wrap/../imath/imrat.h:
+/mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/imath_wrap/../imath/imrat.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/7/include/stddef.h:
 

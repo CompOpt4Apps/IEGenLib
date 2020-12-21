@@ -1,8 +1,8 @@
-# Install script for directory: /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api
+# Install script for directory: /mnt/c/Users/shivi/Desktop/IEGenLib
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/iegen")
+  set(CMAKE_INSTALL_PREFIX "/mnt/c/Users/shivi/Desktop/IEGenLib/iegen")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
@@ -39,10 +39,10 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/doc/cmake_install.cmake")
-  include("/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/lib/cmake_install.cmake")
-  include("/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/src/cmake_install.cmake")
-  include("/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/tutorial/cmake_install.cmake")
+  include("/mnt/c/Users/shivi/Desktop/IEGenLib/build/doc/cmake_install.cmake")
+  include("/mnt/c/Users/shivi/Desktop/IEGenLib/build/lib/cmake_install.cmake")
+  include("/mnt/c/Users/shivi/Desktop/IEGenLib/build/src/cmake_install.cmake")
+  include("/mnt/c/Users/shivi/Desktop/IEGenLib/build/tutorial/cmake_install.cmake")
 
 endif()
 
@@ -54,5 +54,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/mnt/c/Users/shivi/Desktop/IEGenLib/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

@@ -6,5 +6,5 @@ CXX_FLAGS = -std=c++11 -fPIC -std=c++11 -O0 -g
 
 CXX_DEFINES = -DGTEST_HAS_PTHREAD=0 -DGTEST_HAS_TR1_TUPLE=0
 
-CXX_INCLUDES = -I/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/installed/include -I/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gtest/include 
+CXX_INCLUDES = -I/mnt/c/Users/shivi/Desktop/IEGenLib/lib/installed/include -I/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gtest/include 
 

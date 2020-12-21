@@ -51,4 +51,4 @@ src/bin/simplifyDriver.dir/drivers/simplification.cc.o
  ../src/./set_relation/set_relation.h
  ../src/./util/jsonHelper.h
  ../src/./util/util.h
- /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/src/drivers/simplification.cc
+ /mnt/c/Users/shivi/Desktop/IEGenLib/src/drivers/simplification.cc

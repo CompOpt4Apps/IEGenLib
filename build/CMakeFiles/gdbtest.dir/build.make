@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api
+CMAKE_SOURCE_DIR = /mnt/c/Users/shivi/Desktop/IEGenLib
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build
+CMAKE_BINARY_DIR = /mnt/c/Users/shivi/Desktop/IEGenLib/build
 
 # Utility rule file for gdbtest.
 
@@ -57,7 +57,7 @@ CMakeFiles/gdbtest: iegen_lib_gdbtest
 
 
 iegen_lib_gdbtest: bin/iegenlib_t
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Run iegenlib tests through gdb"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Run iegenlib tests through gdb"
 	IEGEN_HOME=. gdb src/iegenlib_t
 
 gdbtest: CMakeFiles/gdbtest
@@ -76,6 +76,6 @@ CMakeFiles/gdbtest.dir/clean:
 .PHONY : CMakeFiles/gdbtest.dir/clean
 
 CMakeFiles/gdbtest.dir/depend:
-	cd /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/gdbtest.dir/DependInfo.cmake --color=$(COLOR)
+	cd /mnt/c/Users/shivi/Desktop/IEGenLib/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /mnt/c/Users/shivi/Desktop/IEGenLib /mnt/c/Users/shivi/Desktop/IEGenLib /mnt/c/Users/shivi/Desktop/IEGenLib/build /mnt/c/Users/shivi/Desktop/IEGenLib/build /mnt/c/Users/shivi/Desktop/IEGenLib/build/CMakeFiles/gdbtest.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/gdbtest.dir/depend
 

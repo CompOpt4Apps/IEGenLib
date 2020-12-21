@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api
+CMAKE_SOURCE_DIR = /mnt/c/Users/shivi/Desktop/IEGenLib
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build
+CMAKE_BINARY_DIR = /mnt/c/Users/shivi/Desktop/IEGenLib/build
 
 # Utility rule file for docs.
 
@@ -54,7 +54,7 @@ CMAKE_BINARY_DIR = /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-comp
 include doc/CMakeFiles/docs.dir/progress.make
 
 doc/CMakeFiles/docs:
-	cd /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api && doxygen doc/doxyconfig
+	cd /mnt/c/Users/shivi/Desktop/IEGenLib && doxygen doc/doxyconfig
 
 docs: doc/CMakeFiles/docs
 docs: doc/CMakeFiles/docs.dir/build.make
@@ -67,10 +67,10 @@ doc/CMakeFiles/docs.dir/build: docs
 .PHONY : doc/CMakeFiles/docs.dir/build
 
 doc/CMakeFiles/docs.dir/clean:
-	cd /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/doc && $(CMAKE_COMMAND) -P CMakeFiles/docs.dir/cmake_clean.cmake
+	cd /mnt/c/Users/shivi/Desktop/IEGenLib/build/doc && $(CMAKE_COMMAND) -P CMakeFiles/docs.dir/cmake_clean.cmake
 .PHONY : doc/CMakeFiles/docs.dir/clean
 
 doc/CMakeFiles/docs.dir/depend:
-	cd /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/doc /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/doc /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/doc/CMakeFiles/docs.dir/DependInfo.cmake --color=$(COLOR)
+	cd /mnt/c/Users/shivi/Desktop/IEGenLib/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /mnt/c/Users/shivi/Desktop/IEGenLib /mnt/c/Users/shivi/Desktop/IEGenLib/doc /mnt/c/Users/shivi/Desktop/IEGenLib/build /mnt/c/Users/shivi/Desktop/IEGenLib/build/doc /mnt/c/Users/shivi/Desktop/IEGenLib/build/doc/CMakeFiles/docs.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : doc/CMakeFiles/docs.dir/depend
 

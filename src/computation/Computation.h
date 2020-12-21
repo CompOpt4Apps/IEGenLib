@@ -80,7 +80,7 @@ class Computation {
     //! Clear all data from this Computation
     void clear();
 
-    void toDot(std::fstream& dotFileStream);
+    void toDot(std::fstream& dotFileStream, string fileName);
 
     //! Environment used by this Computation
     Environment env;

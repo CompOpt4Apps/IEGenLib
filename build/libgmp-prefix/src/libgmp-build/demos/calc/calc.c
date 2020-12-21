@@ -62,7 +62,7 @@
 
 
 /* Copy the first part of user declarations.  */
-#line 1 "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp/demos/calc/calc.y" /* yacc.c:339  */
+#line 1 "/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/demos/calc/calc.y" /* yacc.c:339  */
 
 /* A simple integer desk calculator using yacc and gmp.
 
@@ -303,7 +303,7 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 142 "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp/demos/calc/calc.y" /* yacc.c:355  */
+#line 142 "/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/demos/calc/calc.y" /* yacc.c:355  */
 
   char  *str;
   int   var;
@@ -1554,13 +1554,13 @@ yyreduce:
   switch (yyn)
     {
         case 6:
-#line 173 "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
+#line 173 "/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
     { sp = stack[0]; yyerrok; }
 #line 1560 "calc.c" /* yacc.c:1646  */
     break;
 
   case 8:
-#line 177 "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
+#line 177 "/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
     {
       mpz_out_str (stdout, obase, sp); putchar ('\n');
       sp--;
@@ -1570,7 +1570,7 @@ yyreduce:
     break;
 
   case 9:
-#line 182 "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
+#line 182 "/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
     {
       CHECK_VARIABLE ((yyvsp[-2].var));
       mpz_swap (variable[(yyvsp[-2].var)], sp);
@@ -1581,202 +1581,202 @@ yyreduce:
     break;
 
   case 10:
-#line 188 "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
+#line 188 "/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
     { calc_help (); }
 #line 1587 "calc.c" /* yacc.c:1646  */
     break;
 
   case 11:
-#line 189 "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
+#line 189 "/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
     { ibase = 16; obase = -16; }
 #line 1593 "calc.c" /* yacc.c:1646  */
     break;
 
   case 12:
-#line 190 "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
+#line 190 "/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
     { ibase = 0;  obase = 10; }
 #line 1599 "calc.c" /* yacc.c:1646  */
     break;
 
   case 13:
-#line 191 "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
+#line 191 "/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
     { exit (0); }
 #line 1605 "calc.c" /* yacc.c:1646  */
     break;
 
   case 15:
-#line 198 "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
+#line 198 "/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
     { sp--; mpz_add    (sp, sp, sp+1); }
 #line 1611 "calc.c" /* yacc.c:1646  */
     break;
 
   case 16:
-#line 199 "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
+#line 199 "/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
     { sp--; mpz_sub    (sp, sp, sp+1); }
 #line 1617 "calc.c" /* yacc.c:1646  */
     break;
 
   case 17:
-#line 200 "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
+#line 200 "/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
     { sp--; mpz_mul    (sp, sp, sp+1); }
 #line 1623 "calc.c" /* yacc.c:1646  */
     break;
 
   case 18:
-#line 201 "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
+#line 201 "/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
     { sp--; mpz_fdiv_q (sp, sp, sp+1); }
 #line 1629 "calc.c" /* yacc.c:1646  */
     break;
 
   case 19:
-#line 202 "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
+#line 202 "/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
     { sp--; mpz_fdiv_r (sp, sp, sp+1); }
 #line 1635 "calc.c" /* yacc.c:1646  */
     break;
 
   case 20:
-#line 203 "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
+#line 203 "/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
     { CHECK_UI ("Exponent", sp);
                     sp--; mpz_pow_ui (sp, sp, mpz_get_ui (sp+1)); }
 #line 1642 "calc.c" /* yacc.c:1646  */
     break;
 
   case 21:
-#line 205 "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
+#line 205 "/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
     { CHECK_UI ("Shift count", sp);
                     sp--; mpz_mul_2exp (sp, sp, mpz_get_ui (sp+1)); }
 #line 1649 "calc.c" /* yacc.c:1646  */
     break;
 
   case 22:
-#line 207 "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
+#line 207 "/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
     { CHECK_UI ("Shift count", sp);
                     sp--; mpz_fdiv_q_2exp (sp, sp, mpz_get_ui (sp+1)); }
 #line 1656 "calc.c" /* yacc.c:1646  */
     break;
 
   case 23:
-#line 209 "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
+#line 209 "/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
     { CHECK_UI ("Factorial", sp);
                     mpz_fac_ui (sp, mpz_get_ui (sp)); }
 #line 1663 "calc.c" /* yacc.c:1646  */
     break;
 
   case 24:
-#line 211 "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
+#line 211 "/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
     { mpz_neg (sp, sp); }
 #line 1669 "calc.c" /* yacc.c:1646  */
     break;
 
   case 25:
-#line 213 "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
+#line 213 "/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
     { sp--; mpz_set_ui (sp, mpz_cmp (sp, sp+1) <  0); }
 #line 1675 "calc.c" /* yacc.c:1646  */
     break;
 
   case 26:
-#line 214 "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
+#line 214 "/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
     { sp--; mpz_set_ui (sp, mpz_cmp (sp, sp+1) <= 0); }
 #line 1681 "calc.c" /* yacc.c:1646  */
     break;
 
   case 27:
-#line 215 "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
+#line 215 "/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
     { sp--; mpz_set_ui (sp, mpz_cmp (sp, sp+1) == 0); }
 #line 1687 "calc.c" /* yacc.c:1646  */
     break;
 
   case 28:
-#line 216 "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
+#line 216 "/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
     { sp--; mpz_set_ui (sp, mpz_cmp (sp, sp+1) != 0); }
 #line 1693 "calc.c" /* yacc.c:1646  */
     break;
 
   case 29:
-#line 217 "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
+#line 217 "/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
     { sp--; mpz_set_ui (sp, mpz_cmp (sp, sp+1) >= 0); }
 #line 1699 "calc.c" /* yacc.c:1646  */
     break;
 
   case 30:
-#line 218 "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
+#line 218 "/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
     { sp--; mpz_set_ui (sp, mpz_cmp (sp, sp+1) >  0); }
 #line 1705 "calc.c" /* yacc.c:1646  */
     break;
 
   case 31:
-#line 220 "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
+#line 220 "/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
     { sp--; mpz_set_ui (sp, mpz_sgn (sp) && mpz_sgn (sp+1)); }
 #line 1711 "calc.c" /* yacc.c:1646  */
     break;
 
   case 32:
-#line 221 "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
+#line 221 "/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
     { sp--; mpz_set_ui (sp, mpz_sgn (sp) || mpz_sgn (sp+1)); }
 #line 1717 "calc.c" /* yacc.c:1646  */
     break;
 
   case 33:
-#line 223 "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
+#line 223 "/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
     { mpz_abs (sp, sp); }
 #line 1723 "calc.c" /* yacc.c:1646  */
     break;
 
   case 34:
-#line 224 "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
+#line 224 "/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
     { sp--; CHECK_UI ("Binomial base", sp+1);
                                    mpz_bin_ui (sp, sp, mpz_get_ui (sp+1)); }
 #line 1730 "calc.c" /* yacc.c:1646  */
     break;
 
   case 35:
-#line 226 "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
+#line 226 "/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
     { CHECK_UI ("Fibonacci", sp);
                                    mpz_fib_ui (sp, mpz_get_ui (sp)); }
 #line 1737 "calc.c" /* yacc.c:1646  */
     break;
 
   case 37:
-#line 229 "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
+#line 229 "/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
     { sp--; mpz_set_si (sp,
                                          mpz_kronecker (sp, sp+1)); }
 #line 1744 "calc.c" /* yacc.c:1646  */
     break;
 
   case 39:
-#line 232 "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
+#line 232 "/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
     { CHECK_UI ("Lucas number", sp);
                                    mpz_lucnum_ui (sp, mpz_get_ui (sp)); }
 #line 1751 "calc.c" /* yacc.c:1646  */
     break;
 
   case 40:
-#line 234 "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
+#line 234 "/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
     { mpz_nextprime (sp, sp); }
 #line 1757 "calc.c" /* yacc.c:1646  */
     break;
 
   case 41:
-#line 235 "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
+#line 235 "/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
     { sp -= 2; mpz_powm (sp, sp, sp+1, sp+2); }
 #line 1763 "calc.c" /* yacc.c:1646  */
     break;
 
   case 42:
-#line 236 "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
+#line 236 "/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
     { sp--; CHECK_UI ("Nth-root", sp+1);
                                    mpz_root (sp, sp, mpz_get_ui (sp+1)); }
 #line 1770 "calc.c" /* yacc.c:1646  */
     break;
 
   case 43:
-#line 238 "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
+#line 238 "/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
     { mpz_sqrt (sp, sp); }
 #line 1776 "calc.c" /* yacc.c:1646  */
     break;
 
   case 44:
-#line 240 "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
+#line 240 "/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
     {
         sp++;
         CHECK_OVERFLOW ();
@@ -1787,7 +1787,7 @@ yyreduce:
     break;
 
   case 45:
-#line 246 "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
+#line 246 "/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
     {
         sp++;
         CHECK_OVERFLOW ();
@@ -1801,13 +1801,13 @@ yyreduce:
     break;
 
   case 47:
-#line 258 "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
+#line 258 "/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
     { sp--; mpz_gcd (sp, sp, sp+1); }
 #line 1807 "calc.c" /* yacc.c:1646  */
     break;
 
   case 49:
-#line 262 "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
+#line 262 "/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/demos/calc/calc.y" /* yacc.c:1646  */
     { sp--; mpz_lcm (sp, sp, sp+1); }
 #line 1813 "calc.c" /* yacc.c:1646  */
     break;
@@ -2041,7 +2041,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 264 "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp/demos/calc/calc.y" /* yacc.c:1906  */
+#line 264 "/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/demos/calc/calc.y" /* yacc.c:1906  */
 
 
 yyerror (char *s)

@@ -1,8 +1,8 @@
-# Install script for directory: /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/src
+# Install script for directory: /mnt/c/Users/shivi/Desktop/IEGenLib/src
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/iegen")
+  set(CMAKE_INSTALL_PREFIX "/mnt/c/Users/shivi/Desktop/IEGenLib/iegen")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
@@ -38,7 +38,7 @@ if(NOT DEFINED CMAKE_CROSSCOMPILING)
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" TYPE STATIC_LIBRARY FILES "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/src/libiegenlib.a")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" TYPE STATIC_LIBRARY FILES "/mnt/c/Users/shivi/Desktop/IEGenLib/build/src/libiegenlib.a")
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
@@ -48,12 +48,12 @@ if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_
          FILE "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/iegenlib_calc"
          RPATH "")
   endif()
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/bin" TYPE EXECUTABLE FILES "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/bin/iegenlib_calc")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/bin" TYPE EXECUTABLE FILES "/mnt/c/Users/shivi/Desktop/IEGenLib/build/bin/iegenlib_calc")
   if(EXISTS "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/iegenlib_calc" AND
      NOT IS_SYMLINK "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/iegenlib_calc")
     file(RPATH_CHANGE
          FILE "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/iegenlib_calc"
-         OLD_RPATH "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/installed/lib:"
+         OLD_RPATH "/mnt/c/Users/shivi/Desktop/IEGenLib/lib/installed/lib:"
          NEW_RPATH "")
     if(CMAKE_INSTALL_DO_STRIP)
       execute_process(COMMAND "/usr/bin/strip" "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/iegenlib_calc")
@@ -68,12 +68,12 @@ if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_
          FILE "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/iegenlib_t"
          RPATH "")
   endif()
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/bin" TYPE EXECUTABLE FILES "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/bin/iegenlib_t")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/bin" TYPE EXECUTABLE FILES "/mnt/c/Users/shivi/Desktop/IEGenLib/build/bin/iegenlib_t")
   if(EXISTS "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/iegenlib_t" AND
      NOT IS_SYMLINK "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/iegenlib_t")
     file(RPATH_CHANGE
          FILE "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/iegenlib_t"
-         OLD_RPATH "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/installed/lib:"
+         OLD_RPATH "/mnt/c/Users/shivi/Desktop/IEGenLib/lib/installed/lib:"
          NEW_RPATH "")
     if(CMAKE_INSTALL_DO_STRIP)
       execute_process(COMMAND "/usr/bin/strip" "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/iegenlib_t")
@@ -82,36 +82,36 @@ if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/include/iegenlib" TYPE DIRECTORY FILES "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/src/./" FILES_MATCHING REGEX "/[^/]*\\.h$" REGEX "/\\.svn$" EXCLUDE)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/include/iegenlib" TYPE DIRECTORY FILES "/mnt/c/Users/shivi/Desktop/IEGenLib/src/./" FILES_MATCHING REGEX "/[^/]*\\.h$" REGEX "/\\.svn$" EXCLUDE)
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/include/iegenlib/parser/jsoncons/" TYPE DIRECTORY FILES "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/src/./parser/jsoncons/" FILES_MATCHING REGEX "/[^/]*\\.hpp$" REGEX "/\\.svn$" EXCLUDE)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/include/iegenlib/parser/jsoncons/" TYPE DIRECTORY FILES "/mnt/c/Users/shivi/Desktop/IEGenLib/src/./parser/jsoncons/" FILES_MATCHING REGEX "/[^/]*\\.hpp$" REGEX "/\\.svn$" EXCLUDE)
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
   list(APPEND CMAKE_ABSOLUTE_DESTINATION_FILES
-   "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/iegen/test_data/dotTest")
+   "/mnt/c/Users/shivi/Desktop/IEGenLib/iegen/test_data/dotTest")
   if(CMAKE_WARN_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(WARNING "ABSOLUTE path INSTALL DESTINATION : ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
   if(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(FATAL_ERROR "ABSOLUTE path INSTALL DESTINATION forbidden (by caller): ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
-file(INSTALL DESTINATION "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/iegen/test_data" TYPE DIRECTORY FILES "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/src/./set_relation/dotTest" FILES_MATCHING REGEX "/[^/]*\\.in\\.[^/]*$" REGEX "/[^/]*\\.sh$" REGEX "/\\.svn$" EXCLUDE)
+file(INSTALL DESTINATION "/mnt/c/Users/shivi/Desktop/IEGenLib/iegen/test_data" TYPE DIRECTORY FILES "/mnt/c/Users/shivi/Desktop/IEGenLib/src/./set_relation/dotTest" FILES_MATCHING REGEX "/[^/]*\\.in\\.[^/]*$" REGEX "/[^/]*\\.sh$" REGEX "/\\.svn$" EXCLUDE)
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
   MESSAGE ("
 
-Set IEGEN_HOME to /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/iegen
+Set IEGEN_HOME to /mnt/c/Users/shivi/Desktop/IEGenLib/iegen
 
 ")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/src/bindings/cmake_install.cmake")
+  include("/mnt/c/Users/shivi/Desktop/IEGenLib/build/src/bindings/cmake_install.cmake")
 
 endif()
 

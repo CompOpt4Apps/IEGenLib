@@ -1,5 +1,4 @@
-isl_sort.lo: \
- /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/isl_sort.c \
+isl_sort.lo: /mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/isl_sort.c \
  /usr/include/stdc-predef.h /usr/include/errno.h /usr/include/features.h \
  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
@@ -49,7 +48,7 @@ isl_sort.lo: \
  /usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h \
  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
  /usr/include/x86_64-linux-gnu/bits/stdlib.h \
- /mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/isl_sort.h
+ /mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/isl_sort.h
 
 /usr/include/stdc-predef.h:
 
@@ -161,4 +160,4 @@ isl_sort.lo: \
 
 /usr/include/x86_64-linux-gnu/bits/stdlib.h:
 
-/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/isl_sort.h:
+/mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl/isl_sort.h:

@@ -1,7 +1,7 @@
 #!/bin/sh
 
 EXEEXT=
-srcdir=/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl
+srcdir=/mnt/c/Users/shivi/Desktop/IEGenLib/lib/isl
 
 failed=0
 

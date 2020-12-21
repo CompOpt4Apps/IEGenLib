@@ -1,7 +1,7 @@
 dnl config.m4.  Generated automatically by configure.
 changequote(<,>)
 ifdef(<__CONFIG_M4_INCLUDED__>,,<
-define(<CONFIG_TOP_SRCDIR>,<`/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp'>)
+define(<CONFIG_TOP_SRCDIR>,<`/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp'>)
 define(<WANT_ASSERT>,0)
 define(<WANT_PROFILING>,<`no'>)
 define(<M4WRAP_SPURIOUS>,<no>)

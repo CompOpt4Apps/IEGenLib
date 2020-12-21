@@ -1,1 +1,1 @@
-/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp/mpn/x86_64/coreisbr/divrem_1.asm
+/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/mpn/x86_64/coreisbr/divrem_1.asm

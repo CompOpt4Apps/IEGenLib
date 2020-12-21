@@ -4,34 +4,9 @@ digraph dataFlowGraph_1{
 		color = grey; 
 				label = " Domain: { [k] : k >= 0 && -k + 2 n - 2 >= 0 }"; 
 		S0[label= " C[k] = 0"][shape=Mrecord][style=filled][color=lightgrey] ; 
-		subgraph cluster_dataspaceC{ 
-			style = filled; 
-			color = lightgrey; 
-			label= " "; 
-			C[label="C[] "] [shape=box][style=filled][color=lightgrey];
-			}
-		S0->C
-	}
-	subgraph cluster_S1 { 
+		}	subgraph cluster_S1 { 
 		style = bold; 
 		color = grey; 
 				label = " Domain: { [i, j] : i >= 0 && j >= 0 && -i + n - 1 >= 0 && -j + n - 1 >= 0 }"; 
 		S1[label= " C[i+j] = C[i+j] + A[i] * B[j]"][shape=Mrecord][style=filled][color=lightgrey] ; 
-		subgraph cluster_dataspaceA{ 
-			style = filled; 
-			color = lightgrey; 
-			label=" "; 
-			A[label="A[] "] [shape=box][style=filled][color=lightgrey];
-			}
-		A->S1
-		subgraph cluster_dataspaceB{ 
-			style = filled; 
-			color = lightgrey; 
-			label=" "; 
-			B[label="B[] "] [shape=box][style=filled][color=lightgrey];
-			}
-		B->S1
-		C->S1
-		S1->C
-	}
-}
+		}}

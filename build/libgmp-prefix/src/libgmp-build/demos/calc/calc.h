@@ -110,7 +110,7 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 142 "/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/gmp/demos/calc/calc.y" /* yacc.c:1909  */
+#line 142 "/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/demos/calc/calc.y" /* yacc.c:1909  */
 
   char  *str;
   int   var;
