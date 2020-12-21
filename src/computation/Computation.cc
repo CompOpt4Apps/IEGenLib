@@ -157,9 +157,67 @@ bool Computation::isComplete() const {
     return true;
 }
 
+
 void Computation::clear() {
     dataSpaces.clear();
     stmts.clear();
+}
+
+void Computation::toDot(std::fstream& dotFile){
+
+  std::vector<string> data_spaces; 
+  std::cout<<"Reached toDot()"<<"\n";
+  dotFile.open("Example.txt",std::ios::out);
+
+  dotFile << "digraph dataFlowGraph_1{ \n";
+
+  for(int i=0; i<getNumStmts(); i++){
+    
+       dotFile << '\t' << "subgraph cluster_S" << i <<" { \n"
+		       << "\t\t" << "style = bold; \n"
+			   << "\t\t" << "color = grey; \n"
+               << "\t\t" << ""
+			   << "\t\t" <<"label = \" Domain: " << getStmt(i)->getIterationSpace()->prettyPrintString() <<"\"; \n"
+			   << "\t\t" << "S" << i <<"[label= \" " << getStmt(i)->getStmtSourceCode() <<"\"][shape=Mrecord][style=filled][color=lightgrey] ; \n"
+					    ;
+
+       for(int data_read_index=0; data_read_index< getStmt(i)->getNumReads(); data_read_index++){
+            if(!(std::count(data_spaces.begin(), data_spaces.end(), getStmt(i)->getReadDataSpace(data_read_index)))){
+                dotFile << "\t\t" << "subgraph cluster_dataspace" << getStmt(i)->getReadDataSpace(data_read_index) << "{ \n"
+                        << "\t\t\t" << "style = filled; \n"
+                        << "\t\t\t" << "color = lightgrey; \n"
+                        << "\t\t\t" << "label=\" \"; \n"
+                        << "\t\t\t" << getStmt(i)->getReadDataSpace(data_read_index) << "[label=\"" << getStmt(i)->getReadDataSpace(data_read_index) << "[] \"] [shape=box][style=filled][color=lightgrey];\n"
+                        << "\t\t\t" << "}\n";
+                                   
+                data_spaces.push_back(getStmt(i)->getReadDataSpace(data_read_index));
+            }
+             dotFile <<"\t\t" << getStmt(i)->getReadDataSpace(data_read_index) <<  "->" << "S" << i << "\n";
+        }
+
+        for(int data_write_index=0; data_write_index< getStmt(i)->getNumWrites(); data_write_index++){
+            if(!(std::count(data_spaces.begin(), data_spaces.end(), getStmt(i)->getWriteDataSpace(data_write_index)))) {
+                 dotFile << "\t\t" << "subgraph cluster_dataspace" << getStmt(i)->getWriteDataSpace(data_write_index) << "{ \n"
+                         << "\t\t\t" << "style = filled; \n"
+                         << "\t\t\t" << "color = lightgrey; \n"
+                         << "\t\t\t" << "label= \" \"; \n"
+                         << "\t\t\t" << getStmt(i)->getWriteDataSpace(data_write_index) << "[label=\"" << getStmt(i)->getWriteDataSpace(data_write_index) << "[] \"] [shape=box][style=filled][color=lightgrey];\n"
+                         << "\t\t\t" << "}\n";
+                                     
+                         data_spaces.push_back(getStmt(i)->getWriteDataSpace(data_write_index));
+               }
+            dotFile <<"\t\t" << "S" << i << "->" << getStmt(i)->getWriteDataSpace(data_write_index) << "\n";
+            
+         }
+                    
+      dotFile << "\t" << "}\n" ;
+                         
+    }
+
+    dotFile << "}\n";
+    dotFile.close();
+
+
 }
 
 /* Stmt */

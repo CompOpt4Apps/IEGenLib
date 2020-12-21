@@ -21,6 +21,7 @@
 #ifndef COMPUTATION_H_
 #define COMPUTATION_H_
 
+#include <map>
 #include <memory>
 #include <string>
 #include <unordered_set>
@@ -79,6 +80,8 @@ class Computation {
     //! Clear all data from this Computation
     void clear();
 
+    void toDot(std::fstream& dotFileStream);
+
     //! Environment used by this Computation
     Environment env;
 
@@ -89,6 +92,8 @@ class Computation {
     std::unordered_set<std::string> dataSpaces;
 };
 
+//! Prints the dotFile for the Computation structure
+    
 /*!
  * \class Stmt
  *

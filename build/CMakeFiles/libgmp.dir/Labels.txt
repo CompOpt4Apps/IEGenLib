@@ -1,0 +1,13 @@
+# Target labels
+ libgmp
+# Source files and their labels
+/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/libgmp
+/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/libgmp.rule
+/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/CMakeFiles/libgmp-complete.rule
+/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/libgmp-prefix/src/libgmp-stamp/libgmp-install.rule
+/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/libgmp-prefix/src/libgmp-stamp/libgmp-mkdir.rule
+/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/libgmp-prefix/src/libgmp-stamp/libgmp-download.rule
+/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/libgmp-prefix/src/libgmp-stamp/libgmp-update.rule
+/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/libgmp-prefix/src/libgmp-stamp/libgmp-patch.rule
+/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/libgmp-prefix/src/libgmp-stamp/libgmp-configure.rule
+/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/build/libgmp-prefix/src/libgmp-stamp/libgmp-build.rule

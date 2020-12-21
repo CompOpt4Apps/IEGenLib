@@ -1,0 +1,1 @@
+cmd='/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/isl/configure;--prefix=/mnt/c/Users/shivi/Desktop/Project/Code/IEGenLib-improve-computation-api/lib/installed;--with-int=imath-32;--disable-shared;--with-pic'
