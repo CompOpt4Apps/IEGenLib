@@ -46,20 +46,37 @@ class Stmt;
  */
 class VisitorFindUFReplacements : public Visitor {
    private:
-    //! next number to use in creating unique names
-    int nextReplacementNumber = 0;
+    //! next number to use in creating unique function names
+    int nextFuncReplacementNumber = 0;
+    //! next number to use in creating replacement variable names
+    int nextVarReplacementNumber = 0;
     //! 'from' and 'to' string for each UF call macro we need
     std::map<std::string, std::string>* macros;
+    //! conjunction we are currently under, to un-nest UF's into
+    Conjunction* currentConj;
+    //! equality constraints that must be added to the current conjunction to
+    //! make nested UF substitutions valid
+    std::vector<Exp*> UFSubstitutionConstraints;
 
    public:
     VisitorFindUFReplacements(std::map<std::string, std::string>* iMacros) {
         macros = iMacros;
     }
 
-    void preVisitUFCallTerm(UFCallTerm* callTerm) {
+    void preVisitConjunction(Conjunction* conj) { currentConj = conj; }
+
+    void postVisitConjunction(Conjunction* conj) {
+        for (const auto& constraint : UFSubstitutionConstraints) {
+            currentConj->addEquality(constraint);
+        }
+        UFSubstitutionConstraints.clear();
+    }
+
+    void postVisitUFCallTerm(UFCallTerm* callTerm) {
         // set new function name
         std::string replacementName =
-            callTerm->name() + "_" + std::to_string(nextReplacementNumber++);
+            callTerm->name() + "_" +
+            std::to_string(nextFuncReplacementNumber++);
         callTerm->setName(replacementName);
 
         // set up macro outputs
@@ -113,8 +130,34 @@ class VisitorFindUFReplacements : public Visitor {
         i = 0;
         for (const auto& savedTerm : termsToSave) {
             Exp* newParamExp = new Exp();
-            newParamExp->addTerm(savedTerm);
+            if (dynamic_cast<UFCallTerm*>(savedTerm)) {
+                // use a replacement variable, which will be constrained in this
+                // conjunction to be equal to the UF
+                VarTerm* replacementVar = new VarTerm(
+                    savedTerm->coefficient(),
+                    "rvar_" + std::to_string(nextVarReplacementNumber++));
+                newParamExp->addTerm(replacementVar);
+
+                // create a constraint in the current conjunction to make the
+                // replacement valid, for example:
+                // if we have a call A(B(i)), it will become A(rvar_0), and we
+                // will add the constraint B(i) - rvar_0 = 0
+                Exp* replacementExp = new Exp();
+                VarTerm* replacementVarForConstraint =
+                    static_cast<VarTerm*>(replacementVar->clone());
+                replacementVarForConstraint->setCoefficient(-1);
+                savedTerm->setCoefficient(1);
+                replacementExp->addTerm(savedTerm);
+                replacementExp->addTerm(replacementVarForConstraint);
+
+                // add the constraint to a list to be added later, to avoid
+                // double-processing
+                UFSubstitutionConstraints.push_back(replacementExp);
+            } else {
+                newParamExp->addTerm(savedTerm);
+            }
             callTerm->setParamExp(i, newParamExp);
+
             i++;
         }
 
