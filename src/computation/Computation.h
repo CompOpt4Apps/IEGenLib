@@ -73,17 +73,17 @@ class VisitorFindUFReplacements : public Visitor {
     }
 
     void postVisitUFCallTerm(UFCallTerm* callTerm) {
+        // set up macro outputs
+        std::ostringstream os_replaceFrom;
+        std::ostringstream os_replaceTo;
+
         // set new function name
         std::string replacementName =
             callTerm->name() + "_" +
             std::to_string(nextFuncReplacementNumber++);
-        callTerm->setName(replacementName);
-
-        // set up macro outputs
-        std::ostringstream os_replaceFrom;
-        std::ostringstream os_replaceTo;
         os_replaceFrom << replacementName << "(";
         os_replaceTo << callTerm->name() << "(";
+        callTerm->setName(replacementName);
 
         // process every parameter
         bool pastFirstParam = false;
