@@ -328,6 +328,11 @@ unsigned int UFCallTerm::numArgs() const
 { return mNumArgs; }
 
 void UFCallTerm::resetNumArgs(unsigned int newNumArgs) {
+    for (unsigned int i = 0; i < mArgs.size(); i++) {
+        if (mArgs[i]) {
+            delete mArgs[i];
+        }
+    }
     mArgs.clear();
     // fill in new elements as null
     for (unsigned int i = 0; i < newNumArgs; ++i) {
