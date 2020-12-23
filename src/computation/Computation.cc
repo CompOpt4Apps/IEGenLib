@@ -377,35 +377,41 @@ Relation* Stmt::getWriteRelation(unsigned int index) const {
 }
 
 std::string Computation::codeGen() {
-    // temporary test code, should be removed
+    // set up IEGenLib sets/relations for use in codegen
     Relation* originalRel =
         new Relation("{[i]->[j]: A(i, C(1)+1+D(j)) + B(i, j) = 0}");
-    VisitorChangeUFsForOmega* vReplace = new VisitorChangeUFsForOmega();
-    Relation* copyRel = new Relation(*originalRel);
-    // modify relation in-place to use corrected UF calls
-    copyRel->acceptVisitor(vReplace);
-    std::string macros = vReplace->getMacrosString();
-    std::cout << "omega string: " << copyRel->toOmegaString() << "\n";
-    std::cout << "macros:\n" << macros;
-    delete originalRel;
-    delete copyRel;
-    delete vReplace;
+    Relation* modifiedRel = new Relation(*originalRel);
+    VisitorChangeUFsForOmega* vOmegaReplacer = new VisitorChangeUFsForOmega();
 
+    // modify relation in-place to use corrected UF calls
+    modifiedRel->acceptVisitor(vOmegaReplacer);
+    std::string macrosString = vOmegaReplacer->getMacrosString();
+    std::cout << "omega string:\n" << modifiedRel->toOmegaString() << "\n";
+    delete originalRel;
+    delete modifiedRel;
+    delete vOmegaReplacer;
+
+    std::string generatedCode;
+    generatedCode += macrosString;
+    // do actual code generation with Omega
     try {
         std::vector<omega::Relation> transforms;
         std::vector<omega::Relation> iterSpaces;
+        // TODO: pass in omega strings to be parsed and used in codegen
 
         omega::CodeGen cg(transforms, iterSpaces);
         omega::CG_result* cgr = cg.buildAST();
         if (cgr) {
-            std::string s = cgr->printString();
+            generatedCode += cgr->printString() + "\n";
             delete cgr;
-            return s;
         } else {
-            return "/* empty */";
+            generatedCode += "/* empty */\n";
         }
     } catch (const std::exception& e) {
         std::cout << e.what() << std::endl;
     }
+
+    return generatedCode;
 }
+
 }  // namespace iegenlib

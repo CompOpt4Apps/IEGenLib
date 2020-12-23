@@ -58,6 +58,7 @@ return 0; \
     comp->addStmt(s4);
 
     std::string generatedCode = comp->codeGen();
+    std::cout << "generated code:\n" << generatedCode;
     /* EXPECT_EQ(originalCode, generatedCode); */
 
     delete comp;
