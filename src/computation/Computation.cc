@@ -380,18 +380,13 @@ std::string Computation::codeGen() {
     // temporary test code, should be removed
     Relation* originalRel =
         new Relation("{[i]->[j]: A(i, C(1)+1+D(j)) + B(i, j) = 0}");
-    std::map<std::string, std::string> macros;
-    VisitorFindUFReplacements* vReplace =
-        new VisitorFindUFReplacements(&macros);
+    VisitorChangeUFsForOmega* vReplace = new VisitorChangeUFsForOmega();
     Relation* copyRel = new Relation(*originalRel);
     // modify relation in-place to use corrected UF calls
     copyRel->acceptVisitor(vReplace);
-    std::ostringstream os;
-    for (const auto& rule : macros) {
-        os << "#define " << rule.first << " " << rule.second << "\n";
-    }
-    std::cout << os.str();
-    std::cout << copyRel->toOmegaString() << "\n";
+    std::string macros = vReplace->getMacrosString();
+    std::cout << "omega string: " << copyRel->toOmegaString() << "\n";
+    std::cout << "macros:\n" << macros;
     delete originalRel;
     delete copyRel;
     delete vReplace;

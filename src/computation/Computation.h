@@ -21,7 +21,6 @@
 #ifndef COMPUTATION_H_
 #define COMPUTATION_H_
 
-#include <list>
 #include <map>
 #include <memory>
 #include <sstream>
@@ -39,38 +38,40 @@ namespace iegenlib {
 class Stmt;
 
 /*!
- * \class VisitorFindUFReplacements
+ * \class VisitorChangeUFsForOmega
  *
- * \brief Visitor used to build a list of replacement names/formats for UF calls
- * that Omega doesn't support.
+ * \brief Visitor that makes modifications to UF call terms so that they are
+ * acceptable for what Omega supports.
+ *
+ * Intended for use on sets/relations. Also gathers information needed to pass
+ * along to Omega codegen, such as #define macros.
  */
-class VisitorFindUFReplacements : public Visitor {
+class VisitorChangeUFsForOmega : public Visitor {
    private:
-    //! next number to use in creating unique function names
-    int nextFuncReplacementNumber = 0;
-    //! next number to use in creating replacement variable names
-    int nextVarReplacementNumber = 0;
-    //! 'from' and 'to' string for each UF call macro we need
-    std::map<std::string, std::string>* macros;
-    //! conjunction we are currently under, to un-nest UF's into
-    Conjunction* currentConj;
+    //! string stream for building up necessary UF call macros
+    std::ostringstream macros;
     //! equality constraints that must be added to the current conjunction to
     //! make nested UF substitutions valid
     std::vector<Exp*> UFSubstitutionConstraints;
     //! symbolic constants to use in place of UF calls that become 0-args
     std::map<UFCallTerm*, VarTerm*> zeroArgUFReplacements;
+    //! next number to use in creating unique function names
+    int nextFuncReplacementNumber = 0;
+    //! next number to use in creating replacement variable names
+    int nextVarReplacementNumber = 0;
 
    public:
-    VisitorFindUFReplacements(std::map<std::string, std::string>* iMacros) {
-        macros = iMacros;
-    }
+    //! Construct a new VisitorChangeUFsForOmega
+    VisitorChangeUFsForOmega() {}
 
-    void preVisitConjunction(Conjunction* conj) { currentConj = conj; }
+    //! Get the UF call macros required for the code corresponding to the
+    //! set/relation to function correctly, as a string
+    std::string getMacrosString() { return macros.str(); }
 
     void postVisitConjunction(Conjunction* conj) {
         // add constraints on replacement variables to make UF subs valid
         for (const auto& constraint : UFSubstitutionConstraints) {
-            currentConj->addEquality(constraint);
+            conj->addEquality(constraint);
         }
         UFSubstitutionConstraints.clear();
     }
@@ -81,9 +82,10 @@ class VisitorFindUFReplacements : public Visitor {
         for (const auto& originalTerm : exp->getTermList()) {
             UFCallTerm* originalTermAsUF =
                 dynamic_cast<UFCallTerm*>(originalTerm);
-            for (const auto& replacementRule : zeroArgUFReplacements) {
+            auto it = zeroArgUFReplacements.begin();
+            while (it != zeroArgUFReplacements.end()) {
                 // match term with one that must be replaced
-                if (replacementRule.first == originalTermAsUF) {
+                if (it->first == originalTermAsUF) {
                     // perform replacement
                     // subtract original UF term
                     UFCallTerm* subtractionTerm =
@@ -92,7 +94,12 @@ class VisitorFindUFReplacements : public Visitor {
                         -1 * subtractionTerm->coefficient());
                     exp->addTerm(subtractionTerm);
                     // add new symbolic constant term
-                    exp->addTerm(replacementRule.second);
+                    exp->addTerm(it->second->clone());
+                    // remove replacement rule after it has been applied, to
+                    // avoid extra searching later
+                    it = zeroArgUFReplacements.erase(it);
+                } else {
+                    it++;
                 }
             }
         }
@@ -108,7 +115,6 @@ class VisitorFindUFReplacements : public Visitor {
             callTerm->name() + "_" +
             std::to_string(nextFuncReplacementNumber++);
         os_replaceFrom << replacementName;
-        /* os_replaceFrom << replacementName << "("; */
         os_replaceTo << callTerm->name() << "(";
         callTerm->setName(replacementName);
 
@@ -118,6 +124,7 @@ class VisitorFindUFReplacements : public Visitor {
         bool haveAddedToOutput;
         bool haveAddedToInput;
         Exp* paramExp;
+        // maintain a list of parameters that will remain in the call
         std::vector<Term*> termsToSave;
         unsigned int i;
         for (i = 0; i < callTerm->numArgs(); ++i) {
@@ -129,8 +136,7 @@ class VisitorFindUFReplacements : public Visitor {
                 os_replaceTo << ",";
             }
             paramExp = callTerm->getParamExp(i);
-            std::list<Term*> originalTerms = paramExp->getTermList();
-            for (const auto& term : originalTerms) {
+            for (const auto& term : paramExp->getTermList()) {
                 if (term->isConst()) {
                     // add the term to the function call, without making an
                     // input param for it
@@ -146,7 +152,7 @@ class VisitorFindUFReplacements : public Visitor {
                         << "p" << paramNumber;
                     os_replaceTo << (haveAddedToOutput ? "+" : "") << "p"
                                  << paramNumber;
-                    termsToSave.push_back(std::move(term->clone()));
+                    termsToSave.push_back(term->clone());
                     paramNumber++;
                     haveAddedToInput = true;
                 }
@@ -203,7 +209,8 @@ class VisitorFindUFReplacements : public Visitor {
             os_replaceFrom << ")";
         }
         os_replaceTo << ")";
-        macros->emplace(os_replaceFrom.str(), os_replaceTo.str());
+        macros << "#define " << os_replaceFrom.str() << " "
+               << os_replaceTo.str() << "\n";
     }
 };
 
