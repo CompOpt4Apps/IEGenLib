@@ -39,6 +39,7 @@ ExternalProject_Add(lib-omega
     # building requires running make depend, then make
     BUILD_COMMAND make depend
     COMMAND make
+    INSTALL_COMMAND ""
 )
 
 ExternalProject_Add(lib-isl
