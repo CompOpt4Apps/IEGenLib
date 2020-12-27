@@ -364,7 +364,10 @@ public:
         { return toISLString(0); }
     std::string toISLString(int aritySplit) const;
 
-    //! Convert to Omega format (substitute in tuple vars and declare symbolics).
+    //! Convert to Omega format (substitute in tuple vars and declare
+    //! symbolics properly).
+    //! Meant to be used on a modified SparseConstraints which fits
+    //! Omega's restrictions -- see VisitorChangeUFsForOmega
     virtual std::string toOmegaString() const
         { return toOmegaString(0); }
     std::string toOmegaString(int aritySplit) const;
