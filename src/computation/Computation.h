@@ -31,6 +31,7 @@
 
 #include "set_relation/Visitor.h"
 #include "set_relation/environment.h"
+#include "set_relation/expression.h"
 #include "set_relation/set_relation.h"
 
 namespace iegenlib {
@@ -50,11 +51,13 @@ class VisitorChangeUFsForOmega : public Visitor {
    private:
     //! string stream for building up necessary UF call macros
     std::ostringstream macros;
+
     //! equality constraints that must be added to the current conjunction to
     //! make nested UF substitutions valid
     std::vector<Exp*> UFSubstitutionConstraints;
     //! symbolic constants to use in place of UF calls that become 0-args
     std::map<UFCallTerm*, VarTerm*> zeroArgUFReplacements;
+
     //! next number to use in creating unique function names
     int nextFuncReplacementNumber = 0;
     //! next number to use in creating replacement variable names
@@ -63,6 +66,18 @@ class VisitorChangeUFsForOmega : public Visitor {
    public:
     //! Construct a new VisitorChangeUFsForOmega
     VisitorChangeUFsForOmega() {}
+
+    //! Destructor
+    ~VisitorChangeUFsForOmega() {
+        // no need to delete UF substitution constraints, which is done as they
+        // are applied
+        for (const auto& it : zeroArgUFReplacements) {
+            delete it.first;
+            delete it.second;
+        }
+
+        zeroArgUFReplacements.clear();
+    }
 
     //! Get the UF call macros required for the code corresponding to the
     //! set/relation to function correctly, as a string
@@ -73,6 +88,8 @@ class VisitorChangeUFsForOmega : public Visitor {
         for (const auto& constraint : UFSubstitutionConstraints) {
             conj->addEquality(constraint);
         }
+        // clear references but don't free memory, as the constraints have been
+        // adopted by the conjunction
         UFSubstitutionConstraints.clear();
     }
 
@@ -80,26 +97,17 @@ class VisitorChangeUFsForOmega : public Visitor {
         // replace 0-arg UF calls we found while traversing with symbolic
         // constants
         for (const auto& originalTerm : exp->getTermList()) {
-            UFCallTerm* originalTermAsUF =
-                dynamic_cast<UFCallTerm*>(originalTerm);
-            auto it = zeroArgUFReplacements.begin();
-            while (it != zeroArgUFReplacements.end()) {
+            for (const auto& it : zeroArgUFReplacements) {
                 // match term with one that must be replaced
-                if (it->first == originalTermAsUF) {
+                if (*it.first == *originalTerm) {
                     // perform replacement
                     // subtract original UF term
-                    UFCallTerm* subtractionTerm =
-                        static_cast<UFCallTerm*>(originalTermAsUF->clone());
+                    Term* subtractionTerm = originalTerm->clone();
                     subtractionTerm->setCoefficient(
                         -1 * subtractionTerm->coefficient());
                     exp->addTerm(subtractionTerm);
                     // add new symbolic constant term
-                    exp->addTerm(it->second->clone());
-                    // remove replacement rule after it has been applied, to
-                    // avoid extra searching later
-                    it = zeroArgUFReplacements.erase(it);
-                } else {
-                    it++;
+                    exp->addTerm(it.second->clone());
                 }
             }
         }
@@ -167,7 +175,7 @@ class VisitorChangeUFsForOmega : public Visitor {
             i = 0;
             for (const auto& savedTerm : termsToSave) {
                 Exp* newParamExp = new Exp();
-                if (dynamic_cast<UFCallTerm*>(savedTerm)) {
+                if (savedTerm->isUFCall()) {
                     // use a replacement variable, which will be constrained in
                     // this conjunction to be equal to the UF
                     VarTerm* replacementVar = new VarTerm(
@@ -181,14 +189,14 @@ class VisitorChangeUFsForOmega : public Visitor {
                     // constraint B(i) - rvar_0 = 0
                     Exp* replacementExp = new Exp();
                     VarTerm* replacementVarForConstraint =
-                        static_cast<VarTerm*>(replacementVar->clone());
+                        new VarTerm(*replacementVar);
                     replacementVarForConstraint->setCoefficient(-1);
                     savedTerm->setCoefficient(1);
                     replacementExp->addTerm(savedTerm);
                     replacementExp->addTerm(replacementVarForConstraint);
 
                     // add the constraint to a list to be added later, to avoid
-                    // double-processing
+                    // the double-processing that would occur if we added it now
                     UFSubstitutionConstraints.push_back(replacementExp);
                 } else {
                     newParamExp->addTerm(savedTerm);
@@ -201,7 +209,8 @@ class VisitorChangeUFsForOmega : public Visitor {
             // replace 0-arg UF calls with symbolic constant
             VarTerm* replacementSymbol =
                 new VarTerm(callTerm->coefficient(), callTerm->name());
-            zeroArgUFReplacements.emplace(callTerm, replacementSymbol);
+            zeroArgUFReplacements.emplace(new UFCallTerm(*callTerm),
+                                          replacementSymbol);
         }
 
         // complete outputs for this UF call
