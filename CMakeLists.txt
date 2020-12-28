@@ -33,11 +33,14 @@ ExternalProject_Add(libgmp
 ExternalProject_Add(lib-omega
     GIT_REPOSITORY "https://github.com/BoiseState-AdaptLab/omega"
     GIT_TAG "8747c32d9acf6b5b857dd48a1dfe6fb75fa3c9b8"
+    GIT_REMOTE_UPDATE_STRATEGY CHECKOUT
+    GIT_PROGRESS ON
     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/omega
     BUILD_IN_SOURCE ON
-    CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/lib/omega/configure --prefix=${CMAKE_CURRENT_SOURCE_DIR}/lib/installed
-    GIT_REMOTE_UPDATE_STRATEGY CHECKOUT
-    BUILD_COMMAND ${MAKE}
+    CONFIGURE_COMMAND autoreconf -i
+    COMMAND ./configure --prefix=${CMAKE_CURRENT_SOURCE_DIR}/lib/installed
+    # BUILD_COMMAND make
+    # INSTALL_COMMAND make install
 )
 
 ExternalProject_Add(lib-isl
@@ -48,6 +51,8 @@ ExternalProject_Add(lib-isl
     BUILD_COMMAND ${MAKE})
 
 ## -I and -L on external projects
+include_directories(${IEGENLIB_SOURCE_DIR}/lib/omega/install/include)
+link_directories(${IEGENLIB_SOURCE_DIR}/lib/omega/install/lib)
 include_directories(${IEGENLIB_SOURCE_DIR}/lib/installed/include)
 link_directories( "${IEGENLIB_SOURCE_DIR}/lib/installed/lib" )
 include_directories(${IEGENLIB_SOURCE_DIR}/lib/gtest/include)
