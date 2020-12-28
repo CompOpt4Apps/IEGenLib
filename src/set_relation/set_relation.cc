@@ -1681,32 +1681,42 @@ std::string SparseConstraints::toISLString(int aritySplit) const {
     return ss.str();
 }
 
-std::string SparseConstraints::toOmegaString(int aritySplit) const {
-
+std::string SparseConstraints::toOmegaString(
+    int aritySplit, std::set<std::string> ufCallDecls) const {
     // collect all symbolic/parameter variable names
     // and print the declaration for the symbolics
     std::stringstream ss;
-    StringIterator * symIter;
-    bool foundSymbols = false;
-    for (std::list<Conjunction*>::const_iterator i=mConjunctions.begin();
-            i != mConjunctions.end(); i++) {
+    StringIterator* symIter;
+    bool usedDecls = false;
+    for (std::list<Conjunction*>::const_iterator i = mConjunctions.begin();
+         i != mConjunctions.end(); i++) {
         symIter = (*i)->getSymbolIterator();
         while (symIter->hasNext()) {
             // print out start of symbol declaration at first symbol
-            if (foundSymbols == false) {
+            if (usedDecls == false) {
                 ss << "symbolic ";
-                foundSymbols = true;
+                usedDecls = true;
                 // print the symbol declaration itself
                 ss << symIter->next();
-            // later symbols will have a comma and then var name
+                // later symbols will have a comma and then var name
             } else {
                 ss << ", " << symIter->next();
             }
         }
         delete symIter;
     }
+    for (const auto& decl : ufCallDecls) {
+        if (usedDecls == false) {
+            ss << "symbolic ";
+            usedDecls = true;
+            ss << decl;
+            // later symbols will have a comma and then var name
+        } else {
+            ss << ", " << decl;
+        }
+    }
     // finish off declaration if there were symbols
-    if (foundSymbols) {
+    if (usedDecls) {
         ss << "; ";
     }
 
@@ -1717,7 +1727,6 @@ std::string SparseConstraints::toOmegaString(int aritySplit) const {
 
     return ss.str();
 }
-
 
 std::string SparseConstraints::toDotString() const{
     std::stringstream result;
