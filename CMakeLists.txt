@@ -27,7 +27,9 @@ include(ExternalProject)
 ExternalProject_Add(libgmp
     DOWNLOAD_COMMAND ""
     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/gmp
-    CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/lib/gmp/configure --prefix=${CMAKE_CURRENT_SOURCE_DIR}/lib/installed --disable-shared --with-pic
+    BUILD_IN_SOURCE ON
+    CONFIGURE_COMMAND autoreconf -i
+    COMMAND ./configure --prefix=${CMAKE_CURRENT_SOURCE_DIR}/lib/installed --disable-shared --with-pic
     BUILD_COMMAND ${MAKE})
 
 ExternalProject_Add(lib-omega
@@ -46,7 +48,9 @@ ExternalProject_Add(lib-isl
     DOWNLOAD_COMMAND ""
     DEPENDS libgmp lib-omega
     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/isl
-    CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/lib/isl/configure --prefix=${CMAKE_CURRENT_SOURCE_DIR}/lib/installed --with-int=imath-32 --disable-shared --with-pic
+    BUILD_IN_SOURCE ON
+    CONFIGURE_COMMAND autoreconf -i
+    COMMAND ./configure --prefix=${CMAKE_CURRENT_SOURCE_DIR}/lib/installed --with-int=imath-32 --disable-shared --with-pic
     BUILD_COMMAND ${MAKE})
 
 ## -I and -L on external projects
