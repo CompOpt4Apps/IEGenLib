@@ -33,7 +33,6 @@ ExternalProject_Add(libgmp
 ExternalProject_Add(lib-omega
     GIT_REPOSITORY "https://github.com/BoiseState-AdaptLab/omega"
     GIT_TAG "ead9ddde1bccf57a6d5a9419bd25279dda38cea2"
-    GIT_REMOTE_UPDATE_STRATEGY CHECKOUT
     GIT_PROGRESS ON
     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/omega
     BUILD_IN_SOURCE ON
