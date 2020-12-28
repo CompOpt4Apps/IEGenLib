@@ -51,8 +51,6 @@ ExternalProject_Add(lib-isl
 include_directories(${IEGENLIB_SOURCE_DIR}/lib/installed/include)
 link_directories( "${IEGENLIB_SOURCE_DIR}/lib/installed/lib" )
 include_directories(${IEGENLIB_SOURCE_DIR}/lib/gtest/include)
-include_directories(${IEGENLIB_SOURCE_DIR}/lib/omega/include)
-link_directories(${IEGENLIB_SOURCE_DIR}/lib/omega/lib)
 
 ## gtest is added through lib (our source through src)
 add_subdirectory(lib)
