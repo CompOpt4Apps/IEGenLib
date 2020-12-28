@@ -368,9 +368,11 @@ public:
     //! symbolics properly).
     //! Meant to be used on a modified SparseConstraints which fits
     //! Omega's restrictions -- see VisitorChangeUFsForOmega
-    virtual std::string toOmegaString() const
-        { return toOmegaString(0); }
-    std::string toOmegaString(int aritySplit) const;
+    virtual std::string toOmegaString(std::set<std::string> ufDecls) const {
+        return toOmegaString(0, ufDecls);
+    }
+    std::string toOmegaString(int aritySplit,
+                              std::set<std::string> ufDecls) const;
 
     //! Create a graph for visualization with graphviz
     virtual std::string toDotString() const;
