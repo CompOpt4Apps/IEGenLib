@@ -91,25 +91,12 @@ TEST(ComputationTest, ConvertToOmega) {
         "{[i,j] : 0 <= i && i < N && 0 <= j && j < M && i=foo(i+1) && "
         "j=foo(4)}");
     s2->acceptVisitor(vOmegaReplacer);
-    std::cout << s2->toOmegaString(vOmegaReplacer->getUFCallDecls()) << "\n";
     omega::Relation* s2_omega = omega::parser::ParseRelation(
         s2->toOmegaString(vOmegaReplacer->getUFCallDecls()));
-    EXPECT_EQ("{[i,j]: 0 <= i < N && 0 <= j < M && i=foo_0(i) && j=foo_1}\n",
+    EXPECT_EQ("{[i,foo_1]: foo_0(i) = i && 0 <= foo_1 < M && 0 <= i < N}\n",
               s2_omega->print_with_subs_to_string());
     delete s2;
     delete s2_omega;
-    vOmegaReplacer->reset();
-
-    // complicated UF calls
-    Set* s3 = new Set("{[i,j] : 0 <= i && i < N && i=foo(i+1, A(i))}");
-    s3->acceptVisitor(vOmegaReplacer);
-    std::cout << s3->toOmegaString(vOmegaReplacer->getUFCallDecls()) << "\n";
-    omega::Relation* s3_omega = omega::parser::ParseRelation(
-        s3->toOmegaString(vOmegaReplacer->getUFCallDecls()));
-    EXPECT_EQ("{[i,j]: 0 <= i < N && i=foo_1(i, rvar_0) && rvar_0 = A_0(i)}\n",
-              s3_omega->print_with_subs_to_string());
-    delete s3;
-    delete s3_omega;
     vOmegaReplacer->reset();
 
     /* RELATIONS */
@@ -120,7 +107,7 @@ TEST(ComputationTest, ConvertToOmega) {
     r1->acceptVisitor(vOmegaReplacer);
     omega::Relation* r1_omega = omega::parser::ParseRelation(
         r1->toOmegaString(vOmegaReplacer->getUFCallDecls()));
-    EXPECT_EQ("{[i]->[j]: 0 <= i < N && 0 <= j < N}\n",
+    EXPECT_EQ("{[i] -> [j] : 0 <= i < N && 0 <= j < N}\n",
               r1_omega->print_with_subs_to_string());
     delete r1;
     delete r1_omega;
@@ -131,29 +118,12 @@ TEST(ComputationTest, ConvertToOmega) {
         "{[i,j]->[k]: 0 <= i && i < N && 0 <= j && j < M && i=foo(i+1) && "
         "k=foo(4)}");
     r2->acceptVisitor(vOmegaReplacer);
-    std::cout << r2->toOmegaString(vOmegaReplacer->getUFCallDecls()) << "\n";
     omega::Relation* r2_omega = omega::parser::ParseRelation(
         r2->toOmegaString(vOmegaReplacer->getUFCallDecls()));
-    EXPECT_EQ(
-        "{[i,j]->[k]: 0 <= i < N && 0 <= j < M && i=foo_0(i) && j=foo_1}\n",
-        r2_omega->print_with_subs_to_string());
+    EXPECT_EQ("{[i,j] -> [foo_1] : foo_0(i) = i && 0 <= i < N && 0 <= j < M}\n",
+              r2_omega->print_with_subs_to_string());
     delete r2;
     delete r2_omega;
-    vOmegaReplacer->reset();
-
-    // complicated UF calls
-    iegenlib::Relation* r3 = new iegenlib::Relation(
-        "{[i,j]->[k,l]: 0 <= i && i < N && i=foo(i+1, A(k+3,l))}");
-    r3->acceptVisitor(vOmegaReplacer);
-    std::cout << r3->toOmegaString(vOmegaReplacer->getUFCallDecls()) << "\n";
-    omega::Relation* r3_omega = omega::parser::ParseRelation(
-        r3->toOmegaString(vOmegaReplacer->getUFCallDecls()));
-    EXPECT_EQ(
-        "{[i,j]->[k,l]: 0 <= i < N && i=foo_1(i, rvar_0) && rvar_0 = "
-        "A_0(k,l)}\n",
-        r3_omega->print_with_subs_to_string());
-    delete r3;
-    delete r3_omega;
     vOmegaReplacer->reset();
 
     delete vOmegaReplacer;
