@@ -25,8 +25,42 @@
 
 using namespace iegenlib;
 
+/*!
+ * \class ComputationTest
+ *
+ * \brief gtest fixture for computation testing
+ */
+class ComputationTest : public ::testing::Test {
+   private:
+    VisitorChangeUFsForOmega* vOmegaReplacer;
+
+   protected:
+    virtual void SetUp() override {
+        vOmegaReplacer = new VisitorChangeUFsForOmega();
+    }
+    virtual void TearDown() override { delete vOmegaReplacer; }
+
+    //! attempt to convert the given SparseConstraints to Omega format,
+    //! EXPECTing that it will equal the given Omega string
+    void checkOmegaConversion(SparseConstraints iegenStructure,
+                              std::string expectedOmegaResult) {
+        SCOPED_TRACE(iegenStructure.prettyPrintString());
+
+        // do conversion
+        iegenStructure.acceptVisitor(vOmegaReplacer);
+        std::cout << iegenStructure.prettyPrintString() << "\n";
+        omega::Relation* omegaConverted = omega::parser::ParseRelation(
+            iegenStructure.toOmegaString(vOmegaReplacer->getUFCallDecls()));
+        EXPECT_EQ(expectedOmegaResult + "\n",
+                  omegaConverted->print_with_subs_to_string());
+
+        delete omegaConverted;
+        vOmegaReplacer->reset();
+    }
+};
+
 #pragma mark DenseMVCodeGen
-TEST(ComputationTest, DenseMVCodeGen) {
+TEST_F(ComputationTest, DenseMVCodeGen) {
     std::string originalCode =
         "\
 int i; \
@@ -70,63 +104,24 @@ return 0; \
 #pragma mark ConvertToOmega
 // Test that we can correctly convert from IEGenLib SparseConstraints to Omega
 // Relations
-TEST(ComputationTest, ConvertToOmega) {
-    VisitorChangeUFsForOmega* vOmegaReplacer = new VisitorChangeUFsForOmega();
-
-    /* SETS */
-
+TEST_F(ComputationTest, ConvertToOmega) {
+    /* Sets */
     // basic test
-    Set* s1 = new Set("{[i,j] : 0 <= i && i < N && 0 <= j && j < N }");
-    s1->acceptVisitor(vOmegaReplacer);
-    std::cout << s1->prettyPrintString() << "\n";
-    omega::Relation* s1_omega = omega::parser::ParseRelation(
-        s1->toOmegaString(vOmegaReplacer->getUFCallDecls()));
-    EXPECT_EQ("{[i,j]: 0 <= i < N && 0 <= j < N}\n",
-              s1_omega->print_with_subs_to_string());
-    delete s1;
-    delete s1_omega;
-    vOmegaReplacer->reset();
-
+    checkOmegaConversion(Set("{[i,j] : 0 <= i && i < N && 0 <= j && j < N }"),
+                         "{[i,j]: 0 <= i < N && 0 <= j < N}");
     // with simple UF constraints
-    Set* s2 = new Set(
-        "{[i,j] : 0 <= i && i < N && 0 <= j && j < M && i=foo(i+1)}");
-    s2->acceptVisitor(vOmegaReplacer);
-    std::cout << s2->prettyPrintString() << "\n";
-    omega::Relation* s2_omega = omega::parser::ParseRelation(
-        s2->toOmegaString(vOmegaReplacer->getUFCallDecls()));
-    EXPECT_EQ("{[i,j]: foo_0(i) = i && 0 <= i < N && 0 <= j < M}\n",
-              s2_omega->print_with_subs_to_string());
-    delete s2;
-    delete s2_omega;
-    vOmegaReplacer->reset();
+    checkOmegaConversion(
+        Set("{[i,j] : 0 <= i && i < N && 0 <= j && j < M && i=foo(i+1)}"),
+        "{[i,j]: foo_0(i) = i && 0 <= i < N && 0 <= j < M}");
 
-    /* RELATIONS */
-
+    /* Relations */
     // basic test
-    iegenlib::Relation* r1 = new iegenlib::Relation(
-        "{[i]->[j]: 0 <= i && i < N && 0 <= j && j < N }");
-    r1->acceptVisitor(vOmegaReplacer);
-    std::cout << r1->prettyPrintString() << "\n";
-    omega::Relation* r1_omega = omega::parser::ParseRelation(
-        r1->toOmegaString(vOmegaReplacer->getUFCallDecls()));
-    EXPECT_EQ("{[i] -> [j] : 0 <= i < N && 0 <= j < N}\n",
-              r1_omega->print_with_subs_to_string());
-    delete r1;
-    delete r1_omega;
-    vOmegaReplacer->reset();
-
+    checkOmegaConversion(
+        iegenlib::Relation("{[i]->[j]: 0 <= i && i < N && 0 <= j && j < N }"),
+        "{[i] -> [j] : 0 <= i < N && 0 <= j < N}");
     // with simple UF constraints
-    iegenlib::Relation* r2 = new iegenlib::Relation(
-        "{[i,j]->[k]: 0 <= i && i < N && 0 <= j && j < M && i=foo(i+1)}");
-    r2->acceptVisitor(vOmegaReplacer);
-    std::cout << r2->prettyPrintString() << "\n";
-    omega::Relation* r2_omega = omega::parser::ParseRelation(
-        r2->toOmegaString(vOmegaReplacer->getUFCallDecls()));
-    EXPECT_EQ("{[i,j] -> [k] : foo_0(i) = i && 0 <= i < N && 0 <= j < M}\n",
-              r2_omega->print_with_subs_to_string());
-    delete r2;
-    delete r2_omega;
-    vOmegaReplacer->reset();
-
-    delete vOmegaReplacer;
+    checkOmegaConversion(
+        iegenlib::Relation(
+            "{[i,j]->[k]: 0 <= i && i < N && 0 <= j && j < M && i=foo(i+1)}"),
+        "{[i,j] -> [k] : foo_0(i) = i && 0 <= i < N && 0 <= j < M}");
 }
