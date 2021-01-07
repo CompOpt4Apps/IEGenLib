@@ -193,12 +193,6 @@ class VisitorChangeUFsForOmega : public Visitor {
     //! declarations of UF calls needed by Omega parser
     std::set<std::string> ufCallDecls;
 
-    //! equality constraints that must be added to the current conjunction to
-    //! make nested UF substitutions valid
-    std::vector<Exp*> UFSubstitutionConstraints;
-    //! symbolic constants to use in place of UF calls that become 0-args
-    std::map<UFCallTerm*, VarTerm*> zeroArgUFReplacements;
-
     //! next number to use in creating unique function names
     int nextFuncReplacementNumber;
     //! next number to use in creating replacement variable names
@@ -216,16 +210,6 @@ class VisitorChangeUFsForOmega : public Visitor {
         macros.str(std::string());
         ufCallDecls.clear();
 
-        UFSubstitutionConstraints.clear();
-        // no need to delete UF substitution constraints, which is done as they
-        // are applied
-        for (const auto& it : zeroArgUFReplacements) {
-            delete it.first;
-            delete it.second;
-        }
-
-        zeroArgUFReplacements.clear();
-
         nextFuncReplacementNumber = 0;
         nextVarReplacementNumber = 0;
     }
@@ -235,44 +219,7 @@ class VisitorChangeUFsForOmega : public Visitor {
     std::string getMacrosString() { return macros.str(); }
 
     //! Get the declarations of UF calls needed by Omega parser
-    std::set<std::string> getUFCallDecls() {
-        /* std::set<std::string> output; */
-        /* for (const auto& decl : ufCallDecls) { */
-        /*     output.emplace(decl.first + "(" + decl.second + ")"); */
-        /* } */
-        /* return output; */
-        return ufCallDecls;
-    }
-
-    void postVisitConjunction(Conjunction* conj) {
-        // add constraints on replacement variables to make UF subs valid
-        for (const auto& constraint : UFSubstitutionConstraints) {
-            conj->addEquality(constraint);
-        }
-        // clear references but don't free memory, as the constraints have been
-        // adopted by the conjunction
-        UFSubstitutionConstraints.clear();
-    }
-
-    void postVisitExp(Exp* exp) {
-        // replace 0-arg UF calls we found while traversing with symbolic
-        // constants
-        for (const auto& originalTerm : exp->getTermList()) {
-            for (const auto& it : zeroArgUFReplacements) {
-                // match term with one that must be replaced
-                if (*it.first == *originalTerm) {
-                    // perform replacement
-                    // subtract original UF term
-                    Term* subtractionTerm = originalTerm->clone();
-                    subtractionTerm->setCoefficient(
-                        -1 * subtractionTerm->coefficient());
-                    exp->addTerm(subtractionTerm);
-                    // add new symbolic constant term
-                    exp->addTerm(it.second->clone());
-                }
-            }
-        }
-    }
+    std::set<std::string> getUFCallDecls() { return ufCallDecls; }
 
     void postVisitUFCallTerm(UFCallTerm* callTerm) {
         // set up macro outputs
@@ -330,52 +277,19 @@ class VisitorChangeUFsForOmega : public Visitor {
             pastFirstParam = true;
         }
 
-        if (termsToSave.size() != 0) {
-            // rewrite argument list, one arg per term in original call args
-            callTerm->resetNumArgs(termsToSave.size());
-            i = 0;
-            for (const auto& savedTerm : termsToSave) {
-                Exp* newParamExp = new Exp();
-                if (savedTerm->isUFCall()) {
-                    // use a replacement variable, which will be constrained in
-                    // this conjunction to be equal to the UF
-                    VarTerm* replacementVar = new VarTerm(
-                        savedTerm->coefficient(),
-                        "rvar_" + std::to_string(nextVarReplacementNumber++));
-                    newParamExp->addTerm(replacementVar);
+        // rewrite argument list, one arg per term in original call args
+        callTerm->resetNumArgs(termsToSave.size());
+        i = 0;
+        for (const auto& savedTerm : termsToSave) {
+            Exp* newParamExp = new Exp();
+            newParamExp->addTerm(savedTerm);
+            callTerm->setParamExp(i, newParamExp);
 
-                    // create a constraint in the current conjunction to make
-                    // the replacement valid, for example: if we have a call
-                    // A(B(i)), it will become A(rvar_0), and we will add the
-                    // constraint B(i) - rvar_0 = 0
-                    Exp* replacementExp = new Exp();
-                    VarTerm* replacementVarForConstraint =
-                        new VarTerm(*replacementVar);
-                    replacementVarForConstraint->setCoefficient(-1);
-                    savedTerm->setCoefficient(1);
-                    replacementExp->addTerm(savedTerm);
-                    replacementExp->addTerm(replacementVarForConstraint);
+            // add UF call to the list of declarations
+            ufCallDecls.emplace(callTerm->name() + "(" +
+                                std::to_string(callTerm->numArgs()) + ")");
 
-                    // add the constraint to a list to be added later, to avoid
-                    // the double-processing that would occur if we added it now
-                    UFSubstitutionConstraints.push_back(replacementExp);
-                } else {
-                    newParamExp->addTerm(savedTerm);
-                }
-                callTerm->setParamExp(i, newParamExp);
-
-                // add UF call to the list of declarations
-                ufCallDecls.emplace(callTerm->name() + "(" +
-                                    std::to_string(callTerm->numArgs()) + ")");
-
-                i++;
-            }
-        } else {
-            // replace 0-arg UF calls with symbolic constant
-            VarTerm* replacementSymbol =
-                new VarTerm(callTerm->coefficient(), callTerm->name());
-            zeroArgUFReplacements.emplace(new UFCallTerm(*callTerm),
-                                          replacementSymbol);
+            i++;
         }
 
         // complete outputs for this UF call
