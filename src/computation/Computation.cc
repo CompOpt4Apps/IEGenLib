@@ -29,6 +29,7 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
+#include <code_gen/parser/parser.h>
 
 #include "set_relation/set_relation.h"
 
@@ -178,8 +179,13 @@ std::string Computation::codeGen() {
         VisitorChangeUFsForOmega* vOmegaReplacer =
             new VisitorChangeUFsForOmega();
         for (const auto& stmt : stmts) {
+
             Set* modifiedIterSpace = new Set(*stmt.getIterationSpace());
             modifiedIterSpace->acceptVisitor(vOmegaReplacer);
+            generatedCode << vOmegaReplacer->getMacrosString();
+            vOmegaReplacer->reset();
+            Relation * modifiedTransform = new Relation(*stmt.getExecutionSchedule());
+            modifiedTransform->acceptVisitor(vOmegaReplacer);
             generatedCode << vOmegaReplacer->getMacrosString();
 
             // TODO
@@ -188,9 +194,22 @@ std::string Computation::codeGen() {
             /* transforms.push_back(parse relation on
              * stmt.getExecutionSchedule()->prettyPrintString());
              */
+            std::string omegaIterString = modifiedIterSpace->toOmegaString
+                    (vOmegaReplacer->getUFCallDecls());
+            omega::Relation * omegaIterSpace = omega::parser::
+                    ParseRelation(omegaIterString);
+
+            omega::Relation * omegaTransform = omega::parser::
+            ParseRelation(modifiedTransform->toOmegaString
+                    (vOmegaReplacer->getUFCallDecls()));
+            iterSpaces.push_back(omega::copy(*omegaIterSpace));
+            transforms.push_back(omega::copy(*omegaTransform));
 
             vOmegaReplacer->reset();
             delete modifiedIterSpace;
+            delete modifiedTransform;
+            delete omegaIterSpace;
+            delete omegaTransform;
         }
         delete vOmegaReplacer;
         generatedCode << "\n";
@@ -248,6 +267,7 @@ Stmt& Stmt::operator=(const Stmt& other) {
             {writeInfo.first,
              std::unique_ptr<Relation>(new Relation(*writeInfo.second))});
     }
+    return *this;
 }
 
 bool Stmt::operator==(const Stmt& other) const {
