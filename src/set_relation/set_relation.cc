@@ -570,6 +570,32 @@ std::string Conjunction::prettyPrintString() const {
     return ss.str();
 }
 
+std::string Conjunction::prettyPrintStringForOmega() const {
+    std::stringstream ss;
+    ss << "{ " << mTupleDecl.toStringForOmega(true,mInArity);
+    bool first = true;
+    Conjunction *dup = this->clone();
+
+    dup->cleanUp();
+    for (std::list<Exp*>::const_iterator i = dup->mEqualities.begin();
+                i != dup->mEqualities.end(); i++) {
+        if (not first) { ss << " && "; }
+        else { ss << " : ";  first = false; }
+        ss << (*i)->prettyPrintString(mTupleDecl)<< " = 0";
+    }
+
+    for (std::list<Exp*>::const_iterator i = dup->mInequalities.begin();
+                i != dup->mInequalities.end(); i++) {
+        if (not first) { ss << " && "; }
+        else { ss << " : ";  first = false; }
+        ss << (*i)->prettyPrintString(mTupleDecl)<< " >= 0";
+    }
+
+    ss << " }";
+    delete dup;
+    return ss.str();
+}
+
 /* Convert to a string for DOT output
 **
 ** \param next_id       id for this Conjunction node
@@ -1645,6 +1671,35 @@ std::string SparseConstraints::prettyPrintString(int aritySplit) const {
     return ss.str();
 }
 
+std::string SparseConstraints::prettyPrintStringForOmega(int aritySplit) const {
+    std::stringstream ss;
+
+    bool first = true;
+    for (std::list<Conjunction*>::const_iterator i=mConjunctions.begin();
+                i != mConjunctions.end(); i++) {
+        if (not first) { ss << " union "; }
+        ss << (*i)->prettyPrintStringForOmega();
+        first = false;
+    }
+
+    // If there are no conjunctions then indicate we have an empty set
+    // by printing out generic arity tuple declarations and
+    // FALSE as a constraint.
+    // FIXME: refactor with identical code in SparseConstraints::toString
+    if (mConjunctions.size()==0) {
+        TupleDecl genericTupleDecl(arity());
+        for (int i=0; i<arity(); i++) {
+            std::stringstream varname;
+            varname << "tv" << i;
+            genericTupleDecl.setTupleElem(i,varname.str());
+        }
+        ss << "{ " << genericTupleDecl.toString(true,aritySplit)
+           << " : FALSE }";
+    }
+
+    return ss.str();
+}
+
 std::string SparseConstraints::toISLString(int aritySplit) const {
 
     // collect all symbolic/parameter variable names
@@ -1720,8 +1775,8 @@ std::string SparseConstraints::toOmegaString(
         ss << "; ";
     }
 
-    // do a typical prettyPrint
-    ss << prettyPrintString(aritySplit);
+    // do a prettyPrint modified to work correctly with Omega's parsing
+    ss << prettyPrintStringForOmega(aritySplit);
 
     ss << ";";
 
@@ -2165,6 +2220,10 @@ std::string Relation::toString() const {
 
 std::string Relation::prettyPrintString() const {
     return SparseConstraints::prettyPrintString(mInArity);
+}
+
+std::string Relation::prettyPrintStringForOmega() const {
+    return SparseConstraints::prettyPrintStringForOmega(mInArity);
 }
 
 std::string Relation::toDotString() const{
