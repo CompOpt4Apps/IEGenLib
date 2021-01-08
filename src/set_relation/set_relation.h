@@ -132,6 +132,8 @@ public:
 
     //! Convert to a human-readable string, pretty printed.
     virtual std::string prettyPrintString() const;
+    //! Get pretty-printed string with modifications for Omega parsing
+    virtual std::string prettyPrintStringForOmega() const;
 
     //! Convert to a DOT string.
     //! Pass in the parent node id and the next node id.
@@ -358,6 +360,10 @@ public:
     virtual std::string prettyPrintString() const
         { return prettyPrintString(0); }
     std::string prettyPrintString(int aritySplit) const;
+    //! Human-readable string with adjustments for Omega parsing
+    virtual std::string prettyPrintStringForOmega() const
+        { return prettyPrintStringForOmega(0); }
+    std::string prettyPrintStringForOmega(int aritySplit) const;
 
     //! Convert to ISL format (substitute in tuple vars and declare symbolics).
     virtual std::string toISLString() const
@@ -685,6 +691,8 @@ public:
 
     //! Convert to a human-readable string (substitute in tuple vars).
     std::string prettyPrintString() const;
+    //! Pretty print with modifications for Omega parsing
+    std::string prettyPrintStringForOmega() const;
 
     //! Get/Set our in/out arity.
     int inArity() const { return mInArity; }

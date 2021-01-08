@@ -44,11 +44,11 @@ class ComputationTest : public ::testing::Test {
     //! EXPECTing that it will equal the given Omega string
     void checkOmegaConversion(SparseConstraints iegenStructure,
                               std::string expectedOmegaResult) {
-        SCOPED_TRACE(iegenStructure.prettyPrintString());
+        SCOPED_TRACE(iegenStructure.prettyPrintStringForOmega());
 
         // do conversion
         iegenStructure.acceptVisitor(vOmegaReplacer);
-        std::cout << iegenStructure.prettyPrintString() << "\n";
+        std::cout << iegenStructure.prettyPrintStringForOmega() << "\n";
         omega::Relation* omegaConverted = omega::parser::ParseRelation(
             iegenStructure.toOmegaString(vOmegaReplacer->getUFCallDecls()));
         EXPECT_EQ(expectedOmegaResult + "\n",
@@ -109,6 +109,8 @@ TEST_F(ComputationTest, ConvertToOmega) {
     // basic test
     checkOmegaConversion(Set("{[i,j] : 0 <= i && i < N && 0 <= j && j < N }"),
                          "{[i,j]: 0 <= i < N && 0 <= j < N}");
+    // empty set
+    checkOmegaConversion(Set("{[]}"), "{ TRUE }");
     // with simple UF constraints
     checkOmegaConversion(
         Set("{[i,j] : 0 <= i && i < N && 0 <= j && j < M && i=foo(i+1)}"),
@@ -119,6 +121,8 @@ TEST_F(ComputationTest, ConvertToOmega) {
     checkOmegaConversion(
         iegenlib::Relation("{[i]->[j]: 0 <= i && i < N && 0 <= j && j < N }"),
         "{[i] -> [j] : 0 <= i < N && 0 <= j < N}");
+    // empty relation
+    checkOmegaConversion(iegenlib::Relation("{[]->[]}"), "{ TRUE }");
     // with simple UF constraints
     checkOmegaConversion(
         iegenlib::Relation(
