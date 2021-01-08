@@ -1,7 +1,7 @@
 /*!
  * \file Computation.h
  *
- * \brief Declarations for the Computation and Stmt classes.
+ * \brief Declarations for the Computation class, and supporting classes.
  *
  * The Computation class is the SPF representation of a logical computation.
  * It contains a Stmt class for each statement, which in turn contains
@@ -188,7 +188,6 @@ class VisitorChangeUFsForOmega : public Visitor {
     std::ostringstream macros;
     //! declarations of UF calls needed by Omega parser
     std::set<std::string> ufCallDecls;
-
     //! next number to use in creating unique function names
     int nextFuncReplacementNumber;
     //! next number to use in creating replacement variable names
@@ -196,106 +195,22 @@ class VisitorChangeUFsForOmega : public Visitor {
 
    public:
     //! Construct a new VisitorChangeUFsForOmega
-    VisitorChangeUFsForOmega() { reset(); }
+    VisitorChangeUFsForOmega();
 
     //! Destructor
-    ~VisitorChangeUFsForOmega() { reset(); }
+    ~VisitorChangeUFsForOmega();
 
     //! Reset state of visitor for additional use, including freeing memory
-    void reset() {
-        macros.str(std::string());
-        ufCallDecls.clear();
-
-        nextFuncReplacementNumber = 0;
-        nextVarReplacementNumber = 0;
-    }
+    void reset();
 
     //! Get the UF call macros required for the code corresponding to the
     //! set/relation to function correctly, as a string
-    std::string getMacrosString() { return macros.str(); }
+    std::string getMacrosString();
 
     //! Get the declarations of UF calls needed by Omega parser
-    std::set<std::string> getUFCallDecls() { return ufCallDecls; }
+    std::set<std::string> getUFCallDecls();
 
-    void postVisitUFCallTerm(UFCallTerm* callTerm) {
-        // set up macro outputs
-        std::ostringstream os_replaceFrom;
-        std::ostringstream os_replaceTo;
-
-        // set new function name
-        std::string replacementName =
-            callTerm->name() + "_" +
-            std::to_string(nextFuncReplacementNumber++);
-        os_replaceFrom << replacementName;
-        os_replaceTo << callTerm->name() << "(";
-        callTerm->setName(replacementName);
-
-        // process every parameter
-        bool pastFirstParam = false;
-        int paramNumber = 0;
-        bool haveAddedToOutput;
-        bool haveAddedToInput;
-        Exp* paramExp;
-        // maintain a list of parameters that will remain in the call
-        std::vector<Term*> termsToSave;
-        unsigned int i;
-        for (i = 0; i < callTerm->numArgs(); ++i) {
-            // loop through all terms, adding them into the 'to' and 'from'
-            // appropriately
-            haveAddedToInput = false;
-            haveAddedToOutput = false;
-            if (pastFirstParam) {
-                os_replaceTo << ",";
-            }
-            paramExp = callTerm->getParamExp(i);
-            for (const auto& term : paramExp->getTermList()) {
-                if (term->isConst()) {
-                    // add the term to the function call, without making an
-                    // input param for it
-                    os_replaceTo << (haveAddedToOutput ? "+" : "") << "("
-                                 << term->toString() << ")";
-                } else {
-                    // add the term to both the input and output function call
-                    if (!haveAddedToInput && !pastFirstParam) {
-                        os_replaceFrom << "(";
-                    }
-                    os_replaceFrom
-                        << ((pastFirstParam || haveAddedToInput) ? "," : "")
-                        << "p" << paramNumber;
-                    os_replaceTo << (haveAddedToOutput ? "+" : "") << "p"
-                                 << paramNumber;
-                    termsToSave.push_back(term->clone());
-                    paramNumber++;
-                    haveAddedToInput = true;
-                }
-                haveAddedToOutput = true;
-            }
-            pastFirstParam = true;
-        }
-
-        // rewrite argument list, one arg per term in original call args
-        callTerm->resetNumArgs(termsToSave.size());
-        i = 0;
-        for (const auto& savedTerm : termsToSave) {
-            Exp* newParamExp = new Exp();
-            newParamExp->addTerm(savedTerm);
-            callTerm->setParamExp(i, newParamExp);
-
-            // add UF call to the list of declarations
-            ufCallDecls.emplace(callTerm->name() + "(" +
-                                std::to_string(callTerm->numArgs()) + ")");
-
-            i++;
-        }
-
-        // complete outputs for this UF call
-        if (haveAddedToInput) {
-            os_replaceFrom << ")";
-        }
-        os_replaceTo << ")";
-        macros << "#define " << os_replaceFrom.str() << " "
-               << os_replaceTo.str() << "\n";
-    }
+    void postVisitUFCallTerm(UFCallTerm*);
 };
 
 }  // namespace iegenlib
