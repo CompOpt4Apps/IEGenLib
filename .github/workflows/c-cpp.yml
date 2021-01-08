@@ -16,6 +16,8 @@ jobs:
     - name: Complete flex installation
       run: sudo apt-get install libfl-dev
     - uses: actions/checkout@v2
+    - name: set TERM
+      run: echo "TERM=xterm-256color" >> $GITHUB_ENV
     - name: configure
       run: ./configure
     - name: make

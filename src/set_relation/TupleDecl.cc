@@ -10,8 +10,8 @@
  *
  * \authors Michelle Strout and Joe Strout
  *
- * Copyright (c) 2009, 2010, 2011, 2012, Colorado State University 
- * All rights reserved. 
+ * Copyright (c) 2009, 2010, 2011, 2012, Colorado State University
+ * All rights reserved.
  * See ../../COPYING for details. <br>
  */
 
@@ -48,7 +48,7 @@ TupleDecl TupleDecl::sDefaultTupleDecl(unsigned int arity) {
     for (unsigned int i=0; i<arity; i++) {
         genericTupleDecl.setTupleElem(i,sDefaultTupleVarName(i));
     }
-    return genericTupleDecl; 
+    return genericTupleDecl;
 }
 
 //! Copy constructor.
@@ -96,7 +96,7 @@ bool TupleDecl::operator<( const TupleDecl& other) const {
         if (mIsConst[i] && !other.mIsConst[i]) { return false; }
         //if other is const and we are not, other's greater
         if (other.mIsConst[i] && !mIsConst[i]) { return true; }
-        
+
         //compare values
         if (mConstVal[i] < other.mConstVal[i]) { return true; }
         if (other.mConstVal[i] < mConstVal[i]) { return false; }
@@ -146,8 +146,8 @@ TupleDecl* TupleDecl::clone() const {
 }
 
 
-std::string TupleDecl::toString(bool withBrackets, 
-                                unsigned int aritySplit, 
+std::string TupleDecl::toString(bool withBrackets,
+                                unsigned int aritySplit,
                                 bool generic) const {
     std::stringstream ss;
     // Do not print empty brackets if have zero arity.
@@ -169,9 +169,30 @@ std::string TupleDecl::toString(bool withBrackets,
     return ss.str();
 }
 
+std::string TupleDecl::toStringForOmega(bool withBrackets,
+                                unsigned int aritySplit,
+                                bool generic) const {
+    std::stringstream ss;
+    // print brackets regardless of potential zero arity
+    if (withBrackets) { ss << "["; }
+    for (unsigned int i=0; i<mSize; i++) {
+        if (i > 0) {
+            if (aritySplit == i && withBrackets) {
+                ss << "] -> [";
+            } else {
+                ss << ", ";
+            }
+        }
+        ss << elemToString(i, generic);
+    }
+    if (withBrackets) { ss << "]"; }
+
+    return ss.str();
+}
+
 void TupleDecl::setTupleElem(unsigned int elem_loc, int const_val) {
     if (elem_loc>=mSize) {
-        throw 
+        throw
             assert_exception("TupleDecl::setTupleElem: elem_loc out of bounds");
     }
     mIsConst[elem_loc] = true;
@@ -180,7 +201,7 @@ void TupleDecl::setTupleElem(unsigned int elem_loc, int const_val) {
 
 void TupleDecl::setTupleElem(unsigned int elem_loc, std::string var_string) {
     if (elem_loc>=mSize) {
-        throw 
+        throw
             assert_exception("TupleDecl::setTupleElem: elem_loc out of bounds");
     }
     mIsConst[elem_loc] = false;
@@ -197,7 +218,7 @@ void TupleDecl::copyTupleElem(const TupleDecl& other,
 }
 
 
-std::string TupleDecl::elemToString(unsigned int elem_loc, 
+std::string TupleDecl::elemToString(unsigned int elem_loc,
                                     bool generic) const {
     std::stringstream ss;
     if (mIsConst[elem_loc]) {
@@ -226,19 +247,19 @@ std::string TupleDecl::elemVarString(unsigned int elem_loc) const {
 
 //! Returns an appropriate term for this tuple element.
 //! If the view location is a constant then will use that
-//! constant.  Otherwise makes a tuple variable for the 
-//! use_elem_loc. 
+//! constant.  Otherwise makes a tuple variable for the
+//! use_elem_loc.
 //! Caller is responsible for deleting the resulting Term.
 Term* TupleDecl::elemCreateTerm(unsigned int view_elem_loc,
                                 unsigned int use_elem_loc) const {
-                                
+
     // Checking the indices to see if they fall within size.
     if (view_elem_loc>=size()) {
         throw assert_exception("TupleDecl::elemCreateTerm: view_elem_loc "
                                "parameter is out of bounds");
-        
+
     }
-    
+
     // Determining whether to make a constant or a tuple variable term.
     if (mIsConst[view_elem_loc]) {
         return new Term(mConstVal[view_elem_loc]);
