@@ -1,1 +1,0 @@
-/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/mpn/x86_64/mod_1_1.asm

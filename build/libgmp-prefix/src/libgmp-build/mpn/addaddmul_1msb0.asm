@@ -1,1 +1,0 @@
-/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/mpn/x86_64/addaddmul_1msb0.asm

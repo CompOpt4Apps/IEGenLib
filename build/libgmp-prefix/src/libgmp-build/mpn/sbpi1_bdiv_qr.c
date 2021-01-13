@@ -1,1 +1,0 @@
-/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/mpn/generic/sbpi1_bdiv_qr.c

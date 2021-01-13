@@ -1,1 +1,0 @@
-/mnt/c/Users/shivi/Desktop/IEGenLib/lib/gmp/mpn/generic/sec_pi1_div.c
