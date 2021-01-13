@@ -198,10 +198,10 @@ std::string Computation::codeGen() {
                     (vOmegaReplacer->getUFCallDecls());
             omega::Relation * omegaIterSpace = omega::parser::
                     ParseRelation(omegaIterString);
-
+            std::string omegaTransformString =modifiedTransform->toOmegaString
+                    (vOmegaReplacer->getUFCallDecls());
             omega::Relation * omegaTransform = omega::parser::
-            ParseRelation(modifiedTransform->toOmegaString
-                    (vOmegaReplacer->getUFCallDecls()));
+            ParseRelation(omegaTransformString);
             iterSpaces.push_back(omega::copy(*omegaIterSpace));
             transforms.push_back(omega::copy(*omegaTransform));
 
