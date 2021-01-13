@@ -162,9 +162,99 @@ bool Computation::isComplete() const {
     return true;
 }
 
+
 void Computation::clear() {
     dataSpaces.clear();
     stmts.clear();
+}
+
+
+
+void Computation::toDot(std::fstream& dotFile, string fileName){
+
+  std::vector<string> data_spaces;    //Maintains the list of dataspaces already created
+  std::vector<string> loop_variable;  //Maintains list of loop variables
+  std::cout<<"Reached toDot()"<<"\n";
+  dotFile.open(fileName,std::ios::out); // Open the file to write the dot code
+
+  // Start of the dotFile
+  dotFile << "digraph dataFlowGraph_1{ \n";
+
+  //Adding nodes for each statement
+  for(int i=0; i<getNumStmts(); i++){
+        dotFile << '\t' << "subgraph cluster_S" << i <<" { \n"
+		       << "\t\t" << "style = bold; \n"
+			   << "\t\t" << "color = grey; \n"
+               << "\t\t" << ""
+			   << "\t\t" <<"label = \" Domain: " << getStmt(i)->getIterationSpace()->prettyPrintString() <<"\"; \n"
+			   << "\t\t" << "S" << i <<"[label= \" " << getStmt(i)->getStmtSourceCode() <<"\"][shape=Mrecord][style=filled][color=lightgrey] ; \n"
+               << "\t\t" << "}";
+  }
+
+  //Adding the participating dataspaces for each statement and mapping out the read and write access.
+  for(int i=0; i<getNumStmts(); i++) {
+
+       //Iterates over the read-DataSpaces
+       for(int data_read_index=0; data_read_index< getStmt(i)->getNumReads(); data_read_index++){
+
+           string readDataSpace = getStmt(i)->getReadDataSpace(data_read_index);
+            // Check to make sure the data space is not created if it already exists
+            if(!(std::count(data_spaces.begin(), data_spaces.end(), readDataSpace))){
+                // Creates data space
+                dotFile << "\t\t" << "subgraph cluster_dataspace" << readDataSpace << "{ \n"
+                        << "\t\t\t" << "style = filled; \n"
+                        << "\t\t\t" << "color = lightgrey; \n"
+                        << "\t\t\t" << "label=\" \"; \n"
+                        << "\t\t\t" << readDataSpace << "[label=\"" << readDataSpace << "[] \"] [shape=box][style=filled][color=lightgrey];\n"
+                        << "\t\t\t" << "}\n";
+
+                data_spaces.push_back(readDataSpace);
+            }
+
+            size_t start_pos = getStmt(i)->getReadRelation(data_read_index)->getString().rfind("[");
+            size_t end_pos = getStmt(i)->getReadRelation(data_read_index)->getString().rfind("]");
+
+             dotFile <<"\t\t" << readDataSpace
+                     <<  "->"
+                     << "S" << i
+                     << "[label=\"["<< getStmt(i)->getReadRelation(data_read_index)->getString().substr(start_pos+1,end_pos-start_pos-1)<<"]\"]"
+                     << "\n";
+        }
+
+        //Iterates over the read-DataSpaces
+        for(int data_write_index=0; data_write_index< getStmt(i)->getNumWrites(); data_write_index++){
+
+            string writeDataSpace = getStmt(i)->getWriteDataSpace(data_write_index);
+            // Check to make sure the data space is not created if it already exists
+            if(!(std::count(data_spaces.begin(), data_spaces.end(), writeDataSpace))) {
+
+                 dotFile << "\t\t" << "subgraph cluster_dataspace" << writeDataSpace << "{ \n"
+                         << "\t\t\t" << "style = filled; \n"
+                         << "\t\t\t" << "color = lightgrey; \n"
+                         << "\t\t\t" << "label= \" \"; \n"
+                         << "\t\t\t" << writeDataSpace << "[label=\"" << writeDataSpace << "[] \"] [shape=box][style=filled][color=lightgrey];\n"
+                         << "\t\t\t" << "}\n";
+
+                         data_spaces.push_back(writeDataSpace);
+               }
+
+            size_t start_pos = getStmt(i)->getWriteRelation(data_write_index)->getString().find("[");
+            size_t end_pos = getStmt(i)->getWriteRelation(data_write_index)->getString().find("]");
+
+            dotFile <<"\t\t" << "S"
+                    << i
+                    << "->"
+                    << writeDataSpace
+                    << "[label=\"["<< getStmt(i)->getWriteRelation(data_write_index)->getString().substr(start_pos+1,end_pos-start_pos-1)<<"]\"]"
+                    << "\n";
+
+         }
+
+    }
+
+    dotFile << "}\n";
+    dotFile.close();
+
 }
 
 std::string Computation::codeGen() {
@@ -179,6 +269,7 @@ std::string Computation::codeGen() {
         VisitorChangeUFsForOmega* vOmegaReplacer =
             new VisitorChangeUFsForOmega();
         for (const auto& stmt : stmts) {
+
 
             Set* modifiedIterSpace = new Set(*stmt.getIterationSpace());
             modifiedIterSpace->acceptVisitor(vOmegaReplacer);
@@ -210,6 +301,7 @@ std::string Computation::codeGen() {
             delete modifiedTransform;
             delete omegaIterSpace;
             delete omegaTransform;
+
         }
         delete vOmegaReplacer;
         generatedCode << "\n";

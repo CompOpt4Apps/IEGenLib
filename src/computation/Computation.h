@@ -83,6 +83,8 @@ class Computation {
     //! Clear all data from this Computation
     void clear();
 
+    void toDot(std::fstream& dotFileStream, string fileName);
+
     //! Environment used by this Computation
     Environment env;
 
@@ -95,6 +97,8 @@ class Computation {
     //! Data spaces accessed in the computation
     std::unordered_set<std::string> dataSpaces;
 };
+
+//! Prints the dotFile for the Computation structure
 
 /*!
  * \class Stmt
