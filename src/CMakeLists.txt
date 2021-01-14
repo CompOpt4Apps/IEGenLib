@@ -55,7 +55,7 @@ list(REMOVE_ITEM iegenlib_SOURCES
 
 list(REMOVE_ITEM iegenlib_SOURCES
   ${IEGENLIB_SOURCE_DIR}/src/drivers/subSetDriver.cc)
-  
+
 list(REMOVE_ITEM iegenlib_SOURCES
   ${IEGENLIB_SOURCE_DIR}/src/drivers/Computation_driver.cc)
 
@@ -138,7 +138,7 @@ target_link_libraries(../bin/subSetDriver iegenlib isl codegen omega gmp)
 cmake_policy(SET CMP0037 OLD)
 #Compile and link the Computation executable
 add_executable(../bin/Computation_driver drivers/Computation_driver.cc)
-target_link_libraries(../bin/Computation_driver iegenlib isl gmp codegen omega)
+target_link_libraries(../bin/Computation_driver iegenlib isl codegen omega gmp)
 
 
 
