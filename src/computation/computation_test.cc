@@ -96,7 +96,8 @@ return 0; \
     comp->addStmt(s4);
 
     std::string generatedCode = comp->codeGen();
-    EXPECT_EQ("", generatedCode);
+
+   EXPECT_EQ("", generatedCode);
 
     delete comp;
 }
