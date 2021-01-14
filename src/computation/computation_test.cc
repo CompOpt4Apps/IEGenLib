@@ -40,21 +40,43 @@ class ComputationTest : public ::testing::Test {
     }
     virtual void TearDown() override { delete vOmegaReplacer; }
 
-    //! attempt to convert the given SparseConstraints to Omega format,
+    //! attempt to convert the given Set string to Omega format,
     //! EXPECTing that it will equal the given Omega string
-    void checkOmegaConversion(SparseConstraints iegenStructure,
-                              std::string expectedOmegaResult) {
-        SCOPED_TRACE(iegenStructure.prettyPrintStringForOmega());
+    void checkOmegaSetConversion(std::string iegenSetStr,
+                                 std::string expectedOmegaResult) {
+        SCOPED_TRACE(iegenSetStr);
+        Set* iegenSet = new Set(iegenSetStr);
 
         // do conversion
-        iegenStructure.acceptVisitor(vOmegaReplacer);
-        std::cout << iegenStructure.prettyPrintStringForOmega() << "\n";
-        omega::Relation* omegaConverted = omega::parser::ParseRelation(
-            iegenStructure.toOmegaString(vOmegaReplacer->getUFCallDecls()));
+        iegenSet->acceptVisitor(vOmegaReplacer);
+        /* std::cout << iegenSet->prettyPrintStringForOmega() << "\n"; */
+        omega::Relation* omegaSet = omega::parser::ParseRelation(
+            iegenSet->toOmegaString(vOmegaReplacer->getUFCallDecls()));
         EXPECT_EQ(expectedOmegaResult + "\n",
-                  omegaConverted->print_with_subs_to_string());
+                  omegaSet->print_with_subs_to_string());
 
-        delete omegaConverted;
+        delete iegenSet;
+        delete omegaSet;
+        vOmegaReplacer->reset();
+    }
+
+    //! attempt to convert the given Relation to Omega format,
+    //! EXPECTing that it will equal the given Omega string
+    void checkOmegaRelationConversion(std::string iegenRelStr,
+                                      std::string expectedOmegaResult) {
+        SCOPED_TRACE(iegenRelStr);
+        iegenlib::Relation* iegenRel = new iegenlib::Relation(iegenRelStr);
+
+        // do conversion
+        iegenRel->acceptVisitor(vOmegaReplacer);
+        /* std::cout << iegenRel->prettyPrintStringForOmega() << "\n"; */
+        omega::Relation* omegaRel = omega::parser::ParseRelation(
+            iegenRel->toOmegaString(vOmegaReplacer->getUFCallDecls()));
+        EXPECT_EQ(expectedOmegaResult + "\n",
+                  omegaRel->print_with_subs_to_string());
+
+        delete iegenRel;
+        delete omegaRel;
         vOmegaReplacer->reset();
     }
 };
@@ -107,25 +129,25 @@ return 0; \
 TEST_F(ComputationTest, ConvertToOmega) {
     /* Sets */
     // basic test
-    checkOmegaConversion(Set("{[i,j] : 0 <= i && i < N && 0 <= j && j < N }"),
-                         "{[i,j]: 0 <= i < N && 0 <= j < N}");
+    checkOmegaSetConversion("{[i,j] : 0 <= i && i < N && 0 <= j && j < N }",
+                            "{[i,j]: 0 <= i < N && 0 <= j < N}");
     // empty set
-    checkOmegaConversion(Set("{[]}"), "{ TRUE }");
+    checkOmegaSetConversion("{[]}", "{ TRUE }");
     // with simple UF constraints
-    checkOmegaConversion(
-        Set("{[i,j] : 0 <= i && i < N && 0 <= j && j < M && i=foo(i+1)}"),
+    checkOmegaSetConversion(
+        "{[i,j] : 0 <= i && i < N && 0 <= j && j < M && i=foo(i+1)}",
         "{[i,j]: foo_0(i) = i && 0 <= i < N && 0 <= j < M}");
 
     /* Relations */
     // basic test
-    checkOmegaConversion(
-        iegenlib::Relation("{[i]->[j]: 0 <= i && i < N && 0 <= j && j < N }"),
+    checkOmegaRelationConversion(
+        "{[i]->[j]: 0 <= i && i < N && 0 <= j && j < N }",
         "{[i] -> [j] : 0 <= i < N && 0 <= j < N}");
     // empty relation
-    checkOmegaConversion(iegenlib::Relation("{[]->[]}"), "{ TRUE }");
+    checkOmegaRelationConversion("{[]->[]}", "{ TRUE }");
     // with simple UF constraints
-    checkOmegaConversion(
-        iegenlib::Relation(
-            "{[i,j]->[k]: 0 <= i && i < N && 0 <= j && j < M && i=foo(i+1)}"),
+    checkOmegaRelationConversion(
+
+        "{[i,j]->[k]: 0 <= i && i < N && 0 <= j && j < M && i=foo(i+1)}",
         "{[i,j] -> [k] : foo_0(i) = i && 0 <= i < N && 0 <= j < M}");
 }

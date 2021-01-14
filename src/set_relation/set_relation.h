@@ -133,7 +133,7 @@ public:
     //! Convert to a human-readable string, pretty printed.
     virtual std::string prettyPrintString() const;
     //! Get pretty-printed string with modifications for Omega parsing
-    virtual std::string prettyPrintStringForOmega() const;
+    virtual std::string prettyPrintStringForOmega(bool isRel) const;
 
     //! Convert to a DOT string.
     //! Pass in the parent node id and the next node id.
@@ -363,7 +363,8 @@ public:
     //! Human-readable string with adjustments for Omega parsing
     virtual std::string prettyPrintStringForOmega() const
         { return prettyPrintStringForOmega(0); }
-    std::string prettyPrintStringForOmega(int aritySplit) const;
+    std::string prettyPrintStringForOmega(int aritySplit,
+                                          bool isRel = false) const;
 
     //! Convert to ISL format (substitute in tuple vars and declare symbolics).
     virtual std::string toISLString() const
@@ -377,8 +378,8 @@ public:
     virtual std::string toOmegaString(std::set<std::string> ufDecls) const {
         return toOmegaString(0, ufDecls);
     }
-    std::string toOmegaString(int aritySplit,
-                              std::set<std::string> ufDecls) const;
+    std::string toOmegaString(int aritySplit, std::set<std::string> ufDecls,
+                              bool isRel = false) const;
 
     //! Create a graph for visualization with graphviz
     virtual std::string toDotString() const;
@@ -693,6 +694,9 @@ public:
     std::string prettyPrintString() const;
     //! Pretty print with modifications for Omega parsing
     std::string prettyPrintStringForOmega() const;
+    //! Convert to Omega format (substitute in tuple vars and declare
+    //! symbolics properly).
+    std::string toOmegaString(std::set<std::string>) const;
 
     //! Get/Set our in/out arity.
     int inArity() const { return mInArity; }

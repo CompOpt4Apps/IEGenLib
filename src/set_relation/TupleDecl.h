@@ -85,7 +85,7 @@ public:
                          unsigned int aritySplit=0, bool generic=false) const;
 
     //! toString with modifications to work correctly for Omega parser input
-    std::string toStringForOmega(bool withBrackets=false,
+    std::string toStringForOmega(bool isRel, bool withBrackets=false,
                          unsigned int aritySplit=0, bool generic=false) const;
 
     // Setting individual elements

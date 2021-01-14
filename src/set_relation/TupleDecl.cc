@@ -169,23 +169,28 @@ std::string TupleDecl::toString(bool withBrackets,
     return ss.str();
 }
 
-std::string TupleDecl::toStringForOmega(bool withBrackets,
-                                unsigned int aritySplit,
-                                bool generic) const {
+std::string TupleDecl::toStringForOmega(bool isRel, bool withBrackets,
+                                        unsigned int aritySplit,
+                                        bool generic) const {
     std::stringstream ss;
-    // print brackets regardless of potential zero arity
-    if (withBrackets) { ss << "["; }
-    for (unsigned int i=0; i<mSize; i++) {
-        if (i > 0) {
-            if (aritySplit == i && withBrackets) {
-                ss << "] -> [";
-            } else {
-                ss << ", ";
-            }
+    if (withBrackets) {
+        ss << "[";
+        // print Relations in arrow format even for 0-arity input tuple
+        if (isRel && mSize == 0) {
+            ss << "] -> [";
+        }
+    }
+    for (unsigned int i = 0; i < mSize; i++) {
+        if (aritySplit == i && withBrackets && isRel) {
+            ss << "] -> [";
+        } else if (i > 0) {
+            ss << ", ";
         }
         ss << elemToString(i, generic);
     }
-    if (withBrackets) { ss << "]"; }
+    if (withBrackets) {
+        ss << "]";
+    }
 
     return ss.str();
 }
