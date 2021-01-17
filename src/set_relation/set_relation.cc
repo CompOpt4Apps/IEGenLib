@@ -570,9 +570,9 @@ std::string Conjunction::prettyPrintString() const {
     return ss.str();
 }
 
-std::string Conjunction::prettyPrintStringForOmega() const {
+std::string Conjunction::prettyPrintStringForOmega(bool isRel) const {
     std::stringstream ss;
-    ss << "{ " << mTupleDecl.toStringForOmega(true,mInArity);
+    ss << "{ " << mTupleDecl.toStringForOmega(isRel, true, mInArity);
     bool first = true;
     Conjunction *dup = this->clone();
 
@@ -1671,14 +1671,15 @@ std::string SparseConstraints::prettyPrintString(int aritySplit) const {
     return ss.str();
 }
 
-std::string SparseConstraints::prettyPrintStringForOmega(int aritySplit) const {
+std::string SparseConstraints::prettyPrintStringForOmega(int aritySplit,
+                                                         bool isRel) const {
     std::stringstream ss;
 
     bool first = true;
     for (std::list<Conjunction*>::const_iterator i=mConjunctions.begin();
                 i != mConjunctions.end(); i++) {
         if (not first) { ss << " union "; }
-        ss << (*i)->prettyPrintStringForOmega();
+        ss << (*i)->prettyPrintStringForOmega(isRel);
         first = false;
     }
 
@@ -1737,7 +1738,7 @@ std::string SparseConstraints::toISLString(int aritySplit) const {
 }
 
 std::string SparseConstraints::toOmegaString(
-    int aritySplit, std::set<std::string> ufCallDecls) const {
+    int aritySplit, std::set<std::string> ufCallDecls, bool isRel) const {
     // collect all symbolic/parameter variable names
     // and print the declaration for the symbolics
     std::stringstream ss;
@@ -1776,7 +1777,7 @@ std::string SparseConstraints::toOmegaString(
     }
 
     // do a prettyPrint modified to work correctly with Omega's parsing
-    ss << prettyPrintStringForOmega(aritySplit);
+    ss << prettyPrintStringForOmega(aritySplit, isRel);
 
     ss << ";";
 
@@ -2223,7 +2224,11 @@ std::string Relation::prettyPrintString() const {
 }
 
 std::string Relation::prettyPrintStringForOmega() const {
-    return SparseConstraints::prettyPrintStringForOmega(mInArity);
+    return SparseConstraints::prettyPrintStringForOmega(mInArity, true);
+}
+
+std::string Relation::toOmegaString(std::set<std::string> ufDecls) const {
+    return SparseConstraints::toOmegaString(mInArity, ufDecls, true);
 }
 
 std::string Relation::toDotString() const{
