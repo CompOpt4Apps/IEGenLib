@@ -28,3 +28,5 @@ jobs:
       run: echo "IEGEN_HOME=$GITHUB_WORKSPACE/iegen" >> $GITHUB_ENV
     - name: run tests
       run: ./build/bin/iegenlib_t
+    - name: build tutorial examples
+      run: make tutorial

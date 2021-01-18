@@ -152,7 +152,7 @@ following command:
 
     make tutorial
 
-Output will be located alongside the normal executables produced in build/bin.
+Output will be in build/bin/tutorial.
 
 ==== VIII. Debug and Release Builds =====
 
