@@ -268,9 +268,15 @@ std::string Computation::codeGen() {
 
         VisitorChangeUFsForOmega* vOmegaReplacer =
             new VisitorChangeUFsForOmega();
-        for (const auto& stmt : stmts) {
-
-
+	int stmtCount = 0;
+        for  (const auto& stmt : stmts) {
+	    std::string tupleString = stmt.getIterationSpace()->getTupleDecl()
+		    .toString();
+            // Stmt Macro:
+	    generatedCode <<  "#undef s" <<stmtCount << "("<<tupleString <<") \n"
+		    << "#define s"<<stmtCount << "("<<tupleString <<")   " <<
+		   stmt.getStmtSourceCode() << " \n";
+	    stmtCount++;
             Set* modifiedIterSpace = new Set(*stmt.getIterationSpace());
             modifiedIterSpace->acceptVisitor(vOmegaReplacer);
             generatedCode << vOmegaReplacer->getMacrosString();

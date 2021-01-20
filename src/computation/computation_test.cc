@@ -119,9 +119,7 @@ return 0; \
 
     std::string generatedCode = comp->codeGen();
 
-   EXPECT_EQ("", generatedCode);
-
-    delete comp;
+    EXPECT_EQ("#undef s0() \n#define s0()   int i; \n#undef s1() \n#define s1()   int j; \n#undef s2(i) \n#define s2(i)   product[i] = 0; \n#undef s3(i, j) \n#define s3(i, j)   product[i] += x[i][j] * y[j]; \n#undef s4() \n#define s4()   return 0; \n\ns0();\ns1();\nfor(t2 = 0; t2 <= a-1; t2++) {\n  s2(t2);\n  if (a >= t2+1) {\n    for(t4 = 0; t4 <= b-1; t4++) {\n      s3(t2,t4);\n    }\n  }\n}\nif (b >= 1) {\n  for(t2 = max(a',0); t2 <= a-1; t2++) {\n    for(t4 = 0; t4 <= b-1; t4++) {\n      s3(t2,t4);\n    }\n  }\n}\ns4();\n\n", generatedCode);
 }
 
 #pragma mark ConvertToOmega

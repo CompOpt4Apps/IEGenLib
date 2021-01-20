@@ -49,7 +49,7 @@ ExternalProject_Add(lib-isl
     DEPENDS libgmp lib-omega
     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/isl
     BUILD_IN_SOURCE ON
-    CONFIGURE_COMMAND autoreconf -i
+    CONFIGURE_COMMAND autoreconf -f -i
     COMMAND ./configure --prefix=${CMAKE_CURRENT_SOURCE_DIR}/lib/installed --with-int=imath-32 --disable-shared --with-pic
     BUILD_COMMAND ${MAKE})
 
