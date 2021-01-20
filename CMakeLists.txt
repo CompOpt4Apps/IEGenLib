@@ -28,7 +28,7 @@ ExternalProject_Add(libgmp
     DOWNLOAD_COMMAND ""
     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/gmp
     BUILD_IN_SOURCE ON
-    CONFIGURE_COMMAND autoreconf -i
+    CONFIGURE_COMMAND autoreconf -f -i
     COMMAND ./configure --prefix=${CMAKE_CURRENT_SOURCE_DIR}/lib/installed --disable-shared --with-pic
     BUILD_COMMAND ${MAKE})
 
@@ -38,7 +38,7 @@ ExternalProject_Add(lib-omega
     GIT_PROGRESS ON
     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/omega
     BUILD_IN_SOURCE ON
-    CONFIGURE_COMMAND autoreconf -i
+    CONFIGURE_COMMAND autoreconf -f -i
     COMMAND ./configure --prefix=${CMAKE_CURRENT_SOURCE_DIR}/lib/installed
     # BUILD_COMMAND make
     # INSTALL_COMMAND make install
