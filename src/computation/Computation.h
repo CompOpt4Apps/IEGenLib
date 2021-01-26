@@ -189,7 +189,7 @@ class Stmt {
 class VisitorChangeUFsForOmega : public Visitor {
    private:
     //! string stream for building up necessary UF call macros
-    std::ostringstream macros;
+    std::map<std::string, std::string> macros;
     //! declarations of UF calls needed by Omega parser
     std::set<std::string> ufCallDecls;
     //! next number to use in creating unique function names
@@ -209,7 +209,7 @@ class VisitorChangeUFsForOmega : public Visitor {
 
     //! Get the UF call macros required for the code corresponding to the
     //! set/relation to function correctly, as a string
-    std::string getMacrosString();
+    std::map<std::string, std::string>* getUFMacros();
 
     //! Get the declarations of UF calls needed by Omega parser
     std::set<std::string> getUFCallDecls();

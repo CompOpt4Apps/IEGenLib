@@ -303,58 +303,71 @@ void Computation::toDot(std::fstream& dotFile, string fileName) {
 std::string Computation::codeGen() {
     std::ostringstream generatedCode;
 
-    try {
-        // convert sets/relations to Omega format for use in codegen, and
-        // collect required macro substitutions
-        std::vector<omega::Relation> transforms;
-        std::vector<omega::Relation> iterSpaces;
+    // convert sets/relations to Omega format for use in codegen, and
+    // collect required macro substitutions
+    VisitorChangeUFsForOmega* vOmegaReplacer = new VisitorChangeUFsForOmega();
+    std::vector<omega::Relation> transforms;
+    std::vector<omega::Relation> iterSpaces;
+    std::ostringstream stmtMacroUndefs;
+    std::ostringstream stmtMacroDefs;
+    std::ostringstream UFMacroUndefs;
+    std::ostringstream UFMacroDefs;
+    int stmtCount = 0;
+    for (const auto& stmt : stmts) {
+        std::string tupleString =
+            stmt.getIterationSpace()->getTupleDecl().toString();
+        // Stmt Macro:
+        stmtMacroUndefs << "#undef s" << stmtCount << "(" << tupleString
+                        << ") \n";
+        stmtMacroDefs << "#define s" << stmtCount << "(" << tupleString
+                      << ")   " << stmt.getStmtSourceCode() << " \n";
+        stmtCount++;
 
-        VisitorChangeUFsForOmega* vOmegaReplacer =
-            new VisitorChangeUFsForOmega();
-        int stmtCount = 0;
-        for (const auto& stmt : stmts) {
-            std::string tupleString =
-                stmt.getIterationSpace()->getTupleDecl().toString();
-            // Stmt Macro:
-            generatedCode << "#undef s" << stmtCount << "(" << tupleString
-                          << ") \n"
-                          << "#define s" << stmtCount << "(" << tupleString
-                          << ")   " << stmt.getStmtSourceCode() << " \n";
-            stmtCount++;
-
-            // process iterSpace for Omega
-            Set* modifiedIterSpace = new Set(*stmt.getIterationSpace());
-            modifiedIterSpace->acceptVisitor(vOmegaReplacer);
-            generatedCode << vOmegaReplacer->getMacrosString();
-            std::string omegaIterString = modifiedIterSpace->toOmegaString(
-                vOmegaReplacer->getUFCallDecls());
-            delete modifiedIterSpace;
-            vOmegaReplacer->reset();
-
-            // process transform (exec schedule) for Omega
-            Relation* modifiedTransform =
-                new Relation(*stmt.getExecutionSchedule());
-            modifiedTransform->acceptVisitor(vOmegaReplacer);
-            generatedCode << vOmegaReplacer->getMacrosString();
-            std::string omegaTransformString = modifiedTransform->toOmegaString(
-                vOmegaReplacer->getUFCallDecls());
-            delete modifiedTransform;
-            vOmegaReplacer->reset();
-
-            // create and insert new Omega data structures
-            omega::Relation* omegaIterSpace =
-                omega::parser::ParseRelation(omegaIterString);
-            omega::Relation* omegaTransform =
-                omega::parser::ParseRelation(omegaTransformString);
-            iterSpaces.push_back(omega::copy(*omegaIterSpace));
-            transforms.push_back(omega::copy(*omegaTransform));
-            delete omegaIterSpace;
-            delete omegaTransform;
+        // process iterSpace for Omega
+        Set* modifiedIterSpace = new Set(*stmt.getIterationSpace());
+        modifiedIterSpace->acceptVisitor(vOmegaReplacer);
+        for (const auto& macro : *vOmegaReplacer->getUFMacros()) {
+            UFMacroUndefs << "#undef " << macro.first << "\n";
+            UFMacroDefs << "#define " << macro.first << " " << macro.second
+                        << "\n";
         }
-        delete vOmegaReplacer;
-        generatedCode << "\n";
+        std::string omegaIterString =
+            modifiedIterSpace->toOmegaString(vOmegaReplacer->getUFCallDecls());
+        delete modifiedIterSpace;
+        vOmegaReplacer->reset();
 
-        // do Omega CodeGen
+        // process transform (exec schedule) for Omega
+        Relation* modifiedTransform =
+            new Relation(*stmt.getExecutionSchedule());
+        modifiedTransform->acceptVisitor(vOmegaReplacer);
+        for (const auto& macro : *vOmegaReplacer->getUFMacros()) {
+            UFMacroUndefs << "#undef " << macro.first << "\n";
+            UFMacroDefs << "#define " << macro.first << " " << macro.second
+                        << "\n";
+        }
+        std::string omegaTransformString =
+            modifiedTransform->toOmegaString(vOmegaReplacer->getUFCallDecls());
+        delete modifiedTransform;
+        vOmegaReplacer->reset();
+
+        // create and insert new Omega data structures
+        omega::Relation* omegaIterSpace =
+            omega::parser::ParseRelation(omegaIterString);
+        omega::Relation* omegaTransform =
+            omega::parser::ParseRelation(omegaTransformString);
+        iterSpaces.push_back(omega::copy(*omegaIterSpace));
+        transforms.push_back(omega::copy(*omegaTransform));
+        delete omegaIterSpace;
+        delete omegaTransform;
+    }
+    delete vOmegaReplacer;
+
+    // define necessary macros collected from statements
+    generatedCode << stmtMacroUndefs.str() << stmtMacroDefs.str() << "\n";
+    generatedCode << UFMacroUndefs.str() << UFMacroDefs.str() << "\n";
+
+    // do actual Omega CodeGen
+    try {
         omega::CodeGen cg(transforms, iterSpaces);
         omega::CG_result* cgr = cg.buildAST();
         if (cgr) {
@@ -366,6 +379,9 @@ std::string Computation::codeGen() {
     } catch (const std::exception& e) {
         std::cout << e.what() << std::endl;
     }
+
+    // undefine macros, which are now extraneous
+    generatedCode << stmtMacroUndefs.str() << UFMacroUndefs.str();
 
     return generatedCode.str();
 }
@@ -501,13 +517,15 @@ VisitorChangeUFsForOmega::VisitorChangeUFsForOmega() { reset(); }
 VisitorChangeUFsForOmega::~VisitorChangeUFsForOmega() { reset(); }
 
 void VisitorChangeUFsForOmega::reset() {
-    macros.str(std::string());
+    macros.clear();
     ufCallDecls.clear();
     nextFuncReplacementNumber = 0;
     nextVarReplacementNumber = 0;
 }
 
-std::string VisitorChangeUFsForOmega::getMacrosString() { return macros.str(); }
+std::map<std::string, std::string>* VisitorChangeUFsForOmega::getUFMacros() {
+    return &macros;
+}
 
 std::set<std::string> VisitorChangeUFsForOmega::getUFCallDecls() {
     return ufCallDecls;
@@ -588,8 +606,8 @@ void VisitorChangeUFsForOmega::postVisitUFCallTerm(UFCallTerm* callTerm) {
         os_replaceFrom << ")";
     }
     os_replaceTo << ")";
-    macros << "#define " << os_replaceFrom.str() << " " << os_replaceTo.str()
-           << "\n";
+
+    macros.emplace(os_replaceFrom.str(), os_replaceTo.str());
 }
 
 }  // namespace iegenlib
