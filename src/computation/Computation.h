@@ -196,6 +196,8 @@ class VisitorChangeUFsForOmega : public Visitor {
     int nextFuncReplacementNumber;
     //! next number to use in creating replacement variable names
     int nextVarReplacementNumber;
+    //! stored tuple decl for variable retrieval
+    TupleDecl tupleDecl;
 
    public:
     //! Construct a new VisitorChangeUFsForOmega
@@ -213,6 +215,8 @@ class VisitorChangeUFsForOmega : public Visitor {
 
     //! Get the declarations of UF calls needed by Omega parser
     std::set<std::string> getUFCallDecls();
+
+    void preVisitSparseConstraints(SparseConstraints*);
 
     void postVisitUFCallTerm(UFCallTerm*);
 };

@@ -24,6 +24,7 @@
 #include <code_gen/parser/parser.h>
 #include <codegen.h>
 
+#include <algorithm>
 #include <set>
 #include <sstream>
 #include <string>
@@ -521,6 +522,7 @@ void VisitorChangeUFsForOmega::reset() {
     ufCallDecls.clear();
     nextFuncReplacementNumber = 0;
     nextVarReplacementNumber = 0;
+    tupleDecl = NULL;
 }
 
 std::map<std::string, std::string>* VisitorChangeUFsForOmega::getUFMacros() {
@@ -531,83 +533,63 @@ std::set<std::string> VisitorChangeUFsForOmega::getUFCallDecls() {
     return ufCallDecls;
 }
 
+void VisitorChangeUFsForOmega::preVisitSparseConstraints(
+    SparseConstraints* sc) {
+    if (sc->getNumConjuncts() != 1) {
+        throw assert_exception(
+            "Must have exactly one conjunction for Omega conversion");
+    }
+    tupleDecl = sc->getTupleDecl();
+}
+
 void VisitorChangeUFsForOmega::postVisitUFCallTerm(UFCallTerm* callTerm) {
-    // set up macro outputs
-    std::ostringstream os_replaceFrom;
-    std::ostringstream os_replaceTo;
+    // determine which tuple variables are needed in the call (how large of a
+    // prefix)
+    int max_tvloc = -1;
+    for (unsigned int i = 0; i < callTerm->numArgs(); ++i) {
+        // loop through all terms, processing as needed
+        for (const auto& term : callTerm->getParamExp(i)->getTermList()) {
+            if (term->isUFCall()) {
+                throw assert_exception("Nested UF calls are not yet supported");
+            } else if (term->type() == "TupleVarTerm") {
+                TupleVarTerm* termAsTupleVar = static_cast<TupleVarTerm*>(term);
+                max_tvloc = std::max(termAsTupleVar->tvloc(), max_tvloc);
+            } else if (term->type() == "TupleExpTerm") {
+                throw assert_exception("TupleExpTerm unsupported");
+            }
+        }
+    }
+    // UF calls cannot be constant-only (must include at least one tuple var)
+    if (max_tvloc == -1) {
+        throw assert_exception(
+            "Cannot make UF calls with only constant arguments");
+    }
+    // save original info for printing
+    int originalCoefficient = callTerm->coefficient();
+    callTerm->setCoefficient(1);
+    std::string originalCall = callTerm->toString();
+    // rewrite argument list as a prefix of input tuple
+    callTerm->resetNumArgs(max_tvloc + 1);
+    for (int i = 0; i < callTerm->numArgs(); ++i) {
+        Exp* newParamExp = new Exp();
+        TupleVarTerm* tupleVarParam = new TupleVarTerm(i);
+        newParamExp->addTerm(tupleVarParam);
+        callTerm->setParamExp(i, newParamExp);
+    }
 
     // set new function name
     std::string replacementName =
         callTerm->name() + "_" + std::to_string(nextFuncReplacementNumber++);
-    os_replaceFrom << replacementName;
-    os_replaceTo << callTerm->name() << "(";
     callTerm->setName(replacementName);
 
-    // process every parameter
-    bool pastFirstParam = false;
-    int paramNumber = 0;
-    bool haveAddedToOutput;
-    bool haveAddedToInput;
-    Exp* paramExp;
-    // maintain a list of parameters that will remain in the call
-    std::vector<Term*> termsToSave;
-    unsigned int i;
-    for (i = 0; i < callTerm->numArgs(); ++i) {
-        // loop through all terms, adding them into the 'to' and 'from'
-        // appropriately
-        haveAddedToInput = false;
-        haveAddedToOutput = false;
-        if (pastFirstParam) {
-            os_replaceTo << ",";
-        }
-        paramExp = callTerm->getParamExp(i);
-        for (const auto& term : paramExp->getTermList()) {
-            if (term->isConst()) {
-                // add the term to the function call, without making an
-                // input param for it
-                os_replaceTo << (haveAddedToOutput ? "+" : "") << "("
-                             << term->toString() << ")";
-            } else {
-                // add the term to both the input and output function call
-                if (!haveAddedToInput && !pastFirstParam) {
-                    os_replaceFrom << "(";
-                }
-                os_replaceFrom
-                    << ((pastFirstParam || haveAddedToInput) ? "," : "") << "p"
-                    << paramNumber;
-                os_replaceTo << (haveAddedToOutput ? "+" : "") << "p"
-                             << paramNumber;
-                termsToSave.push_back(term->clone());
-                paramNumber++;
-                haveAddedToInput = true;
-            }
-            haveAddedToOutput = true;
-        }
-        pastFirstParam = true;
-    }
+    // add macro strings
+    macros.emplace(callTerm->toString(), originalCall);
+    // add UF call to the list of declarations
+    ufCallDecls.emplace(callTerm->name() + "(" + std::to_string(max_tvloc + 1) +
+                        ")");
 
-    // rewrite argument list, one arg per term in original call args
-    callTerm->resetNumArgs(termsToSave.size());
-    i = 0;
-    for (const auto& savedTerm : termsToSave) {
-        Exp* newParamExp = new Exp();
-        newParamExp->addTerm(savedTerm);
-        callTerm->setParamExp(i, newParamExp);
-
-        // add UF call to the list of declarations
-        ufCallDecls.emplace(callTerm->name() + "(" +
-                            std::to_string(callTerm->numArgs()) + ")");
-
-        i++;
-    }
-
-    // complete outputs for this UF call
-    if (haveAddedToInput) {
-        os_replaceFrom << ")";
-    }
-    os_replaceTo << ")";
-
-    macros.emplace(os_replaceFrom.str(), os_replaceTo.str());
+    // restore info that was changed temporarily for printing
+    callTerm->setCoefficient(originalCoefficient);
 }
 
 }  // namespace iegenlib

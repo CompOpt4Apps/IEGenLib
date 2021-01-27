@@ -49,6 +49,12 @@ class ComputationTest : public ::testing::Test {
 
         // do conversion
         iegenSet->acceptVisitor(vOmegaReplacer);
+        std::ostringstream UFMacroDefs;
+        for (const auto& macro : *vOmegaReplacer->getUFMacros()) {
+            UFMacroDefs << "#define " << macro.first << " " << macro.second
+                        << "\n";
+        }
+        std::cout << UFMacroDefs.str() << "\n";
         /* std::cout << iegenSet->prettyPrintStringForOmega() << "\n"; */
         omega::Relation* omegaSet = omega::parser::ParseRelation(
             iegenSet->toOmegaString(vOmegaReplacer->getUFCallDecls()));
@@ -145,6 +151,8 @@ TEST_F(ComputationTest, ConvertToOmega) {
     checkOmegaSetConversion(
         "{[i,j] : 0 <= i && i < N && 0 <= j && j < M && i=foo(i+1)}",
         "{[i,j]: foo_0(i) = i && 0 <= i < N && 0 <= j < M}");
+    // multiple uses of same UF
+    checkOmegaSetConversion("{[i, j]: A(i)=0 && A(i)=A(j)}", "{[i,j]: A_0(i) = 0 && A_0(i) = A_1(i,j)}");
 
     /* Relations */
     // basic test
