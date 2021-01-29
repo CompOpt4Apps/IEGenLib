@@ -301,7 +301,7 @@ void Computation::toDot(std::fstream& dotFile, string fileName) {
     dotFile.close();
 }
 
-std::string Computation::codeGen() {
+std::string Computation::codeGen(Set* knownConstraints) {
     std::ostringstream generatedCode;
 
     // convert sets/relations to Omega format for use in codegen, and
@@ -355,17 +355,30 @@ std::string Computation::codeGen() {
     std::ostringstream UFMacroDefs;
     for (const auto& macro : *vOmegaReplacer->getUFMacros()) {
         UFMacroUndefs << "#undef " << macro.first << "\n";
-        UFMacroDefs << "#define " << macro.first << " " << macro.second
-                    << "\n";
+        UFMacroDefs << "#define " << macro.first << " " << macro.second << "\n";
     }
     generatedCode << stmtMacroUndefs.str() << stmtMacroDefs.str() << "\n";
     generatedCode << UFMacroUndefs.str() << UFMacroDefs.str() << "\n";
+
+    // convert set of known constraints to Omega format
+    Set* modifiedKnown;
+    if (knownConstraints) {
+        modifiedKnown = new Set(*knownConstraints);
+    } else {
+        modifiedKnown = new Set("{}");
+    }
+    modifiedKnown->acceptVisitor(vOmegaReplacer);
+    std::string omegaKnownString =
+        modifiedKnown->toOmegaString(vOmegaReplacer->getUFCallDecls());
+    delete modifiedKnown;
+    omega::Relation* omegaKnown =
+        omega::parser::ParseRelation(omegaKnownString);
 
     delete vOmegaReplacer;
 
     // do actual Omega CodeGen
     try {
-        omega::CodeGen cg(transforms, iterSpaces);
+        omega::CodeGen cg(transforms, iterSpaces, omega::copy(*omegaKnown));
         omega::CG_result* cgr = cg.buildAST();
         if (cgr) {
             generatedCode << cgr->printString() << "\n";
@@ -376,6 +389,7 @@ std::string Computation::codeGen() {
     } catch (const std::exception& e) {
         std::cout << e.what() << std::endl;
     }
+    delete omegaKnown;
 
     // undefine macros, which are now extraneous
     generatedCode << stmtMacroUndefs.str() << UFMacroUndefs.str();

@@ -89,7 +89,10 @@ class Computation {
     Environment env;
 
     //! Method generates c code.
-    std::string codeGen();
+    //! Known constraints are constraints that can be considered already
+    //! enforced/are known to be true without need for checking in generated
+    //! code (guards).
+    std::string codeGen(Set* knownConstraints = nullptr);
 
    private:
     //! Information on all statements in the Computation
