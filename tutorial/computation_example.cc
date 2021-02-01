@@ -68,4 +68,27 @@ cout << "Entering toDot()" << "\n";
 MyComp.toDot(dotFileStream,"Example.txt");
 
 
+// Codegen SPMV
+// for(int i = 0; i < NR; i++)
+//    for(int k = rowptr(i); k < rowptr(i+1); k++){
+//       y[i]+=A[k] * x[col[k]];
+//    }
+//}
+dataReads.clear();
+dataWrites.clear();
+dataReads.push_back(make_pair("y","{[i,k]->[i]}"));
+dataReads.push_back(make_pair("A","{[i,k]->[k]}"));
+dataReads.push_back(make_pair("x","{[i,k]->[t]: t = col(k)}"));
+dataWrites.push_back(make_pair("y","{[i,k]->[i]}"));
+Computation spmv;
+Stmt s1 ("y[i]+=A[k] * x[col[k]];" ,/*Statement*/
+	"{[i,k]: 0 <= i && i < NR && rowptr(i) <= k && k < rowptr(i+1)}", /*domain*/
+	"{[i,k] -> [0,i,0,k]}", /*execution schedule*/
+	dataReads,
+	dataWrites);
+spmv.addStmt(s1);
+std::string code = spmv.codeGen();
+cout << "SPMV CodeGen: \n";
+cout << code;
+spmv.toDot(dotFileStream,"spmv.dot");
 }
