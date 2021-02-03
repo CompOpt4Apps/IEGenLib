@@ -344,7 +344,7 @@ std::string Computation::codeGen() {
             // create and insert new Omega data structures
             omega::Relation* omegaIterSpace =
                 omega::parser::ParseRelation(omegaIterString);
-            omega::Relation* omegaTransform =
+	    omega::Relation* omegaTransform =
                 omega::parser::ParseRelation(omegaTransformString);
             iterSpaces.push_back(omega::copy(*omegaIterSpace));
             transforms.push_back(omega::copy(*omegaTransform));

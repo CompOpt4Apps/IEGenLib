@@ -67,6 +67,8 @@ fstream dotFileStream;
 cout << "Entering toDot()" << "\n";
 MyComp.toDot(dotFileStream,"Example.txt");
 
+cout << "Polynomial product Codegen:\n";
+cout << MyComp.codeGen();
 
 // Codegen SPMV
 // for(int i = 0; i < NR; i++)
@@ -83,7 +85,7 @@ dataWrites.push_back(make_pair("y","{[i,k]->[i]}"));
 Computation spmv;
 Stmt s1 ("y[i]+=A[k] * x[col[k]];" ,/*Statement*/
 	"{[i,k]: 0 <= i && i < NR && rowptr(i) <= k && k < rowptr(i+1)}", /*domain*/
-	"{[i,k] -> [0,i,0,k]}", /*execution schedule*/
+	"{[i,k] -> [i,k]}", /*execution schedule*/
 	dataReads,
 	dataWrites);
 spmv.addStmt(s1);
