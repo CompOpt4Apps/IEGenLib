@@ -176,8 +176,22 @@ TEST_F(ComputationTest, ForwardTriangularSolve){
     forwardSolve.addStmt(ss1);							
     forwardSolve.addStmt(ss2);							
     std::string codegen = forwardSolve.codeGen();
-   // EXPECT_EQ("",codegen);
+    std::string omegString= forwardSolve.toOmegaString();
+    
+    EXPECT_EQ("\n#Statment 0 (tmp = f[i];) \nDomain: 0\nsymbolic NR"
+		    "; { [i] : i >= 0 && -i + NR - 1 >= 0 };\nSchedule:"
+		    " 0\n{ [i] -> [i, 0, 0, 0] : i - i = 0 };\n\n#Statment"
+		    " 0 (tmp -= val[k] * u[col[k]];) \nDomain: 0\nsymbolic"
+		    " NR, rowptr_0(1), rowptr_1(1); { [i, k] : i >= 0 && k "
+		    "- rowptr_0(i) >= 0 && -i + NR - 1 >= 0 && -k + "
+		    "rowptr_1(i) - 2 >= 0 };\nSchedule: 0\n{ [i, k] ->"
+		    " [i, 1, k, 0] : i - i = 0 && k - k = 0 };\n\n#Statment"
+		    " 0 (u[i] = tmp/ val[rowptr[i+1]-1];) \nDomain: 0\n"
+		    "symbolic NR; { [i] : i >= 0 && -i + NR - 1 >= 0 };\n"
+		    "Schedule: 0\n{ [i] -> [i, 2, 0, 0] : i - i = 0 };\n\n",
+		    omegString);
 }
+
 
 
 #pragma mark ConvertToOmega

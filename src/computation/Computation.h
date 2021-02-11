@@ -90,6 +90,9 @@ class Computation {
 
     //! Method generates c code.
     std::string codeGen();
+    
+    //! Method returns omega strings for each statement
+    std::string toOmegaString();
 
    private:
     //! Information on all statements in the Computation

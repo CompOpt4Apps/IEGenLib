@@ -300,6 +300,55 @@ void Computation::toDot(std::fstream& dotFile, string fileName) {
     dotFile.close();
 }
 
+std::string Computation::toOmegaString() {
+    std::ostringstream omegaString;
+    try {
+
+        VisitorChangeUFsForOmega* vOmegaReplacer =
+            new VisitorChangeUFsForOmega();
+        int stmtCount = 0;
+        for (const auto& stmt : stmts) {
+            std::string tupleString =
+                stmt.getIterationSpace()->getTupleDecl().toString();
+     
+            omegaString << "\n#Statment "<<stmtCount <<" ("<<
+		     stmt.getStmtSourceCode() <<") \n";
+
+            // process iterSpace for Omega
+            Set* modifiedIterSpace = new Set(*stmt.getIterationSpace());
+            modifiedIterSpace->acceptVisitor(vOmegaReplacer);
+            std::string omegaIterString = modifiedIterSpace->toOmegaString(
+                vOmegaReplacer->getUFCallDecls());
+	    omegaString << "Domain: "<<stmtCount << "\n" <<omegaIterString << "\n"; 
+            delete modifiedIterSpace;
+            vOmegaReplacer->reset();
+
+            // process transform (exec schedule) for Omega
+            Relation* modifiedTransform =
+                new Relation(*stmt.getExecutionSchedule());
+            modifiedTransform->acceptVisitor(vOmegaReplacer);
+            std::string omegaTransformString = modifiedTransform->toOmegaString(
+                vOmegaReplacer->getUFCallDecls());
+
+	    omegaString << "Schedule: "<<stmtCount << "\n" <<omegaTransformString << "\n"; 
+            delete modifiedTransform;
+            vOmegaReplacer->reset();
+
+        }
+        delete vOmegaReplacer;
+        omegaString << "\n";
+
+    } catch (const std::exception& e) {
+        std::cout << e.what() << std::endl;
+    }
+
+    return omegaString.str();
+}
+
+
+
+
+
 std::string Computation::codeGen() {
     std::ostringstream generatedCode;
 
