@@ -313,7 +313,8 @@ std::string Computation::codeGen(Set* knownConstraints) {
     std::ostringstream stmtMacroDefs;
     int stmtCount = 0;
     for (const auto& stmt : stmts) {
-        std::string tupleString =
+        
+	std::string tupleString =
             stmt.getIterationSpace()->getTupleDecl().toString();
         // Stmt Macro:
         stmtMacroUndefs << "#undef s" << stmtCount << "(" << tupleString
@@ -321,7 +322,9 @@ std::string Computation::codeGen(Set* knownConstraints) {
         stmtMacroDefs << "#define s" << stmtCount << "(" << tupleString
                       << ")   " << stmt.getStmtSourceCode() << " \n";
         stmtCount++;
-
+        
+	//
+	
         // process iterSpace for Omega
         Set* modifiedIterSpace = new Set(*stmt.getIterationSpace());
         modifiedIterSpace->acceptVisitor(vOmegaReplacer);
@@ -558,7 +561,53 @@ void VisitorChangeUFsForOmega::preVisitSparseConstraints(
     }
     currentTupleDecl = sc->getTupleDecl();
 }
+void VisitorChangeUFsForOmega::preVisitConjunction(Conjunction* c){
+    bool requireChange = false;
+    std::string prefix = "__x";
+    std::list<Exp*> newConstraints;
+    TupleDecl decl = c->getTupleDecl();
+    for(unsigned int i = 0; i <decl.getSize(); i++){
+        if(decl.elemIsConst(i)){
+	    requireChange = true;
+	    decl.setTupleElem(i,prefix+std::to_string(i));
+	    // Create constraint for replacement
+	    TupleVarTerm* tupleTerm = new TupleVarTerm(i);
+	    Term* constTerm = new Term(-decl.elemConstVal(i));
+	    Exp * eqConstraint = new Exp();
+	    eqConstraint->setEquality();
+            eqConstraint->addTerm(tupleTerm);
+            eqConstraint->addTerm(constTerm);
+	    newConstraints.push_back(eqConstraint);
+	}	
+    }
 
+    // Change the conjunction at this point to the 
+    // new conjunction.
+    if (requireChange){
+        Conjunction* conj = new Conjunction(decl);
+        conj->setInArity(c->inarity()); 
+	for(auto it = newConstraints.begin();
+		it!=newConstraints.end(); it++){
+	    conj->addEquality(*it);
+	}
+        for (auto it = c->equalities().begin();
+		it!=c->equalities().end(); it++){
+	    conj->addEquality((*it)->clone());
+	}
+        	
+        for (auto it = c->inequalities().begin();
+		it!=c->inequalities().end(); it++){
+	    conj->addInequality((*it)->clone());
+	}
+	if(c->isUnsat()){
+            conj->setUnsat();
+	}
+        // Copy contents of new conjunction to current
+	// conjunction being visited.	
+	*c = *conj;
+	delete conj;
+    }
+}
 void VisitorChangeUFsForOmega::postVisitUFCallTerm(UFCallTerm* callTerm) {
     if (currentTupleDecl == NULL) {
         throw assert_exception(

@@ -229,7 +229,9 @@ class VisitorChangeUFsForOmega : public Visitor {
     std::set<std::string> getUFCallDecls();
 
     void preVisitSparseConstraints(SparseConstraints*);
-
+    
+    void preVisitConjunction(Conjunction * c); 
+    
     void postVisitUFCallTerm(UFCallTerm*);
 };
 
