@@ -93,7 +93,8 @@ std::string code = spmv.codeGen();
 cout << "SPMV CodeGen: \n";
 cout << code;
 spmv.toDot(dotFileStream,"spmv.dot");
-
+cout << "To Omega String \n"
+   << spmv.toOmegaString();
 // Forward Solve CSR
 // for (i = 0; i < N; i++) /loop over rows
 //s0:tmp = f[i]; 
