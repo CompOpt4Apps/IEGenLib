@@ -323,8 +323,25 @@ std::string Computation::codeGen(Set* knownConstraints) {
                       << ")   " << stmt.getStmtSourceCode() << " \n";
         stmtCount++;
         
-	//
+	// new Codegen would require an application
+	// be performed first before the set is sent
+	// to omega. This is a temporary solution to 
+	// circumvent Omega's schedulling bug.
+        Set * iterSpace = stmt.getExecutionSchedule()->
+		Apply(stmt.getIterationSpace());
+	iterSpace->acceptVisitor(vOmegaReplacer);
+
+        std::string omegaIterString =
+            iterSpace->toOmegaString(vOmegaReplacer->getUFCallDecls());
+        omega::Relation* omegaIterSpace =
+            omega::parser::ParseRelation(omegaIterString);
 	
+        iterSpaces.push_back(omega::copy(*omegaIterSpace));
+	// Use identity transformation instead.
+        transforms.push_back(omega::Identity(iterSpace->arity()));
+        delete omegaIterSpace;
+	delete iterSpace;
+	/*
         // process iterSpace for Omega
         Set* modifiedIterSpace = new Set(*stmt.getIterationSpace());
         modifiedIterSpace->acceptVisitor(vOmegaReplacer);
@@ -350,7 +367,7 @@ std::string Computation::codeGen(Set* knownConstraints) {
         iterSpaces.push_back(omega::copy(*omegaIterSpace));
         transforms.push_back(omega::copy(*omegaTransform));
         delete omegaIterSpace;
-        delete omegaTransform;
+        delete omegaTransform;*/
     }
 
     // define necessary macros collected from statements
