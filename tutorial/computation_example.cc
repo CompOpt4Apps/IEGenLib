@@ -67,5 +67,76 @@ fstream dotFileStream;
 cout << "Entering toDot()" << "\n";
 MyComp.toDot(dotFileStream,"Example.txt");
 
+cout << "Polynomial product Codegen:\n";
+cout << MyComp.codeGen();
 
+// Codegen SPMV
+// for(int i = 0; i < NR; i++)
+//    for(int k = rowptr(i); k < rowptr(i+1); k++){
+//       y[i]+=A[k] * x[col[k]];
+//    }
+//}
+dataReads.clear();
+dataWrites.clear();
+dataReads.push_back(make_pair("y","{[i,k]->[i]}"));
+dataReads.push_back(make_pair("A","{[i,k]->[k]}"));
+dataReads.push_back(make_pair("x","{[i,k]->[t]: t = col(k)}"));
+dataWrites.push_back(make_pair("y","{[i,k]->[i]}"));
+Computation spmv;
+Stmt s1 ("y[i]+=A[k] * x[col[k]];" ,/*Statement*/
+	"{[i,k]: 0 <= i && i < NR && rowptr(i) <= k && k < rowptr(i+1)}", /*domain*/
+	"{[i,k] -> [i,k]}", /*execution schedule*/
+	dataReads,
+	dataWrites);
+spmv.addStmt(s1);
+std::string code = spmv.codeGen();
+cout << "SPMV CodeGen: \n";
+cout << code;
+spmv.toDot(dotFileStream,"spmv.dot");
+
+// Forward Solve CSR
+// for (i = 0; i < N; i++) /loop over rows
+//s0:tmp = f[i]; 
+//   for ( k = rowptr[i]; k < rowptr[i+1] -1 ; k++){
+//s1:  tmp -= val[k] * u[col[k]];
+//   }
+//s2:u[i] = tmp/ val[rowptr[i+1]-1];
+//}
+
+dataReads.clear();
+dataWrites.clear();
+dataWrites.push_back(make_pair("tmp","{[i]->[]}"));
+dataReads.push_back(make_pair("f","{[i]->[i]}"));
+Computation forwardSolve;
+Stmt ss0 ("tmp = f[i];", "{[i]: 0 <= i < NR}", "{[i] ->[i,0,0,0]}"
+		,dataReads,dataWrites);
+dataReads.clear();
+dataWrites.clear();
+dataReads.push_back(make_pair("tmp","{[i,k]->[]}"));
+dataReads.push_back(make_pair("val","{[i,k]->[k]}"));
+dataReads.push_back(make_pair("u","{[i,k]->[t]: t = col(k)}"));
+dataWrites.push_back(make_pair("tmp","{[i,k]->[]}"));
+
+Stmt ss1 ("tmp -= val[k] * u[col[k]];",
+		"{[i,k]: 0 <= i && i < NR && rowptr(i) <= k && k < rowptr(i+1)-1}",
+		"{[i,k] -> [i,1,k,0]}",
+                dataReads,dataWrites);  
+dataReads.clear();
+dataWrites.clear();
+dataReads.push_back(make_pair("tmp","{[i]->[]}"));
+dataReads.push_back(make_pair("val","{[i]->[t]: t = rowptr(i+1) - 1}"));
+dataWrites.push_back(make_pair("u","{[i]->[i]}"));
+
+Stmt ss2 ("u[i] = tmp/ val[rowptr[i+1]-1];",
+		"{[i]: 0 <= i && i < NR}",
+		"{[i] -> [i,2,0,0]}",
+                dataReads,dataWrites);  
+forwardSolve.addStmt(ss0);							
+forwardSolve.addStmt(ss1);							
+forwardSolve.addStmt(ss2);							
+cout << "Forward Solve Codegen";
+cout << forwardSolve.codeGen();
+
+cout << "Forward Solve Dot File: forward_solve.dot";
+forwardSolve.toDot(dotFileStream,"forward_solve.dot");
 }

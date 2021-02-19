@@ -395,7 +395,6 @@ std::string Computation::codeGen(Set* knownConstraints) {
         omega::parser::ParseRelation(omegaKnownString);
 
     delete vOmegaReplacer;
-
     // do actual Omega CodeGen
     try {
         omega::CodeGen cg(transforms, iterSpaces, omega::copy(*omegaKnown));
@@ -416,6 +415,41 @@ std::string Computation::codeGen(Set* knownConstraints) {
 
     return generatedCode.str();
 }
+
+
+std::string Computation::toOmegaString() {
+    std::ostringstream omegaString;
+
+    // convert sets/relations to Omega format for use in codegen, and
+    // collect statement macro definitions
+    VisitorChangeUFsForOmega* vOmegaReplacer = new VisitorChangeUFsForOmega();
+    int stmtCount = 0;
+    for (const auto& stmt : stmts) {
+        omegaString << "s" << stmtCount << "\n";
+        omegaString << stmt.getStmtSourceCode() << "\n";
+        stmtCount++;
+        
+	// new Codegen would require an application
+	// be performed first before the set is sent
+	// to omega. This is a temporary solution to 
+	// circumvent Omega's schedulling bug.
+        Set * iterSpace = stmt.getExecutionSchedule()->
+		Apply(stmt.getIterationSpace());
+	iterSpace->acceptVisitor(vOmegaReplacer);
+
+
+        std::string omegaIterString =
+            iterSpace->toOmegaString(vOmegaReplacer->getUFCallDecls());
+        omegaString << "Domain\n";
+	omegaString << omegaIterString;
+
+	delete iterSpace;
+    }
+
+    delete vOmegaReplacer;
+    return omegaString.str();
+}
+
 
 /* Stmt */
 

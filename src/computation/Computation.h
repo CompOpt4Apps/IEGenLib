@@ -93,6 +93,9 @@ class Computation {
     //! enforced/are known to be true without need for checking in generated
     //! code (guards).
     std::string codeGen(Set* knownConstraints = nullptr);
+    
+    //! Method returns omega strings for each statement
+    std::string toOmegaString();
 
    private:
     //! Information on all statements in the Computation
