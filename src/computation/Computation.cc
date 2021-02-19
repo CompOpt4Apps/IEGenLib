@@ -314,14 +314,6 @@ std::string Computation::codeGen(Set* knownConstraints) {
     int stmtCount = 0;
     for (const auto& stmt : stmts) {
         
-	std::string tupleString =
-            stmt.getIterationSpace()->getTupleDecl().toString();
-        // Stmt Macro:
-        stmtMacroUndefs << "#undef s" << stmtCount << "(" << tupleString
-                        << ") \n";
-        stmtMacroDefs << "#define s" << stmtCount << "(" << tupleString
-                      << ")   " << stmt.getStmtSourceCode() << " \n";
-        stmtCount++;
         
 	// new Codegen would require an application
 	// be performed first before the set is sent
@@ -330,7 +322,15 @@ std::string Computation::codeGen(Set* knownConstraints) {
         Set * iterSpace = stmt.getExecutionSchedule()->
 		Apply(stmt.getIterationSpace());
 	iterSpace->acceptVisitor(vOmegaReplacer);
-
+	std::string tupleString =
+            iterSpace->getTupleDecl().toString();
+        // Stmt Macro:
+        stmtMacroUndefs << "#undef s" << stmtCount << "(" << tupleString
+                        << ") \n";
+        stmtMacroDefs << "#define s" << stmtCount << "(" << tupleString
+                      << ")   " << stmt.getStmtSourceCode() << " \n";
+        stmtCount++;
+	
         std::string omegaIterString =
             iterSpace->toOmegaString(vOmegaReplacer->getUFCallDecls());
         omega::Relation* omegaIterSpace =
@@ -441,7 +441,7 @@ std::string Computation::toOmegaString() {
         std::string omegaIterString =
             iterSpace->toOmegaString(vOmegaReplacer->getUFCallDecls());
         omegaString << "Domain\n";
-	omegaString << omegaIterString;
+	omegaString << omegaIterString << "\n";
 
 	delete iterSpace;
     }

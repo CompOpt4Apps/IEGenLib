@@ -85,7 +85,7 @@ dataWrites.push_back(make_pair("y","{[i,k]->[i]}"));
 Computation spmv;
 Stmt s1 ("y[i]+=A[k] * x[col[k]];" ,/*Statement*/
 	"{[i,k]: 0 <= i && i < NR && rowptr(i) <= k && k < rowptr(i+1)}", /*domain*/
-	"{[i,k] -> [i,k]}", /*execution schedule*/
+	"{[i,k] -> [0,i,k]}", /*execution schedule*/
 	dataReads,
 	dataWrites);
 spmv.addStmt(s1);
@@ -134,8 +134,13 @@ Stmt ss2 ("u[i] = tmp/ val[rowptr[i+1]-1];",
 forwardSolve.addStmt(ss0);							
 forwardSolve.addStmt(ss1);							
 forwardSolve.addStmt(ss2);							
+
+cout << "To Omega String:\n";
+cout <<forwardSolve.toOmegaString();
+
 cout << "Forward Solve Codegen";
 cout << forwardSolve.codeGen();
+
 
 cout << "Forward Solve Dot File: forward_solve.dot";
 forwardSolve.toDot(dotFileStream,"forward_solve.dot");
