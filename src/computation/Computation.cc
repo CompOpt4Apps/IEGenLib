@@ -169,35 +169,33 @@ void Computation::clear() {
 
 void Computation::appendComputation(Computation* other) {
     // store last statement's execution schedule information
-    Relation* previousExecutionSchedule = stmts.back().getExecutionSchedule();
-    if (previousExecutionSchedule->getNumConjuncts() != 1) {
+    Relation* precedingExecSchedule = stmts.back().getExecutionSchedule();
+    if (precedingExecSchedule->getNumConjuncts() != 1) {
         throw assert_exception(
             "Execution schedule should have exactly 1 Conjunction.");
     }
-    TupleDecl previousTupleDecl = previousExecutionSchedule->getTupleDecl();
+    TupleDecl precedingTuple = precedingExecSchedule->getTupleDecl();
     // adjust execution schedule for each statement
     for (unsigned int i = 0; i < other->getNumStmts(); ++i) {
-        Stmt* stmt = new Stmt(*other->getStmt(i));
-        // collect original execution schedule information
-        Relation* appendExecutionSchedule = stmt->getExecutionSchedule();
-        TupleDecl appendTupleDecl = appendExecutionSchedule->getTupleDecl();
-        /* std::cout << "original tuple: " << appendTupleDecl.toString() <<
-         * "\n"; */
-        int appendInArity = appendExecutionSchedule->inArity();
-        // construct new execution schedule
-        TupleDecl newTuple = TupleDecl(appendTupleDecl);
-        int oldValue = newTuple.elemConstVal(appendInArity);
-        int offsetValue = previousTupleDecl.elemConstVal(
-            previousExecutionSchedule->inArity());
-        newTuple.setTupleElem(appendInArity, oldValue + offsetValue);
-        /* std::cout << "new tuple: " << newTuple.toString() << "\n"; */
-        // make a new execution schedule relation using the new tuple
-        Relation* newExecSchedule =
-            new Relation(appendInArity, appendExecutionSchedule->outArity());
+        Stmt* currentStmt = new Stmt(*other->getStmt(i));
+        // collect original execution schedule information for statement to be
+        // appended
+        Relation* appendExecSchedule = currentStmt->getExecutionSchedule();
+        // construct new execution schedule tuple
+        TupleDecl newTuple = TupleDecl(appendExecSchedule->getTupleDecl());
+        int oldValue = newTuple.elemConstVal(appendExecSchedule->inArity());
+        int offsetValue =
+            precedingTuple.elemConstVal(precedingExecSchedule->inArity());
+        newTuple.setTupleElem(appendExecSchedule->inArity(),
+                              oldValue + offsetValue);
+        // build a new execution schedule relation using the new tuple
+        Relation* newExecSchedule = new Relation(
+            appendExecSchedule->inArity(), appendExecSchedule->outArity());
         newExecSchedule->setTupleDecl(newTuple);
-        Conjunction* newConj = new Conjunction(newTuple.size(), appendInArity);
+        Conjunction* newConj =
+            new Conjunction(newTuple.size(), appendExecSchedule->inArity());
         newConj->setTupleDecl(newTuple);
-        Conjunction* conjToCopy = *appendExecutionSchedule->conjunctionBegin();
+        Conjunction* conjToCopy = *appendExecSchedule->conjunctionBegin();
         for (auto eq : conjToCopy->equalities()) {
             newConj->addEquality(eq->clone());
         }
@@ -205,14 +203,12 @@ void Computation::appendComputation(Computation* other) {
             newConj->addInequality(ineq->clone());
         }
         newExecSchedule->addConjunction(newConj);
-        /* std::cout << "new rel str: " << newExecSchedule->prettyPrintString()
-         */
-        /*           << "\n"; */
-        stmt->setExecutionSchedule(newExecSchedule->prettyPrintString());
+        // replace old execution schedule with modified one
+        currentStmt->setExecutionSchedule(newExecSchedule->prettyPrintString());
         delete newExecSchedule;
 
         // add the modified statement to this Computation
-        addStmt(*stmt);
+        addStmt(*currentStmt);
     }
 }
 
