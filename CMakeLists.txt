@@ -79,7 +79,7 @@ add_custom_command(OUTPUT iegen_lib_memtest
 add_custom_target(mtest DEPENDS iegen_lib_memtest)
 
 add_custom_command(OUTPUT iegen_lib_test
-	          COMMAND IEGEN_HOME=. src/iegenlib_t
+	          COMMAND IEGEN_HOME=. bin/iegenlib_t
                   DEPENDS iegenlib_t
                   COMMENT "Run iegenlib tests")
 add_custom_target(rtest DEPENDS iegen_lib_test)
