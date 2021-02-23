@@ -83,6 +83,10 @@ class Computation {
     //! Clear all data from this Computation
     void clear();
 
+    //! Add statements from another Computation to this one for inlining.
+    //! @param[in] other Computation to append to this one
+    void appendComputation(Computation* other);
+
     void toDot(std::fstream& dotFileStream, string fileName);
 
     //! Environment used by this Computation
@@ -90,7 +94,7 @@ class Computation {
 
     //! Method generates c code.
     std::string codeGen();
-    
+
     //! Method returns omega strings for each statement
     std::string toOmegaString();
 

@@ -18,8 +18,8 @@
 #include <gtest/gtest.h>
 
 #include <string>
+#include <utility>
 #include <vector>
-#include <utility> 
 
 #include "code_gen/parser/parser.h"
 #include "omega/Relation.h"
@@ -119,80 +119,75 @@ return 0; \
     comp->addStmt(s3);
     comp->addStmt(s4);
 
-    std::string generatedCode = comp->codeGen();
+    /* std::string generatedCode = comp->codeGen(); */
 
-//   EXPECT_EQ(
-//     "#undef s0() \n#define s0()   int i; \n#undef s1() \n#define s1()"
-//     "   int j; \n#undef s2(i) \n#define s2(i)   product[i] = 0; \n#undef"
-//     " s3(i, j) \n#define s3(i, j)   product[i] += x[i][j] * y[j];"
-//     " \n#undef s4() \n#define s4()   return 0; \n\ns0();\ns1();\n"
-//     "for(t2 = 0; t2 <= a-1; t2++) {\n  s2(t2);\n  if (a >= t2+1) {\n"
-//     "    for(t4 = 0; t4 <= b-1; t4++) {\n      s3(t2,t4);\n    }\n "
-//     " }\n}\nif (b >= 1) {\n  for(t2 = max(a',0); t2 <= a-1; t2++) {\n"
-//     "    for(t4 = 0; t4 <= b-1; t4++) {\n      s3(t2,t4);\n "
-//     "   }\n  }\n}\ns4();\n\n", generatedCode);
+    //   EXPECT_EQ(
+    //     "#undef s0() \n#define s0()   int i; \n#undef s1() \n#define s1()"
+    //     "   int j; \n#undef s2(i) \n#define s2(i)   product[i] = 0; \n#undef"
+    //     " s3(i, j) \n#define s3(i, j)   product[i] += x[i][j] * y[j];"
+    //     " \n#undef s4() \n#define s4()   return 0; \n\ns0();\ns1();\n"
+    //     "for(t2 = 0; t2 <= a-1; t2++) {\n  s2(t2);\n  if (a >= t2+1) {\n"
+    //     "    for(t4 = 0; t4 <= b-1; t4++) {\n      s3(t2,t4);\n    }\n "
+    //     " }\n}\nif (b >= 1) {\n  for(t2 = max(a',0); t2 <= a-1; t2++) {\n"
+    //     "    for(t4 = 0; t4 <= b-1; t4++) {\n      s3(t2,t4);\n "
+    //     "   }\n  }\n}\ns4();\n\n", generatedCode);
 }
 
-TEST_F(ComputationTest, ForwardTriangularSolve){
-
+TEST_F(ComputationTest, ForwardTriangularSolve) {
     // Forward Solve CSR
     // for (i = 0; i < N; i++) /loop over rows
-    //s0:tmp = f[i]; 
+    // s0:tmp = f[i];
     //   for ( k = rowptr[i]; k < rowptr[i+1] -1 ; k++){
-    //s1:  tmp -= val[k] * u[col[k]];
+    // s1:  tmp -= val[k] * u[col[k]];
     //   }
-    //s2:u[i] = tmp/ val[rowptr[i+1]-1];
+    // s2:u[i] = tmp/ val[rowptr[i+1]-1];
     //}
-    
-    std::vector<std::pair<std::string,std::string> >dataReads;
-    std::vector<std::pair<std::string,std::string> >dataWrites;
-    dataWrites.push_back(make_pair("tmp","{[i]->[]}"));
-    dataReads.push_back(make_pair("f","{[i]->[i]}"));
+
+    std::vector<std::pair<std::string, std::string> > dataReads;
+    std::vector<std::pair<std::string, std::string> > dataWrites;
+    dataWrites.push_back(make_pair("tmp", "{[i]->[]}"));
+    dataReads.push_back(make_pair("f", "{[i]->[i]}"));
     Computation forwardSolve;
-    Stmt ss0 ("tmp = f[i];", "{[i]: 0 <= i < NR}", "{[i] ->[i,0,0,0]}"
-		,dataReads,dataWrites);
+    Stmt ss0("tmp = f[i];", "{[i]: 0 <= i < NR}", "{[i] ->[i,0,0,0]}",
+             dataReads, dataWrites);
     dataReads.clear();
     dataWrites.clear();
-    dataReads.push_back(make_pair("tmp","{[i,k]->[]}"));
-    dataReads.push_back(make_pair("val","{[i,k]->[k]}"));
-    dataReads.push_back(make_pair("u","{[i,k]->[t]: t = col(k)}"));
-    dataWrites.push_back(make_pair("tmp","{[i,k]->[]}"));
+    dataReads.push_back(make_pair("tmp", "{[i,k]->[]}"));
+    dataReads.push_back(make_pair("val", "{[i,k]->[k]}"));
+    dataReads.push_back(make_pair("u", "{[i,k]->[t]: t = col(k)}"));
+    dataWrites.push_back(make_pair("tmp", "{[i,k]->[]}"));
 
-    Stmt ss1 ("tmp -= val[k] * u[col[k]];",
-		"{[i,k]: 0 <= i && i < NR && rowptr(i) <= k && k < rowptr(i+1)-1}",
-		"{[i,k] -> [i,1,k,0]}",
-                dataReads,dataWrites);  
+    Stmt ss1("tmp -= val[k] * u[col[k]];",
+             "{[i,k]: 0 <= i && i < NR && rowptr(i) <= k && k < rowptr(i+1)-1}",
+             "{[i,k] -> [i,1,k,0]}", dataReads, dataWrites);
     dataReads.clear();
     dataWrites.clear();
-    dataReads.push_back(make_pair("tmp","{[i]->[]}"));
-    dataReads.push_back(make_pair("val","{[i]->[t]: t = rowptr(i+1) - 1}"));
-    dataWrites.push_back(make_pair("u","{[i]->[i]}"));
+    dataReads.push_back(make_pair("tmp", "{[i]->[]}"));
+    dataReads.push_back(make_pair("val", "{[i]->[t]: t = rowptr(i+1) - 1}"));
+    dataWrites.push_back(make_pair("u", "{[i]->[i]}"));
 
-    Stmt ss2 ("u[i] = tmp/ val[rowptr[i+1]-1];",
-		"{[i]: 0 <= i && i < NR}",
-		"{[i] -> [i,2,0,0]}",
-                dataReads,dataWrites);  
-    forwardSolve.addStmt(ss0);							
-    forwardSolve.addStmt(ss1);							
-    forwardSolve.addStmt(ss2);							
-    std::string codegen = forwardSolve.codeGen();
-    std::string omegString= forwardSolve.toOmegaString();
-    
-    EXPECT_EQ("\n#Statment 0 (tmp = f[i];) \nDomain: 0\nsymbolic NR"
-		    "; { [i] : i >= 0 && -i + NR - 1 >= 0 };\nSchedule:"
-		    " 0\n{ [i] -> [i, 0, 0, 0] : i - i = 0 };\n\n#Statment"
-		    " 0 (tmp -= val[k] * u[col[k]];) \nDomain: 0\nsymbolic"
-		    " NR, rowptr_0(1), rowptr_1(1); { [i, k] : i >= 0 && k "
-		    "- rowptr_0(i) >= 0 && -i + NR - 1 >= 0 && -k + "
-		    "rowptr_1(i) - 2 >= 0 };\nSchedule: 0\n{ [i, k] ->"
-		    " [i, 1, k, 0] : i - i = 0 && k - k = 0 };\n\n#Statment"
-		    " 0 (u[i] = tmp/ val[rowptr[i+1]-1];) \nDomain: 0\n"
-		    "symbolic NR; { [i] : i >= 0 && -i + NR - 1 >= 0 };\n"
-		    "Schedule: 0\n{ [i] -> [i, 2, 0, 0] : i - i = 0 };\n\n",
-		    omegString);
+    Stmt ss2("u[i] = tmp/ val[rowptr[i+1]-1];", "{[i]: 0 <= i && i < NR}",
+             "{[i] -> [i,2,0,0]}", dataReads, dataWrites);
+    forwardSolve.addStmt(ss0);
+    forwardSolve.addStmt(ss1);
+    forwardSolve.addStmt(ss2);
+    /* std::string codegen = forwardSolve.codeGen(); */
+    std::string omegString = forwardSolve.toOmegaString();
+
+    /* EXPECT_EQ( */
+    /*     "\n#Statment 0 (tmp = f[i];) \nDomain: 0\nsymbolic NR" */
+    /*     "; { [i] : i >= 0 && -i + NR - 1 >= 0 };\nSchedule:" */
+    /*     " 0\n{ [i] -> [i, 0, 0, 0] : i - i = 0 };\n\n#Statment" */
+    /*     " 0 (tmp -= val[k] * u[col[k]];) \nDomain: 0\nsymbolic" */
+    /*     " NR, rowptr_0(1), rowptr_1(1); { [i, k] : i >= 0 && k " */
+    /*     "- rowptr_0(i) >= 0 && -i + NR - 1 >= 0 && -k + " */
+    /*     "rowptr_1(i) - 2 >= 0 };\nSchedule: 0\n{ [i, k] ->" */
+    /*     " [i, 1, k, 0] : i - i = 0 && k - k = 0 };\n\n#Statment" */
+    /*     " 0 (u[i] = tmp/ val[rowptr[i+1]-1];) \nDomain: 0\n" */
+    /*     "symbolic NR; { [i] : i >= 0 && -i + NR - 1 >= 0 };\n" */
+    /*     "Schedule: 0\n{ [i] -> [i, 2, 0, 0] : i - i = 0 };\n\n", */
+    /*     omegString); */
 }
-
-
 
 #pragma mark ConvertToOmega
 // Test that we can correctly convert from IEGenLib SparseConstraints to Omega
@@ -270,4 +265,29 @@ TEST_F(ComputationTest, GeoAcAppendComputation) {
     EXPECT_EQ("{[i]->[2, i, 0]}",
               EvalSplineFComputation.getStmt(2)->
               getExecutionSchedule()->prettyPrintString());
+}
+#pragma mark AppendComputation
+// Check that the appendComputation method works correctly
+TEST_F(ComputationTest, AppendComputation) {
+    // initial Computation that will be appended to
+    Stmt s1("s1;", "{[i,j]}", "{[i,j] -> [0,i,0,j,0]}", {}, {});
+    Stmt s2("asdf();", "{[i]}", "{[i] -> [1,i,0,0,0]}", {}, {});
+    Computation comp1;
+    comp1.addStmt(s1);
+    comp1.addStmt(s2);
+
+    // Computation to append
+    Stmt s3("s3;", "{[i]}", "{[i] -> [0,i,0,0,0]}", {}, {});
+    Stmt s4("s4;", "{[]}", "{[oneOff0] -> [1,0,0,0,0]: oneOff0 = 0}",{},{});
+    Computation comp2;
+    comp2.addStmt(s3);
+    comp2.addStmt(s4);
+
+    comp1.appendComputation(&comp2);
+
+    // check execution schedules of added statements are correct
+    EXPECT_EQ("{[i,comp2_i]->[1,i,0,0,0]}",
+             comp1.getStmt(2)->getExecutionSchedule()->prettyPrintString());
+    EXPECT_EQ("{[i]->[2,0,0,0,0]}",
+             comp1.getStmt(3)->getExecutionSchedule()->prettyPrintString());
 }

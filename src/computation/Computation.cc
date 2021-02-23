@@ -167,6 +167,51 @@ void Computation::clear() {
     stmts.clear();
 }
 
+void Computation::appendComputation(Computation* other) {
+    // store last statement's execution schedule information
+    Relation* precedingExecSchedule = stmts.back().getExecutionSchedule();
+    if (precedingExecSchedule->getNumConjuncts() != 1) {
+        throw assert_exception(
+            "Execution schedule should have exactly 1 Conjunction.");
+    }
+    TupleDecl precedingTuple = precedingExecSchedule->getTupleDecl();
+    // adjust execution schedule for each statement
+    for (unsigned int i = 0; i < other->getNumStmts(); ++i) {
+        Stmt* currentStmt = new Stmt(*other->getStmt(i));
+        // collect original execution schedule information for statement to be
+        // appended
+        Relation* appendExecSchedule = currentStmt->getExecutionSchedule();
+        // construct new execution schedule tuple
+        TupleDecl newTuple = TupleDecl(appendExecSchedule->getTupleDecl());
+        int oldValue = newTuple.elemConstVal(appendExecSchedule->inArity());
+        int offsetValue =
+            precedingTuple.elemConstVal(precedingExecSchedule->inArity());
+        newTuple.setTupleElem(appendExecSchedule->inArity(),
+                              oldValue + offsetValue);
+        // build a new execution schedule relation using the new tuple
+        Relation* newExecSchedule = new Relation(
+            appendExecSchedule->inArity(), appendExecSchedule->outArity());
+        newExecSchedule->setTupleDecl(newTuple);
+        Conjunction* newConj =
+            new Conjunction(newTuple.size(), appendExecSchedule->inArity());
+        newConj->setTupleDecl(newTuple);
+        Conjunction* conjToCopy = *appendExecSchedule->conjunctionBegin();
+        for (auto eq : conjToCopy->equalities()) {
+            newConj->addEquality(eq->clone());
+        }
+        for (auto ineq : conjToCopy->inequalities()) {
+            newConj->addInequality(ineq->clone());
+        }
+        newExecSchedule->addConjunction(newConj);
+        // replace old execution schedule with modified one
+        currentStmt->setExecutionSchedule(newExecSchedule->prettyPrintString());
+        delete newExecSchedule;
+
+        // add the modified statement to this Computation
+        addStmt(*currentStmt);
+    }
+}
+
 void Computation::toDot(std::fstream& dotFile, string fileName) {
     std::vector<string>
         data_spaces;  // Maintains the list of dataspaces already created
@@ -303,23 +348,23 @@ void Computation::toDot(std::fstream& dotFile, string fileName) {
 std::string Computation::toOmegaString() {
     std::ostringstream omegaString;
     try {
-
         VisitorChangeUFsForOmega* vOmegaReplacer =
             new VisitorChangeUFsForOmega();
         int stmtCount = 0;
         for (const auto& stmt : stmts) {
             std::string tupleString =
                 stmt.getIterationSpace()->getTupleDecl().toString();
-     
-            omegaString << "\n#Statment "<<stmtCount <<" ("<<
-		     stmt.getStmtSourceCode() <<") \n";
+
+            omegaString << "\n#Statment " << stmtCount << " ("
+                        << stmt.getStmtSourceCode() << ") \n";
 
             // process iterSpace for Omega
             Set* modifiedIterSpace = new Set(*stmt.getIterationSpace());
             modifiedIterSpace->acceptVisitor(vOmegaReplacer);
             std::string omegaIterString = modifiedIterSpace->toOmegaString(
                 vOmegaReplacer->getUFCallDecls());
-	    omegaString << "Domain: "<<stmtCount << "\n" <<omegaIterString << "\n"; 
+            omegaString << "Domain: " << stmtCount << "\n"
+                        << omegaIterString << "\n";
             delete modifiedIterSpace;
             vOmegaReplacer->reset();
 
@@ -330,10 +375,10 @@ std::string Computation::toOmegaString() {
             std::string omegaTransformString = modifiedTransform->toOmegaString(
                 vOmegaReplacer->getUFCallDecls());
 
-	    omegaString << "Schedule: "<<stmtCount << "\n" <<omegaTransformString << "\n"; 
+            omegaString << "Schedule: " << stmtCount << "\n"
+                        << omegaTransformString << "\n";
             delete modifiedTransform;
             vOmegaReplacer->reset();
-
         }
         delete vOmegaReplacer;
         omegaString << "\n";
@@ -344,10 +389,6 @@ std::string Computation::toOmegaString() {
 
     return omegaString.str();
 }
-
-
-
-
 
 std::string Computation::codeGen() {
     std::ostringstream generatedCode;
@@ -393,7 +434,7 @@ std::string Computation::codeGen() {
             // create and insert new Omega data structures
             omega::Relation* omegaIterSpace =
                 omega::parser::ParseRelation(omegaIterString);
-	    omega::Relation* omegaTransform =
+            omega::Relation* omegaTransform =
                 omega::parser::ParseRelation(omegaTransformString);
             iterSpaces.push_back(omega::copy(*omegaIterSpace));
             transforms.push_back(omega::copy(*omegaTransform));
