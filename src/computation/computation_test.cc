@@ -222,3 +222,52 @@ TEST_F(ComputationTest, ConvertToOmega) {
         "{[i,j]->[k]: 0 <= i && i < N && 0 <= j && j < M && i=foo(i+1)}",
         "{[i,j] -> [k] : foo_0(i) = i && 0 <= i < N && 0 <= j < M}");
 }
+
+TEST_F(ComputationTest, GeoAcAppendComputation) {
+
+    //Initial Computation that will be appended to
+    Computation EvalSplineFComputation;
+    //int k;
+    //Creating s0
+    Stmt s0("int k",
+      "{[0]}",
+      "{[0]->[0, 0, 0]}",
+      {},
+      {}
+      );
+    //Adding s0
+    EvalSplineFComputation.addStmt(s0);
+
+    //Creating s1
+    //int k = Find_Segment(x, Spline.x_vals, Spline.length, Spline.accel);
+    //Find_Segment(double x, double* x_vals, int length, int & prev){
+    Stmt s1("double* x_vals = Spline.x_vals; int length = Spline.length; int& prev = Spline.accel",
+      "{[0]}",
+      "{[0]->[1, 0, 0]}",
+      {},
+      {}
+      );
+    //Adding s1
+    EvalSplineFComputation.addStmt(s1);
+
+    //Computation that gets appended
+    Computation FindSegmentComputation;
+    //Creating statement1
+    //if(x >= x_vals[i] && x <= x_vals[i+1]) prev = i;
+    Stmt s00("if(x >= x_vals[i] && x <= x_vals[i+1]) prev = i",
+      "{[i]: i>=0 && i<length}",
+      "{[i]->[0, i, 0]}", 
+      {},
+      {}
+      );
+    //Adding statement2
+    FindSegmentComputation.addStmt(s00);
+
+    //Append
+    EvalSplineFComputation.appendComputation(&FindSegmentComputation);
+
+    // check execution schedules of added statements are correct
+    EXPECT_EQ("{[i]->[2, i, 0]}",
+              EvalSplineFComputation.getStmt(2)->
+              getExecutionSchedule()->prettyPrintString());
+}
