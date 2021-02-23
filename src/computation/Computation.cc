@@ -167,7 +167,7 @@ void Computation::clear() {
     stmts.clear();
 }
 
-void Computation::appendComputation(Computation* other) {
+int Computation::appendComputation(Computation* other) {
     // store last statement's execution schedule information
     Relation* precedingExecSchedule = stmts.back().getExecutionSchedule();
     if (precedingExecSchedule->getNumConjuncts() != 1) {
@@ -175,6 +175,11 @@ void Computation::appendComputation(Computation* other) {
             "Execution schedule should have exactly 1 Conjunction.");
     }
     TupleDecl precedingTuple = precedingExecSchedule->getTupleDecl();
+    int offsetValue =
+            precedingTuple.elemConstVal(precedingExecSchedule->inArity());
+    int latest_value = offsetValue;
+    
+
     // adjust execution schedule for each statement
     for (unsigned int i = 0; i < other->getNumStmts(); ++i) {
         Stmt* currentStmt = new Stmt(*other->getStmt(i));
@@ -184,10 +189,9 @@ void Computation::appendComputation(Computation* other) {
         // construct new execution schedule tuple
         TupleDecl newTuple = TupleDecl(appendExecSchedule->getTupleDecl());
         int oldValue = newTuple.elemConstVal(appendExecSchedule->inArity());
-        int offsetValue =
-            precedingTuple.elemConstVal(precedingExecSchedule->inArity());
+        latest_value = oldValue + offsetValue;
         newTuple.setTupleElem(appendExecSchedule->inArity(),
-                              oldValue + offsetValue);
+                              latest_value);
         // build a new execution schedule relation using the new tuple
         Relation* newExecSchedule = new Relation(
             appendExecSchedule->inArity(), appendExecSchedule->outArity());
@@ -210,6 +214,7 @@ void Computation::appendComputation(Computation* other) {
         // add the modified statement to this Computation
         addStmt(*currentStmt);
     }
+    return latest_value;
 }
 
 void Computation::toDot(std::fstream& dotFile, string fileName) {

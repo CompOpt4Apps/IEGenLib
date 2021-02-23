@@ -259,7 +259,9 @@ TEST_F(ComputationTest, GeoAcAppendComputation) {
     FindSegmentComputation.addStmt(s00);
 
     //Append
-    EvalSplineFComputation.appendComputation(&FindSegmentComputation);
+    int retval = EvalSplineFComputation.appendComputation(
+                                         &FindSegmentComputation);
+    EXPECT_EQ(2,retval);
 
     // check execution schedules of added statements are correct
     EXPECT_EQ("{[i]->[2, i, 0]}",
@@ -277,13 +279,15 @@ TEST_F(ComputationTest, AppendComputation) {
     comp1.addStmt(s2);
 
     // Computation to append
-    Stmt s3("s3;", "{[i]}", "{[i] -> [0,i,0,0,0]}", {}, {});
-    Stmt s4("s4;", "{[]}", "{[oneOff0] -> [1,0,0,0,0]: oneOff0 = 0}",{},{});
+    Stmt s3("s3;", "{[i]}","{[i] -> [0,i,0,0,0]}", {}, {});
+    Stmt s4("s4;", "{[0]}","{[oneOff0] -> [1,0,0,0,0]: oneOff0 = 0}",{},{});
     Computation comp2;
     comp2.addStmt(s3);
     comp2.addStmt(s4);
 
-    comp1.appendComputation(&comp2);
+    int retval = comp1.appendComputation(&comp2);
+  
+    EXPECT_EQ(2,retval);
 
     // check execution schedules of added statements are correct
     EXPECT_EQ("{[i,comp2_i]->[1,i,0,0,0]}",

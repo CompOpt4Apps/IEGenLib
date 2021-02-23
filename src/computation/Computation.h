@@ -85,7 +85,7 @@ class Computation {
 
     //! Add statements from another Computation to this one for inlining.
     //! @param[in] other Computation to append to this one
-    void appendComputation(Computation* other);
+    int appendComputation(Computation* other);
 
     void toDot(std::fstream& dotFileStream, string fileName);
 
