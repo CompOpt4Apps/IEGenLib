@@ -1,5 +1,6 @@
 all:
-	@make -C build all
+	cmake -S . -B build 
+	cmake --build build
 
 install:
 	@make -C build install

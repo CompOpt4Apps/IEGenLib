@@ -35,7 +35,6 @@ are being added. You can get the latest source code from this git repository:
 ---- A. Building IEGenLib ----------
 
 If you want to do a quick build, just run:
-    ./configure
     make
     make test
     make install
@@ -70,12 +69,10 @@ output; graphviz is needed to visualize the dot output.
 ==== IV. Building IEGenLib from Source =======================
 
     Build Command Sequence
-        ./configure
         make
         make install
 
     Build and Test without creating an install directory
-        ./configure
         make
         make test
 
@@ -111,7 +108,6 @@ version 2.5 or newer and BISON version 2.4 or newer are required. If
 documentation is to be re-generated, then doxygen and dot are also
 required to create it.
 
-Run ./configure --help for more build configuration options.
 
 The default install directory is ${IEGEN_DIR}/iegen/. This directory
 may be changed using options to the configure script.  Note that the
