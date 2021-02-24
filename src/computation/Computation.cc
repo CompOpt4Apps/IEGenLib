@@ -176,7 +176,7 @@ int Computation::appendComputation(Computation* other) {
     }
     TupleDecl precedingTuple = precedingExecSchedule->getTupleDecl();
     int offsetValue =
-            precedingTuple.elemConstVal(precedingExecSchedule->inArity());
+            precedingTuple.elemConstVal(precedingExecSchedule->inArity())+1;
     int latest_value = offsetValue;
     
 

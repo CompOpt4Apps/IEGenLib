@@ -280,18 +280,18 @@ TEST_F(ComputationTest, AppendComputation) {
 
     // Computation to append
     Stmt s3("s3;", "{[i]}","{[i] -> [0,i,0,0,0]}", {}, {});
-    Stmt s4("s4;", "{[0]}","{[oneOff0] -> [1,0,0,0,0]: oneOff0 = 0}",{},{});
+    Stmt s4("s4;", "{[0]}","{[0] -> [1,0,0,0,0]}",{},{});
     Computation comp2;
     comp2.addStmt(s3);
     comp2.addStmt(s4);
 
     int retval = comp1.appendComputation(&comp2);
   
-    EXPECT_EQ(2,retval);
+    EXPECT_EQ(3,retval);
 
     // check execution schedules of added statements are correct
-    EXPECT_EQ("{[i,comp2_i]->[1,i,0,0,0]}",
+    EXPECT_EQ("{[i]->[2,i,0,0,0]}",
              comp1.getStmt(2)->getExecutionSchedule()->prettyPrintString());
-    EXPECT_EQ("{[i]->[2,0,0,0,0]}",
+    EXPECT_EQ("{[0]->[3,0,0,0,0]}",
              comp1.getStmt(3)->getExecutionSchedule()->prettyPrintString());
 }
