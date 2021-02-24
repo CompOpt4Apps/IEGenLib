@@ -52,7 +52,6 @@ class ComputationTest : public ::testing::Test {
 
         // do conversion
         iegenSet->acceptVisitor(vOmegaReplacer);
-        /* std::cout << iegenSet->prettyPrintStringForOmega() << "\n"; */
         omega::Relation* omegaSet = omega::parser::ParseRelation(
             iegenSet->toOmegaString(vOmegaReplacer->getUFCallDecls()));
         EXPECT_EQ(expectedOmegaResult + "\n",
@@ -72,8 +71,7 @@ class ComputationTest : public ::testing::Test {
 
         // do conversion
         iegenRel->acceptVisitor(vOmegaReplacer);
-        /* std::cout << iegenRel->prettyPrintStringForOmega() << "\n"; */
-        omega::Relation* omegaRel = omega::parser::ParseRelation(
+	omega::Relation* omegaRel = omega::parser::ParseRelation(
             iegenRel->toOmegaString(vOmegaReplacer->getUFCallDecls()));
         EXPECT_EQ(expectedOmegaResult + "\n",
                   omegaRel->print_with_subs_to_string());
@@ -163,33 +161,33 @@ TEST_F(ComputationTest, ForwardTriangularSolve) {
              "{[i,k] -> [i,1,k,0]}", dataReads, dataWrites);
     dataReads.clear();
     dataWrites.clear();
-    dataReads.push_back(make_pair("tmp", "{[i]->[]}"));
-    dataReads.push_back(make_pair("val", "{[i]->[t]: t = rowptr(i+1) - 1}"));
-    dataWrites.push_back(make_pair("u", "{[i]->[i]}"));
+    dataReads.push_back(make_pair("tmp","{[i]->[]}"));
+    dataReads.push_back(make_pair("val","{[i]->[t]: t = rowptr(i+1) - 1}"));
+    dataWrites.push_back(make_pair("u","{[i]->[i]}"));
 
-    Stmt ss2("u[i] = tmp/ val[rowptr[i+1]-1];", "{[i]: 0 <= i && i < NR}",
-             "{[i] -> [i,2,0,0]}", dataReads, dataWrites);
-    forwardSolve.addStmt(ss0);
-    forwardSolve.addStmt(ss1);
-    forwardSolve.addStmt(ss2);
-    /* std::string codegen = forwardSolve.codeGen(); */
-    std::string omegString = forwardSolve.toOmegaString();
-
-    /* EXPECT_EQ( */
-    /*     "\n#Statment 0 (tmp = f[i];) \nDomain: 0\nsymbolic NR" */
-    /*     "; { [i] : i >= 0 && -i + NR - 1 >= 0 };\nSchedule:" */
-    /*     " 0\n{ [i] -> [i, 0, 0, 0] : i - i = 0 };\n\n#Statment" */
-    /*     " 0 (tmp -= val[k] * u[col[k]];) \nDomain: 0\nsymbolic" */
-    /*     " NR, rowptr_0(1), rowptr_1(1); { [i, k] : i >= 0 && k " */
-    /*     "- rowptr_0(i) >= 0 && -i + NR - 1 >= 0 && -k + " */
-    /*     "rowptr_1(i) - 2 >= 0 };\nSchedule: 0\n{ [i, k] ->" */
-    /*     " [i, 1, k, 0] : i - i = 0 && k - k = 0 };\n\n#Statment" */
-    /*     " 0 (u[i] = tmp/ val[rowptr[i+1]-1];) \nDomain: 0\n" */
-    /*     "symbolic NR; { [i] : i >= 0 && -i + NR - 1 >= 0 };\n" */
-    /*     "Schedule: 0\n{ [i] -> [i, 2, 0, 0] : i - i = 0 };\n\n", */
-    /*     omegString); */
+    Stmt ss2 ("u[i] = tmp/ val[rowptr[i+1]-1];",
+		"{[i]: 0 <= i && i < NR}",
+		"{[i] -> [i,2,0,0]}",
+                dataReads,dataWrites);  
+    forwardSolve.addStmt(ss0);							
+    forwardSolve.addStmt(ss1);							
+    forwardSolve.addStmt(ss2);							
+    std::string codegen = forwardSolve.codeGen();
+    std::string omegString= forwardSolve.toOmegaString();
+    
+    /*EXPECT_EQ("\n#Statment 0 (tmp = f[i];) \nDomain: 0\nsymbolic NR"
+		    "; { [i] : i >= 0 && -i + NR - 1 >= 0 };\nSchedule:"
+		    " 0\n{ [i] -> [i, 0, 0, 0] : i - i = 0 };\n\n#Statment"
+		    " 0 (tmp -= val[k] * u[col[k]];) \nDomain: 0\nsymbolic"
+		    " NR, rowptr_0(1), rowptr_1(1); { [i, k] : i >= 0 && k "
+		    "- rowptr_0(i) >= 0 && -i + NR - 1 >= 0 && -k + "
+		    "rowptr_1(i) - 2 >= 0 };\nSchedule: 0\n{ [i, k] ->"
+		    " [i, 1, k, 0] : i - i = 0 && k - k = 0 };\n\n#Statment"
+		    " 0 (u[i] = tmp/ val[rowptr[i+1]-1];) \nDomain: 0\n"
+		    "symbolic NR; { [i] : i >= 0 && -i + NR - 1 >= 0 };\n"
+		    "Schedule: 0\n{ [i] -> [i, 2, 0, 0] : i - i = 0 };\n\n",
+		    omegString);*/
 }
-
 #pragma mark ConvertToOmega
 // Test that we can correctly convert from IEGenLib SparseConstraints to Omega
 // Relations
@@ -204,7 +202,35 @@ TEST_F(ComputationTest, ConvertToOmega) {
     checkOmegaSetConversion(
         "{[i,j] : 0 <= i && i < N && 0 <= j && j < M && i=foo(i+1)}",
         "{[i,j]: foo_0(i) = i && 0 <= i < N && 0 <= j < M}");
+    // multiple uses of same UF
+    checkOmegaSetConversion(
+        "{[i,j]: A(i) = A(j) && A(i,j) = A(j)}",
+        "{[i,j]: A_0(i) = A_1(i,j) && A_2(i,j) = A_1(i,j)}");
+    
+    // replacing constants with variables in tuple.
+    checkOmegaSetConversion(
+        "{[0,i,j]: A(i) = A(j) && A(i,j) = A(j)}",
+        "{[__x0,i,j]: A_0(__x0,i) = A_2(__x0,i,j) && A_1(__x0,i,j) = A_2(__x0,i,j) && __x0 = 0}");
+    
+    checkOmegaSetConversion(
+        "{[0,i,0,j,1]: A(i) = A(j) && A(i,j) = A(j)}",
+        "{[__x0,i,__x2,j,__x4]: A_2(__x0,i,__x2,j) = A_0(__x0,i) && \
+A_1(__x0,i,__x2,j) = A_0(__x0,i) && __x4 = 1 && __x0 = 0 && __x2 = 0}");
+    
 
+
+    checkOmegaSetConversion(
+        "{[0,i,2,j,1]: A(i) = A(j) && A(i,j) = A(j)}",
+        "{[__x0,i,__x2,j,__x4]: A_2(__x0,i,__x2,j) = A_0(__x0,i) && \
+A_1(__x0,i,__x2,j) = A_0(__x0,i) && __x4 = 1 && __x0 = 0 && __x2 = 2}");
+
+    checkOmegaSetConversion(
+        "{[0,i,0,j,1,k,0]: A(i) = A(j) && A(i,j) = A(j) && B(j,k) = 0 }",
+        "{[__x0,i,__x2,j,__x4,k,__x6]: A_3(__x0,i,__x2,j) = \
+A_1(__x0,i) && A_2(__x0,i,__x2,j) = A_1(__x0,i) && \
+__x6 = 0 && B_0(__x0,i,__x2,j,__x4,k) = 0 && __x4 = 1 \
+&& __x0 = 0 && __x2 = 0}");
+    
     /* Relations */
     // basic test
     checkOmegaRelationConversion(
@@ -214,9 +240,13 @@ TEST_F(ComputationTest, ConvertToOmega) {
     checkOmegaRelationConversion("{[]->[]}", "{ TRUE }");
     // with simple UF constraints
     checkOmegaRelationConversion(
-
         "{[i,j]->[k]: 0 <= i && i < N && 0 <= j && j < M && i=foo(i+1)}",
         "{[i,j] -> [k] : foo_0(i) = i && 0 <= i < N && 0 <= j < M}");
+    // replacement of constants with tuplevariable
+    checkOmegaRelationConversion(
+        "{[0,i,j]->[k]: 0 <= i && i < N && 0 <= j && j < M && i=foo(i+1)}",
+        "{[__x0,i,j] -> [k] : foo_0(__x0,i) = i && __x0 = 0 && 0 <= i < N && 0 <= j < M}");
+    // TODO: multiple uses of same UF in a Relation?
 }
 
 TEST_F(ComputationTest, GeoAcAppendComputation) {
@@ -291,18 +321,18 @@ TEST_F(ComputationTest, AppendComputation) {
 
     // Computation to append
     Stmt s3("s3;", "{[i]}","{[i] -> [0,i,0,0,0]}", {}, {});
-    Stmt s4("s4;", "{[0]}","{[oneOff0] -> [1,0,0,0,0]: oneOff0 = 0}",{},{});
+    Stmt s4("s4;", "{[0]}","{[0] -> [1,0,0,0,0]}",{},{});
     Computation comp2;
     comp2.addStmt(s3);
     comp2.addStmt(s4);
 
     int retval = comp1.appendComputation(&comp2);
   
-    EXPECT_EQ(2,retval);
+    EXPECT_EQ(3,retval);
 
     // check execution schedules of added statements are correct
-    EXPECT_EQ("{[i,comp2_i]->[1,i,0,0,0]}",
+    EXPECT_EQ("{[i]->[2,i,0,0,0]}",
              comp1.getStmt(2)->getExecutionSchedule()->prettyPrintString());
-    EXPECT_EQ("{[i]->[2,0,0,0,0]}",
+    EXPECT_EQ("{[0]->[3,0,0,0,0]}",
              comp1.getStmt(3)->getExecutionSchedule()->prettyPrintString());
 }
