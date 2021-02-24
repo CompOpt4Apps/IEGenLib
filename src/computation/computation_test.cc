@@ -27,6 +27,7 @@
 
 using namespace iegenlib;
 using namespace std;
+
 /*!
  * \class ComputationTest
  *
@@ -220,10 +221,11 @@ TEST_F(ComputationTest, ConvertToOmega) {
 
 TEST_F(ComputationTest, GeoAcAppendComputation) {
 
-    //Initial Computation that will be appended to
+    // Initial Computation that will be appended to
     Computation EvalSplineFComputation;
-    //int k;
-    //Creating s0
+    
+    // Creating s0
+    // int k;
     Stmt s0("int k",
       "{[0]}",
       "{[0]->[0, 0, 0]}",
@@ -233,40 +235,49 @@ TEST_F(ComputationTest, GeoAcAppendComputation) {
     //Adding s0
     EvalSplineFComputation.addStmt(s0);
 
-    //Creating s1
-    //int k = Find_Segment(x, Spline.x_vals, Spline.length, Spline.accel);
-    //Find_Segment(double x, double* x_vals, int length, int & prev){
+    // Creating s1
+    // int k = Find_Segment(x, Spline.x_vals, Spline.length, Spline.accel);
+    // Find_Segment(double x, double* x_vals, int length, int & prev){
     Stmt s1("double* x_vals = Spline.x_vals; int length = Spline.length; int& prev = Spline.accel",
       "{[0]}",
       "{[0]->[1, 0, 0]}",
       {},
       {}
       );
-    //Adding s1
+    // Adding s1
     EvalSplineFComputation.addStmt(s1);
 
-    //Computation that gets appended
+    // Computation that gets appended
     Computation FindSegmentComputation;
-    //Creating statement1
-    //if(x >= x_vals[i] && x <= x_vals[i+1]) prev = i;
+    // Creating statement1
+    // if(x >= x_vals[i] && x <= x_vals[i+1]) prev = i;
     Stmt s00("if(x >= x_vals[i] && x <= x_vals[i+1]) prev = i",
       "{[i]: i>=0 && i<length}",
       "{[i]->[0, i, 0]}", 
       {},
       {}
       );
-    //Adding statement2
+    // Adding statement2
     FindSegmentComputation.addStmt(s00);
 
-    //Append
+    // Append
     int retval = EvalSplineFComputation.appendComputation(
                                          &FindSegmentComputation);
+
+    // Test position of last appended computation
     EXPECT_EQ(2,retval);
 
-    // check execution schedules of added statements are correct
-    EXPECT_EQ("{[i]->[2, i, 0]}",
+    // Create an iegenlib relation to test the output of the append
+    iegenlib::Relation *r_s00 = new iegenlib::Relation(
+        "{[i] -> [2, i, 0]}"
+        );
+
+    // Check execution schedules of added statements are correct
+    EXPECT_EQ(r_s00->prettyPrintString(),
               EvalSplineFComputation.getStmt(2)->
               getExecutionSchedule()->prettyPrintString());
+    
+    delete r_s00;
 }
 #pragma mark AppendComputation
 // Check that the appendComputation method works correctly
