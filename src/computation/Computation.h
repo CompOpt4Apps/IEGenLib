@@ -93,7 +93,11 @@ class Computation {
     Environment env;
 
     //! Method generates c code.
-    std::string codeGen();
+    //! Known constraints are constraints that can be considered already
+    //! enforced/are known to be true without need for checking in generated
+    //! code (guards).
+    std::string codeGen(Set* knownConstraints = nullptr);
+    
 
     //! Method returns omega strings for each statement
     std::string toOmegaString();
@@ -195,14 +199,17 @@ class Stmt {
  */
 class VisitorChangeUFsForOmega : public Visitor {
    private:
-    //! string stream for building up necessary UF call macros
-    std::ostringstream macros;
+    //! UF call (re)definition macros
+    std::map<std::string, std::string> macros;
     //! declarations of UF calls needed by Omega parser
     std::set<std::string> ufCallDecls;
+    //! UF calls that we've seen before and do not need to rename if encountered
+    //! again; mapping from call as string -> new assigned name
+    std::map<std::string, std::string> knownUFs;
     //! next number to use in creating unique function names
     int nextFuncReplacementNumber;
-    //! next number to use in creating replacement variable names
-    int nextVarReplacementNumber;
+    //! stored tuple decl for variable retrieval
+    TupleDecl currentTupleDecl;
 
    public:
     //! Construct a new VisitorChangeUFsForOmega
@@ -211,16 +218,28 @@ class VisitorChangeUFsForOmega : public Visitor {
     //! Destructor
     ~VisitorChangeUFsForOmega();
 
-    //! Reset state of visitor for additional use, including freeing memory
+    //! Completely reset state of Visitor for re-use, including freeing memory.
+    //! This method should NOT be used between visiting connected
+    //! Sets/Relations, for instance those which share some UF calls you want
+    //! the Visitor to remember.
     void reset();
+
+    //! Partially reset Visitor state so that it is prepared for use with
+    //! additional interrelated Sets/Relations, such as statements in a
+    //! Computation.
+    void prepareForNext();
 
     //! Get the UF call macros required for the code corresponding to the
     //! set/relation to function correctly, as a string
-    std::string getMacrosString();
+    std::map<std::string, std::string>* getUFMacros();
 
     //! Get the declarations of UF calls needed by Omega parser
     std::set<std::string> getUFCallDecls();
 
+    void preVisitSparseConstraints(SparseConstraints*);
+    
+    void preVisitConjunction(Conjunction * c); 
+    
     void postVisitUFCallTerm(UFCallTerm*);
 };
 

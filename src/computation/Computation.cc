@@ -24,6 +24,7 @@
 #include <code_gen/parser/parser.h>
 #include <codegen.h>
 
+#include <algorithm>
 #include <set>
 #include <sstream>
 #include <string>
@@ -350,107 +351,76 @@ void Computation::toDot(std::fstream& dotFile, string fileName) {
     dotFile.close();
 }
 
-std::string Computation::toOmegaString() {
-    std::ostringstream omegaString;
-    try {
-        VisitorChangeUFsForOmega* vOmegaReplacer =
-            new VisitorChangeUFsForOmega();
-        int stmtCount = 0;
-        for (const auto& stmt : stmts) {
-            std::string tupleString =
-                stmt.getIterationSpace()->getTupleDecl().toString();
-
-            omegaString << "\n#Statment " << stmtCount << " ("
-                        << stmt.getStmtSourceCode() << ") \n";
-
-            // process iterSpace for Omega
-            Set* modifiedIterSpace = new Set(*stmt.getIterationSpace());
-            modifiedIterSpace->acceptVisitor(vOmegaReplacer);
-            std::string omegaIterString = modifiedIterSpace->toOmegaString(
-                vOmegaReplacer->getUFCallDecls());
-            omegaString << "Domain: " << stmtCount << "\n"
-                        << omegaIterString << "\n";
-            delete modifiedIterSpace;
-            vOmegaReplacer->reset();
-
-            // process transform (exec schedule) for Omega
-            Relation* modifiedTransform =
-                new Relation(*stmt.getExecutionSchedule());
-            modifiedTransform->acceptVisitor(vOmegaReplacer);
-            std::string omegaTransformString = modifiedTransform->toOmegaString(
-                vOmegaReplacer->getUFCallDecls());
-
-            omegaString << "Schedule: " << stmtCount << "\n"
-                        << omegaTransformString << "\n";
-            delete modifiedTransform;
-            vOmegaReplacer->reset();
-        }
-        delete vOmegaReplacer;
-        omegaString << "\n";
-
-    } catch (const std::exception& e) {
-        std::cout << e.what() << std::endl;
-    }
-
-    return omegaString.str();
-}
-
-std::string Computation::codeGen() {
+std::string Computation::codeGen(Set* knownConstraints) {
     std::ostringstream generatedCode;
 
+    // convert sets/relations to Omega format for use in codegen, and
+    // collect statement macro definitions
+    VisitorChangeUFsForOmega* vOmegaReplacer = new VisitorChangeUFsForOmega();
+    std::vector<omega::Relation> transforms;
+    std::vector<omega::Relation> iterSpaces;
+    std::ostringstream stmtMacroUndefs;
+    std::ostringstream stmtMacroDefs;
+    int stmtCount = 0;
+    for (const auto& stmt : stmts) {
+        
+        
+	// new Codegen would require an application
+	// be performed first before the set is sent
+	// to omega. This is a temporary solution to 
+	// circumvent Omega's schedulling bug.
+        Set * iterSpace = stmt.getExecutionSchedule()->
+		Apply(stmt.getIterationSpace());
+	iterSpace->acceptVisitor(vOmegaReplacer);
+	std::string tupleString =
+            iterSpace->getTupleDecl().toString();
+        // Stmt Macro:
+        stmtMacroUndefs << "#undef s" << stmtCount << "(" << tupleString
+                        << ") \n";
+        stmtMacroDefs << "#define s" << stmtCount << "(" << tupleString
+                      << ")   " << stmt.getStmtSourceCode() << " \n";
+        stmtCount++;
+	
+        std::string omegaIterString =
+            iterSpace->toOmegaString(vOmegaReplacer->getUFCallDecls());
+        omega::Relation* omegaIterSpace =
+            omega::parser::ParseRelation(omegaIterString);
+	
+        iterSpaces.push_back(omega::copy(*omegaIterSpace));
+	// Use identity transformation instead.
+        transforms.push_back(omega::Identity(iterSpace->arity()));
+        delete omegaIterSpace;
+	delete iterSpace;
+    }
+
+    // define necessary macros collected from statements
+    std::ostringstream UFMacroUndefs;
+    std::ostringstream UFMacroDefs;
+    for (const auto& macro : *vOmegaReplacer->getUFMacros()) {
+        UFMacroUndefs << "#undef " << macro.first << "\n";
+        UFMacroDefs << "#define " << macro.first << " " << macro.second << "\n";
+    }
+    generatedCode << stmtMacroUndefs.str() << stmtMacroDefs.str() << "\n";
+    generatedCode << UFMacroUndefs.str() << UFMacroDefs.str() << "\n";
+
+    // convert set of known constraints to Omega format
+    Set* modifiedKnown;
+    if (knownConstraints) {
+        modifiedKnown = new Set(*knownConstraints);
+    } else {
+        modifiedKnown = new Set("{}");
+    }
+    modifiedKnown->acceptVisitor(vOmegaReplacer);
+    std::string omegaKnownString =
+        modifiedKnown->toOmegaString(vOmegaReplacer->getUFCallDecls());
+    delete modifiedKnown;
+    omega::Relation* omegaKnown =
+        omega::parser::ParseRelation(omegaKnownString);
+
+    delete vOmegaReplacer;
+    // do actual Omega CodeGen
     try {
-        // convert sets/relations to Omega format for use in codegen, and
-        // collect required macro substitutions
-        std::vector<omega::Relation> transforms;
-        std::vector<omega::Relation> iterSpaces;
-
-        VisitorChangeUFsForOmega* vOmegaReplacer =
-            new VisitorChangeUFsForOmega();
-        int stmtCount = 0;
-        for (const auto& stmt : stmts) {
-            std::string tupleString =
-                stmt.getIterationSpace()->getTupleDecl().toString();
-            // Stmt Macro:
-            generatedCode << "#undef s" << stmtCount << "(" << tupleString
-                          << ") \n"
-                          << "#define s" << stmtCount << "(" << tupleString
-                          << ")   " << stmt.getStmtSourceCode() << " \n";
-            stmtCount++;
-
-            // process iterSpace for Omega
-            Set* modifiedIterSpace = new Set(*stmt.getIterationSpace());
-            modifiedIterSpace->acceptVisitor(vOmegaReplacer);
-            generatedCode << vOmegaReplacer->getMacrosString();
-            std::string omegaIterString = modifiedIterSpace->toOmegaString(
-                vOmegaReplacer->getUFCallDecls());
-            delete modifiedIterSpace;
-            vOmegaReplacer->reset();
-
-            // process transform (exec schedule) for Omega
-            Relation* modifiedTransform =
-                new Relation(*stmt.getExecutionSchedule());
-            modifiedTransform->acceptVisitor(vOmegaReplacer);
-            generatedCode << vOmegaReplacer->getMacrosString();
-            std::string omegaTransformString = modifiedTransform->toOmegaString(
-                vOmegaReplacer->getUFCallDecls());
-            delete modifiedTransform;
-            vOmegaReplacer->reset();
-
-            // create and insert new Omega data structures
-            omega::Relation* omegaIterSpace =
-                omega::parser::ParseRelation(omegaIterString);
-            omega::Relation* omegaTransform =
-                omega::parser::ParseRelation(omegaTransformString);
-            iterSpaces.push_back(omega::copy(*omegaIterSpace));
-            transforms.push_back(omega::copy(*omegaTransform));
-            delete omegaIterSpace;
-            delete omegaTransform;
-        }
-        delete vOmegaReplacer;
-        generatedCode << "\n";
-
-        // do Omega CodeGen
-        omega::CodeGen cg(transforms, iterSpaces);
+        omega::CodeGen cg(transforms, iterSpaces, omega::copy(*omegaKnown));
         omega::CG_result* cgr = cg.buildAST();
         if (cgr) {
             generatedCode << cgr->printString() << "\n";
@@ -461,9 +431,48 @@ std::string Computation::codeGen() {
     } catch (const std::exception& e) {
         std::cout << e.what() << std::endl;
     }
+    delete omegaKnown;
+
+    // undefine macros, which are now extraneous
+    generatedCode << stmtMacroUndefs.str() << UFMacroUndefs.str();
 
     return generatedCode.str();
 }
+
+
+std::string Computation::toOmegaString() {
+    std::ostringstream omegaString;
+
+    // convert sets/relations to Omega format for use in codegen, and
+    // collect statement macro definitions
+    VisitorChangeUFsForOmega* vOmegaReplacer = new VisitorChangeUFsForOmega();
+    int stmtCount = 0;
+    for (const auto& stmt : stmts) {
+        omegaString << "s" << stmtCount << "\n";
+        omegaString << stmt.getStmtSourceCode() << "\n";
+        stmtCount++;
+        
+	// new Codegen would require an application
+	// be performed first before the set is sent
+	// to omega. This is a temporary solution to 
+	// circumvent Omega's schedulling bug.
+        Set * iterSpace = stmt.getExecutionSchedule()->
+		Apply(stmt.getIterationSpace());
+	iterSpace->acceptVisitor(vOmegaReplacer);
+
+
+        std::string omegaIterString =
+            iterSpace->toOmegaString(vOmegaReplacer->getUFCallDecls());
+        omegaString << "Domain\n";
+	omegaString << omegaIterString << "\n";
+
+	delete iterSpace;
+    }
+
+    delete vOmegaReplacer;
+    return omegaString.str();
+}
+
 
 /* Stmt */
 
@@ -596,95 +605,151 @@ VisitorChangeUFsForOmega::VisitorChangeUFsForOmega() { reset(); }
 VisitorChangeUFsForOmega::~VisitorChangeUFsForOmega() { reset(); }
 
 void VisitorChangeUFsForOmega::reset() {
-    macros.str(std::string());
     ufCallDecls.clear();
+    macros.clear();
+    knownUFs.clear();
     nextFuncReplacementNumber = 0;
-    nextVarReplacementNumber = 0;
+    currentTupleDecl = NULL;
 }
 
-std::string VisitorChangeUFsForOmega::getMacrosString() { return macros.str(); }
+void VisitorChangeUFsForOmega::prepareForNext() {
+    ufCallDecls.clear();
+    currentTupleDecl = NULL;
+    // known UFs are preserved for reference in next
+    // macros are accumulated over Visitor lifetime
+}
+
+std::map<std::string, std::string>* VisitorChangeUFsForOmega::getUFMacros() {
+    return &macros;
+}
 
 std::set<std::string> VisitorChangeUFsForOmega::getUFCallDecls() {
     return ufCallDecls;
 }
 
+void VisitorChangeUFsForOmega::preVisitSparseConstraints(
+    SparseConstraints* sc) {
+    if (sc->getNumConjuncts() != 1) {
+        throw assert_exception(
+            "Must have exactly one conjunction for Omega conversion");
+    }
+    currentTupleDecl = sc->getTupleDecl();
+}
+void VisitorChangeUFsForOmega::preVisitConjunction(Conjunction* c){
+    bool requireChange = false;
+    std::string prefix = "__x";
+    std::list<Exp*> newConstraints;
+    TupleDecl decl = c->getTupleDecl();
+    for(unsigned int i = 0; i <decl.getSize(); i++){
+        if(decl.elemIsConst(i)){
+	    requireChange = true;
+	    decl.setTupleElem(i,prefix+std::to_string(i));
+	    // Create constraint for replacement
+	    TupleVarTerm* tupleTerm = new TupleVarTerm(i);
+	    Term* constTerm = new Term(-decl.elemConstVal(i));
+	    Exp * eqConstraint = new Exp();
+	    eqConstraint->setEquality();
+            eqConstraint->addTerm(tupleTerm);
+            eqConstraint->addTerm(constTerm);
+	    newConstraints.push_back(eqConstraint);
+	}	
+    }
+
+    // Change the conjunction at this point to the 
+    // new conjunction.
+    if (requireChange){
+        Conjunction* conj = new Conjunction(decl);
+        conj->setInArity(c->inarity()); 
+	for(auto it = newConstraints.begin();
+		it!=newConstraints.end(); it++){
+	    conj->addEquality(*it);
+	}
+        for (auto it = c->equalities().begin();
+		it!=c->equalities().end(); it++){
+	    conj->addEquality((*it)->clone());
+	}
+        	
+        for (auto it = c->inequalities().begin();
+		it!=c->inequalities().end(); it++){
+	    conj->addInequality((*it)->clone());
+	}
+	if(c->isUnsat()){
+            conj->setUnsat();
+	}
+        // Copy contents of new conjunction to current
+	// conjunction being visited.	
+	*c = *conj;
+	delete conj;
+    }
+}
 void VisitorChangeUFsForOmega::postVisitUFCallTerm(UFCallTerm* callTerm) {
-    // set up macro outputs
-    std::ostringstream os_replaceFrom;
-    std::ostringstream os_replaceTo;
+    if (currentTupleDecl == NULL) {
+        throw assert_exception(
+            "No TupleDecl collected -- is this Visitor (incorrectly) being run "
+            "on something other than a Set/Relation?");
+    }
 
-    // set new function name
-    std::string replacementName =
-        callTerm->name() + "_" + std::to_string(nextFuncReplacementNumber++);
-    os_replaceFrom << replacementName;
-    os_replaceTo << callTerm->name() << "(";
-    callTerm->setName(replacementName);
-
-    // process every parameter
-    bool pastFirstParam = false;
-    int paramNumber = 0;
-    bool haveAddedToOutput;
-    bool haveAddedToInput;
-    Exp* paramExp;
-    // maintain a list of parameters that will remain in the call
-    std::vector<Term*> termsToSave;
-    unsigned int i;
-    for (i = 0; i < callTerm->numArgs(); ++i) {
-        // loop through all terms, adding them into the 'to' and 'from'
-        // appropriately
-        haveAddedToInput = false;
-        haveAddedToOutput = false;
-        if (pastFirstParam) {
-            os_replaceTo << ",";
-        }
-        paramExp = callTerm->getParamExp(i);
-        for (const auto& term : paramExp->getTermList()) {
-            if (term->isConst()) {
-                // add the term to the function call, without making an
-                // input param for it
-                os_replaceTo << (haveAddedToOutput ? "+" : "") << "("
-                             << term->toString() << ")";
-            } else {
-                // add the term to both the input and output function call
-                if (!haveAddedToInput && !pastFirstParam) {
-                    os_replaceFrom << "(";
-                }
-                os_replaceFrom
-                    << ((pastFirstParam || haveAddedToInput) ? "," : "") << "p"
-                    << paramNumber;
-                os_replaceTo << (haveAddedToOutput ? "+" : "") << "p"
-                             << paramNumber;
-                termsToSave.push_back(term->clone());
-                paramNumber++;
-                haveAddedToInput = true;
+    // determine which tuple variables are needed in the call (how large of a
+    // prefix)
+    int max_tvloc = -1;
+    for (unsigned int i = 0; i < callTerm->numArgs(); ++i) {
+        // loop through all terms, processing as needed
+        for (const auto& term : callTerm->getParamExp(i)->getTermList()) {
+            if (term->isUFCall()) {
+                throw assert_exception("Nested UF calls are not yet supported");
+            } else if (term->type() == "TupleVarTerm") {
+                TupleVarTerm* termAsTupleVar = static_cast<TupleVarTerm*>(term);
+                max_tvloc = std::max(termAsTupleVar->tvloc(), max_tvloc);
+            } else if (term->type() == "TupleExpTerm") {
+                throw assert_exception("TupleExpTerm unsupported");
             }
-            haveAddedToOutput = true;
         }
-        pastFirstParam = true;
+    }
+    // ensure presence of at least one tuple var (UF calls cannot be
+    // constant-only)
+    if (max_tvloc == -1) {
+        throw assert_exception(
+            "Cannot make UF calls with only constant arguments");
     }
 
-    // rewrite argument list, one arg per term in original call args
-    callTerm->resetNumArgs(termsToSave.size());
-    i = 0;
-    for (const auto& savedTerm : termsToSave) {
+    // save original coefficient, then temporarily modify for printing
+    int originalCoefficient = callTerm->coefficient();
+    callTerm->setCoefficient(1);
+    std::string originalCall = callTerm->toString();
+
+    // rewrite argument list as a prefix of input tuple
+    callTerm->resetNumArgs(max_tvloc + 1);
+    for (int i = 0; i < callTerm->numArgs(); ++i) {
         Exp* newParamExp = new Exp();
-        newParamExp->addTerm(savedTerm);
+        TupleVarTerm* tupleVarParam = new TupleVarTerm(i);
+        newParamExp->addTerm(tupleVarParam);
         callTerm->setParamExp(i, newParamExp);
-
-        // add UF call to the list of declarations
-        ufCallDecls.emplace(callTerm->name() + "(" +
-                            std::to_string(callTerm->numArgs()) + ")");
-
-        i++;
     }
 
-    // complete outputs for this UF call
-    if (haveAddedToInput) {
-        os_replaceFrom << ")";
+    std::string replacementName;
+    auto it = knownUFs.find(originalCall);
+    // check if this particular UF invocation has already been encountered
+    if (it != knownUFs.end()) {
+        // use the function name from the already-existing definition
+        replacementName = it->second;
+        callTerm->setName(replacementName);
+    } else {
+        // assign a new name to this function and add it to our list
+        replacementName =
+            callTerm->name() + "_" + std::to_string(nextFuncReplacementNumber);
+        nextFuncReplacementNumber++;
+        knownUFs.emplace(originalCall, replacementName);
+
+        callTerm->setName(replacementName);
+        // this is a new UF, so add a macro definition for it
+        macros.emplace(callTerm->toString(), originalCall);
     }
-    os_replaceTo << ")";
-    macros << "#define " << os_replaceFrom.str() << " " << os_replaceTo.str()
-           << "\n";
+    // add UF call to the list of declarations
+    ufCallDecls.emplace(callTerm->name() + "(" + std::to_string(max_tvloc + 1) +
+                        ")");
+
+    // restore coefficient, which was changed temporarily for printing
+    callTerm->setCoefficient(originalCoefficient);
 }
 
 }  // namespace iegenlib
