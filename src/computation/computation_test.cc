@@ -204,12 +204,32 @@ TEST_F(ComputationTest, ConvertToOmega) {
     // multiple uses of same UF
     checkOmegaSetConversion(
         "{[i,j]: A(i) = A(j) && A(i,j) = A(j)}",
-        "{[i,j]: A_1(i,j) = A_0(i) && A_2(i,j) = A_0(i)}");
+        "{[i,j]: A_0(i) = A_1(i,j) && A_2(i,j) = A_1(i,j)}");
     
     // replacing constants with variables in tuple.
     checkOmegaSetConversion(
         "{[0,i,j]: A(i) = A(j) && A(i,j) = A(j)}",
         "{[__x0,i,j]: A_0(__x0,i) = A_2(__x0,i,j) && A_1(__x0,i,j) = A_2(__x0,i,j) && __x0 = 0}");
+    
+    checkOmegaSetConversion(
+        "{[0,i,0,j,1]: A(i) = A(j) && A(i,j) = A(j)}",
+        "{[__x0,i,__x2,j,__x4]: A_2(__x0,i,__x2,j) = A_0(__x0,i) && \
+A_1(__x0,i,__x2,j) = A_0(__x0,i) && __x4 = 1 && __x0 = 0 && __x2 = 0}");
+    
+
+
+    checkOmegaSetConversion(
+        "{[0,i,2,j,1]: A(i) = A(j) && A(i,j) = A(j)}",
+        "{[__x0,i,__x2,j,__x4]: A_2(__x0,i,__x2,j) = A_0(__x0,i) && \
+A_1(__x0,i,__x2,j) = A_0(__x0,i) && __x4 = 1 && __x0 = 0 && __x2 = 2}");
+
+    checkOmegaSetConversion(
+        "{[0,i,0,j,1,k,0]: A(i) = A(j) && A(i,j) = A(j) && B(j,k) = 0 }",
+        "{[__x0,i,__x2,j,__x4,k,__x6]: A_3(__x0,i,__x2,j) = \
+A_1(__x0,i) && A_2(__x0,i,__x2,j) = A_1(__x0,i) && \
+__x6 = 0 && B_0(__x0,i,__x2,j,__x4,k) = 0 && __x4 = 1 \
+&& __x0 = 0 && __x2 = 0}");
+    
     /* Relations */
     // basic test
     checkOmegaRelationConversion(
