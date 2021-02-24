@@ -309,6 +309,7 @@ TEST_F(ComputationTest, GeoAcAppendComputation) {
     
     delete r_s00;
 }
+
 #pragma mark AppendComputation
 // Check that the appendComputation method works correctly
 TEST_F(ComputationTest, AppendComputation) {
@@ -330,9 +331,20 @@ TEST_F(ComputationTest, AppendComputation) {
   
     EXPECT_EQ(3,retval);
 
+    // Create an iegenlib relation to test the output of the append
+    iegenlib::Relation *r_s3 = new iegenlib::Relation(
+        "{[i] -> [2,i,0,0,0]}"
+        );
+
+    iegenlib::Relation *r_s4 = new iegenlib::Relation(
+        "{[0] -> [3,0,0,0,0]}"
+        );
+
     // check execution schedules of added statements are correct
-    EXPECT_EQ("{[i]->[2,i,0,0,0]}",
+    EXPECT_EQ(r_s3->prettyPrintString(),
              comp1.getStmt(2)->getExecutionSchedule()->prettyPrintString());
-    EXPECT_EQ("{[0]->[3,0,0,0,0]}",
+    EXPECT_EQ(r_s4->prettyPrintString(),
              comp1.getStmt(3)->getExecutionSchedule()->prettyPrintString());
+
+    delete r_s3, r_s4;
 }
