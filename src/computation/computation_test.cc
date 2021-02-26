@@ -80,6 +80,36 @@ class ComputationTest : public ::testing::Test {
         delete omegaRel;
         vOmegaReplacer->reset();
     }
+
+    //! Test that appending a computation to another yields the correct results.
+    //! The passed-in computations are modified but not adopted, and should be
+    //! freed after this test.
+    void checkAppendComputation(
+        Computation* appendedTo, Computation* appendedComp, int expectedRetVal,
+        std::vector<std::string> expectedExecSchedules) {
+        // remember number of original statements, for testing only appended
+        // ones later
+        unsigned int origNumStmts = appendedTo->getNumStmts();
+        // perform actual append
+        int retVal = appendedTo->appendComputation(appendedComp);
+        EXPECT_EQ(expectedRetVal, retVal);
+
+        // sanity check correct number of expected schedules
+        ASSERT_EQ(expectedExecSchedules.size(),
+                  appendedTo->getNumStmts() - origNumStmts);
+        // verify that all execution schedules match expected values
+        int i = origNumStmts;
+        for (const auto& it : expectedExecSchedules) {
+            SCOPED_TRACE("Statement " +
+                         appendedTo->getStmt(i)->getStmtSourceCode());
+            iegenlib::Relation* testRel = new iegenlib::Relation(it);
+            EXPECT_EQ(testRel->prettyPrintString(), appendedTo->getStmt(i)
+                                                        ->getExecutionSchedule()
+                                                        ->prettyPrintString());
+            delete testRel;
+            i++;
+        }
+    }
 };
 
 #pragma mark DenseMVCodeGen
@@ -319,32 +349,13 @@ TEST_F(ComputationTest, AppendComputation) {
     Computation comp1;
     comp1.addStmt(s1);
     comp1.addStmt(s2);
-
     // Computation to append
-    Stmt s3("s3;", "{[i]}","{[i] -> [0,i,0,0,0]}", {}, {});
-    Stmt s4("s4;", "{[0]}","{[0] -> [1,0,0,0,0]}",{},{});
+    Stmt s3("s3;", "{[i]}", "{[i] -> [0,i,0,0,0]}", {}, {});
+    Stmt s4("s4;", "{[0]}", "{[0] -> [1,0,0,0,0]}", {}, {});
     Computation comp2;
     comp2.addStmt(s3);
     comp2.addStmt(s4);
-
-    int retval = comp1.appendComputation(&comp2);
-  
-    EXPECT_EQ(3,retval);
-
-    // Create an iegenlib relation to test the output of the append
-    iegenlib::Relation *r_s3 = new iegenlib::Relation(
-        "{[i] -> [2,i,0,0,0]}"
-        );
-
-    iegenlib::Relation *r_s4 = new iegenlib::Relation(
-        "{[0] -> [3,0,0,0,0]}"
-        );
-
-    // check execution schedules of added statements are correct
-    EXPECT_EQ(r_s3->prettyPrintString(),
-             comp1.getStmt(2)->getExecutionSchedule()->prettyPrintString());
-    EXPECT_EQ(r_s4->prettyPrintString(),
-             comp1.getStmt(3)->getExecutionSchedule()->prettyPrintString());
-
-    delete r_s3, r_s4;
+    // perform test
+    checkAppendComputation(&comp1, &comp2, 3,
+                           {"{[i] -> [2,i,0,0,0]}", "{[0] -> [3,0,0,0,0]}"});
 }

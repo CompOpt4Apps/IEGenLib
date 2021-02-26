@@ -6,27 +6,21 @@ jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         os: [ubuntu-latest]
-    # defaults:
-    #   run:
-    #     shell: bash
+    defaults:
+      run:
+        shell: bash
     steps:
     - name: Complete flex installation
       run: sudo apt-get install libfl-dev
     - uses: actions/checkout@v2
     - name: set TERM
       run: echo "TERM=xterm-256color" >> $GITHUB_ENV
-    - name: configure
-      run: ./configure
-    - name: make
+    - name: build
       run: make
-    - name: make install
-      run: make install
-    - name: set IEGEN_HOME
-      run: echo "IEGEN_HOME=$GITHUB_WORKSPACE/iegen" >> $GITHUB_ENV
     - name: run tests
-      run: ./build/bin/iegenlib_t
+      run: make test
     - name: build tutorial examples
       run: make tutorial
