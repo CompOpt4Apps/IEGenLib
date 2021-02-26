@@ -217,7 +217,7 @@ Computation* Eval_Spline_f_Computation(){
 */
 Computation* Find_Segment_Computation(){
 
-  Computation* FindSegmentComputation;
+  Computation* FindSegmentComputation = new Computation();
 
   //Creating s0
   //if(x >= x_vals[i] && x <= x_vals[i+1]) prev = i;
@@ -237,7 +237,7 @@ Computation* Find_Segment_Computation(){
   //Creating s1
   //return prev; 
   Stmt* s1 = new Stmt("return prev",
-      "{[]}",  //Iteration schedule - Only happening one time (not iterating)
+      "{[0]}",  //Iteration schedule - Only happening one time (not iterating)
       "{[0]->[1, 0, 0]}", //Execution schedule - scheduling statement to be first (scheduling function)
       {}, 
       {}  
