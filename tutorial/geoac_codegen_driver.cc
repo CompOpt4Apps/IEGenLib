@@ -2,6 +2,7 @@
 #include <utility>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 
 using iegenlib::Computation;
 using namespace std;
@@ -109,22 +110,25 @@ Computation* Eval_Spline_f_Computation(){
   //Append FindSegmentComputation to EvalSplineFComputation
   int retVal = EvalSplineFComputation->appendComputation(FindSegmentComputation);
 
-/*
+
+
   //Creating s2
   //if (k >= Spline.length) return 0.0; 
-  Stmt s2("if (k >= Spline.length) return 0.0",
-      "{[]}",  //Iteration schedule - Only happening one time (not iterating)
-      "{[0]->[1, 0, 0]}", //Execution schedule - scheduling statement to be first (scheduling function)
+  Stmt* s2= new Stmt("if (k >= Spline.length) return 0.0",
+      "{[0]}",  //Iteration schedule - Only happening one time (not iterating)
+      //"{[0]->["+static_cast<ostringstream*>( &(ostringstream() << (retVal+1)) )->str()+", 0, 0]}", //Execution schedule - scheduling statement to be first (scheduling function)
+      "{[0]->["+std::to_string(retVal+1)+", 0, 0]}", //Execution schedule - scheduling statement to be first (scheduling function)
       {},
       {}
       );
-  cout << "Source statement : " << s2.getStmtSourceCode() << "\n\t"
-    <<"- Iteration Space : "<< s2.getIterationSpace()->prettyPrintString() << "\n\t"
-    << "- Execution Schedule : "<< s2.getExecutionSchedule()->prettyPrintString() << "\n\t" ;
+  cout << "Source statement : " << s2->getStmtSourceCode() << "\n\t"
+    <<"- Iteration Space : "<< s2->getIterationSpace()->prettyPrintString() << "\n\t"
+    << "- Execution Schedule : "<< s2->getExecutionSchedule()->prettyPrintString() << "\n\t" ;
 
   //Adding s2
-  EvalSplineFComputation->addStmt(s2);
+  EvalSplineFComputation->addStmt(*s2);
 
+/*
   //Creating s3
   //double X = (x - Spline.x_vals[k])/(Spline.x_vals[k+1] - Spline.x_vals[k]);
   Stmt s3("double X = (x - Spline.x_vals[k])/(Spline.x_vals[k+1] - Spline.x_vals[k])",
