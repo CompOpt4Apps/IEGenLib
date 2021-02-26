@@ -279,83 +279,64 @@ __x6 = 0 && B_0(__x0,i,__x2,j,__x4,k) = 0 && __x4 = 1 \
     // TODO: multiple uses of same UF in a Relation?
 }
 
-TEST_F(ComputationTest, GeoAcAppendComputation) {
-
-    // Initial Computation that will be appended to
-    Computation EvalSplineFComputation;
-    
-    // Creating s0
-    // int k;
-    Stmt s0("int k",
-      "{[0]}",
-      "{[0]->[0, 0, 0]}",
-      {},
-      {}
-      );
-    //Adding s0
-    EvalSplineFComputation.addStmt(s0);
-
-    // Creating s1
-    // int k = Find_Segment(x, Spline.x_vals, Spline.length, Spline.accel);
-    // Find_Segment(double x, double* x_vals, int length, int & prev){
-    Stmt s1("double* x_vals = Spline.x_vals; int length = Spline.length; int& prev = Spline.accel",
-      "{[0]}",
-      "{[0]->[1, 0, 0]}",
-      {},
-      {}
-      );
-    // Adding s1
-    EvalSplineFComputation.addStmt(s1);
-
-    // Computation that gets appended
-    Computation FindSegmentComputation;
-    // Creating statement1
-    // if(x >= x_vals[i] && x <= x_vals[i+1]) prev = i;
-    Stmt s00("if(x >= x_vals[i] && x <= x_vals[i+1]) prev = i",
-      "{[i]: i>=0 && i<length}",
-      "{[i]->[0, i, 0]}", 
-      {},
-      {}
-      );
-    // Adding statement2
-    FindSegmentComputation.addStmt(s00);
-
-    // Append
-    int retval = EvalSplineFComputation.appendComputation(
-                                         &FindSegmentComputation);
-
-    // Test position of last appended computation
-    EXPECT_EQ(2,retval);
-
-    // Create an iegenlib relation to test the output of the append
-    iegenlib::Relation *r_s00 = new iegenlib::Relation(
-        "{[i] -> [2, i, 0]}"
-        );
-
-    // Check execution schedules of added statements are correct
-    EXPECT_EQ(r_s00->prettyPrintString(),
-              EvalSplineFComputation.getStmt(2)->
-              getExecutionSchedule()->prettyPrintString());
-    
-    delete r_s00;
-}
-
 #pragma mark AppendComputation
 // Check that the appendComputation method works correctly
 TEST_F(ComputationTest, AppendComputation) {
-    // initial Computation that will be appended to
-    Stmt s1("s1;", "{[i,j]}", "{[i,j] -> [0,i,0,j,0]}", {}, {});
-    Stmt s2("asdf();", "{[i]}", "{[i] -> [1,i,0,0,0]}", {}, {});
-    Computation comp1;
-    comp1.addStmt(s1);
-    comp1.addStmt(s2);
-    // Computation to append
-    Stmt s3("s3;", "{[i]}", "{[i] -> [0,i,0,0,0]}", {}, {});
-    Stmt s4("s4;", "{[0]}", "{[0] -> [1,0,0,0,0]}", {}, {});
-    Computation comp2;
-    comp2.addStmt(s3);
-    comp2.addStmt(s4);
-    // perform test
-    checkAppendComputation(&comp1, &comp2, 3,
-                           {"{[i] -> [2,i,0,0,0]}", "{[0] -> [3,0,0,0,0]}"});
+    {
+        SCOPED_TRACE("Basic 0-depth test");
+
+        // initial Computation that will be appended to
+        Stmt s1("s1;", "{[i,j]}", "{[i,j] -> [0,i,0,j,0]}", {}, {});
+        Stmt s2("asdf();", "{[i]}", "{[i] -> [1,i,0,0,0]}", {}, {});
+        Computation comp1;
+        comp1.addStmt(s1);
+        comp1.addStmt(s2);
+        // Computation to append
+        Stmt s3("s3;", "{[i]}", "{[i] -> [0,i,0,0,0]}", {}, {});
+        Stmt s4("s4;", "{[0]}", "{[0] -> [1,0,0,0,0]}", {}, {});
+        Computation comp2;
+        comp2.addStmt(s3);
+        comp2.addStmt(s4);
+        // perform test
+        checkAppendComputation(
+            &comp1, &comp2, 3,
+            {"{[i] -> [2,i,0,0,0]}", "{[0] -> [3,0,0,0,0]}"});
+    }
+
+    {
+        SCOPED_TRACE("GeoAc example");
+
+        // Initial Computation that will be appended to
+        Computation EvalSplineFComputation;
+
+        // Creating s0
+        // int k;
+        Stmt s0("int k", "{[0]}", "{[0]->[0, 0, 0]}", {}, {});
+        // Adding s0
+        EvalSplineFComputation.addStmt(s0);
+
+        // Creating s1
+        // int k = Find_Segment(x, Spline.x_vals, Spline.length, Spline.accel);
+        // Find_Segment(double x, double* x_vals, int length, int & prev){
+        Stmt s1(
+            "double* x_vals = Spline.x_vals; int length = Spline.length; int& "
+            "prev "
+            "= Spline.accel",
+            "{[0]}", "{[0]->[1, 0, 0]}", {}, {});
+        // Adding s1
+        EvalSplineFComputation.addStmt(s1);
+
+        // Computation that gets appended
+        Computation FindSegmentComputation;
+        // Creating statement1
+        // if(x >= x_vals[i] && x <= x_vals[i+1]) prev = i;
+        Stmt s00("if(x >= x_vals[i] && x <= x_vals[i+1]) prev = i",
+                 "{[i]: i>=0 && i<length}", "{[i]->[0, i, 0]}", {}, {});
+        // Adding statement2
+        FindSegmentComputation.addStmt(s00);
+
+        // perform test
+        checkAppendComputation(&EvalSplineFComputation, &FindSegmentComputation,
+                               2, {"{[i] -> [2, i, 0]}"});
+    }
 }
