@@ -73,35 +73,35 @@ Computation* Eval_Spline_f_Computation(){
 
   //Creating s0
   //int k = Find_Segment(x, Spline.x_vals, Spline.length, Spline.accel);
-  Stmt s0("int k",
-      "{[]}",  //Iteration schedule - Only happening one time (not iterating)
-      "{[0]->[0, 0, 0]}", //Execution schedule - scheduling statement to be first (scheduling function)
+  Stmt* s0 = new Stmt("int k",
+      "{[0]}",  
+      "{[0]->[0, 0, 0]}",
       {},
       {}
       );
-  cout << "Source statement : " << s0.getStmtSourceCode() << "\n\t"
-    <<"- Iteration Space : "<< s0.getIterationSpace()->prettyPrintString() << "\n\t"
-    << "- Execution Schedule : "<< s0.getExecutionSchedule()->prettyPrintString() << "\n\t" ;
+  cout << "Source statement : " << s0->getStmtSourceCode() << "\n\t"
+    <<"- Iteration Space : "<< s0->getIterationSpace()->prettyPrintString() << "\n\t"
+    << "- Execution Schedule : "<< s0->getExecutionSchedule()->prettyPrintString() << "\n\t" ;
 
   //Adding s0
-  EvalSplineFComputation->addStmt(s0);
+  EvalSplineFComputation->addStmt(*s0);
 
   // Creating s1
   // int k = Find_Segment(x, Spline.x_vals, Spline.length, Spline.accel);
   // Find_Segment(double x, double* x_vals, int length, int & prev){
-  Stmt s1("double* x_vals = Spline.x_vals; int length = Spline.length; int& prev = Spline.accel",
+  Stmt* s1 = new Stmt("double* x_vals = Spline.x_vals; int length = Spline.length; int& prev = Spline.accel",
     "{[0]}",
     "{[0]->[1, 0, 0]}",
     {},
     {}
     );
 
-  cout << "Source statement : " << s1.getStmtSourceCode() << "\n\t"
-    <<"- Iteration Space : "<< s1.getIterationSpace()->prettyPrintString() << "\n\t"
-    << "- Execution Schedule : "<< s1.getExecutionSchedule()->prettyPrintString() << "\n\t" ;
+  cout << "Source statement : " << s1->getStmtSourceCode() << "\n\t"
+    <<"- Iteration Space : "<< s1->getIterationSpace()->prettyPrintString() << "\n\t"
+    << "- Execution Schedule : "<< s1->getExecutionSchedule()->prettyPrintString() << "\n\t" ;
 
   //Adding s1
-  EvalSplineFComputation->addStmt(s1);
+  EvalSplineFComputation->addStmt(*s1);
 
   //Call Find_Segment_Computation() 
   Computation* FindSegmentComputation = Find_Segment_Computation();
@@ -221,33 +221,33 @@ Computation* Find_Segment_Computation(){
 
   //Creating s0
   //if(x >= x_vals[i] && x <= x_vals[i+1]) prev = i;
-  Stmt s0("if(x >= x_vals[i] && x <= x_vals[i+1]) prev = i",
+  Stmt*  s0 = new Stmt("if(x >= x_vals[i] && x <= x_vals[i+1]) prev = i",
       "{[i]: i>=0 && i<length}",  //Iteration schedule - Only happening one time (not iterating)
       "{[i]->[0, i, 0]}", //Execution schedule - scheduling statement to be first (scheduling function)
       {}, 
       {}  
       );  
-  cout << "Source statement : " << s0.getStmtSourceCode() << "\n\t"
-    <<"- Iteration Space : "<< s0.getIterationSpace()->prettyPrintString() << "\n\t"
-    << "- Execution Schedule : "<< s0.getExecutionSchedule()->prettyPrintString() << "\n\t" ;
+  cout << "Source statement : " << s0->getStmtSourceCode() << "\n\t"
+    <<"- Iteration Space : "<< s0->getIterationSpace()->prettyPrintString() << "\n\t"
+    << "- Execution Schedule : "<< s0->getExecutionSchedule()->prettyPrintString() << "\n\t" ;
 
   //Adding s0
-  FindSegmentComputation->addStmt(s0);
+  FindSegmentComputation->addStmt(*s0);
 
   //Creating s1
   //return prev; 
-  Stmt s1("return prev",
+  Stmt* s1 = new Stmt("return prev",
       "{[]}",  //Iteration schedule - Only happening one time (not iterating)
       "{[0]->[1, 0, 0]}", //Execution schedule - scheduling statement to be first (scheduling function)
       {}, 
       {}  
       );  
-  cout << "Source statement : " << s1.getStmtSourceCode() << "\n\t"
-    <<"- Iteration Space : "<< s1.getIterationSpace()->prettyPrintString() << "\n\t"
-    << "- Execution Schedule : "<< s1.getExecutionSchedule()->prettyPrintString() << "\n\t" ;
+  cout << "Source statement : " << s1->getStmtSourceCode() << "\n\t"
+    <<"- Iteration Space : "<< s1->getIterationSpace()->prettyPrintString() << "\n\t"
+    << "- Execution Schedule : "<< s1->getExecutionSchedule()->prettyPrintString() << "\n\t" ;
 
   //Adding s1
-  FindSegmentComputation->addStmt(s1);
+  FindSegmentComputation->addStmt(*s1);
 
 
   return FindSegmentComputation;
