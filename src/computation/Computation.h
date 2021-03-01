@@ -94,7 +94,9 @@ class Computation {
 
     //! Add statements from another Computation to this one for inlining.
     //! @param[in] other Computation to append to this one
-    int appendComputation(Computation* other);
+    //! @param[in] level 0-indexed execution schedule tuple position to append
+    //! at, to define the level of nesting the new Computation is within
+    int appendComputation(Computation* other, unsigned int level = 0);
 
     void toDot(std::fstream& dotFileStream, string fileName);
 

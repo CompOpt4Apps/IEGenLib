@@ -85,13 +85,14 @@ class ComputationTest : public ::testing::Test {
     //! The passed-in computations are modified but not adopted, and should be
     //! freed after this test.
     void checkAppendComputation(
-        Computation* appendedTo, Computation* appendedComp, int expectedRetVal,
+        Computation* appendedTo, Computation* appendedComp,
+        unsigned int appendAtLevel, int expectedRetVal,
         std::vector<std::string> expectedExecSchedules) {
         // remember number of original statements, for testing only appended
         // ones later
         unsigned int origNumStmts = appendedTo->getNumStmts();
         // perform actual append
-        int retVal = appendedTo->appendComputation(appendedComp);
+        int retVal = appendedTo->appendComputation(appendedComp, appendAtLevel);
         EXPECT_EQ(expectedRetVal, retVal);
 
         // sanity check correct number of expected schedules
@@ -303,7 +304,7 @@ TEST_F(ComputationTest, AppendComputation) {
         comp2->addStmt(s4);
         // perform test
         checkAppendComputation(
-            comp1, comp2, 3,
+            comp1, comp2, 0, 3,
             {"{[i] -> [2,i,0,0,0]}", "{[0] -> [3,0,0,0,0]}"});
 
         delete comp1, comp2;
@@ -343,8 +344,25 @@ TEST_F(ComputationTest, AppendComputation) {
 
         // perform test
         checkAppendComputation(EvalSplineFComputation, FindSegmentComputation,
-                               2, {"{[i] -> [2, i, 0]}"});
+                               0, 2, {"{[i] -> [2, i, 0]}"});
 
         delete EvalSplineFComputation, FindSegmentComputation;
+    }
+
+    {
+        SCOPED_TRACE("Basic non-zero depth test");
+
+        Stmt* s1 = new Stmt("s1;", "{[i,j]}", "{[i,j] -> [2,i,1,j,1]}", {}, {});
+        Computation* comp1 = new Computation();
+        comp1->addStmt(s1);
+
+        Stmt* s2 = new Stmt("s3;", "{[k]}", "{[k] -> [0,k,1]}", {}, {});
+        Computation* comp2 = new Computation();
+        comp2->addStmt(s2);
+
+        checkAppendComputation(comp1, comp2, 2, 2,
+                               {"{[i,k] -> [2,i,2,k,1]}"});
+
+        delete comp1, comp2;
     }
 }

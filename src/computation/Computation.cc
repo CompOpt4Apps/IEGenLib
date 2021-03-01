@@ -174,53 +174,86 @@ void Computation::clear() {
     dataSpaces.clear();
 }
 
-int Computation::appendComputation(Computation* other) {
+int Computation::appendComputation(Computation* other, unsigned int level) {
     // store last statement's execution schedule information
     Relation* precedingExecSchedule = stmts.back()->getExecutionSchedule();
+    int precedingInArity = precedingExecSchedule->inArity();
     if (precedingExecSchedule->getNumConjuncts() != 1) {
         throw assert_exception(
             "Execution schedule should have exactly 1 Conjunction.");
     }
     TupleDecl precedingTuple = precedingExecSchedule->getTupleDecl();
-    int offsetValue =
-            precedingTuple.elemConstVal(precedingExecSchedule->inArity())+1;
+
+    // index within the tuple corresponding to the specified level, adjusted for
+    // input size that comes before it
+    int adjustedLevelIndex = level + precedingInArity;
+    int offsetValue = precedingTuple.elemConstVal(adjustedLevelIndex) + 1;
     int latest_value = offsetValue;
 
+    // keep track of all iterators that exist at the level we're using, others
+    // will be discarded
+    std::vector<std::string> savedIterators;
+    for (int i = precedingInArity; i < adjustedLevelIndex; ++i) {
+        if (!precedingTuple.elemIsConst(i)) {
+            savedIterators.push_back(precedingTuple.elemToString(i));
+        }
+    }
 
     // adjust execution schedule for each statement
     for (auto i = other->stmtsBegin(); i != other->stmtsEnd(); ++i) {
         Stmt* currentStmt = new Stmt(*(*i));
-        // collect original execution schedule information for statement to be
-        // appended
+        // original execution schedule for statement to be appended
         Relation* appendExecSchedule = currentStmt->getExecutionSchedule();
+        TupleDecl appendTuple = appendExecSchedule->getTupleDecl();
+        int appendInArity = appendExecSchedule->inArity();
+
         // construct new execution schedule tuple
-        TupleDecl newTuple = TupleDecl(appendExecSchedule->getTupleDecl());
-        int oldValue = newTuple.elemConstVal(appendExecSchedule->inArity());
-        latest_value = oldValue + offsetValue;
-        newTuple.setTupleElem(appendExecSchedule->inArity(),
-                              latest_value);
-        // build a new execution schedule relation using the new tuple
-        Relation* newExecSchedule = new Relation(
-            appendExecSchedule->inArity(), appendExecSchedule->outArity());
+        int newInArity = savedIterators.size() + appendInArity;
+        int newOutArity = level + appendExecSchedule->outArity();
+        TupleDecl newTuple = TupleDecl(newInArity + newOutArity);
+        unsigned int currentTuplePos = 0;
+        // insert iterators from surrounding context
+        for (const std::string& iterator : savedIterators) {
+            std::cout << "inserting iterator " << iterator << "\n";
+            newTuple.setTupleElem(currentTuplePos++, iterator);
+        }
+        // insert iterators from schedule of appended statement
+        for (int iteratorPos = 0; iteratorPos < appendInArity; ++iteratorPos) {
+            std::cout << "inserting appended iterator "
+                      << appendTuple.elemToString(iteratorPos) << "\n";
+            newTuple.copyTupleElem(appendTuple, iteratorPos, currentTuplePos++);
+        }
+        // insert base tuple elements up to specified level
+        for (int it = precedingInArity; it < adjustedLevelIndex; ++it) {
+            std::cout << "inserting base elem "
+                      << precedingTuple.elemToString(it) << "\n";
+            newTuple.copyTupleElem(precedingTuple, it, currentTuplePos++);
+        }
+        // insert specified level value, with offset
+        latest_value = appendTuple.elemConstVal(appendInArity) + offsetValue;
+        std::cout << "level " << level << ", inserting latest_value of "
+                  << latest_value << "\n";
+        newTuple.setTupleElem(currentTuplePos++, latest_value);
+        // insert remaining append tuple values
+        for (int it = appendInArity + 1; it < appendTuple.size(); ++it) {
+            std::cout << "inserting append tuple elem "
+                      << appendTuple.elemToString(it) << "\n";
+            newTuple.copyTupleElem(appendTuple, it, currentTuplePos++);
+        }
+
+        // insert a new execution schedule Relation using the new tuple
+        Relation* newExecSchedule = new Relation(newInArity, newOutArity);
         newExecSchedule->setTupleDecl(newTuple);
-        Conjunction* newConj =
-            new Conjunction(newTuple.size(), appendExecSchedule->inArity());
-        newConj->setTupleDecl(newTuple);
-        Conjunction* conjToCopy = *appendExecSchedule->conjunctionBegin();
-        for (auto eq : conjToCopy->equalities()) {
-            newConj->addEquality(eq->clone());
-        }
-        for (auto ineq : conjToCopy->inequalities()) {
-            newConj->addInequality(ineq->clone());
-        }
-        newExecSchedule->addConjunction(newConj);
-        // replace old execution schedule with modified one
-        currentStmt->setExecutionSchedule(newExecSchedule->prettyPrintString());
+        std::cout << newTuple.toString() << "\n";
+        /* std::cout << newExecSchedule->prettyPrintString() << "\n"; */
+        /* currentStmt->setExecutionSchedule(newExecSchedule->prettyPrintString());
+         */
         delete newExecSchedule;
 
         // add the modified statement to this Computation
         addStmt(currentStmt);
     }
+
     return latest_value;
 }
 
