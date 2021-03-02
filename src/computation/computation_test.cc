@@ -128,18 +128,18 @@ for (i = 0; i < a; i++) { \
 return 0; \
 ";
 
-    Stmt s0 = Stmt("int i;", "{}", "{[]->[0,0,0,0,0]}", {}, {});
-    Stmt s1 = Stmt("int j;", "{}", "{[]->[1,0,0,0,0]}", {}, {});
-    Stmt s2 = Stmt("product[i] = 0;", "{[i]: i >= 0 && i < a}",
+    Stmt* s0 = new Stmt("int i;", "{}", "{[]->[0,0,0,0,0]}", {}, {});
+    Stmt* s1 = new Stmt("int j;", "{}", "{[]->[1,0,0,0,0]}", {}, {});
+    Stmt* s2 = new Stmt("product[i] = 0;", "{[i]: i >= 0 && i < a}",
                    "{[i]->[2,i,0,0,0]}", {}, {{"product", "{[i]->[i]}"}});
-    Stmt s3 = Stmt("product[i] += x[i][j] * y[j];",
+    Stmt* s3 = new Stmt("product[i] += x[i][j] * y[j];",
                    "{[i,j]: i >= 0 && i < a && j >= 0 && j < b}",
                    "{[i,j]->[2,i,1,j,0]}",
                    {{"product", "{[i,j]->[i]}"},
                     {"x", "{[i,j]->[i,j]}"},
                     {"y", "{[i,j]->[j]}"}},
                    {{"product", "{[i,j]->[i]}"}});
-    Stmt s4 = Stmt("return 0;", "{}", "{[]->[3,0,0,0,0]}", {}, {});
+    Stmt* s4 = new Stmt("return 0;", "{}", "{[]->[3,0,0,0,0]}", {}, {});
 
     Computation* comp = new Computation();
     comp->addStmt(s0);
@@ -160,6 +160,8 @@ return 0; \
     //     " }\n}\nif (b >= 1) {\n  for(t2 = max(a',0); t2 <= a-1; t2++) {\n"
     //     "    for(t4 = 0; t4 <= b-1; t4++) {\n      s3(t2,t4);\n "
     //     "   }\n  }\n}\ns4();\n\n", generatedCode);
+
+    delete comp;
 }
 
 TEST_F(ComputationTest, ForwardTriangularSolve) {
@@ -176,8 +178,8 @@ TEST_F(ComputationTest, ForwardTriangularSolve) {
     std::vector<std::pair<std::string, std::string> > dataWrites;
     dataWrites.push_back(make_pair("tmp", "{[i]->[]}"));
     dataReads.push_back(make_pair("f", "{[i]->[i]}"));
-    Computation forwardSolve;
-    Stmt ss0("tmp = f[i];", "{[i]: 0 <= i < NR}", "{[i] ->[i,0,0,0]}",
+    Computation* forwardSolve = new Computation();
+    Stmt* ss0 = new Stmt("tmp = f[i];", "{[i]: 0 <= i < NR}", "{[i] ->[i,0,0,0]}",
              dataReads, dataWrites);
     dataReads.clear();
     dataWrites.clear();
@@ -186,7 +188,7 @@ TEST_F(ComputationTest, ForwardTriangularSolve) {
     dataReads.push_back(make_pair("u", "{[i,k]->[t]: t = col(k)}"));
     dataWrites.push_back(make_pair("tmp", "{[i,k]->[]}"));
 
-    Stmt ss1("tmp -= val[k] * u[col[k]];",
+    Stmt* ss1 = new Stmt("tmp -= val[k] * u[col[k]];",
              "{[i,k]: 0 <= i && i < NR && rowptr(i) <= k && k < rowptr(i+1)-1}",
              "{[i,k] -> [i,1,k,0]}", dataReads, dataWrites);
     dataReads.clear();
@@ -195,16 +197,16 @@ TEST_F(ComputationTest, ForwardTriangularSolve) {
     dataReads.push_back(make_pair("val","{[i]->[t]: t = rowptr(i+1) - 1}"));
     dataWrites.push_back(make_pair("u","{[i]->[i]}"));
 
-    Stmt ss2 ("u[i] = tmp/ val[rowptr[i+1]-1];",
+    Stmt* ss2  = new Stmt("u[i] = tmp/ val[rowptr[i+1]-1];",
 		"{[i]: 0 <= i && i < NR}",
 		"{[i] -> [i,2,0,0]}",
-                dataReads,dataWrites);  
-    forwardSolve.addStmt(ss0);							
-    forwardSolve.addStmt(ss1);							
-    forwardSolve.addStmt(ss2);							
-    std::string codegen = forwardSolve.codeGen();
-    std::string omegString= forwardSolve.toOmegaString();
-    
+                dataReads,dataWrites);
+    forwardSolve->addStmt(ss0);
+    forwardSolve->addStmt(ss1);
+    forwardSolve->addStmt(ss2);
+    /* std::string codegen = forwardSolve->codeGen(); */
+    std::string omegString= forwardSolve->toOmegaString();
+
     /*EXPECT_EQ("\n#Statment 0 (tmp = f[i];) \nDomain: 0\nsymbolic NR"
 		    "; { [i] : i >= 0 && -i + NR - 1 >= 0 };\nSchedule:"
 		    " 0\n{ [i] -> [i, 0, 0, 0] : i - i = 0 };\n\n#Statment"
@@ -217,6 +219,8 @@ TEST_F(ComputationTest, ForwardTriangularSolve) {
 		    "symbolic NR; { [i] : i >= 0 && -i + NR - 1 >= 0 };\n"
 		    "Schedule: 0\n{ [i] -> [i, 2, 0, 0] : i - i = 0 };\n\n",
 		    omegString);*/
+
+    delete forwardSolve;
 }
 #pragma mark ConvertToOmega
 // Test that we can correctly convert from IEGenLib SparseConstraints to Omega
@@ -236,17 +240,17 @@ TEST_F(ComputationTest, ConvertToOmega) {
     checkOmegaSetConversion(
         "{[i,j]: A(i) = A(j) && A(i,j) = A(j)}",
         "{[i,j]: A_0(i) = A_1(i,j) && A_2(i,j) = A_1(i,j)}");
-    
+
     // replacing constants with variables in tuple.
     checkOmegaSetConversion(
         "{[0,i,j]: A(i) = A(j) && A(i,j) = A(j)}",
         "{[__x0,i,j]: A_0(__x0,i) = A_2(__x0,i,j) && A_1(__x0,i,j) = A_2(__x0,i,j) && __x0 = 0}");
-    
+
     checkOmegaSetConversion(
         "{[0,i,0,j,1]: A(i) = A(j) && A(i,j) = A(j)}",
         "{[__x0,i,__x2,j,__x4]: A_2(__x0,i,__x2,j) = A_0(__x0,i) && \
 A_1(__x0,i,__x2,j) = A_0(__x0,i) && __x4 = 1 && __x0 = 0 && __x2 = 0}");
-    
+
 
 
     checkOmegaSetConversion(
@@ -260,7 +264,7 @@ A_1(__x0,i,__x2,j) = A_0(__x0,i) && __x4 = 1 && __x0 = 0 && __x2 = 2}");
 A_1(__x0,i) && A_2(__x0,i,__x2,j) = A_1(__x0,i) && \
 __x6 = 0 && B_0(__x0,i,__x2,j,__x4,k) = 0 && __x4 = 1 \
 && __x0 = 0 && __x2 = 0}");
-    
+
     /* Relations */
     // basic test
     checkOmegaRelationConversion(
@@ -286,57 +290,61 @@ TEST_F(ComputationTest, AppendComputation) {
         SCOPED_TRACE("Basic 0-depth test");
 
         // initial Computation that will be appended to
-        Stmt s1("s1;", "{[i,j]}", "{[i,j] -> [0,i,0,j,0]}", {}, {});
-        Stmt s2("asdf();", "{[i]}", "{[i] -> [1,i,0,0,0]}", {}, {});
-        Computation comp1;
-        comp1.addStmt(s1);
-        comp1.addStmt(s2);
+        Stmt* s1 = new Stmt("s1;", "{[i,j]}", "{[i,j] -> [0,i,0,j,0]}", {}, {});
+        Stmt* s2 = new Stmt("asdf();", "{[i]}", "{[i] -> [1,i,0,0,0]}", {}, {});
+        Computation* comp1 = new Computation();
+        comp1->addStmt(s1);
+        comp1->addStmt(s2);
         // Computation to append
-        Stmt s3("s3;", "{[i]}", "{[i] -> [0,i,0,0,0]}", {}, {});
-        Stmt s4("s4;", "{[0]}", "{[0] -> [1,0,0,0,0]}", {}, {});
-        Computation comp2;
-        comp2.addStmt(s3);
-        comp2.addStmt(s4);
+        Stmt* s3 = new Stmt("s3;", "{[i]}", "{[i] -> [0,i,0,0,0]}", {}, {});
+        Stmt* s4 = new Stmt("s4;", "{[0]}", "{[0] -> [1,0,0,0,0]}", {}, {});
+        Computation* comp2 = new Computation();
+        comp2->addStmt(s3);
+        comp2->addStmt(s4);
         // perform test
         checkAppendComputation(
-            &comp1, &comp2, 3,
+            comp1, comp2, 3,
             {"{[i] -> [2,i,0,0,0]}", "{[0] -> [3,0,0,0,0]}"});
+
+        delete comp1, comp2;
     }
 
     {
         SCOPED_TRACE("GeoAc example");
 
         // Initial Computation that will be appended to
-        Computation EvalSplineFComputation;
+        Computation* EvalSplineFComputation = new Computation();
 
         // Creating s0
         // int k;
-        Stmt s0("int k", "{[0]}", "{[0]->[0, 0, 0]}", {}, {});
+        Stmt* s0 = new Stmt("int k", "{[0]}", "{[0]->[0, 0, 0]}", {}, {});
         // Adding s0
-        EvalSplineFComputation.addStmt(s0);
+        EvalSplineFComputation->addStmt(s0);
 
         // Creating s1
         // int k = Find_Segment(x, Spline.x_vals, Spline.length, Spline.accel);
         // Find_Segment(double x, double* x_vals, int length, int & prev){
-        Stmt s1(
+        Stmt* s1 = new Stmt(
             "double* x_vals = Spline.x_vals; int length = Spline.length; int& "
             "prev "
             "= Spline.accel",
             "{[0]}", "{[0]->[1, 0, 0]}", {}, {});
         // Adding s1
-        EvalSplineFComputation.addStmt(s1);
+        EvalSplineFComputation->addStmt(s1);
 
         // Computation that gets appended
-        Computation FindSegmentComputation;
+        Computation* FindSegmentComputation = new Computation();
         // Creating statement1
         // if(x >= x_vals[i] && x <= x_vals[i+1]) prev = i;
-        Stmt s00("if(x >= x_vals[i] && x <= x_vals[i+1]) prev = i",
+        Stmt* s00 = new Stmt("if(x >= x_vals[i] && x <= x_vals[i+1]) prev = i",
                  "{[i]: i>=0 && i<length}", "{[i]->[0, i, 0]}", {}, {});
         // Adding statement2
-        FindSegmentComputation.addStmt(s00);
+        FindSegmentComputation->addStmt(s00);
 
         // perform test
-        checkAppendComputation(&EvalSplineFComputation, &FindSegmentComputation,
+        checkAppendComputation(EvalSplineFComputation, FindSegmentComputation,
                                2, {"{[i] -> [2, i, 0]}"});
+
+        delete EvalSplineFComputation, FindSegmentComputation;
     }
 }
