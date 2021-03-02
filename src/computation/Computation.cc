@@ -179,7 +179,7 @@ int Computation::appendComputation(Computation* other) {
     int offsetValue =
             precedingTuple.elemConstVal(precedingExecSchedule->inArity())+1;
     int latest_value = offsetValue;
-    
+
 
     // adjust execution schedule for each statement
     for (unsigned int i = 0; i < other->getNumStmts(); ++i) {
@@ -363,11 +363,11 @@ std::string Computation::codeGen(Set* knownConstraints) {
     std::ostringstream stmtMacroDefs;
     int stmtCount = 0;
     for (const auto& stmt : stmts) {
-        
-        
+
+
 	// new Codegen would require an application
 	// be performed first before the set is sent
-	// to omega. This is a temporary solution to 
+	// to omega. This is a temporary solution to
 	// circumvent Omega's schedulling bug.
         Set * iterSpace = stmt.getExecutionSchedule()->
 		Apply(stmt.getIterationSpace());
@@ -375,17 +375,16 @@ std::string Computation::codeGen(Set* knownConstraints) {
 	std::string tupleString =
             iterSpace->getTupleDecl().toString();
         // Stmt Macro:
-        stmtMacroUndefs << "#undef s" << stmtCount << "(" << tupleString
-                        << ") \n";
+        stmtMacroUndefs << "#undef s" << stmtCount << "\n";
         stmtMacroDefs << "#define s" << stmtCount << "(" << tupleString
                       << ")   " << stmt.getStmtSourceCode() << " \n";
         stmtCount++;
-	
+
         std::string omegaIterString =
             iterSpace->toOmegaString(vOmegaReplacer->getUFCallDecls());
         omega::Relation* omegaIterSpace =
             omega::parser::ParseRelation(omegaIterString);
-	
+
         iterSpaces.push_back(omega::copy(*omegaIterSpace));
 	// Use identity transformation instead.
         transforms.push_back(omega::Identity(iterSpace->arity()));
@@ -451,10 +450,10 @@ std::string Computation::toOmegaString() {
         omegaString << "s" << stmtCount << "\n";
         omegaString << stmt.getStmtSourceCode() << "\n";
         stmtCount++;
-        
+
 	// new Codegen would require an application
 	// be performed first before the set is sent
-	// to omega. This is a temporary solution to 
+	// to omega. This is a temporary solution to
 	// circumvent Omega's schedulling bug.
         Set * iterSpace = stmt.getExecutionSchedule()->
 		Apply(stmt.getIterationSpace());
@@ -652,14 +651,14 @@ void VisitorChangeUFsForOmega::preVisitConjunction(Conjunction* c){
             eqConstraint->addTerm(tupleTerm);
             eqConstraint->addTerm(constTerm);
 	    newConstraints.push_back(eqConstraint);
-	}	
+	}
     }
 
-    // Change the conjunction at this point to the 
+    // Change the conjunction at this point to the
     // new conjunction.
     if (requireChange){
         Conjunction* conj = new Conjunction(decl);
-        conj->setInArity(c->inarity()); 
+        conj->setInArity(c->inarity());
 	for(auto it = newConstraints.begin();
 		it!=newConstraints.end(); it++){
 	    conj->addEquality(*it);
@@ -668,7 +667,7 @@ void VisitorChangeUFsForOmega::preVisitConjunction(Conjunction* c){
 		it!=c->equalities().end(); it++){
 	    conj->addEquality((*it)->clone());
 	}
-        	
+
         for (auto it = c->inequalities().begin();
 		it!=c->inequalities().end(); it++){
 	    conj->addInequality((*it)->clone());
@@ -677,7 +676,7 @@ void VisitorChangeUFsForOmega::preVisitConjunction(Conjunction* c){
             conj->setUnsat();
 	}
         // Copy contents of new conjunction to current
-	// conjunction being visited.	
+	// conjunction being visited.
 	*c = *conj;
 	delete conj;
     }
