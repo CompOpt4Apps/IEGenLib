@@ -72,6 +72,11 @@ class Computation {
     //! Get the number of statements in this Computation
     unsigned int getNumStmts() const;
 
+    //! Get an iterator to the first Stmt in this Computation
+    std::vector<Stmt>::iterator stmtsBegin() { return stmts.begin(); }
+    //! Get an iterator pointing past the last Stmt in this Computation
+    std::vector<Stmt>::iterator stmtsEnd() { return stmts.end(); }
+
     //! Print out all the information represented in this Computation for
     //! debug purposes
     void printInfo() const;
@@ -97,7 +102,6 @@ class Computation {
     //! enforced/are known to be true without need for checking in generated
     //! code (guards).
     std::string codeGen(Set* knownConstraints = nullptr);
-    
 
     //! Method returns omega strings for each statement
     std::string toOmegaString();
@@ -237,9 +241,9 @@ class VisitorChangeUFsForOmega : public Visitor {
     std::set<std::string> getUFCallDecls();
 
     void preVisitSparseConstraints(SparseConstraints*);
-    
-    void preVisitConjunction(Conjunction * c); 
-    
+
+    void preVisitConjunction(Conjunction* c);
+
     void postVisitUFCallTerm(UFCallTerm*);
 };
 

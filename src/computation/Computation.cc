@@ -182,8 +182,8 @@ int Computation::appendComputation(Computation* other) {
 
 
     // adjust execution schedule for each statement
-    for (unsigned int i = 0; i < other->getNumStmts(); ++i) {
-        Stmt* currentStmt = new Stmt(*other->getStmt(i));
+    for (auto i = other->stmtsBegin(); i != other->stmtsEnd(); ++i) {
+        Stmt* currentStmt = new Stmt(*(i));
         // collect original execution schedule information for statement to be
         // appended
         Relation* appendExecSchedule = currentStmt->getExecutionSchedule();
