@@ -38,6 +38,10 @@ namespace iegenlib {
 
 /* Computation */
 
+Computation::~Computation() {
+    clear();
+}
+
 Computation::Computation(const Computation& other) { *this = other; }
 
 Computation& Computation::operator=(const Computation& other) {
@@ -49,12 +53,11 @@ bool Computation::operator==(const Computation& other) const {
     return (this->dataSpaces == other.dataSpaces && this->stmts == other.stmts);
 }
 
-Stmt* Computation::addStmt(const Stmt& stmt) {
-    stmts.push_back(Stmt(stmt));
-    return getStmt(stmts.size() - 1);
+void Computation::addStmt(Stmt* stmt) {
+    stmts.push_back(stmt);
 }
 
-Stmt* Computation::getStmt(unsigned int index) { return &stmts.at(index); }
+Stmt* Computation::getStmt(unsigned int index) { return stmts.at(index); }
 
 void Computation::addDataSpace(std::string dataSpaceName) {
     dataSpaces.emplace(dataSpaceName);
@@ -78,39 +81,39 @@ void Computation::printInfo() const {
     for (const auto& it : stmts) {
         std::string stmtName = "S" + std::to_string(stmtNum);
         // stmt source code
-        stmtsOutput << stmtName << ": " << it.getStmtSourceCode() << "\n";
+        stmtsOutput << stmtName << ": " << (*it).getStmtSourceCode() << "\n";
         // iter spaces
         iterSpacesOutput << stmtName << ": "
-                         << it.getIterationSpace()->prettyPrintString() << "\n";
+                         << (*it).getIterationSpace()->prettyPrintString() << "\n";
         // exec schedules
         execSchedulesOutput << stmtName << ": "
-                            << it.getExecutionSchedule()->prettyPrintString()
+                            << (*it).getExecutionSchedule()->prettyPrintString()
                             << "\n";
         // data reads
-        unsigned int numReads = it.getNumReads();
+        unsigned int numReads = (*it).getNumReads();
         dataReadsOutput << stmtName << ":";
         if (numReads == 0) {
             dataReadsOutput << " none";
         } else {
             dataReadsOutput << "{\n";
             for (unsigned int i = 0; i < numReads; ++i) {
-                dataReadsOutput << "    " << it.getReadDataSpace(i) << ": "
-                                << it.getReadRelation(i)->prettyPrintString()
+                dataReadsOutput << "    " << (*it).getReadDataSpace(i) << ": "
+                                << (*it).getReadRelation(i)->prettyPrintString()
                                 << "\n";
             }
             dataReadsOutput << "}";
         }
         dataReadsOutput << "\n";
         // data writes
-        unsigned int numWrites = it.getNumWrites();
+        unsigned int numWrites = (*it).getNumWrites();
         dataWritesOutput << stmtName << ":";
         if (numWrites == 0) {
             dataWritesOutput << " none";
         } else {
             dataWritesOutput << "{\n";
             for (unsigned int i = 0; i < numWrites; ++i) {
-                dataWritesOutput << "    " << it.getReadDataSpace(i) << ": "
-                                 << it.getReadRelation(i)->prettyPrintString()
+                dataWritesOutput << "    " << (*it).getReadDataSpace(i) << ": "
+                                 << (*it).getReadRelation(i)->prettyPrintString()
                                  << "\n";
             }
             dataWritesOutput << "}";
@@ -142,16 +145,16 @@ bool Computation::isComplete() const {
     std::unordered_set<std::string> dataSpacesActuallyAccessed;
     for (const auto& stmt : stmts) {
         // check completeness of each statement
-        if (!stmt.isComplete()) {
+        if (!stmt->isComplete()) {
             return false;
         }
 
         // collect all data space accesses
-        for (unsigned int i = 0; i < stmt.getNumReads(); ++i) {
-            dataSpacesActuallyAccessed.emplace(stmt.getReadDataSpace(i));
+        for (unsigned int i = 0; i < stmt->getNumReads(); ++i) {
+            dataSpacesActuallyAccessed.emplace(stmt->getReadDataSpace(i));
         }
-        for (unsigned int i = 0; i < stmt.getNumWrites(); ++i) {
-            dataSpacesActuallyAccessed.emplace(stmt.getWriteDataSpace(i));
+        for (unsigned int i = 0; i < stmt->getNumWrites(); ++i) {
+            dataSpacesActuallyAccessed.emplace(stmt->getWriteDataSpace(i));
         }
     }
 
@@ -164,13 +167,16 @@ bool Computation::isComplete() const {
 }
 
 void Computation::clear() {
-    dataSpaces.clear();
+    for (auto& stmt : stmts) {
+        delete stmt;
+    }
     stmts.clear();
+    dataSpaces.clear();
 }
 
 int Computation::appendComputation(Computation* other) {
     // store last statement's execution schedule information
-    Relation* precedingExecSchedule = stmts.back().getExecutionSchedule();
+    Relation* precedingExecSchedule = stmts.back()->getExecutionSchedule();
     if (precedingExecSchedule->getNumConjuncts() != 1) {
         throw assert_exception(
             "Execution schedule should have exactly 1 Conjunction.");
@@ -183,7 +189,7 @@ int Computation::appendComputation(Computation* other) {
 
     // adjust execution schedule for each statement
     for (auto i = other->stmtsBegin(); i != other->stmtsEnd(); ++i) {
-        Stmt* currentStmt = new Stmt(*(i));
+        Stmt* currentStmt = new Stmt(*(*i));
         // collect original execution schedule information for statement to be
         // appended
         Relation* appendExecSchedule = currentStmt->getExecutionSchedule();
@@ -213,7 +219,7 @@ int Computation::appendComputation(Computation* other) {
         delete newExecSchedule;
 
         // add the modified statement to this Computation
-        addStmt(*currentStmt);
+        addStmt(currentStmt);
     }
     return latest_value;
 }
@@ -369,15 +375,15 @@ std::string Computation::codeGen(Set* knownConstraints) {
 	// be performed first before the set is sent
 	// to omega. This is a temporary solution to
 	// circumvent Omega's schedulling bug.
-        Set * iterSpace = stmt.getExecutionSchedule()->
-		Apply(stmt.getIterationSpace());
+        Set * iterSpace = stmt->getExecutionSchedule()->
+		Apply(stmt->getIterationSpace());
 	iterSpace->acceptVisitor(vOmegaReplacer);
 	std::string tupleString =
             iterSpace->getTupleDecl().toString();
         // Stmt Macro:
         stmtMacroUndefs << "#undef s" << stmtCount << "\n";
         stmtMacroDefs << "#define s" << stmtCount << "(" << tupleString
-                      << ")   " << stmt.getStmtSourceCode() << " \n";
+                      << ")   " << stmt->getStmtSourceCode() << " \n";
         stmtCount++;
 
         std::string omegaIterString =
@@ -448,15 +454,15 @@ std::string Computation::toOmegaString() {
     int stmtCount = 0;
     for (const auto& stmt : stmts) {
         omegaString << "s" << stmtCount << "\n";
-        omegaString << stmt.getStmtSourceCode() << "\n";
+        omegaString << stmt->getStmtSourceCode() << "\n";
         stmtCount++;
 
 	// new Codegen would require an application
 	// be performed first before the set is sent
 	// to omega. This is a temporary solution to
 	// circumvent Omega's schedulling bug.
-        Set * iterSpace = stmt.getExecutionSchedule()->
-		Apply(stmt.getIterationSpace());
+        Set * iterSpace = stmt->getExecutionSchedule()->
+		Apply(stmt->getIterationSpace());
 	iterSpace->acceptVisitor(vOmegaReplacer);
 
 
@@ -474,6 +480,19 @@ std::string Computation::toOmegaString() {
 
 
 /* Stmt */
+
+Stmt::~Stmt() {
+    iterationSpace.reset();
+    executionSchedule.reset();
+    for (auto& read : dataReads) {
+        read.second.reset();
+    }
+    dataReads.clear();
+    for (auto& write : dataWrites) {
+        write.second.reset();
+    }
+    dataWrites.clear();
+}
 
 Stmt::Stmt(std::string stmtSourceCode, std::string iterationSpaceStr,
            std::string executionScheduleStr,

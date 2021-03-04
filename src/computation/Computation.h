@@ -49,6 +49,9 @@ class Computation {
     //! Construct an empty Computation
     Computation(){};
 
+    //! Destructor
+    ~Computation();
+
     //! Copy constructor
     Computation(const Computation& other);
 
@@ -58,9 +61,10 @@ class Computation {
     //! Equality operator
     bool operator==(const Computation& other) const;
 
-    //! Add a statement to this Computation and get a pointer to it.
-    //! Statements are numbered sequentially from 0 as they are inserted
-    Stmt* addStmt(const Stmt& stmt);
+    //! Add a statement to this Computation.
+    //! Statements are numbered sequentially from 0 as they are inserted.
+    //! @param[in] stmt Stmt to add (adopted)
+    void addStmt(Stmt* stmt);
     //! Get a statement by index
     Stmt* getStmt(unsigned int index);
 
@@ -73,9 +77,9 @@ class Computation {
     unsigned int getNumStmts() const;
 
     //! Get an iterator to the first Stmt in this Computation
-    std::vector<Stmt>::iterator stmtsBegin() { return stmts.begin(); }
+    std::vector<Stmt*>::iterator stmtsBegin() { return stmts.begin(); }
     //! Get an iterator pointing past the last Stmt in this Computation
-    std::vector<Stmt>::iterator stmtsEnd() { return stmts.end(); }
+    std::vector<Stmt*>::iterator stmtsEnd() { return stmts.end(); }
 
     //! Print out all the information represented in this Computation for
     //! debug purposes
@@ -108,7 +112,7 @@ class Computation {
 
    private:
     //! Information on all statements in the Computation
-    std::vector<Stmt> stmts;
+    std::vector<Stmt*> stmts;
     //! Data spaces accessed in the computation
     std::unordered_set<std::string> dataSpaces;
 };
@@ -125,6 +129,9 @@ class Stmt {
    public:
     //! Construct an empty Stmt
     Stmt(){};
+
+    //! Destructor
+    ~Stmt();
 
     //! Construct a complete Stmt, given strings that will be used to
     //! construct each set/relation.
