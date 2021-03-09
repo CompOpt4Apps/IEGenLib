@@ -4475,3 +4475,52 @@ TEST_F(SetRelationTest, RestrictDomainTest){
      delete restrictRel2;
      delete restrictRel3;
 }
+
+
+// Test solve for output tuple.
+TEST_F(SetRelationTest, SolveForOutputTuple){
+     Relation * rel = new Relation(
+		     "{[i,j] -> [k]: A(i,j) > 0 and rowptr(i) <= k"
+		     " and k < rowptr(i+ 1) and col(k) =j and 0 <= i"
+		     " and i < NR and 0 <= j and j < NC}");
+     auto solveForList = rel->solveForOutputTuple();
+     EXPECT_EQ(solveForList.size(),3);
+     // Check contents of list.
+     Exp * constraint1 = (*solveForList.begin());
+     Exp * constraint2 = (*(++solveForList.begin()));
+     Exp * constraint3 = (*(++(++solveForList.begin())));
+     
+     EXPECT_EQ(constraint1->prettyPrintString(rel->getTupleDecl()),
+          "k - rowptr(i) >= 0 ");
+     EXPECT_EQ(constraint2->prettyPrintString(rel->getTupleDecl()),
+          "rowptr(i+1) - k - 1 >= 0 ");
+     EXPECT_EQ(constraint1->prettyPrintString(rel->getTupleDecl()),
+          "col_inv(i,j) - k = 0 ");
+     
+     Relation * re2 = new Relation(
+		     "{[i,j] -> [n]: A(i,j) > 0 and 0 <= n"
+		     " and n < NNZ and rowcol(n) = (i,j) "
+		     " and 0 <= i and i < NR and 0 <= j and j < NC}");
+     auto solveForList2 = re2->solveForOutputTuple();
+     EXPECT_EQ(solveForList.size(),3);
+     // Check contents of list.
+     Exp * constraint21 = (*solveForList2.begin());
+     Exp * constraint22 = (*(++solveForList2.begin()));
+     Exp * constraint23 = (*(++(++solveForList2.begin())));
+     
+     EXPECT_EQ(constraint1->prettyPrintString(re2->getTupleDecl()),
+          "rowcol_inv(i,j) - n = 0 ");
+     EXPECT_EQ(constraint2->prettyPrintString(re2->getTupleDecl()),
+          "n >= 0 ");
+     EXPECT_EQ(constraint1->prettyPrintString(re2->getTupleDecl()),
+          "NNZ - n - 1 >= 0 ");
+
+     delete constraint21;
+     delete constraint22;
+     delete constraint23;
+     delete constraint1;
+     delete constraint2;
+     delete constraint3;
+     delete re2;
+     delete rel;
+}

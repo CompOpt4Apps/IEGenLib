@@ -2515,6 +2515,65 @@ void Relation::normalize(bool bdr) {
     delete superset_normalized;
 }
 
+/******************************************************************************/
+#pragma mark -
+/*************** ExpTermVisitor *****************************/
+/*! Vistor Class used for locating expressions involving 
+**  a tuple variable. This class is used by solveForOutputTuple
+**  to solve expressions involving output tuples.
+*/
+class ExpTermVisitor: public Visitor {
+  private:
+    std::list<Exp*> exps;
+    TupleVarTerm* term;
+    std::stack<Exp*> expStack;
+  public:
+    explicit ExpTermVisitor(TupleVarTerm *term): term(term){}
+    void preVisitTupleVarTerm(TupleVarTerm *t) override;
+    void preVisitExp(Exp* e) override;
+    void postVisitExp(Exp* e) override;
+    std::list<Exp*> getExpressions(); 
+
+};
+
+void ExpTermVisitor::preVisitTupleVarTerm(TupleVarTerm *t){
+    if(t->tvloc() == term->tvloc()){
+       auto expression= expStack.top();
+       auto it = std::find(exps.begin(),exps.end(), expression);
+       if(it == exps.end()){
+           exps.push_back(expression);
+       }
+    }
+}
+
+std::list<Exp*> ExpTermVisitor::getExpressions(){
+    return exps;
+}	
+
+void ExpTermVisitor::preVisitExp(Exp* e){
+    expStack.push(e);
+}
+
+void ExpTermVisitor::postVisitExp(Exp* e){
+    expStack.pop();
+}
+
+// Returns a list of constraints directly
+// involving output tuple variables and attempts to solve for these 
+// variables. Deallocating expressions is required by the caller. 
+std::list<Exp*> Relation::solveForOutputTuple(){
+    if(mOutArity != 1){
+        throw assert_exception("Output arity must be 1");
+    }
+    std::list<Exp*> res;
+    
+    TupleVarTerm * term= new TupleVarTerm(mInArity);
+    ExpTermVisitor expVisit(term);
+    this->acceptVisitor(&expVisit);
+    res = expVisit.getExpressions(); 
+    
+    return res;
+}
 
 
 /******************************************************************************/

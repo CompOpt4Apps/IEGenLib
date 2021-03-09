@@ -874,6 +874,11 @@ public:
 
     //
     SetRelationshipType dataDependenceRelationship(Relation* rightSide, int parallelLoopLevel=0);
+    
+    // Returns a list of constraints directly
+    // involving output tuple variables and attempts to solve for these 
+    // variables. Deallocating expressions is required by the caller. 
+    std::list<Exp*> solveForOutputTuple();
 
 private:
     int mInArity;

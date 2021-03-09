@@ -402,6 +402,15 @@ std::string Computation::codeGen(Set* knownConstraints) {
     }
     generatedCode << stmtMacroUndefs.str() << stmtMacroDefs.str() << "\n";
     generatedCode << UFMacroUndefs.str() << UFMacroDefs.str() << "\n";
+    
+    // initialize tuple variables
+    std::ostringstream TupleAssignments;
+    for(const auto& tupleA: vOmegaReplacer->getTupleAssignments()){
+        TupleAssignments << "t" << (tupleA.first + 1) << " = " 
+		<< tupleA.second << "; \n";
+    }
+    generatedCode << TupleAssignments.str() << "\n";
+
 
     // convert set of known constraints to Omega format
     Set* modifiedKnown;
@@ -627,13 +636,19 @@ std::set<std::string> VisitorChangeUFsForOmega::getUFCallDecls() {
     return ufCallDecls;
 }
 
+
+std::map<int,std::string>& VisitorChangeUFsForOmega::getTupleAssignments(){
+    return tupleAssignments;
+}
+
+
+
 void VisitorChangeUFsForOmega::preVisitSparseConstraints(
     SparseConstraints* sc) {
     if (sc->getNumConjuncts() != 1) {
         throw assert_exception(
             "Must have exactly one conjunction for Omega conversion");
     }
-    currentTupleDecl = sc->getTupleDecl();
 }
 void VisitorChangeUFsForOmega::preVisitConjunction(Conjunction* c){
     bool requireChange = false;
@@ -681,7 +696,62 @@ void VisitorChangeUFsForOmega::preVisitConjunction(Conjunction* c){
 	*c = *conj;
 	delete conj;
     }
+    currentTupleDecl = decl;
+    // Initilize all tuple variable to zero
+    for (unsigned int i = 0; i < decl.size(); i++ ){
+       tupleAssignments[i] = "0"; 
+    }   
 }
+
+void VisitorChangeUFsForOmega::preVisitExp(iegenlib::Exp * e){
+    // The goal of this code section is to generate tuple 
+    // variable intiializations. The code is currently buggy
+    // and will be bypassed for now.
+    /*
+    // Make sure the expression does not have UF
+    // and is equality.
+    if(!e->hasIndexedUFCall() && e->isEquality()){
+        std::cerr << "Analysing: " << e->toString() << "\n";
+	// Check if expression has only one tuple variable.
+	TupleVarTerm * term = NULL;
+	bool isValid = true;
+	std::list<Term*> terms = e->getTermList();
+	// Count number of tuple variable terms in expression,
+	// multiple tuple term in an expression is not considered
+	// as a candidate for tuple initialization.
+	int tv_count = std::count_if(terms.begin(), terms.end(),
+	    [](Term* t){return dynamic_cast<TupleVarTerm*>(t)!=NULL;});
+
+	if (tv_count != 1){
+	    return;
+	}
+
+	for(auto it = terms.begin();!term && it != terms.end(); it++){
+	   if((*it)->isUFCall()){
+	       isValid = false;
+	       break; 
+	   }
+	   term = dynamic_cast<TupleVarTerm*>(*it);
+	}
+	// If this expression is valid for assignment
+	// we go ahead.
+	if(isValid && term){
+	    std::cerr << "Is Valid: " << term->toString() << "\n" ;
+	    if(terms.size()==1){
+	        tupleAssignments[term->tvloc()] = "0";
+	        return;	
+	    }
+	    term->setCoefficient(1);
+	    Exp * solveFor = e->solveForFactor(term);
+	    std::string solvedForString = solveFor->toString(); 
+	    tupleAssignments[term->tvloc()] =  solvedForString; 
+	    delete solveFor;
+	}
+
+    }*/
+}
+
+
 void VisitorChangeUFsForOmega::postVisitUFCallTerm(UFCallTerm* callTerm) {
     if (currentTupleDecl == NULL) {
         throw assert_exception(

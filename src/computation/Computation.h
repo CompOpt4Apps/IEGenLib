@@ -210,6 +210,10 @@ class VisitorChangeUFsForOmega : public Visitor {
     int nextFuncReplacementNumber;
     //! stored tuple decl for variable retrieval
     TupleDecl currentTupleDecl;
+    
+    //! Information stored for tuple variable 
+    //! assignments.
+    std::map<int,std::string> tupleAssignments;
 
    public:
     //! Construct a new VisitorChangeUFsForOmega
@@ -229,6 +233,11 @@ class VisitorChangeUFsForOmega : public Visitor {
     //! Computation.
     void prepareForNext();
 
+    //! Get tuple assignments. A tuple is initially assigned
+    //! to zero, unless there is an equality constraint 
+    //! involving that tuple variable and constants 
+    std::map<int,std::string>& getTupleAssignments();
+
     //! Get the UF call macros required for the code corresponding to the
     //! set/relation to function correctly, as a string
     std::map<std::string, std::string>* getUFMacros();
@@ -241,6 +250,8 @@ class VisitorChangeUFsForOmega : public Visitor {
     void preVisitConjunction(Conjunction * c); 
     
     void postVisitUFCallTerm(UFCallTerm*);
+
+    void preVisitExp(iegenlib::Exp * e);
 };
 
 }  // namespace iegenlib
