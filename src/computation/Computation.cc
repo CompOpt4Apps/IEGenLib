@@ -202,6 +202,7 @@ int Computation::appendComputation(Computation* other, unsigned int level) {
     // adjust execution schedule for each statement
     for (auto i = other->stmtsBegin(); i != other->stmtsEnd(); ++i) {
         Stmt* currentStmt = new Stmt(*(*i));
+
         // original execution schedule for statement to be appended
         Relation* appendExecSchedule = currentStmt->getExecutionSchedule();
         TupleDecl appendTuple = appendExecSchedule->getTupleDecl();
@@ -214,41 +215,27 @@ int Computation::appendComputation(Computation* other, unsigned int level) {
         unsigned int currentTuplePos = 0;
         // insert iterators from surrounding context
         for (const std::string& iterator : savedIterators) {
-            std::cout << "inserting iterator " << iterator << "\n";
             newTuple.setTupleElem(currentTuplePos++, iterator);
         }
         // insert iterators from schedule of appended statement
         for (int iteratorPos = 0; iteratorPos < appendInArity; ++iteratorPos) {
-            std::cout << "inserting appended iterator "
-                      << appendTuple.elemToString(iteratorPos) << "\n";
             newTuple.copyTupleElem(appendTuple, iteratorPos, currentTuplePos++);
         }
         // insert base tuple elements up to specified level
         for (int it = precedingInArity; it < adjustedLevelIndex; ++it) {
-            std::cout << "inserting base elem "
-                      << precedingTuple.elemToString(it) << "\n";
             newTuple.copyTupleElem(precedingTuple, it, currentTuplePos++);
         }
         // insert specified level value, with offset
         latest_value = appendTuple.elemConstVal(appendInArity) + offsetValue;
-        std::cout << "level " << level << ", inserting latest_value of "
-                  << latest_value << "\n";
         newTuple.setTupleElem(currentTuplePos++, latest_value);
         // insert remaining append tuple values
         for (int it = appendInArity + 1; it < appendTuple.size(); ++it) {
-            std::cout << "inserting append tuple elem "
-                      << appendTuple.elemToString(it) << "\n";
             newTuple.copyTupleElem(appendTuple, it, currentTuplePos++);
         }
 
-        // insert a new execution schedule Relation using the new tuple
-        Relation* newExecSchedule = new Relation(newInArity, newOutArity);
-        newExecSchedule->setTupleDecl(newTuple);
-        std::cout << newTuple.toString() << "\n";
-        /* std::cout << newExecSchedule->prettyPrintString() << "\n"; */
-        /* currentStmt->setExecutionSchedule(newExecSchedule->prettyPrintString());
-         */
-        delete newExecSchedule;
+        // insert a new execution schedule Relation using (only) the new tuple
+        currentStmt->setExecutionSchedule(
+            "{" + newTuple.toString(true, newInArity) + "}");
 
         // add the modified statement to this Computation
         addStmt(currentStmt);
