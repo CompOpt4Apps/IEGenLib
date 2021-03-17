@@ -557,7 +557,6 @@ bool Stmt::operator==(const Stmt& other) const {
               *this->dataWrites[i].second == *other.dataWrites[i].second)) {
             return false;
         }
-        i++;
     }
 
     return true;
