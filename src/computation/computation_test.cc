@@ -378,3 +378,57 @@ TEST_F(ComputationTest, AppendComputation) {
         delete comp1, comp2;
     }
 }
+
+#pragma mark DataSpaceNamePrefixing
+// Check creating a copy of a Computation with prefixed data space names works properly
+TEST_F(ComputationTest, DataSpaceNamePrefixing) {
+    Computation* comp = new Computation();
+    Stmt* s0 = new Stmt("$product$[i] += $x$[i][j] * $y$[j];",
+                        "{[i,j]: i >= 0 && i < a && j >= 0 && j < b}",
+                        "{[i,j]->[2,i,1,j,0]}",
+                        {{"$product$", "{[i,j]->[i]}"},
+                         {"$x$", "{[i,j]->[i,j]}"},
+                         {"$y$", "{[i,j]->[j]}"}},
+                        {{"$product$", "{[i,j]->[i]}"}});
+    comp->addStmt(s0);
+    Set* iterSpace = new Set("{[i,j]: i >= 0 && i < a && j >= 0 && j < b}");
+    iegenlib::Relation* execSchedule = new iegenlib::Relation("{[i,j]->[2,i,1,j,0]}");
+    std::string iterSpaceStr = iterSpace->prettyPrintString();
+    std::string execScheduleStr = execSchedule->prettyPrintString();
+    delete iterSpace;
+    delete execSchedule;
+
+    Computation* prefixedComp1 = comp->getDataPrefixedCopy();
+    EXPECT_EQ("_iegen_0$product$[i] += _iegen_0$x$[i][j] * _iegen_0$y$[j];",
+              prefixedComp1->getStmt(0)->getStmtSourceCode());
+    EXPECT_EQ(
+        iterSpaceStr,
+        prefixedComp1->getStmt(0)->getIterationSpace()->prettyPrintString());
+    EXPECT_EQ(
+        execScheduleStr,
+        prefixedComp1->getStmt(0)->getExecutionSchedule()->prettyPrintString());
+    EXPECT_EQ("_iegen_0$product$",
+              prefixedComp1->getStmt(0)->getReadDataSpace(0));
+    EXPECT_EQ("_iegen_0$x$", prefixedComp1->getStmt(0)->getReadDataSpace(1));
+    EXPECT_EQ("_iegen_0$y$", prefixedComp1->getStmt(0)->getReadDataSpace(2));
+    EXPECT_EQ("_iegen_0$product$",
+              prefixedComp1->getStmt(0)->getWriteDataSpace(0));
+
+    Computation* prefixedComp2 = comp->getDataPrefixedCopy();
+    EXPECT_EQ("_iegen_1$product$[i] += _iegen_1$x$[i][j] * _iegen_1$y$[j];",
+              prefixedComp2->getStmt(0)->getStmtSourceCode());
+    EXPECT_EQ(
+        iterSpaceStr,
+        prefixedComp2->getStmt(0)->getIterationSpace()->prettyPrintString());
+    EXPECT_EQ(
+        execScheduleStr,
+        prefixedComp2->getStmt(0)->getExecutionSchedule()->prettyPrintString());
+    EXPECT_EQ("_iegen_1$product$",
+              prefixedComp2->getStmt(0)->getReadDataSpace(0));
+    EXPECT_EQ("_iegen_1$x$", prefixedComp2->getStmt(0)->getReadDataSpace(1));
+    EXPECT_EQ("_iegen_1$y$", prefixedComp2->getStmt(0)->getReadDataSpace(2));
+    EXPECT_EQ("_iegen_1$product$",
+              prefixedComp2->getStmt(0)->getWriteDataSpace(0));
+
+    delete comp, prefixedComp1, prefixedComp2;
+}

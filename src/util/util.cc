@@ -35,14 +35,14 @@ namespace iegenlib{
     }
     // This is simply a call to the string constructor.
     // There is a constructor with the following declaration:
-    // template<class InputIterator> 
+    // template<class InputIterator>
     //    string (InputIterator begin, InputIterator end);
-    // in this case InpuIterator is char. Therefore, this constructor 
+    // in this case InpuIterator is char. Therefore, this constructor
     // simply calls string ( size_t n, char c );
     std::string str((std::istreambuf_iterator<char>(t)),
                      std::istreambuf_iterator<char>());
-    //std::cout << "file = " << str << std::endl;    
-    //std::cout << "contents = " << contents << std::endl;    
+    //std::cout << "file = " << str << std::endl;
+    //std::cout << "contents = " << contents << std::endl;
     if(str.compare(contents) == 0){
       return true;
     }else{
@@ -70,6 +70,19 @@ namespace iegenlib{
     return retval;
   }
 
+  string replaceInString(string input, string toFind, string replaceWith,
+                         size_t startPos) {
+    if (input.empty()) {
+        return input;
+    }
+    size_t pos = input.find(toFind, startPos);
+    if (pos == string::npos) {
+        return input;
+    } else {
+        return replaceInString(input.replace(pos, toFind.length(), replaceWith),
+                               toFind, replaceWith, pos + replaceWith.length());
+    }
+  }
 
   StringIterator::StringIterator(std::list<std::string> aList) : mList(aList) {
     mIter = mList.begin();
@@ -77,13 +90,13 @@ namespace iegenlib{
 
 
   StringIterator::StringIterator(std::set<std::string> aSet) {
-  
+
     std::list<std::string> symbolList;
     for (std::set<std::string>::iterator iter = aSet.begin();
             iter != aSet.end(); iter++) {
         mList.push_back( *iter );
     }
-    
+
     mIter = mList.begin();
   }
 
@@ -95,7 +108,7 @@ namespace iegenlib{
     mIter++;
     return retval;
   }
-    
+
   /// Returns true if there is another symbol in the iteration.
   bool StringIterator::hasNext() {
     return mIter!=mList.end();

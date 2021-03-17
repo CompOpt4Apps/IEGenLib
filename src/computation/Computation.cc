@@ -20,6 +20,7 @@
  */
 
 #include "Computation.h"
+#include "util.h"
 
 #include <code_gen/parser/parser.h>
 #include <codegen.h>
@@ -34,9 +35,14 @@
 
 #include "set_relation/set_relation.h"
 
+//! Base string for use in name prefixing
+#define NAME_PREFIX_BASE "_iegen_"
+
 namespace iegenlib {
 
 /* Computation */
+
+Computation::Computation() {}
 
 Computation::~Computation() {
     clear();
@@ -53,6 +59,24 @@ bool Computation::operator==(const Computation& other) const {
     return (this->dataSpaces == other.dataSpaces && this->stmts == other.stmts);
 }
 
+Computation* Computation::getDataPrefixedCopy() {
+    std::string namePrefix = NAME_PREFIX_BASE + std::to_string(numRenames++);
+    Computation* prefixedCopy = new Computation();
+
+    // prefix all data in the Computation and insert it to the new one
+    for (auto& stmt : stmts) {
+        prefixedCopy->addStmt(stmt->getDataPrefixedCopy(namePrefix));
+    }
+    for (auto& space : dataSpaces) {
+        prefixedCopy->addDataSpace(namePrefix + space);
+    }
+    for (auto& param : parameterNames) {
+        prefixedCopy->addParameter(namePrefix + param);
+    }
+
+    return prefixedCopy;
+}
+
 void Computation::addStmt(Stmt* stmt) {
     stmts.push_back(stmt);
 }
@@ -65,6 +89,15 @@ void Computation::addDataSpace(std::string dataSpaceName) {
 
 std::unordered_set<std::string> Computation::getDataSpaces() const {
     return dataSpaces;
+}
+
+void Computation::addParameter(std::string parameterName) {
+    parameterNames.push_back(parameterName);
+}
+
+std::vector<std::string> Computation::getParameterNames() const {
+    auto prefixedNames = parameterNames;
+    return parameterNames;
 }
 
 unsigned int Computation::getNumStmts() const { return stmts.size(); }
@@ -580,6 +613,37 @@ bool Stmt::operator==(const Stmt& other) const {
     }
 
     return true;
+}
+
+Stmt* Stmt::getDataPrefixedCopy(std::string prefix) {
+    Stmt* prefixedCopy = new Stmt(*this);
+
+    // modify reads and writes, keeping track of original names for further replacing in other fields
+    std::unordered_set<std::string> dataSpaceNames;
+    for (auto& read : prefixedCopy->dataReads) {
+        dataSpaceNames.emplace(read.first);
+        read.first = prefix + read.first;
+    }
+    for (auto& write : prefixedCopy->dataWrites) {
+        dataSpaceNames.emplace(write.first);
+        write.first = prefix + write.first;
+    }
+
+    // replace data space names in statement source code, iteration space, execution schedule
+    std::string srcCode = prefixedCopy->stmtSourceCode;
+    std::string iterSpaceStr = prefixedCopy->iterationSpace->prettyPrintString();
+    std::string execScheduleStr = prefixedCopy->executionSchedule->prettyPrintString();
+    for (const string& originalName : dataSpaceNames) {
+        srcCode = replaceInString(srcCode, originalName, prefix + originalName);
+        iterSpaceStr = replaceInString(iterSpaceStr, originalName, prefix + originalName);
+        execScheduleStr = replaceInString(execScheduleStr, originalName, prefix + originalName);
+    }
+    // use modified strings to construct new values
+    prefixedCopy->setStmtSourceCode(srcCode);
+    prefixedCopy->setIterationSpace(iterSpaceStr);
+    prefixedCopy->setExecutionSchedule(execScheduleStr);
+
+    return prefixedCopy;
 }
 
 bool Stmt::isComplete() const {

@@ -19,8 +19,22 @@
 #include <iegenlib.h>
 #include <gtest/gtest.h>
 
+using iegenlib::replaceInString;
 using iegenlib::parse_exception;
-using iegenlib::assert_exception;;
+using iegenlib::assert_exception;
+
+TEST(UtilTests, ReplaceInString) {
+    EXPECT_EQ("replacement",
+              replaceInString("target", "target", "replacement"));
+    EXPECT_EQ("hello replaced world replaced!",
+              replaceInString("hello replaceme world replaceme!", "replaceme",
+                              "replaced"));
+    EXPECT_EQ("bb", replaceInString("aa", "a", "b"));
+    EXPECT_EQ("hello hello world", replaceInString("hello world", "world", "hello world"));
+    EXPECT_EQ("unchanged", replaceInString("unchanged", "other", "new"));
+    EXPECT_EQ("", replaceInString("", "", "a"));
+    EXPECT_EQ("", replaceInString("eraseme", "eraseme", ""));
+}
 
 // TODO: Test the StringException and ParseException classes and any other util classes/routines
 TEST(UtilTests, UtilTestParse){

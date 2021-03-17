@@ -47,7 +47,7 @@ class Stmt;
 class Computation {
    public:
     //! Construct an empty Computation
-    Computation(){};
+    Computation();
 
     //! Destructor
     ~Computation();
@@ -61,6 +61,12 @@ class Computation {
     //! Equality operator
     bool operator==(const Computation& other) const;
 
+    //! Get a copy of this Computation with uniquely-prefixed data spaces
+    //! Uses string find-and-replace to change data space names, with the
+    //! assumption that incoming names will be unique enough for this to work
+    //! without unintended replacements occuring.
+    Computation* getDataPrefixedCopy();
+
     //! Add a statement to this Computation.
     //! Statements are numbered sequentially from 0 as they are inserted.
     //! @param[in] stmt Stmt to add (adopted)
@@ -72,6 +78,11 @@ class Computation {
     void addDataSpace(std::string dataSpaceName);
     //! Get data spaces
     std::unordered_set<std::string> getDataSpaces() const;
+
+    //! Add a parameter to this Computation
+    void addParameter(std::string parameterName);
+    //! Get parameters
+    std::vector<std::string> getParameterNames() const;
 
     //! Get the number of statements in this Computation
     unsigned int getNumStmts() const;
@@ -117,6 +128,12 @@ class Computation {
     std::vector<Stmt*> stmts;
     //! Data spaces accessed in the computation
     std::unordered_set<std::string> dataSpaces;
+    //! Parameters of the computation (not included in data spaces)
+    std::vector<std::string> parameterNames;
+
+    //! Number of times this Computation has been called by (appended on to)
+    //! others, monitored for name mangling
+    unsigned int numRenames = 0;
 };
 
 //! Prints the dotFile for the Computation structure
@@ -151,6 +168,10 @@ class Stmt {
     //! Equality operator
     //! Checks equality, NOT mathematical equivalence
     bool operator==(const Stmt& other) const;
+
+    //! Get a copy of this Stmt with the given prefix applied to all data space
+    //! names
+    Stmt* getDataPrefixedCopy(std::string prefix);
 
     //! Get whether or not all necessary information for this Stmt is set
     bool isComplete() const;

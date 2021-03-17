@@ -33,6 +33,8 @@ using std::stringstream;
 
 namespace iegenlib{
 
+
+
 bool compareFileContentsToString(string file, string contents);
 
 /*!
@@ -45,6 +47,15 @@ bool compareFileContentsToString(string file, string contents);
  */
 string createUniqueName(string name, set<string>& taken);
 
+
+//! Get a copy of the given string with all instances of the substring to
+//! find replaced as specified
+//! \param[in] input String to perform substitutions on (will not be
+//! modified)
+//! \param[in] toFind String to find (and replace) within input
+//! \param[in] replaceWith String to use as replacement
+string replaceInString(string input, string toFind, string replaceWith,
+                       size_t startPos = 0);
 
 /*!
  * Exception used when we would normally use an assert.  We expect
@@ -79,10 +90,10 @@ class StringIterator {
 
     /// Returns a pointer to the next string.
     std::string next();
-    
+
     /// Returns true if there is another string in the iteration.
     bool hasNext();
-    
+
   private:
     std::list<std::string> mList;
     std::list<std::string>::iterator mIter;
