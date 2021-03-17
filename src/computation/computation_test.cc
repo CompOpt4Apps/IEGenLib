@@ -84,6 +84,18 @@ class ComputationTest : public ::testing::Test {
     //! Test that appending a computation to another yields the correct results.
     //! The passed-in computations are modified but not adopted, and should be
     //! freed after this test.
+    //! @param[in,out] appendedTo Computation that is appended to (the 'caller
+    //! function')
+    //! @param[in] appendedComp Computation appended onto another (the 'callee'
+    //! function)
+    //! @param[in] appendedAtLevel the level (exechution schedule tuple
+    //! position) to append onto, analogous to the nesting depth of the
+    //! 'function call'
+    //! @param[in] expectedRetVal expected return value from the call to
+    //! appendComputation
+    //! @param[in] expectedExecSchedules string versions of expected execution
+    //! schedules for the appended Computation after appending modifications are
+    //! done
     void checkAppendComputation(
         Computation* appendedTo, Computation* appendedComp,
         unsigned int appendAtLevel, int expectedRetVal,
