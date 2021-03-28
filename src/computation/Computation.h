@@ -43,6 +43,10 @@ class Stmt;
  *
  * \brief SPF representation of a computation (group of statements such as a
  * function).
+ *
+ * Incoming code must have highly-unique variable names (assumed to be
+ * surrounded in some non-code string such as $'s') if it may be appended to
+ * another Computation.
  */
 class Computation {
    public:
@@ -171,7 +175,7 @@ class Stmt {
 
     //! Get a copy of this Stmt with the given prefix applied to all data space
     //! names
-    Stmt* getDataPrefixedCopy(std::string prefix);
+    Stmt* getDataPrefixedCopy(std::string prefix) const;
 
     //! Get whether or not all necessary information for this Stmt is set
     bool isComplete() const;

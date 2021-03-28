@@ -208,6 +208,9 @@ void Computation::clear() {
 }
 
 int Computation::appendComputation(Computation* other, unsigned int level) {
+    // create a working copy of the other Computation, with unique data space names; this copy is discarded after use
+    Computation* toAppend = other->getDataPrefixedCopy();
+
     // store last statement's execution schedule information
     Relation* precedingExecSchedule = stmts.back()->getExecutionSchedule();
     int precedingInArity = precedingExecSchedule->inArity();
@@ -233,11 +236,9 @@ int Computation::appendComputation(Computation* other, unsigned int level) {
     }
 
     // adjust execution schedule for each statement
-    for (auto i = other->stmtsBegin(); i != other->stmtsEnd(); ++i) {
-        Stmt* currentStmt = new Stmt(*(*i));
-
+    for (auto currentStmt = other->stmtsBegin(); currentStmt != other->stmtsEnd(); ++currentStmt) {
         // original execution schedule for statement to be appended
-        Relation* appendExecSchedule = currentStmt->getExecutionSchedule();
+        Relation* appendExecSchedule = (*currentStmt)->getExecutionSchedule();
         TupleDecl appendTuple = appendExecSchedule->getTupleDecl();
         int appendInArity = appendExecSchedule->inArity();
 
@@ -267,12 +268,14 @@ int Computation::appendComputation(Computation* other, unsigned int level) {
         }
 
         // insert a new execution schedule Relation using (only) the new tuple
-        currentStmt->setExecutionSchedule(
+        (*currentStmt)->setExecutionSchedule(
             "{" + newTuple.toString(true, newInArity) + "}");
 
-        // add the modified statement to this Computation
-        addStmt(currentStmt);
+        // copy the modified statement into this Computation
+        addStmt(new Stmt(*(*currentStmt)));
     }
+
+    delete toAppend;
 
     return latest_value;
 }
@@ -615,7 +618,7 @@ bool Stmt::operator==(const Stmt& other) const {
     return true;
 }
 
-Stmt* Stmt::getDataPrefixedCopy(std::string prefix) {
+Stmt* Stmt::getDataPrefixedCopy(std::string prefix) const {
     Stmt* prefixedCopy = new Stmt(*this);
 
     // modify reads and writes, keeping track of original names for further replacing in other fields
