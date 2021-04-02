@@ -83,10 +83,16 @@ class Computation {
     //! Get data spaces
     std::unordered_set<std::string> getDataSpaces() const;
 
-    //! Add a parameter to this Computation
-    void addParameter(std::string parameterName);
-    //! Get parameters
-    std::vector<std::string> getParameterNames() const;
+    //! Add a (formal) parameter to this Computation
+    //! @param paramName Name of the parameter
+    //! @param paramType C data type of the parameter
+    void addParameter(std::string paramName, std::string paramType);
+    //! Get a parameter's name
+    std::string getParameterName(unsigned int index) const;
+    //! Get a parameter's data type
+    std::string getParameterType(unsigned int index) const;
+    //! Get the number of parameters this Computation has
+    unsigned int getNumParams() const;
 
     //! Get the number of statements in this Computation
     unsigned int getNumStmts() const;
@@ -108,10 +114,15 @@ class Computation {
     void clear();
 
     //! Add statements from another Computation to this one for inlining.
-    //! @param[in] other Computation to append to this one
+    //! @param[in] other Computation to append to this one, which will be copied
+    //! but its statements will not be modified
+    //! @param[in] arguments Arguments to pass in to the appended Computation
+    //! (if any)
     //! @param[in] level 0-indexed execution schedule tuple position to append
     //! at, to define the level of nesting the new Computation is within
-    int appendComputation(Computation* other, unsigned int level = 0);
+    int appendComputation(Computation* other,
+                          std::vector<std::string> arguments = {},
+                          unsigned int level = 0);
 
     void toDot(std::fstream& dotFileStream, string fileName);
 
@@ -132,8 +143,8 @@ class Computation {
     std::vector<Stmt*> stmts;
     //! Data spaces accessed in the computation
     std::unordered_set<std::string> dataSpaces;
-    //! Parameters of the computation (not included in data spaces)
-    std::vector<std::string> parameterNames;
+    //! Parameters of the computation, pair of name : type
+    std::vector<std::pair<std::string, std::string>> parameters;
 
     //! Number of times this Computation has been called by (appended on to)
     //! others, monitored for name mangling

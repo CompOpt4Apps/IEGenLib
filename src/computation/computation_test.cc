@@ -84,27 +84,29 @@ class ComputationTest : public ::testing::Test {
     //! Test that appending a computation to another yields the correct results.
     //! The passed-in computations are modified but not adopted, and should be
     //! freed after this test.
-    //! @param[in,out] appendedTo Computation that is appended to (the 'caller
+    //! \param[in,out] appendedTo Computation that is appended to (the 'caller
     //! function')
-    //! @param[in] appendedComp Computation appended onto another (the 'callee'
+    //! \param[in] appendedComp Computation appended onto another (the 'callee'
     //! function)
-    //! @param[in] appendedAtLevel the level (exechution schedule tuple
+    //! \param[in] argsList list of arguments to pass the appended Computation
+    //! \param[in] appendedAtLevel the level (exechution schedule tuple
     //! position) to append onto, analogous to the nesting depth of the
     //! 'function call'
-    //! @param[in] expectedRetVal expected return value from the call to
+    //! \param[in] expectedRetVal expected return value from the call to
     //! appendComputation
-    //! @param[in] expectedExecSchedules string versions of expected execution
+    //! \param[in] expectedExecSchedules string versions of expected execution
     //! schedules for the appended Computation after appending modifications are
     //! done
     void checkAppendComputation(
-        Computation* appendedTo, Computation* appendedComp,
+        Computation* appendedTo, Computation* appendedComp, std::vector<std::string> argsList,
         unsigned int appendAtLevel, int expectedRetVal,
         std::vector<std::string> expectedExecSchedules) {
         // remember number of original statements, for testing only appended
         // ones later
         unsigned int origNumStmts = appendedTo->getNumStmts();
         // perform actual append
-        int retVal = appendedTo->appendComputation(appendedComp, appendAtLevel);
+        int retVal = appendedTo->appendComputation(appendedComp, argsList,
+                                                   appendAtLevel);
         EXPECT_EQ(expectedRetVal, retVal);
 
         // sanity check correct number of expected schedules
@@ -316,7 +318,7 @@ TEST_F(ComputationTest, AppendComputation) {
         comp2->addStmt(s4);
         // perform test
         checkAppendComputation(
-            comp1, comp2, 0, 3,
+            comp1, comp2, {}, 0, 3,
             {"{[i] -> [2,i,0,0,0]}", "{[0] -> [3,0,0,0,0]}"});
 
         delete comp1, comp2;
@@ -356,7 +358,7 @@ TEST_F(ComputationTest, AppendComputation) {
 
         // perform test
         checkAppendComputation(EvalSplineFComputation, FindSegmentComputation,
-                               0, 2, {"{[i] -> [2, i, 0]}"});
+                               {}, 0, 2, {"{[i] -> [2, i, 0]}"});
 
         delete EvalSplineFComputation, FindSegmentComputation;
     }
@@ -372,7 +374,7 @@ TEST_F(ComputationTest, AppendComputation) {
         Computation* comp2 = new Computation();
         comp2->addStmt(s2);
 
-        checkAppendComputation(comp1, comp2, 2, 2,
+        checkAppendComputation(comp1, comp2, {}, 2, 2,
                                {"{[i,k] -> [2,i,2,k,1]}"});
 
         delete comp1, comp2;

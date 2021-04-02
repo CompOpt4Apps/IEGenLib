@@ -64,14 +64,14 @@ Computation* Computation::getDataPrefixedCopy() {
     Computation* prefixedCopy = new Computation();
 
     // prefix all data in the Computation and insert it to the new one
-    for (auto& stmt : stmts) {
+    for (auto& stmt : this->stmts) {
         prefixedCopy->addStmt(stmt->getDataPrefixedCopy(namePrefix));
     }
-    for (auto& space : dataSpaces) {
+    for (auto& space : this->dataSpaces) {
         prefixedCopy->addDataSpace(namePrefix + space);
     }
-    for (auto& param : parameterNames) {
-        prefixedCopy->addParameter(namePrefix + param);
+    for (auto& param : this->parameters) {
+        prefixedCopy->addParameter(namePrefix + param.first, param.second);
     }
 
     return prefixedCopy;
@@ -91,13 +91,20 @@ std::unordered_set<std::string> Computation::getDataSpaces() const {
     return dataSpaces;
 }
 
-void Computation::addParameter(std::string parameterName) {
-    parameterNames.push_back(parameterName);
+void Computation::addParameter(std::string paramName, std::string paramType) {
+    parameters.push_back({paramName, paramType});
 }
 
-std::vector<std::string> Computation::getParameterNames() const {
-    auto prefixedNames = parameterNames;
-    return parameterNames;
+std::string Computation::getParameterName(unsigned int index) const {
+    return parameters.at(index).first;
+}
+
+std::string Computation::getParameterType(unsigned int index) const {
+    return parameters.at(index).second;
+}
+
+unsigned int Computation::getNumParams() const {
+    return parameters.size();
 }
 
 unsigned int Computation::getNumStmts() const { return stmts.size(); }
@@ -207,9 +214,13 @@ void Computation::clear() {
     dataSpaces.clear();
 }
 
-int Computation::appendComputation(Computation* other, unsigned int level) {
-    // create a working copy of the other Computation, with unique data space names; this copy is discarded after use
+int Computation::appendComputation(Computation* other,
+                                   std::vector<std::string> arguments,
+                                   unsigned int level) {
+    // create a working copy of the other Computation, with unique data space
+    // names; this copy is discarded after use
     Computation* toAppend = other->getDataPrefixedCopy();
+    const unsigned int numArgs = arguments.size();
 
     // store last statement's execution schedule information
     Relation* precedingExecSchedule = stmts.back()->getExecutionSchedule();
@@ -219,12 +230,51 @@ int Computation::appendComputation(Computation* other, unsigned int level) {
             "Execution schedule should have exactly 1 Conjunction.");
     }
     TupleDecl precedingTuple = precedingExecSchedule->getTupleDecl();
-
     // index within the tuple corresponding to the specified level, adjusted for
     // input size that comes before it
     int adjustedLevelIndex = level + precedingInArity;
-    int offsetValue = precedingTuple.elemConstVal(adjustedLevelIndex) + 1;
+    // Value to offset schedule tuples by at specified level.
+    // includes numArgs because of parameter declaration statements that will be
+    // prepended to original Computation statements
+    int offsetValue =
+        precedingTuple.elemConstVal(adjustedLevelIndex) + numArgs + 1;
+    // keep track of the latest execution schedule position used
     int latest_value = offsetValue;
+
+    // ensure that arguments match parameter list length
+    if (numArgs != toAppend->getNumParams()) {
+        throw assert_exception(
+            "Incorrect number of parameters specified for appendComputation -- "
+            "expected " +
+            std::to_string(toAppend->getNumParams()) + ", got " +
+            std::to_string(numArgs));
+    }
+    // Insert declarations+assignment of (would-have-been if not for inlining)
+    // parameter values.
+    // Assignment of a parameter i will be like:
+    // [type of i] [name of i] = [name of argument i from passed-in list];
+    for (int i = 0; i < numArgs; ++i) {
+        Stmt* paramDeclStmt = new Stmt();
+        paramDeclStmt->setStmtSourceCode(toAppend->getParameterType(i) + " " +
+                                    toAppend->getParameterName(i) + " = " +
+                                    arguments[i] + ";");
+        paramDeclStmt->setIterationSpace("{[0]}");
+
+        // This is an ugly hack to get the correct execution schedule ordering
+        // of parameter declarations with respect to actual original Computation
+        // statements. If there are x args, the first will be at position -x,
+        // and the last at position -1, so that they occur before the first
+        // Computation statement at position 0. These negatives are offset by
+        // adding the # of args to the offset value applied to all tuple values
+        // at the specified level.
+        const signed int scheduleTupleVal = ((signed int) i) - numArgs;
+        paramDeclStmt->setExecutionSchedule(
+            "{[0]->[" + std::to_string(scheduleTupleVal) + "]}");
+
+        // TODO: add appropriate reads and writes
+
+        toAppend->addStmt(paramDeclStmt);
+    }
 
     // keep track of all iterators that exist at the level we're using, others
     // will be discarded
@@ -236,7 +286,8 @@ int Computation::appendComputation(Computation* other, unsigned int level) {
     }
 
     // adjust execution schedule for each statement
-    for (auto currentStmt = other->stmtsBegin(); currentStmt != other->stmtsEnd(); ++currentStmt) {
+    for (auto currentStmt = toAppend->stmtsBegin();
+         currentStmt != toAppend->stmtsEnd(); ++currentStmt) {
         // original execution schedule for statement to be appended
         Relation* appendExecSchedule = (*currentStmt)->getExecutionSchedule();
         TupleDecl appendTuple = appendExecSchedule->getTupleDecl();
@@ -259,7 +310,7 @@ int Computation::appendComputation(Computation* other, unsigned int level) {
         for (int it = precedingInArity; it < adjustedLevelIndex; ++it) {
             newTuple.copyTupleElem(precedingTuple, it, currentTuplePos++);
         }
-        // insert specified level value, with offset
+        // insert specified level value, with offset, and save it
         latest_value = appendTuple.elemConstVal(appendInArity) + offsetValue;
         newTuple.setTupleElem(currentTuplePos++, latest_value);
         // insert remaining append tuple values
@@ -268,11 +319,12 @@ int Computation::appendComputation(Computation* other, unsigned int level) {
         }
 
         // insert a new execution schedule Relation using (only) the new tuple
-        (*currentStmt)->setExecutionSchedule(
-            "{" + newTuple.toString(true, newInArity) + "}");
+        (*currentStmt)
+            ->setExecutionSchedule("{" + newTuple.toString(true, newInArity) +
+                                   "}");
 
         // copy the modified statement into this Computation
-        addStmt(new Stmt(*(*currentStmt)));
+        this->addStmt(new Stmt(*(*currentStmt)));
     }
 
     delete toAppend;
