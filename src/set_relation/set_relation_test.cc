@@ -20,6 +20,8 @@
 #include "expression.h"
 #include "UFCallMap.h"
 #include "Visitor.h"
+#include "environment.h"
+
 
 #include <util/util.h>
 #include <gtest/gtest.h>
@@ -4471,7 +4473,7 @@ TEST_F(SetRelationTest, RestrictDomainTest){
      delete rel3;
      delete set1;
      delete set2;
-     delete set3;
+     delete set3;                                                              
      delete restrictRel2;
      delete restrictRel3;
 }
@@ -4479,24 +4481,41 @@ TEST_F(SetRelationTest, RestrictDomainTest){
 
 // Test solve for output tuple.
 TEST_F(SetRelationTest, SolveForOutputTuple){
+     
      Relation * rel = new Relation(
 		     "{[i,j] -> [k]: A(i,j) > 0 and rowptr(i) <= k"
 		     " and k < rowptr(i+ 1) and col(k) =j and 0 <= i"
 		     " and i < NR and 0 <= j and j < NC}");
+     
      auto solveForList = rel->solveForOutputTuple();
-     EXPECT_EQ(solveForList.size(),3);
+     EXPECT_EQ(solveForList.size(),5);
+     
+     
      // Check contents of list.
      Exp * constraint1 = (*solveForList.begin());
      Exp * constraint2 = (*(++solveForList.begin()));
      Exp * constraint3 = (*(++(++solveForList.begin())));
+     Exp * constraint4 = (*(++(++(++solveForList.begin()))));
+     Exp * constraint5 = (*(++(++(++(++solveForList.begin())))));
      
+     // Expression toString does not attach = 0 | >= 0 to the 
+     // epression.
      EXPECT_EQ(constraint1->prettyPrintString(rel->getTupleDecl()),
-          "k - rowptr(i) >= 0 ");
+          "i - col_aux0(k)");
      EXPECT_EQ(constraint2->prettyPrintString(rel->getTupleDecl()),
-          "rowptr(i+1) - k - 1 >= 0 ");
-     EXPECT_EQ(constraint1->prettyPrintString(rel->getTupleDecl()),
-          "col_inv(i,j) - k = 0 ");
+          "k - col_inv(i, j)");
+     EXPECT_EQ(constraint3->prettyPrintString(rel->getTupleDecl()),
+          "j - col(k)");
      
+     EXPECT_EQ(constraint4->prettyPrintString(rel->getTupleDecl()),
+          "k - rowptr(i)");
+     
+     EXPECT_EQ(constraint5->prettyPrintString(rel->getTupleDecl()),
+          "-k + rowptr(i + 1) - 1");
+
+     
+
+
      Relation * re2 = new Relation(
 		     "{[i,j] -> [n]: A(i,j) > 0 and 0 <= n"
 		     " and n < NNZ and rowcol(n) = (i,j) "
@@ -4508,12 +4527,12 @@ TEST_F(SetRelationTest, SolveForOutputTuple){
      Exp * constraint22 = (*(++solveForList2.begin()));
      Exp * constraint23 = (*(++(++solveForList2.begin())));
      
-     EXPECT_EQ(constraint1->prettyPrintString(re2->getTupleDecl()),
-          "rowcol_inv(i,j) - n = 0 ");
-     EXPECT_EQ(constraint2->prettyPrintString(re2->getTupleDecl()),
-          "n >= 0 ");
-     EXPECT_EQ(constraint1->prettyPrintString(re2->getTupleDecl()),
-          "NNZ - n - 1 >= 0 ");
+     EXPECT_EQ(constraint21->prettyPrintString(re2->getTupleDecl()),
+          "-n + rowcol_inv(i,j) = 0 ");
+     EXPECT_EQ(constraint22->prettyPrintString(re2->getTupleDecl()),
+          "n >= 0");
+     EXPECT_EQ(constraint23->prettyPrintString(re2->getTupleDecl()),
+          "-n + NNZ - 1 >= 0");
 
      delete constraint21;
      delete constraint22;
@@ -4524,3 +4543,41 @@ TEST_F(SetRelationTest, SolveForOutputTuple){
      delete re2;
      delete rel;
 }
+
+
+// Test transitive closure.
+TEST_F(SetRelationTest, TransitiveClosure){
+     Relation * rel = new Relation(
+		     "{[i,j] -> [k]: A(i,j) > 0 and rowptr(i) <= k"
+		     " and k < rowptr(i+ 1) and col(k) =j and 0 <= i"
+		     " and i < NR and 0 <= j and j < NC}");
+     bool isExact  = false;
+    // Relation * closure = islRelTransitiveClosure(rel,isExact);
+    // EXPECT_EQ("",closure->prettyPrintString());
+     
+     Relation * rel2= new Relation(
+		     "{[i1,i2]->[j1,j2]: j1 - i1 = 1 and j2-i2 >= 2"
+		     " and 1 <= i1 and 1 <= j1 and 1 <= j2 and i1 <= n"
+		     " and j1 <= n and j2 <= n and i1 <= i2 and i2 <= n}");
+     Relation* clo2 = islRelTransitiveClosure(rel2,isExact);
+     EXPECT_EQ("",clo2->prettyPrintString());
+     EXPECT_EQ(true,isExact);
+     
+     Relation* rel3 = new Relation(
+		     "{[n] -> [k] : rowptr <= k and k < rowptr1"
+		     " and col2 = col1 and 0 <= row1 and row1 < N_R"
+		     " and  0 <= col1 < N_C and row1in = n and col2in = k }");
+
+
+     Relation* clo3 = islRelTransitiveClosure(rel3,isExact);
+     EXPECT_EQ("",clo3->prettyPrintString());
+     EXPECT_EQ(true,isExact);
+     
+     delete clo3;
+     delete rel3;
+     delete clo2;
+     delete rel2;
+     //delete closure;
+     delete rel;
+}
+

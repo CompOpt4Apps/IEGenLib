@@ -879,6 +879,15 @@ public:
     // involving output tuple variables and attempts to solve for these 
     // variables. Deallocating expressions is required by the caller. 
     std::list<Exp*> solveForOutputTuple();
+    
+    //! Returns true if expression is part of an inverse family.
+    bool hasInverseFamily(Exp* expr);
+    
+    //! Returns a list of constraints in the inverse family of
+    //! of exp. Inverse family is a concept used in synthesis
+    //! as it provides an inverse for an uninvertible function
+    //! by using the charactersitics of the mapping it belongs to.
+    std::list<Exp*> getInverseFamily(Exp* exp);
 
 private:
     int mInArity;
@@ -899,6 +908,8 @@ std::set<std::pair <std::string,std::string>> ruleInstantiation
                           (std::set<Exp> instExps, bool *useRule,
                            TupleDecl origTupleDecl, UFCallMap *ufcmap);
 Set* islSetProjectOut(Set* s, unsigned pos);
+
+Relation* islRelTransitiveClosure(Relation*r,bool& isExact);
 
 }//end namespace iegenlib
 

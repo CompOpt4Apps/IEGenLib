@@ -109,6 +109,30 @@ Relation* passRelationThruISL(Relation* r){
   return result;
 }
 
+
+//! Runs an Affine Relation through to perform tranistive closure.
+Relation* islRelTransitiveClosure(Relation* r,bool& isExact){
+
+  string rstr = r->toISLString();
+  int exact;
+  isl_ctx *ctx = isl_ctx_alloc();
+  isl_map* m =  islStringToMap(rstr,ctx);
+  isl_map * newM = isl_map_transitive_closure(m,&exact);
+  if(isExact){
+    isExact = exact;
+  }
+  string islStr =  islMapToString (newM, ctx );
+  isl_ctx_free(ctx);
+
+  // Same as passSetThruISL
+  int inArity = r->inArity(), outArity = r->outArity();
+  string corrected = revertISLTupDeclToOrig( rstr, islStr, inArity, outArity);
+  Relation* result = new Relation( corrected);
+
+  return result;
+}
+
+
 // This function can be used for Projecting out a tuple variable
 // from an affine set string using isl library
 Set* islSetProjectOut(Set* s, unsigned pos) {
@@ -2241,6 +2265,92 @@ std::string Relation::toDotString() const{
     return result.str();
 }
 
+
+
+//! Returns true if expression is part of an inverse family.
+bool Relation::hasInverseFamily(Exp* expr){
+    if(expr->getTermList().size()!=2 || !expr->isEquality()){
+        return false;
+    }
+    TupleVarTerm* outTerm = new TupleVarTerm(inArity());
+    UFCallTerm *ufTerm = NULL;
+    TupleVarTerm* tupTerm = NULL;
+    for(auto t : expr->getTermList()){
+        if (t->isUFCall()){
+	    ufTerm = dynamic_cast<UFCallTerm*>(t);
+	    if(ufTerm->numArgs()!=1)
+	        return false;
+	    Exp* firstExp = ufTerm->getParamExp(0);
+            if (!firstExp->dependsOn(*outTerm)){
+	        delete outTerm;
+		return false;
+	    } 
+
+	}else{
+	    tupTerm = dynamic_cast<TupleVarTerm*>(t);
+	}
+
+    }
+    delete outTerm;
+    return ufTerm && tupTerm;
+}
+    
+//! Returns a list of constraints in the inverse family of
+//! of exp. Inverse family is a concept used in synthesis
+//! as it provides an inverse for an uninvertible function
+//! by using the charactersitics of the mapping it belongs to.
+std::list<Exp*> Relation::getInverseFamily(Exp* exp){
+    if(!hasInverseFamily(exp)){
+        throw assert_exception("Expression does not have an inverse family");
+    }
+    std::list<Exp*>family;
+    UFCallTerm *ufTerm = NULL;
+    TupleVarTerm* tupTerm = NULL;
+    for(Term* t : exp->getTermList()){
+        if (t->isUFCall()){
+	    ufTerm = dynamic_cast<UFCallTerm*>(t);
+
+	}else{
+	    tupTerm = dynamic_cast<TupleVarTerm*>(t);
+	}
+
+    }
+    TupleVarTerm * outTerm = new TupleVarTerm(mInArity);
+
+    // Create root information of family.
+    UFCallTerm * invRoot = new UFCallTerm(-1,
+        ufTerm->name()+"_inv",inArity());
+    for(int i = 0; i < mInArity; i++){
+       Exp* arg = new Exp();
+       TupleVarTerm * tupTerm= new TupleVarTerm(i); 
+       arg->addTerm(tupTerm->clone());
+       invRoot->setParamExp(i,arg);
+
+       // Check if tuple term is in the expression
+       // if not, we create an auxiliary function.
+       if(! exp->dependsOn((*tupTerm))){
+           UFCallTerm *aux = new UFCallTerm(-1,
+               ufTerm->name()+"_aux"+
+	       std::to_string(i),1);
+	   Exp* auxArg = new Exp();
+	   auxArg->addTerm(outTerm->clone());
+	   aux->setParamExp(0,auxArg);
+	   Exp* auxExp = new Exp();
+	   auxExp->addTerm(aux);
+	   auxExp->addTerm(tupTerm->clone());
+	   family.push_back(auxExp);
+       }
+       delete tupTerm;
+    }
+    Exp* invRootExp = new Exp();
+    invRootExp->addTerm(invRoot);
+    invRootExp->addTerm(outTerm->clone());
+    family.push_back(invRootExp);
+    delete outTerm;
+    return family;
+}
+
+
 //! For all conjunctions, sets them to the given tuple declaration.
 //! If there are some constants that don't agree then throws exception.
 //! If replacing a constant with a variable ignores the substitution
@@ -2527,18 +2637,23 @@ class ExpTermVisitor: public Visitor {
     std::list<Exp*> exps;
     TupleVarTerm* term;
     std::stack<Exp*> expStack;
+    bool inUFCallTerm;
   public:
-    explicit ExpTermVisitor(TupleVarTerm *term): term(term){}
+    explicit ExpTermVisitor(TupleVarTerm *term):
+        inUFCallTerm(false),term(term){}
     void preVisitTupleVarTerm(TupleVarTerm *t) override;
     void preVisitExp(Exp* e) override;
     void postVisitExp(Exp* e) override;
+    void preVisitUFCallTerm ( UFCallTerm* t) override;
+    void postVisitUFCallTerm (UFCallTerm* t) override;
     std::list<Exp*> getExpressions(); 
 
 };
 
 void ExpTermVisitor::preVisitTupleVarTerm(TupleVarTerm *t){
-    if(t->tvloc() == term->tvloc()){
+    if(t->tvloc() == term->tvloc() && expStack.size()!=0){
        auto expression= expStack.top();
+       
        auto it = std::find(exps.begin(),exps.end(), expression);
        if(it == exps.end()){
            exps.push_back(expression);
@@ -2546,16 +2661,26 @@ void ExpTermVisitor::preVisitTupleVarTerm(TupleVarTerm *t){
     }
 }
 
+void ExpTermVisitor::preVisitUFCallTerm ( UFCallTerm* t){
+    inUFCallTerm = true;
+}
+
+void ExpTermVisitor::postVisitUFCallTerm ( UFCallTerm* t){
+    inUFCallTerm = false;
+}
+
 std::list<Exp*> ExpTermVisitor::getExpressions(){
     return exps;
 }	
 
 void ExpTermVisitor::preVisitExp(Exp* e){
-    expStack.push(e);
+    // Only push expression to the stack
+    // that is outside a UFCallTerm
+    if (!inUFCallTerm) expStack.push(e);
 }
 
 void ExpTermVisitor::postVisitExp(Exp* e){
-    expStack.pop();
+    if (!inUFCallTerm)expStack.pop();
 }
 
 // Returns a list of constraints directly
@@ -2570,8 +2695,32 @@ std::list<Exp*> Relation::solveForOutputTuple(){
     TupleVarTerm * term= new TupleVarTerm(mInArity);
     ExpTermVisitor expVisit(term);
     this->acceptVisitor(&expVisit);
-    res = expVisit.getExpressions(); 
-    
+    std::list<Exp*> resT = expVisit.getExpressions(); 
+    for(auto exp : resT){
+	//Skip inequalities
+	if(exp->isInequality()){
+	    res.push_back(exp->clone());
+	    continue;
+	}
+        if(hasInverseFamily(exp)){
+	    std::list<Exp*> inverseFamily = getInverseFamily(exp);
+	    res.insert(res.end(),inverseFamily.begin(),inverseFamily.end()); 
+            res.push_back(exp->clone());
+	    continue;
+	}
+	// Inverse function to expose factor.
+        Exp* solution = exp->solveForFactor(term->clone());
+        if(not solution ){
+            res.push_back(exp->clone());
+	}else{
+	    auto t = term->clone();
+	    t->setCoefficient(-1);
+	    solution->addTerm(t);
+	    res.push_back(solution); 
+	}
+
+    } 
+    delete term;
     return res;
 }
 
