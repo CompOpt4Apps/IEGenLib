@@ -98,9 +98,9 @@ class ComputationTest : public ::testing::Test {
     //! schedules for the appended Computation after appending modifications are
     //! done
     void checkAppendComputation(
-        Computation* appendedTo, Computation* appendedComp, std::vector<std::string> argsList,
-        unsigned int appendAtLevel, int expectedRetVal,
-        std::vector<std::string> expectedExecSchedules) {
+        Computation* appendedTo, Computation* appendedComp,
+        std::vector<std::string> argsList, unsigned int appendAtLevel,
+        int expectedRetVal, std::vector<std::string> expectedExecSchedules) {
         // remember number of original statements, for testing only appended
         // ones later
         unsigned int origNumStmts = appendedTo->getNumStmts();
@@ -376,6 +376,35 @@ TEST_F(ComputationTest, AppendComputation) {
 
         checkAppendComputation(comp1, comp2, {}, 2, 2,
                                {"{[i,k] -> [2,i,2,k,1]}"});
+
+        delete comp1, comp2;
+    }
+
+    {
+        SCOPED_TRACE("Basic argument passing test");
+
+        Stmt* s1 = new Stmt("s1;", "{[i,j]}", "{[i,j] -> [2,i,1,j,1]}", {}, {});
+        Computation* comp1 = new Computation();
+        comp1->addStmt(s1);
+        comp1->addDataSpace("myInt");
+        comp1->addDataSpace("myDouble");
+        comp1->addDataSpace("myFloat");
+
+        Stmt* s2 = new Stmt("s2;", "{[k]}", "{[k] -> [0,k,1]}", {}, {});
+        Computation* comp2 = new Computation();
+        comp2->addStmt(s2);
+        comp2->addParameter("a", "int");
+        comp2->addParameter("b", "double");
+
+        checkAppendComputation(
+            comp1, comp2, {"myInt", "myDouble"}, 2, 4,
+            {"{[i]->[2,i,2]}", "{[i]->[2,i,3]}", "{[i,k]->[2,i,4,k,1]}"});
+
+        // additional checks for parameter decls, which the helper function
+        // doesn't generally do -- may be rolled into checkAppendComputation at
+        // some point
+        EXPECT_EQ("int _iegen_0a = myInt;", comp1->getStmt(1)->getStmtSourceCode());
+        EXPECT_EQ("double _iegen_0b = myDouble;", comp1->getStmt(2)->getStmtSourceCode());
 
         delete comp1, comp2;
     }

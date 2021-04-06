@@ -220,24 +220,39 @@ int Computation::appendComputation(Computation* other,
     // create a working copy of the other Computation, with unique data space
     // names; this copy is discarded after use
     Computation* toAppend = other->getDataPrefixedCopy();
+
     const unsigned int numArgs = arguments.size();
 
     // store last statement's execution schedule information
     Relation* precedingExecSchedule = stmts.back()->getExecutionSchedule();
     int precedingInArity = precedingExecSchedule->inArity();
+    int precedingOutArity = precedingExecSchedule->outArity();
     if (precedingExecSchedule->getNumConjuncts() != 1) {
         throw assert_exception(
             "Execution schedule should have exactly 1 Conjunction.");
     }
+
+    // ensure valid append depth
+    if ((level % 2) != 0) {
+        throw assert_exception(
+            "Append depth should be an even number -- odd numbers indicate "
+            "loop iterator names.");
+    }
+    // this is a strict < because level is 0-indexed whereas arity is a count
+    if (!(level < precedingOutArity)) {
+        throw assert_exception(
+            "Cannot append at depth " + std::to_string(level) +
+            " (0-indexed), preceding schedule only has length of " +
+            std::to_string(precedingOutArity));
+    }
+
+    // calculate indexes/offsets for tuple modifications
     TupleDecl precedingTuple = precedingExecSchedule->getTupleDecl();
     // index within the tuple corresponding to the specified level, adjusted for
     // input size that comes before it
-    int adjustedLevelIndex = level + precedingInArity;
+    const int adjustedLevelIndex = level + precedingInArity;
     // Value to offset schedule tuples by at specified level.
-    // includes numArgs because of parameter declaration statements that will be
-    // prepended to original Computation statements
-    int offsetValue =
-        precedingTuple.elemConstVal(adjustedLevelIndex) + numArgs + 1;
+    int offsetValue = precedingTuple.elemConstVal(adjustedLevelIndex) + 1;
     // keep track of the latest execution schedule position used
     int latest_value = offsetValue;
 
@@ -258,34 +273,28 @@ int Computation::appendComputation(Computation* other,
                 " is not a data space that exists in the Computation");
         }
     }
+
     // Insert declarations+assignment of (would-have-been if not for inlining)
-    // parameter values.
+    // parameter values, at the beginning of the appendee.
     // Assignment of a parameter i will be like:
     // [type of i] [name of i] = [name of argument i from passed-in list];
-    for (int i = 0; i < numArgs; ++i) {
+    // Insertion is done by prepending statements one at a time in reverse
+    // order.
+    for (int i = ((signed int)numArgs) - 1; i >= 0; --i) {
         Stmt* paramDeclStmt = new Stmt();
 
         paramDeclStmt->setStmtSourceCode(toAppend->getParameterType(i) + " " +
-                                    toAppend->getParameterName(i) + " = " +
-                                    arguments[i] + ";");
+                                         toAppend->getParameterName(i) + " = " +
+                                         arguments[i] + ";");
         paramDeclStmt->setIterationSpace("{[0]}");
-
-        // This is an ugly hack to get the correct execution schedule ordering
-        // of parameter declarations with respect to actual original Computation
-        // statements. If there are x args, the first will be at position -x,
-        // and the last at position -1, so that they occur before the first
-        // Computation statement at position 0. These negatives are offset by
-        // adding the # of args to the offset value applied to all tuple values
-        // at the specified level.
-        const signed int scheduleTupleVal = ((signed int) i) - numArgs;
-        paramDeclStmt->setExecutionSchedule(
-            "{[0]->[" + std::to_string(scheduleTupleVal) + "]}");
+        paramDeclStmt->setExecutionSchedule("{[0]->[" + std::to_string(i) +
+                                            "]}");
 
         paramDeclStmt->addRead(arguments[i], "{[0]->[0]}");
         this->addDataSpace(toAppend->getParameterName(i));
         paramDeclStmt->addWrite(toAppend->getParameterName(i), "{[0]->[0]}");
 
-        toAppend->addStmt(paramDeclStmt);
+        toAppend->stmts.insert(toAppend->stmts.begin(), paramDeclStmt);
     }
 
     // keep track of all iterators that exist at the level we're using, others
@@ -297,9 +306,24 @@ int Computation::appendComputation(Computation* other,
         }
     }
 
-    // adjust execution schedule for each statement
+    // adjust execution schedule for each statement, including parameter
+    // declarations
+    unsigned int remainingParamDeclStmts = numArgs;
+    bool processingOriginalStmts = false;
     for (auto currentStmt = toAppend->stmtsBegin();
          currentStmt != toAppend->stmtsEnd(); ++currentStmt) {
+        // once we've finished processing prepended parameter declaration
+        // statements, increase the offset for remaining (original) statements
+        // by the number of prepended statements
+        if (!processingOriginalStmts) {
+            if (remainingParamDeclStmts == 0) {
+                offsetValue += numArgs;
+                processingOriginalStmts = true;
+            } else {
+                remainingParamDeclStmts--;
+            }
+        }
+
         // original execution schedule for statement to be appended
         Relation* appendExecSchedule = (*currentStmt)->getExecutionSchedule();
         TupleDecl appendTuple = appendExecSchedule->getTupleDecl();
@@ -310,13 +334,37 @@ int Computation::appendComputation(Computation* other,
         int newOutArity = level + appendExecSchedule->outArity();
         TupleDecl newTuple = TupleDecl(newInArity + newOutArity);
         unsigned int currentTuplePos = 0;
+        bool haveInsertedIterator = false;
+        bool skippedAZero = false;
         // insert iterators from surrounding context
         for (const std::string& iterator : savedIterators) {
             newTuple.setTupleElem(currentTuplePos++, iterator);
+            haveInsertedIterator = true;
         }
         // insert iterators from schedule of appended statement
-        for (int iteratorPos = 0; iteratorPos < appendInArity; ++iteratorPos) {
-            newTuple.copyTupleElem(appendTuple, iteratorPos, currentTuplePos++);
+        // skip '0' iterator placeholder, if present
+        if (appendTuple.elemIsConst(0) && appendTuple.elemConstVal(0) == 0) {
+            skippedAZero = true;
+            if (appendInArity != 1) {
+                throw assert_exception(
+                    "Found a 0 iterator placeholder, so there shouldn't be "
+                    "other iterators present (but found a total of " +
+                    std::to_string(appendInArity) + " instead of 1).");
+            }
+        } else {
+            for (int iteratorPos = 0; iteratorPos < appendInArity;
+                 ++iteratorPos) {
+                newTuple.copyTupleElem(appendTuple, iteratorPos,
+                                       currentTuplePos++);
+                haveInsertedIterator = true;
+            }
+        }
+        // if there are no iterators, insert a constant 0 instead
+        if (!haveInsertedIterator) {
+            newTuple.setTupleElem(currentTuplePos++, 0);
+            // if a zero was skipped earlier, it is now re-inserted, which is
+            // equivalent to having never been skipped
+            skippedAZero = false;
         }
         // insert base tuple elements up to specified level
         for (int it = precedingInArity; it < adjustedLevelIndex; ++it) {
@@ -328,6 +376,16 @@ int Computation::appendComputation(Computation* other,
         // insert remaining append tuple values
         for (int it = appendInArity + 1; it < appendTuple.size(); ++it) {
             newTuple.copyTupleElem(appendTuple, it, currentTuplePos++);
+        }
+        // if we've skipped a 0-iterator, shrink the tuple appropriately
+        if (skippedAZero) {
+            TupleDecl tmpTuple = TupleDecl(currentTuplePos);
+            for (unsigned int i = 0; i < currentTuplePos; ++i) {
+                tmpTuple.copyTupleElem(newTuple, i, i);
+            }
+            newTuple = tmpTuple;
+            // the 0 iterator has been removed, reducing input arity
+            newInArity--;
         }
 
         // insert a new execution schedule Relation using (only) the new tuple
