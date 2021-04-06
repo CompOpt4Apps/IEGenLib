@@ -249,12 +249,22 @@ int Computation::appendComputation(Computation* other,
             std::to_string(toAppend->getNumParams()) + ", got " +
             std::to_string(numArgs));
     }
+    // ensure that arguments are valid data spaces in appender
+    std::unordered_set<std::string> parentDataSpaces = this->getDataSpaces();
+    for (const std::string& arg : arguments) {
+        if (parentDataSpaces.find(arg) == parentDataSpaces.end()) {
+            throw assert_exception(
+                "Argument " + arg +
+                " is not a data space that exists in the Computation");
+        }
+    }
     // Insert declarations+assignment of (would-have-been if not for inlining)
     // parameter values.
     // Assignment of a parameter i will be like:
     // [type of i] [name of i] = [name of argument i from passed-in list];
     for (int i = 0; i < numArgs; ++i) {
         Stmt* paramDeclStmt = new Stmt();
+
         paramDeclStmt->setStmtSourceCode(toAppend->getParameterType(i) + " " +
                                     toAppend->getParameterName(i) + " = " +
                                     arguments[i] + ";");
@@ -271,7 +281,9 @@ int Computation::appendComputation(Computation* other,
         paramDeclStmt->setExecutionSchedule(
             "{[0]->[" + std::to_string(scheduleTupleVal) + "]}");
 
-        // TODO: add appropriate reads and writes
+        paramDeclStmt->addRead(arguments[i], "{[0]->[0]}");
+        this->addDataSpace(toAppend->getParameterName(i));
+        paramDeclStmt->addWrite(toAppend->getParameterName(i), "{[0]->[0]}");
 
         toAppend->addStmt(paramDeclStmt);
     }
