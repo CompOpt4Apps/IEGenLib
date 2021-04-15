@@ -253,8 +253,10 @@ int Computation::appendComputation(Computation* other,
     const int adjustedLevelIndex = level + precedingInArity;
     // Value to offset schedule tuples by at specified level.
     int offsetValue = precedingTuple.elemConstVal(adjustedLevelIndex) + 1;
-    // keep track of the latest execution schedule position used
-    int latest_value = offsetValue;
+    // Keep track of the latest execution schedule position used.
+    // This initial value is chosen for the case where no statements are
+    // appended, so the latest position is simply the previous one.
+    int latest_value = offsetValue - 1;
 
     // ensure that arguments match parameter list length
     if (numArgs != toAppend->getNumParams()) {

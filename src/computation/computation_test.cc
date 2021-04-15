@@ -408,6 +408,38 @@ TEST_F(ComputationTest, AppendComputation) {
 
         delete comp1, comp2;
     }
+
+    {
+        SCOPED_TRACE("Appending an empty computation, no parameters");
+
+        Stmt* s1 = new Stmt("s1;", "{[i,j]}", "{[i,j] -> [2,i,1,j,1]}", {}, {});
+        Computation* comp1 = new Computation();
+        comp1->addStmt(s1);
+
+        Computation* comp2 = new Computation();
+
+        checkAppendComputation(comp1, comp2, {}, 2, 1, {});
+
+        delete comp1, comp2;
+    }
+
+    {
+        SCOPED_TRACE("Appending an empty computation with parameters");
+        Stmt* s1 = new Stmt("s1;", "{[i,j]}", "{[i,j] -> [2,i,1,j,1]}", {}, {});
+        Computation* comp1 = new Computation();
+        comp1->addStmt(s1);
+        comp1->addDataSpace("myInt");
+        comp1->addDataSpace("myDouble");
+
+        Computation* comp2 = new Computation();
+        comp2->addParameter("a", "int");
+        comp2->addParameter("b", "double");
+
+        checkAppendComputation(comp1, comp2, {"myInt", "myDouble"}, 2, 3,
+                               {"{[i]->[2,i,2]}", "{[i]->[2,i,3]}"});
+
+        delete comp1, comp2;
+    }
 }
 
 #pragma mark DataSpaceNamePrefixing
