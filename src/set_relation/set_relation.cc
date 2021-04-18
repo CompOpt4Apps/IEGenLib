@@ -14,6 +14,7 @@
  */
 
 #include "set_relation.h"
+#include "transitive_closure.h" 
 #include "UFCallMap.h"
 #include "Visitor.h"
 #include <stack>
@@ -1508,6 +1509,82 @@ void Conjunction::groupIndexedUFCalls() {
 }
 
 
+//! Performs transitive closure in presence of UFs
+//! Returns a new conjunction, which the user is responsible
+//  for deallocating.
+Conjunction*  Conjunction::TransitiveClosure(){
+
+    // copy in all of the constraints from ourselves
+    Conjunction* retVal = new Conjunction(*this);
+    
+    // Build Transitive Closure Graph.
+    DiGraph* g = new DiGraph();
+    
+    // Graph only supports = , >= and > relationships,
+    // the next section of code goes through each 
+    // equality or inequality to build the graph. Vertices
+    // contains terms. See documentation of DiGraph for more
+    // information. 
+    for (std::list<Exp*>::const_iterator i=retVal->mEqualities.begin();
+         i != retVal->mEqualities.end(); i++) {
+        //TODO: Make this a function.
+        // Split Terms as different nodes
+	Vertex lhsNode;
+	Vertex rhsNode;
+        for( auto t : (*i)->getTermList()){
+	    if(t->coefficient()< 0){
+	       // Sign is negated for rhsNode terms.
+	       //
+	       Term * tClone = t->clone();
+	       tClone->setCoefficient(tClone->coefficient() * -1);
+	       rhsNode.addTerm(tClone);
+	    }else{
+	       lhsNode.addTerm(t->clone());
+	    }    
+	}
+        // TODO: Remove current expression from the list.
+	// Add edge between lhs and rhs in the graph.
+        g->addEdge(lhsNode,rhsNode,EdgeType::EQUAL);	
+    }
+    for (std::list<Exp*>::const_iterator i=retVal->mInequalities.begin();
+         i != retVal->mInequalities.end(); i++ ) {
+	Vertex lhsNode;
+	Vertex rhsNode;
+        for( auto t : (*i)->getTermList()){
+	    if(t->coefficient()< 0){
+	       // Sign is negated for rhsNode terms.
+	       Term * tClone = t->clone();
+	       tClone->setCoefficient(tClone->coefficient() * -1);
+	       rhsNode.addTerm(tClone);
+	    }else{
+	       lhsNode.addTerm(t->clone());
+	    }    
+	}
+        // TODO: Remove current expression from the list.
+	// Add edge between lhs and rhs in the graph.
+        g->addEdge(lhsNode,rhsNode,EdgeType::GREATER_OR_EQUAL_TO);	
+    }
+    std::cerr << "Graph Dump Before\n";
+    g->dumpGraph();
+    g->simplifyGreaterOrEqual();
+    g->transitiveClosure();
+
+    std::cerr << "Graph Dump After\n";
+    g->dumpGraph();
+    // Delete all expressions in the retVal conjunction.
+    retVal->reset();
+    
+    std::vector<Exp*> newConstraints = g->getExpressions();
+    for(auto e : newConstraints){
+        if(e->isInequality()){
+	    retVal->addInequality(e);
+	}else{
+	    retVal->addEquality(e);
+	}
+    }
+    delete g;
+    return retVal; 
+}
 /******************************************************************************/
 #pragma mark -
 
@@ -2520,6 +2597,22 @@ Relation * Relation::Restrict(const Set *rhs) const {
     }
     return retVal;
 }
+
+
+ //! Performs transitive closure in presence of UFs
+//! Returns a new relation, which the user is responsible
+//  for deallocating.
+Relation* Relation::TransitiveClosure(){
+    Relation * result = new Relation(mOutArity,mInArity);
+
+    // Compute the transitive closure of each Conjunction.
+    for (std::list<Conjunction*>::const_iterator i=mConjunctions.begin();
+        i != mConjunctions.end(); i++) {
+        result->addConjunction((*i)->TransitiveClosure());
+    }
+    return result;
+}
+
 
 /*! Inverse this relation. Returns a new Relation,
 **    which the caller is responsible for deallocating.

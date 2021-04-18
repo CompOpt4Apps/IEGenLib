@@ -210,6 +210,14 @@ public:
     //! \param rhs
     //! \return
     Conjunction* Restrict (const Conjunction* rhs) const;
+    
+    
+
+    //! Performs transitive closure in presence of UFs
+    //! Returns a new conjunction, which the user is responsible
+    //  for deallocating.
+    Conjunction* TransitiveClosure();
+
 
     /*! Treating this Conjunction like a domain or range.  Creates
     ** a new set where passed in tuple expression is
@@ -888,6 +896,11 @@ public:
     //! as it provides an inverse for an uninvertible function
     //! by using the charactersitics of the mapping it belongs to.
     std::list<Exp*> getInverseFamily(Exp* exp);
+    
+    //! Performs transitive closure in presence of UFs
+    //! Returns a new relation, which the user is responsible
+    //  for deallocating.
+    Relation* TransitiveClosure();
 
 private:
     int mInArity;

@@ -4551,17 +4551,16 @@ TEST_F(SetRelationTest, TransitiveClosure){
 		     "{[i,j] -> [k]: A(i,j) > 0 and rowptr(i) <= k"
 		     " and k < rowptr(i+ 1) and col(k) =j and 0 <= i"
 		     " and i < NR and 0 <= j and j < NC}");
-     bool isExact  = false;
-    // Relation * closure = islRelTransitiveClosure(rel,isExact);
-    // EXPECT_EQ("",closure->prettyPrintString());
+     std::cerr << rel->prettyPrintString() << "\n";
+     Relation * closure = rel->TransitiveClosure() ;
+     EXPECT_EQ("",closure->prettyPrintString());
      
      Relation * rel2= new Relation(
 		     "{[i1,i2]->[j1,j2]: j1 - i1 = 1 and j2-i2 >= 2"
 		     " and 1 <= i1 and 1 <= j1 and 1 <= j2 and i1 <= n"
 		     " and j1 <= n and j2 <= n and i1 <= i2 and i2 <= n}");
-     Relation* clo2 = islRelTransitiveClosure(rel2,isExact);
+     Relation* clo2 = rel2->TransitiveClosure();
      EXPECT_EQ("",clo2->prettyPrintString());
-     EXPECT_EQ(true,isExact);
      
      Relation* rel3 = new Relation(
 		     "{[n] -> [k] : rowptr <= k and k < rowptr1"
@@ -4569,15 +4568,16 @@ TEST_F(SetRelationTest, TransitiveClosure){
 		     " and  0 <= col1 < N_C and row1in = n and col2in = k }");
 
 
-     Relation* clo3 = islRelTransitiveClosure(rel3,isExact);
+     Relation* clo3 = rel3->TransitiveClosure();
      EXPECT_EQ("",clo3->prettyPrintString());
-     EXPECT_EQ(true,isExact);
      
      delete clo3;
      delete rel3;
      delete clo2;
      delete rel2;
-     //delete closure;
+     delete closure;
      delete rel;
 }
+
+
 
