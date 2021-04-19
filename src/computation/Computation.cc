@@ -73,6 +73,12 @@ Computation* Computation::getDataPrefixedCopy() {
     for (auto& param : this->parameters) {
         prefixedCopy->addParameter(namePrefix + param.first, param.second);
     }
+    for (auto& retVal : this->returnValues) {
+        // only prefix values that are data space names, avoid trying to prefix
+        // literals
+        prefixedCopy->addReturnValue(
+            (retVal.second ? namePrefix : "") + retVal.first, retVal.second);
+    }
 
     return prefixedCopy;
 }
@@ -91,6 +97,10 @@ std::unordered_set<std::string> Computation::getDataSpaces() const {
     return dataSpaces;
 }
 
+bool Computation::isDataSpace(std::string name) const {
+    return dataSpaces.count(name) > 0;
+}
+
 void Computation::addParameter(std::string paramName, std::string paramType) {
     parameters.push_back({paramName, paramType});
 }
@@ -105,6 +115,26 @@ std::string Computation::getParameterType(unsigned int index) const {
 
 unsigned int Computation::getNumParams() const {
     return parameters.size();
+}
+
+void Computation::addReturnValue(std::string name) {
+    returnValues.push_back({name, this->isDataSpace(name)});
+}
+
+void Computation::addReturnValue(std::string name, bool isDataSpace) {
+    returnValues.push_back({name, isDataSpace});
+}
+
+std::vector<std::string> Computation::getReturnValues() const {
+    std::vector<std::string> names;
+    for (const auto& retVal : returnValues) {
+        names.push_back(retVal.first);
+    }
+    return names;
+}
+
+unsigned int Computation::getNumReturnValues() const {
+    return returnValues.size();
 }
 
 unsigned int Computation::getNumStmts() const { return stmts.size(); }
@@ -214,13 +244,12 @@ void Computation::clear() {
     dataSpaces.clear();
 }
 
-int Computation::appendComputation(Computation* other,
+AppendComputationResult Computation::appendComputation(Computation* other,
                                    std::vector<std::string> arguments,
-                                   unsigned int level) {
+                                   unsigned int depth) {
     // create a working copy of the other Computation, with unique data space
     // names; this copy is discarded after use
     Computation* toAppend = other->getDataPrefixedCopy();
-
     const unsigned int numArgs = arguments.size();
 
     // store last statement's execution schedule information
@@ -233,30 +262,30 @@ int Computation::appendComputation(Computation* other,
     }
 
     // ensure valid append depth
-    if ((level % 2) != 0) {
+    if ((depth % 2) != 0) {
         throw assert_exception(
             "Append depth should be an even number -- odd numbers indicate "
             "loop iterator names.");
     }
-    // this is a strict < because level is 0-indexed whereas arity is a count
-    if (!(level < precedingOutArity)) {
+    // this is a strict < because depth is 0-indexed whereas arity is a count
+    if (!(depth < precedingOutArity)) {
         throw assert_exception(
-            "Cannot append at depth " + std::to_string(level) +
+            "Cannot append at depth " + std::to_string(depth) +
             " (0-indexed), preceding schedule only has length of " +
             std::to_string(precedingOutArity));
     }
 
     // calculate indexes/offsets for tuple modifications
     TupleDecl precedingTuple = precedingExecSchedule->getTupleDecl();
-    // index within the tuple corresponding to the specified level, adjusted for
+    // index within the tuple corresponding to the specified depth, adjusted for
     // input size that comes before it
-    const int adjustedLevelIndex = level + precedingInArity;
-    // Value to offset schedule tuples by at specified level.
+    const int adjustedLevelIndex = depth + precedingInArity;
+    // Value to offset schedule tuples by at specified depth.
     int offsetValue = precedingTuple.elemConstVal(adjustedLevelIndex) + 1;
     // Keep track of the latest execution schedule position used.
     // This initial value is chosen for the case where no statements are
     // appended, so the latest position is simply the previous one.
-    int latest_value = offsetValue - 1;
+    int latestTupleValue = offsetValue - 1;
 
     // ensure that arguments match parameter list length
     if (numArgs != toAppend->getNumParams()) {
@@ -265,15 +294,6 @@ int Computation::appendComputation(Computation* other,
             "expected " +
             std::to_string(toAppend->getNumParams()) + ", got " +
             std::to_string(numArgs));
-    }
-    // ensure that arguments are valid data spaces in appender
-    std::unordered_set<std::string> parentDataSpaces = this->getDataSpaces();
-    for (const std::string& arg : arguments) {
-        if (parentDataSpaces.find(arg) == parentDataSpaces.end()) {
-            throw assert_exception(
-                "Argument " + arg +
-                " is not a data space that exists in the Computation");
-        }
     }
 
     // Insert declarations+assignment of (would-have-been if not for inlining)
@@ -292,14 +312,18 @@ int Computation::appendComputation(Computation* other,
         paramDeclStmt->setExecutionSchedule("{[0]->[" + std::to_string(i) +
                                             "]}");
 
-        paramDeclStmt->addRead(arguments[i], "{[0]->[0]}");
+        // If passed-in argument is a data space, mark it as being read
+        // (otherwise it is a literal)
+        if (this->isDataSpace(arguments[i])) {
+            paramDeclStmt->addRead(arguments[i], "{[0]->[0]}");
+        }
         this->addDataSpace(toAppend->getParameterName(i));
         paramDeclStmt->addWrite(toAppend->getParameterName(i), "{[0]->[0]}");
 
         toAppend->stmts.insert(toAppend->stmts.begin(), paramDeclStmt);
     }
 
-    // keep track of all iterators that exist at the level we're using, others
+    // keep track of all iterators that exist at the depth we're using, others
     // will be discarded
     std::vector<std::string> savedIterators;
     for (int i = precedingInArity; i < adjustedLevelIndex; ++i) {
@@ -333,7 +357,7 @@ int Computation::appendComputation(Computation* other,
 
         // construct new execution schedule tuple
         int newInArity = savedIterators.size() + appendInArity;
-        int newOutArity = level + appendExecSchedule->outArity();
+        int newOutArity = depth + appendExecSchedule->outArity();
         TupleDecl newTuple = TupleDecl(newInArity + newOutArity);
         unsigned int currentTuplePos = 0;
         bool haveInsertedIterator = false;
@@ -368,13 +392,13 @@ int Computation::appendComputation(Computation* other,
             // equivalent to having never been skipped
             skippedAZero = false;
         }
-        // insert base tuple elements up to specified level
+        // insert base tuple elements up to specified depth
         for (int it = precedingInArity; it < adjustedLevelIndex; ++it) {
             newTuple.copyTupleElem(precedingTuple, it, currentTuplePos++);
         }
-        // insert specified level value, with offset, and save it
-        latest_value = appendTuple.elemConstVal(appendInArity) + offsetValue;
-        newTuple.setTupleElem(currentTuplePos++, latest_value);
+        // insert specified depth value, with offset, and save it
+        latestTupleValue = appendTuple.elemConstVal(appendInArity) + offsetValue;
+        newTuple.setTupleElem(currentTuplePos++, latestTupleValue);
         // insert remaining append tuple values
         for (int it = appendInArity + 1; it < appendTuple.size(); ++it) {
             newTuple.copyTupleElem(appendTuple, it, currentTuplePos++);
@@ -399,9 +423,14 @@ int Computation::appendComputation(Computation* other,
         this->addStmt(new Stmt(*(*currentStmt)));
     }
 
+    // collect append result information to return
+    AppendComputationResult result;
+    result.tuplePosition = latestTupleValue;
+    result.returnValues = toAppend->getReturnValues();
+
     delete toAppend;
 
-    return latest_value;
+    return result;
 }
 
 void Computation::toDot(std::fstream& dotFile, string fileName) {

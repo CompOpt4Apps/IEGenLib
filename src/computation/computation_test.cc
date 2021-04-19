@@ -92,22 +92,22 @@ class ComputationTest : public ::testing::Test {
     //! \param[in] appendedAtLevel the level (exechution schedule tuple
     //! position) to append onto, analogous to the nesting depth of the
     //! 'function call'
-    //! \param[in] expectedRetVal expected return value from the call to
-    //! appendComputation
-    //! \param[in] expectedExecSchedules string versions of expected execution
-    //! schedules for the appended Computation after appending modifications are
-    //! done
+    //! \param[in] expectedTuplePosition expected last used tuple position at
+    //! insertion level
+    //! \param[in] expectedExecSchedules string versions of expected
+    //! execution schedules for the appended Computation after appending
+    //! modifications are done
     void checkAppendComputation(
         Computation* appendedTo, Computation* appendedComp,
         std::vector<std::string> argsList, unsigned int appendAtLevel,
-        int expectedRetVal, std::vector<std::string> expectedExecSchedules) {
+        int expectedTuplePosition, std::vector<std::string> expectedExecSchedules) {
         // remember number of original statements, for testing only appended
         // ones later
         unsigned int origNumStmts = appendedTo->getNumStmts();
         // perform actual append
-        int retVal = appendedTo->appendComputation(appendedComp, argsList,
+        AppendComputationResult result = appendedTo->appendComputation(appendedComp, argsList,
                                                    appendAtLevel);
-        EXPECT_EQ(expectedRetVal, retVal);
+        EXPECT_EQ(expectedTuplePosition, result.tuplePosition);
 
         // sanity check correct number of expected schedules
         ASSERT_EQ(expectedExecSchedules.size(),

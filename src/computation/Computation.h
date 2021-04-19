@@ -37,6 +37,7 @@
 namespace iegenlib {
 
 class Stmt;
+class AppendComputationResult;
 
 /*!
  * \class Computation
@@ -82,6 +83,8 @@ class Computation {
     void addDataSpace(std::string dataSpaceName);
     //! Get data spaces
     std::unordered_set<std::string> getDataSpaces() const;
+    //! Check if a given string is a name of a data space of this Computation
+    bool isDataSpace(std::string name) const;
 
     //! Add a (formal) parameter to this Computation
     //! @param paramName Name of the parameter
@@ -93,6 +96,19 @@ class Computation {
     std::string getParameterType(unsigned int index) const;
     //! Get the number of parameters this Computation has
     unsigned int getNumParams() const;
+
+    //! Add a return value to this Computation
+    void addReturnValue(std::string name);
+    //! Add a return value to this Computation, specifying if it is a data space
+    //! name or not (in which case it is a literal). This avoids having to check
+    //! if the name is a data space before insertion, for use in cases where the
+    //! caller already knows this information.
+    void addReturnValue(std::string name, bool isDataSpace);
+    //! Get the list of return values
+    std::vector<std::string> getReturnValues() const;
+    //! Get the number of return values this Computation has (some languages
+    //! support multiple return)
+    unsigned int getNumReturnValues() const;
 
     //! Get the number of statements in this Computation
     unsigned int getNumStmts() const;
@@ -114,15 +130,17 @@ class Computation {
     void clear();
 
     //! Add statements from another Computation to this one for inlining.
-    //! @param[in] other Computation to append to this one, which will be copied
+    //! \param[in] other Computation to append to this one, which will be copied
     //! but its statements will not be modified
-    //! @param[in] arguments Arguments to pass in to the appended Computation
+    //! \param[in] arguments Arguments to pass in to the appended Computation
     //! (if any)
-    //! @param[in] level 0-indexed execution schedule tuple position to append
+    //! \param[in] depth 0-indexed execution schedule tuple position to append
     //! at, to define the level of nesting the new Computation is within
-    int appendComputation(Computation* other,
+    //! \return State information to be used in Stmts following what was
+    //! appended.
+    AppendComputationResult appendComputation(Computation* other,
                           std::vector<std::string> arguments = {},
-                          unsigned int level = 0);
+                          unsigned int depth = 0);
 
     void toDot(std::fstream& dotFileStream, string fileName);
 
@@ -141,14 +159,31 @@ class Computation {
    private:
     //! Information on all statements in the Computation
     std::vector<Stmt*> stmts;
-    //! Data spaces accessed in the computation
+    //! Data spaces accessed in the Computation
     std::unordered_set<std::string> dataSpaces;
     //! Parameters of the computation, pair of name : type
     std::vector<std::pair<std::string, std::string>> parameters;
+    //! Names of values that are returned if this Computation is called. May be
+    //! data space names or literals. This is an ordered list because some
+    //! languages allow multiple returns.
+    //! Pair of name/literal : whether it's a data space name
+    std::vector<std::pair<std::string, bool>> returnValues;
 
     //! Number of times this Computation has been called by (appended on to)
     //! others, monitored for name mangling
     unsigned int numRenames = 0;
+};
+
+/*!
+ * \struct AppendComputationResult
+ *
+ * \brief Struct containing information about the state of the Computation
+ * following an append.
+ */
+struct AppendComputationResult {
+    //! Last execution schedule value used at the appending depth.
+    int tuplePosition;
+    std::vector<std::string> returnValues;
 };
 
 //! Prints the dotFile for the Computation structure
