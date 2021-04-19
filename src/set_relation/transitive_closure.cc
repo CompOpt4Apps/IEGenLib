@@ -179,10 +179,56 @@ void DiGraph::transitiveClosure(){
 }
 
 
-void DiGraph::mergeVertices( int u, int v) {
-    //TODO: Choose which vertice to delete, after the merge
-    //discuss with Dr Cathie. 
-    assert(0 && "merging vertices not currently supported");   
+void DiGraph::mergeVertices(std::vector<int>& aliasMap, int u, int v) {
+    //assert(0 && "merging vertices not currently supported");   
+    // Remove edges between u and v
+    adj[u][v] = EdgeType::NONE;
+    adj[v][u] = EdgeType::NONE;
+
+    // Put all the contents of v in u.
+    for(int i = 0; i < adj[v].size() ; i++){
+	// edgeOp will pick a stronger constraint
+	// if a constraint already exist in u when
+	// merging.
+	
+	// Merge all outgoing edges in v with u.    
+        adj[u][i] = edgeOp(adj[u][i],adj[v][i]);
+
+	// Merge all incoming edges in v with u.
+	adj[i][u] = edgeOp(adj[i][u],adj[i][v]);
+    }
+
+    // Remove column v from the adj matrix.
+
+    // Shift each column after index v backward 
+    // to delete column v for each row.
+    for(int i =  0 ; i < adj.size() ; i++){
+        for(int j = v; j < adj[i].size()-1; j++){
+	    adj[i][j] = adj[i][j+1];
+
+	}
+	adj[i].resize(adj[i].size() -1);
+    }
+     
+    // update aliasmap to ensure that oldvertices
+    // are mapped to a new position after merge.
+    //
+    // The way it works is that vertexes just after
+    // the vertex removed gets their indices decremented
+    // by 1 in the alias map.
+    for(int i = v+1; i < aliasMap.size(); i++){
+        --aliasMap[i];
+    }
+    // Any check on deleted vertex becomes aliased 
+    // to the merged vertex u; 
+    aliasMap[v] = u;
+
+    // Remove row v from the matrix.
+    adj.erase(adj.begin() + v);
+    // Clear content of removed vertex.
+    vertices[v].reset();
+    // Remove v from vertices
+    vertices.erase(vertices.begin() +v);
 }
 
 void DiGraph::simplifyGreaterOrEqual(){
@@ -191,7 +237,6 @@ void DiGraph::simplifyGreaterOrEqual(){
     //content. When this happens such vertexs will
     //be merged in the adjacency matrix.
     std::vector<int> possibleMerge;
-    
     for(int i = 0 ; i < adj.size(); i++){
         for(int j = 0; j < adj[i].size(); j++){
 	    if(adj[i][j] == EdgeType::GREATER_OR_EQUAL_TO ){
@@ -210,18 +255,34 @@ void DiGraph::simplifyGreaterOrEqual(){
 	       possibleMerge.push_back(j);
 	    }  
        }
-   }
-   
-   // Apply merging. 
-   for(auto pos :possibleMerge){
-       int length = vertices.size();
-       for(int i = 0 ; i < length; i++){
-           if( i != pos && vertices[i] == vertices[pos]){
-	       mergeVertices(i,pos);
-	       --length; 
-	   }
-       } 
-   }
+    }
+    
+    // Apply merging. 
+    // Vertices aliasing, this data structure helps
+    // to store already merged vertices to where they
+    // point to after merging.
+    
+    std::vector<int> aliasMap (vertices.size());
+    // Intialize indices in aliasMap to map back to 
+    // its index value.
+    for(int i  = 0 ; i < aliasMap.size() ;i++){
+        aliasMap[i] = i;
+    }
+
+    for(auto vertex :possibleMerge){
+        int length = vertices.size();
+        for(int i = 0 ; i < length; i++){
+	    // Check if there is an alias for the current vertex.
+            int aliasVertex = aliasMap[vertex];
+	     
+	    // if a current vertex is the same as the vertex for possible 
+	    // merge, go ahead to merge. 
+	    if( i != aliasVertex && vertices[i] == vertices[aliasVertex]){
+		mergeVertices(aliasMap,i,aliasVertex);
+	        break;
+	    }
+        } 
+    }
 
 }
 void DiGraph::dumpGraph() const{

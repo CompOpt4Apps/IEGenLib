@@ -4551,16 +4551,24 @@ TEST_F(SetRelationTest, TransitiveClosure){
 		     "{[i,j] -> [k]: A(i,j) > 0 and rowptr(i) <= k"
 		     " and k < rowptr(i+ 1) and col(k) =j and 0 <= i"
 		     " and i < NR and 0 <= j and j < NC}");
-     std::cerr << rel->prettyPrintString() << "\n";
      Relation * closure = rel->TransitiveClosure() ;
-     EXPECT_EQ("",closure->prettyPrintString());
+     EXPECT_EQ("{ [i, j] -> [k] : j - col(k) = 0 && i >= 0 && j >= 0"
+	       " && col(k) >= 0 && k - rowptr(i) >= 0 && NC - 1 >= 0"
+	       " && NR - 1 >= 0 && A(i, j) - 1 >= 0 && -i + NR - 1 >= 0"
+	       " && -j + NC - 1 >= 0 && -k + rowptr(i + 1) - 1 >= 0 &&"
+	       " NC - col(k) - 1 >= 0 && -rowptr(i) + rowptr(i + 1) - 1 >= 0 }",
+	       closure->prettyPrintString());
      
      Relation * rel2= new Relation(
 		     "{[i1,i2]->[j1,j2]: j1 - i1 = 1 and j2-i2 >= 2"
 		     " and 1 <= i1 and 1 <= j1 and 1 <= j2 and i1 <= n"
 		     " and j1 <= n and j2 <= n and i1 <= i2 and i2 <= n}");
      Relation* clo2 = rel2->TransitiveClosure();
-     EXPECT_EQ("",clo2->prettyPrintString());
+     EXPECT_EQ("{ [i1, i2] -> [j1, j2] : i1 - j1 + 1 = 0 && i1 >= 0 &&"
+	       " i2 >= 0 && j2 >= 0 && -i1 + i2 >= 0 && -i1 + n >= 0 &&"
+	       " -i2 + n >= 0 && -j1 + n >= 0 && j1 - 1 >= 0 && -j2 + n"
+	       " >= 0 && n - 1 >= 0 && -i1 + n - 1 >= 0 && -i2 + j2 - 3"
+	       " >= 0 && -i2 + n - 3 >= 0 }",clo2->prettyPrintString());
      
      Relation* rel3 = new Relation(
 		     "{[n] -> [k] : rowptr <= k and k < rowptr1"
@@ -4569,7 +4577,13 @@ TEST_F(SetRelationTest, TransitiveClosure){
 
 
      Relation* clo3 = rel3->TransitiveClosure();
-     EXPECT_EQ("",clo3->prettyPrintString());
+     EXPECT_EQ("{ [n] -> [k] : n - row1in = 0 && k - col2in = 0 &&"
+	       " col1 - col2 = 0 && col1 >= 0 && col2 >= 0 && row1 >= 0 &&"
+	       " k - rowptr >= 0 && N_C - 1 >= 0 && N_R - 1 >= 0 &&"
+	       " col2in - rowptr >= 0 && -k + rowptr1 - 1 >= 0 &&"
+	       " N_C - col1 - 1 >= 0 && N_C - col2 - 1 >= 0 &&"
+	       " N_R - row1 - 1 >= 0 && -col2in + rowptr1 - 1 >= 0 &&"
+	       " -rowptr + rowptr1 - 1 >= 0 }",clo3->prettyPrintString());
      
      delete clo3;
      delete rel3;

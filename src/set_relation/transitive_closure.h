@@ -83,9 +83,15 @@ private:
     //! Expands adjMatrix by 1
     void adjustAdjMatrix( int N);
 
-    /**! Merge vertices in the adjacency matrix
-     * */
-    void mergeVertices( int u, int v);
+    //! Merge vertices in the adjacency matrix
+    //!     \param aliasMap a vector to remember vertices deleted
+    //             due to maping. Caller should provide this array
+    //             and it must be size of the original vertice
+    //             before merging. 
+    //       \param u is the destination vertex during merging
+    //       \param v is the source vertex during merging,
+    //                this vertex will be deleted after merging
+    void mergeVertices( std::vector<int>&aliasMap,int u, int v);
     
     //! This outlines the combination of two edges.
     EdgeType edgeOp (const EdgeType e1, const EdgeType e2);

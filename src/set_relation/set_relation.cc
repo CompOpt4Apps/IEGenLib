@@ -1544,7 +1544,10 @@ Conjunction*  Conjunction::TransitiveClosure(){
 	}
         // TODO: Remove current expression from the list.
 	// Add edge between lhs and rhs in the graph.
-        g->addEdge(lhsNode,rhsNode,EdgeType::EQUAL);	
+        g->addEdge(lhsNode,rhsNode,EdgeType::EQUAL);
+
+	// Equality leads to two edges.
+        g->addEdge(rhsNode,lhsNode,EdgeType::EQUAL);	
     }
     for (std::list<Exp*>::const_iterator i=retVal->mInequalities.begin();
          i != retVal->mInequalities.end(); i++ ) {
@@ -1564,13 +1567,8 @@ Conjunction*  Conjunction::TransitiveClosure(){
 	// Add edge between lhs and rhs in the graph.
         g->addEdge(lhsNode,rhsNode,EdgeType::GREATER_OR_EQUAL_TO);	
     }
-    std::cerr << "Graph Dump Before\n";
-    g->dumpGraph();
     g->simplifyGreaterOrEqual();
     g->transitiveClosure();
-
-    std::cerr << "Graph Dump After\n";
-    g->dumpGraph();
     // Delete all expressions in the retVal conjunction.
     retVal->reset();
     
@@ -2603,13 +2601,15 @@ Relation * Relation::Restrict(const Set *rhs) const {
 //! Returns a new relation, which the user is responsible
 //  for deallocating.
 Relation* Relation::TransitiveClosure(){
-    Relation * result = new Relation(mOutArity,mInArity);
+    Relation * result = new Relation(mInArity,mOutArity);
 
     // Compute the transitive closure of each Conjunction.
     for (std::list<Conjunction*>::const_iterator i=mConjunctions.begin();
         i != mConjunctions.end(); i++) {
         result->addConjunction((*i)->TransitiveClosure());
     }
+
+    result->cleanUp(); 
     return result;
 }
 
