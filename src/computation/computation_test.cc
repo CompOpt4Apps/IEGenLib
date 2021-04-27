@@ -94,13 +94,17 @@ class ComputationTest : public ::testing::Test {
     //! 'function call'
     //! \param[in] expectedTuplePosition expected last used tuple position at
     //! insertion level
+    //! \param[in] expectedReturnValues string versions of expected return
+    //! values
     //! \param[in] expectedExecSchedules string versions of expected
     //! execution schedules for the appended Computation after appending
     //! modifications are done
     void checkAppendComputation(
         Computation* appendedTo, Computation* appendedComp,
         std::vector<std::string> argsList, unsigned int appendAtLevel,
-        int expectedTuplePosition, std::vector<std::string> expectedExecSchedules) {
+        int expectedTuplePosition,
+        std::vector<std::string> expectedReturnValues,
+        std::vector<std::string> expectedExecSchedules) {
         // remember number of original statements, for testing only appended
         // ones later
         unsigned int origNumStmts = appendedTo->getNumStmts();
@@ -108,6 +112,7 @@ class ComputationTest : public ::testing::Test {
         AppendComputationResult result = appendedTo->appendComputation(appendedComp, argsList,
                                                    appendAtLevel);
         EXPECT_EQ(expectedTuplePosition, result.tuplePosition);
+        EXPECT_EQ(expectedReturnValues, result.returnValues);
 
         // sanity check correct number of expected schedules
         ASSERT_EQ(expectedExecSchedules.size(),
@@ -318,7 +323,7 @@ TEST_F(ComputationTest, AppendComputation) {
         comp2->addStmt(s4);
         // perform test
         checkAppendComputation(
-            comp1, comp2, {}, 0, 3,
+            comp1, comp2, {}, 0, 3, {},
             {"{[i] -> [2,i,0,0,0]}", "{[0] -> [3,0,0,0,0]}"});
 
         delete comp1, comp2;
@@ -358,7 +363,7 @@ TEST_F(ComputationTest, AppendComputation) {
 
         // perform test
         checkAppendComputation(EvalSplineFComputation, FindSegmentComputation,
-                               {}, 0, 2, {"{[i] -> [2, i, 0]}"});
+                               {}, 0, 2, {}, {"{[i] -> [2, i, 0]}"});
 
         delete EvalSplineFComputation, FindSegmentComputation;
     }
@@ -374,7 +379,7 @@ TEST_F(ComputationTest, AppendComputation) {
         Computation* comp2 = new Computation();
         comp2->addStmt(s2);
 
-        checkAppendComputation(comp1, comp2, {}, 2, 2,
+        checkAppendComputation(comp1, comp2, {}, 2, 2, {},
                                {"{[i,k] -> [2,i,2,k,1]}"});
 
         delete comp1, comp2;
@@ -388,17 +393,18 @@ TEST_F(ComputationTest, AppendComputation) {
         comp1->addStmt(s1);
         comp1->addDataSpace("myInt");
         comp1->addDataSpace("myDouble");
-        comp1->addDataSpace("myFloat");
 
         Stmt* s2 = new Stmt("s2;", "{[k]}", "{[k] -> [0,k,1]}", {}, {});
         Computation* comp2 = new Computation();
         comp2->addStmt(s2);
         comp2->addParameter("a", "int");
         comp2->addParameter("b", "double");
+        comp2->addParameter("c", "float");
 
-        checkAppendComputation(
-            comp1, comp2, {"myInt", "myDouble"}, 2, 4,
-            {"{[i]->[2,i,2]}", "{[i]->[2,i,3]}", "{[i,k]->[2,i,4,k,1]}"});
+        checkAppendComputation(comp1, comp2, {"myInt", "myDouble", "0"}, 2, 5,
+                               {},
+                               {"{[i]->[2,i,2]}", "{[i]->[2,i,3]}",
+                                "{[i]->[2,i,4]}", "{[i,k]->[2,i,5,k,1]}"});
 
         // additional checks for parameter decls, which the helper function
         // doesn't generally do -- may be rolled into checkAppendComputation at
@@ -410,33 +416,51 @@ TEST_F(ComputationTest, AppendComputation) {
     }
 
     {
-        SCOPED_TRACE("Appending an empty computation, no parameters");
+        SCOPED_TRACE("Appending an empty computation");
 
+        // without params
         Stmt* s1 = new Stmt("s1;", "{[i,j]}", "{[i,j] -> [2,i,1,j,1]}", {}, {});
         Computation* comp1 = new Computation();
         comp1->addStmt(s1);
 
         Computation* comp2 = new Computation();
 
-        checkAppendComputation(comp1, comp2, {}, 2, 1, {});
+        checkAppendComputation(comp1, comp2, {}, 2, 1, {}, {});
+
+        delete comp1, comp2;
+
+        // with params
+        s1 = new Stmt("s1;", "{[i,j]}", "{[i,j] -> [2,i,1,j,1]}", {}, {});
+        comp1 = new Computation();
+        comp1->addStmt(s1);
+        comp1->addDataSpace("myInt");
+
+        comp2 = new Computation();
+        comp2->addParameter("a", "int");
+        comp2->addParameter("b", "double");
+
+        checkAppendComputation(comp1, comp2, {"myInt", "3.14159"}, 2, 3, {},
+                               {"{[i]->[2,i,2]}", "{[i]->[2,i,3]}"});
 
         delete comp1, comp2;
     }
 
     {
-        SCOPED_TRACE("Appending an empty computation with parameters");
-        Stmt* s1 = new Stmt("s1;", "{[i,j]}", "{[i,j] -> [2,i,1,j,1]}", {}, {});
+        SCOPED_TRACE("Return values");
+
         Computation* comp1 = new Computation();
+        Stmt* s1 = new Stmt("s1;", "{[i,j]}", "{[i,j] -> [2,i,1,j,1]}", {}, {});
         comp1->addStmt(s1);
-        comp1->addDataSpace("myInt");
-        comp1->addDataSpace("myDouble");
 
         Computation* comp2 = new Computation();
-        comp2->addParameter("a", "int");
-        comp2->addParameter("b", "double");
+        Stmt* s2 = new Stmt("s2;", "{[k]}", "{[k] -> [0,k,1]}", {}, {});
+        comp2->addStmt(s2);
+        comp2->addDataSpace("res");
+        comp2->addReturnValue("res");
+        comp2->addReturnValue("0");
 
-        checkAppendComputation(comp1, comp2, {"myInt", "myDouble"}, 2, 3,
-                               {"{[i]->[2,i,2]}", "{[i]->[2,i,3]}"});
+        checkAppendComputation(comp1, comp2, {}, 2, 2, {"_iegen_0res", "0"},
+                               {"{[i,k] -> [2,i,2,k,1]}"});
 
         delete comp1, comp2;
     }
