@@ -40,6 +40,8 @@ class ComputationTest : public ::testing::Test {
    protected:
     virtual void SetUp() override {
         vOmegaReplacer = new VisitorChangeUFsForOmega();
+        //! Reset the Computation class's running rename counter so generated name prefixes do not depend on test order.
+        Computation::resetNumRenames();
     }
     virtual void TearDown() override { delete vOmegaReplacer; }
 
@@ -303,173 +305,164 @@ __x6 = 0 && B_0(__x0,i,__x2,j,__x4,k) = 0 && __x4 = 1 \
     // TODO: multiple uses of same UF in a Relation?
 }
 
-#pragma mark AppendComputation
-// Check that the appendComputation method works correctly
-TEST_F(ComputationTest, AppendComputation) {
-    {
-        SCOPED_TRACE("Basic 0-depth test");
+#pragma mark AppendComputation0Depth
+TEST_F(ComputationTest, AppendComputation0Depth) {
+    // initial Computation that will be appended to
+    Stmt* s1 = new Stmt("s1;", "{[i,j]}", "{[i,j] -> [0,i,0,j,0]}", {}, {});
+    Stmt* s2 = new Stmt("asdf();", "{[i]}", "{[i] -> [1,i,0,0,0]}", {}, {});
+    Computation* comp1 = new Computation();
+    comp1->addStmt(s1);
+    comp1->addStmt(s2);
+    // Computation to append
+    Stmt* s3 = new Stmt("s3;", "{[i]}", "{[i] -> [0,i,0,0,0]}", {}, {});
+    Stmt* s4 = new Stmt("s4;", "{[0]}", "{[0] -> [1,0,0,0,0]}", {}, {});
+    Computation* comp2 = new Computation();
+    comp2->addStmt(s3);
+    comp2->addStmt(s4);
+    // perform test
+    checkAppendComputation(comp1, comp2, {}, 0, 3, {},
+                           {"{[i] -> [2,i,0,0,0]}", "{[0] -> [3,0,0,0,0]}"});
 
-        // initial Computation that will be appended to
-        Stmt* s1 = new Stmt("s1;", "{[i,j]}", "{[i,j] -> [0,i,0,j,0]}", {}, {});
-        Stmt* s2 = new Stmt("asdf();", "{[i]}", "{[i] -> [1,i,0,0,0]}", {}, {});
-        Computation* comp1 = new Computation();
-        comp1->addStmt(s1);
-        comp1->addStmt(s2);
-        // Computation to append
-        Stmt* s3 = new Stmt("s3;", "{[i]}", "{[i] -> [0,i,0,0,0]}", {}, {});
-        Stmt* s4 = new Stmt("s4;", "{[0]}", "{[0] -> [1,0,0,0,0]}", {}, {});
-        Computation* comp2 = new Computation();
-        comp2->addStmt(s3);
-        comp2->addStmt(s4);
-        // perform test
-        checkAppendComputation(
-            comp1, comp2, {}, 0, 3, {},
-            {"{[i] -> [2,i,0,0,0]}", "{[0] -> [3,0,0,0,0]}"});
-
-        delete comp1, comp2;
-    }
-
-    {
-        SCOPED_TRACE("GeoAc example");
-
-        // Initial Computation that will be appended to
-        Computation* EvalSplineFComputation = new Computation();
-
-        // Creating s0
-        // int k;
-        Stmt* s0 = new Stmt("int k", "{[0]}", "{[0]->[0, 0, 0]}", {}, {});
-        // Adding s0
-        EvalSplineFComputation->addStmt(s0);
-
-        // Creating s1
-        // int k = Find_Segment(x, Spline.x_vals, Spline.length, Spline.accel);
-        // Find_Segment(double x, double* x_vals, int length, int & prev){
-        Stmt* s1 = new Stmt(
-            "double* x_vals = Spline.x_vals; int length = Spline.length; int& "
-            "prev "
-            "= Spline.accel",
-            "{[0]}", "{[0]->[1, 0, 0]}", {}, {});
-        // Adding s1
-        EvalSplineFComputation->addStmt(s1);
-
-        // Computation that gets appended
-        Computation* FindSegmentComputation = new Computation();
-        // Creating statement1
-        // if(x >= x_vals[i] && x <= x_vals[i+1]) prev = i;
-        Stmt* s00 = new Stmt("if(x >= x_vals[i] && x <= x_vals[i+1]) prev = i",
-                 "{[i]: i>=0 && i<length}", "{[i]->[0, i, 0]}", {}, {});
-        // Adding statement2
-        FindSegmentComputation->addStmt(s00);
-
-        // perform test
-        checkAppendComputation(EvalSplineFComputation, FindSegmentComputation,
-                               {}, 0, 2, {}, {"{[i] -> [2, i, 0]}"});
-
-        delete EvalSplineFComputation, FindSegmentComputation;
-    }
-
-    {
-        SCOPED_TRACE("Basic non-zero depth test");
-
-        Stmt* s1 = new Stmt("s1;", "{[i,j]}", "{[i,j] -> [2,i,1,j,1]}", {}, {});
-        Computation* comp1 = new Computation();
-        comp1->addStmt(s1);
-
-        Stmt* s2 = new Stmt("s3;", "{[k]}", "{[k] -> [0,k,1]}", {}, {});
-        Computation* comp2 = new Computation();
-        comp2->addStmt(s2);
-
-        checkAppendComputation(comp1, comp2, {}, 2, 2, {},
-                               {"{[i,k] -> [2,i,2,k,1]}"});
-
-        delete comp1, comp2;
-    }
-
-    {
-        SCOPED_TRACE("Basic argument passing test");
-
-        Stmt* s1 = new Stmt("s1;", "{[i,j]}", "{[i,j] -> [2,i,1,j,1]}", {}, {});
-        Computation* comp1 = new Computation();
-        comp1->addStmt(s1);
-        comp1->addDataSpace("myInt");
-        comp1->addDataSpace("myDouble");
-
-        Stmt* s2 = new Stmt("s2;", "{[k]}", "{[k] -> [0,k,1]}", {}, {});
-        Computation* comp2 = new Computation();
-        comp2->addStmt(s2);
-        comp2->addParameter("a", "int");
-        comp2->addParameter("b", "double");
-        comp2->addParameter("c", "float");
-
-        checkAppendComputation(comp1, comp2, {"myInt", "myDouble", "0"}, 2, 5,
-                               {},
-                               {"{[i]->[2,i,2]}", "{[i]->[2,i,3]}",
-                                "{[i]->[2,i,4]}", "{[i,k]->[2,i,5,k,1]}"});
-
-        // additional checks for parameter decls, which the helper function
-        // doesn't generally do -- may be rolled into checkAppendComputation at
-        // some point
-        EXPECT_EQ("int _iegen_0a = myInt;", comp1->getStmt(1)->getStmtSourceCode());
-        EXPECT_EQ("double _iegen_0b = myDouble;", comp1->getStmt(2)->getStmtSourceCode());
-
-        delete comp1, comp2;
-    }
-
-    {
-        SCOPED_TRACE("Appending an empty computation");
-
-        // without params
-        Stmt* s1 = new Stmt("s1;", "{[i,j]}", "{[i,j] -> [2,i,1,j,1]}", {}, {});
-        Computation* comp1 = new Computation();
-        comp1->addStmt(s1);
-
-        Computation* comp2 = new Computation();
-
-        checkAppendComputation(comp1, comp2, {}, 2, 1, {}, {});
-
-        delete comp1, comp2;
-
-        // with params
-        s1 = new Stmt("s1;", "{[i,j]}", "{[i,j] -> [2,i,1,j,1]}", {}, {});
-        comp1 = new Computation();
-        comp1->addStmt(s1);
-        comp1->addDataSpace("myInt");
-
-        comp2 = new Computation();
-        comp2->addParameter("a", "int");
-        comp2->addParameter("b", "double");
-
-        checkAppendComputation(comp1, comp2, {"myInt", "3.14159"}, 2, 3, {},
-                               {"{[i]->[2,i,2]}", "{[i]->[2,i,3]}"});
-
-        delete comp1, comp2;
-    }
-
-    {
-        SCOPED_TRACE("Return values");
-
-        Computation* comp1 = new Computation();
-        Stmt* s1 = new Stmt("s1;", "{[i,j]}", "{[i,j] -> [2,i,1,j,1]}", {}, {});
-        comp1->addStmt(s1);
-
-        Computation* comp2 = new Computation();
-        Stmt* s2 = new Stmt("s2;", "{[k]}", "{[k] -> [0,k,1]}", {}, {});
-        comp2->addStmt(s2);
-        comp2->addDataSpace("res");
-        comp2->addReturnValue("res");
-        comp2->addReturnValue("0");
-
-        checkAppendComputation(comp1, comp2, {}, 2, 2, {"_iegen_0res", "0"},
-                               {"{[i,k] -> [2,i,2,k,1]}"});
-
-        delete comp1, comp2;
-    }
+    delete comp1, comp2;
 }
 
-#pragma mark DataSpaceNamePrefixing
-// Check creating a copy of a Computation with prefixed data space names works properly
-TEST_F(ComputationTest, DataSpaceNamePrefixing) {
-    Computation* comp = new Computation();
+#pragma mark AppendComputationGeoAc
+TEST_F(ComputationTest, AppendComputationGeoAc) {
+    // Initial Computation that will be appended to
+    Computation* EvalSplineFComputation = new Computation();
+
+    // Creating s0
+    // int k;
+    Stmt* s0 = new Stmt("int k", "{[0]}", "{[0]->[0, 0, 0]}", {}, {});
+    // Adding s0
+    EvalSplineFComputation->addStmt(s0);
+
+    // Creating s1
+    // int k = Find_Segment(x, Spline.x_vals, Spline.length, Spline.accel);
+    // Find_Segment(double x, double* x_vals, int length, int & prev){
+    Stmt* s1 = new Stmt(
+        "double* x_vals = Spline.x_vals; int length = Spline.length; int& "
+        "prev "
+        "= Spline.accel",
+        "{[0]}", "{[0]->[1, 0, 0]}", {}, {});
+    // Adding s1
+    EvalSplineFComputation->addStmt(s1);
+
+    // Computation that gets appended
+    Computation* FindSegmentComputation = new Computation();
+    // Creating statement1
+    // if(x >= x_vals[i] && x <= x_vals[i+1]) prev = i;
+    Stmt* s00 = new Stmt("if(x >= x_vals[i] && x <= x_vals[i+1]) prev = i",
+                         "{[i]: i>=0 && i<length}", "{[i]->[0, i, 0]}", {}, {});
+    // Adding statement2
+    FindSegmentComputation->addStmt(s00);
+
+    // perform test
+    checkAppendComputation(EvalSplineFComputation, FindSegmentComputation, {},
+                           0, 2, {}, {"{[i] -> [2, i, 0]}"});
+
+    delete EvalSplineFComputation, FindSegmentComputation;
+}
+
+#pragma mark AppendComputationNonzeroDepth
+TEST_F(ComputationTest, AppendComputationNonzeroDepth) {
+    Stmt* s1 = new Stmt("s1;", "{[i,j]}", "{[i,j] -> [2,i,1,j,1]}", {}, {});
+    Computation* comp1 = new Computation();
+    comp1->addStmt(s1);
+
+    Stmt* s2 = new Stmt("s3;", "{[k]}", "{[k] -> [0,k,1]}", {}, {});
+    Computation* comp2 = new Computation();
+    comp2->addStmt(s2);
+
+    checkAppendComputation(comp1, comp2, {}, 2, 2, {},
+                           {"{[i,k] -> [2,i,2,k,1]}"});
+
+    delete comp1, comp2;
+}
+
+#pragma mark AppendComputationArgumentPassing
+TEST_F(ComputationTest, AppendComputationArgumentPassing) {
+    SCOPED_TRACE("Basic argument passing test");
+
+    Stmt* s1 = new Stmt("s1;", "{[i,j]}", "{[i,j] -> [2,i,1,j,1]}", {}, {});
+    Computation* comp1 = new Computation();
+    comp1->addStmt(s1);
+    comp1->addDataSpace("myInt");
+    comp1->addDataSpace("myDouble");
+
+    Stmt* s2 = new Stmt("s2;", "{[k]}", "{[k] -> [0,k,1]}", {}, {});
+    Computation* comp2 = new Computation();
+    comp2->addStmt(s2);
+    comp2->addParameter("a", "int");
+    comp2->addParameter("b", "double");
+    comp2->addParameter("c", "float");
+
+    checkAppendComputation(comp1, comp2, {"myInt", "myDouble", "0"}, 2, 5, {},
+                           {"{[i]->[2,i,2]}", "{[i]->[2,i,3]}",
+                            "{[i]->[2,i,4]}", "{[i,k]->[2,i,5,k,1]}"});
+
+    // additional checks for parameter decls, which the helper function
+    // doesn't generally do -- may be rolled into checkAppendComputation at
+    // some point
+    EXPECT_EQ("int _iegen_0a = myInt;", comp1->getStmt(1)->getStmtSourceCode());
+    EXPECT_EQ("double _iegen_0b = myDouble;",
+              comp1->getStmt(2)->getStmtSourceCode());
+
+    delete comp1, comp2;
+}
+
+#pragma mark AppendComputationEmpty
+TEST_F(ComputationTest, AppendComputationEmpty) {
+    // without params
+    Stmt* s1 = new Stmt("s1;", "{[i,j]}", "{[i,j] -> [2,i,1,j,1]}", {}, {});
+    Computation* comp1 = new Computation();
+    comp1->addStmt(s1);
+
+    Computation* comp2 = new Computation();
+
+    checkAppendComputation(comp1, comp2, {}, 2, 1, {}, {});
+
+    delete comp1, comp2;
+
+    // with params
+    s1 = new Stmt("s1;", "{[i,j]}", "{[i,j] -> [2,i,1,j,1]}", {}, {});
+    comp1 = new Computation();
+    comp1->addStmt(s1);
+    comp1->addDataSpace("myInt");
+
+    comp2 = new Computation();
+    comp2->addParameter("a", "int");
+    comp2->addParameter("b", "double");
+
+    checkAppendComputation(comp1, comp2, {"myInt", "3.14159"}, 2, 3, {},
+                           {"{[i]->[2,i,2]}", "{[i]->[2,i,3]}"});
+
+    delete comp1, comp2;
+}
+
+#pragma mark AppendComputationReturnValues
+TEST_F(ComputationTest, AppendComputationReturnValues) {
+    Computation* comp1 = new Computation();
+    Stmt* s1 = new Stmt("s1;", "{[i,j]}", "{[i,j] -> [2,i,1,j,1]}", {}, {});
+    comp1->addStmt(s1);
+
+    Computation* comp2 = new Computation();
+    Stmt* s2 = new Stmt("s2;", "{[k]}", "{[k] -> [0,k,1]}", {}, {});
+    comp2->addStmt(s2);
+    comp2->addDataSpace("res");
+    comp2->addReturnValue("res");
+    comp2->addReturnValue("0");
+
+    checkAppendComputation(comp1, comp2, {}, 2, 2, {"_iegen_0res", "0"},
+                           {"{[i,k] -> [2,i,2,k,1]}"});
+
+    delete comp1, comp2;
+}
+
+#pragma mark ComputationNamePrefixing
+// Check creating a copy of a Computation with prefixed names works properly
+TEST_F(ComputationTest, ComputationNamePrefixing) {
+    Computation* comp1 = new Computation();
     Stmt* s0 = new Stmt("$product$[i] += $x$[i][j] * $y$[j];",
                         "{[i,j]: i >= 0 && i < a && j >= 0 && j < b}",
                         "{[i,j]->[2,i,1,j,0]}",
@@ -477,7 +470,7 @@ TEST_F(ComputationTest, DataSpaceNamePrefixing) {
                          {"$x$", "{[i,j]->[i,j]}"},
                          {"$y$", "{[i,j]->[j]}"}},
                         {{"$product$", "{[i,j]->[i]}"}});
-    comp->addStmt(s0);
+    comp1->addStmt(s0);
     Set* iterSpace = new Set("{[i,j]: i >= 0 && i < a && j >= 0 && j < b}");
     iegenlib::Relation* execSchedule = new iegenlib::Relation("{[i,j]->[2,i,1,j,0]}");
     std::string iterSpaceStr = iterSpace->prettyPrintString();
@@ -485,7 +478,7 @@ TEST_F(ComputationTest, DataSpaceNamePrefixing) {
     delete iterSpace;
     delete execSchedule;
 
-    Computation* prefixedComp1 = comp->getDataPrefixedCopy();
+    Computation* prefixedComp1 = comp1->getUniquelyNamedClone();
     EXPECT_EQ("_iegen_0$product$[i] += _iegen_0$x$[i][j] * _iegen_0$y$[j];",
               prefixedComp1->getStmt(0)->getStmtSourceCode());
     EXPECT_EQ(
@@ -501,7 +494,7 @@ TEST_F(ComputationTest, DataSpaceNamePrefixing) {
     EXPECT_EQ("_iegen_0$product$",
               prefixedComp1->getStmt(0)->getWriteDataSpace(0));
 
-    Computation* prefixedComp2 = comp->getDataPrefixedCopy();
+    Computation* prefixedComp2 = comp1->getUniquelyNamedClone();
     EXPECT_EQ("_iegen_1$product$[i] += _iegen_1$x$[i][j] * _iegen_1$y$[j];",
               prefixedComp2->getStmt(0)->getStmtSourceCode());
     EXPECT_EQ(
@@ -517,5 +510,34 @@ TEST_F(ComputationTest, DataSpaceNamePrefixing) {
     EXPECT_EQ("_iegen_1$product$",
               prefixedComp2->getStmt(0)->getWriteDataSpace(0));
 
-    delete comp, prefixedComp1, prefixedComp2;
+    delete comp1, prefixedComp1, prefixedComp2;
+
+    // separate Computation
+    Computation* comp2 = new Computation();
+    Stmt* s2 = new Stmt("$product$[i] += $x$[i][j] * $y$[j];",
+                        "{[i,j]: i >= 0 && i < a && j >= 0 && j < b}",
+                        "{[i,j]->[2,i,1,j,0]}",
+                        {{"$product$", "{[i,j]->[i]}"},
+                         {"$x$", "{[i,j]->[i,j]}"},
+                         {"$y$", "{[i,j]->[j]}"}},
+                        {{"$product$", "{[i,j]->[i]}"}});
+    comp1->addStmt(s0);
+
+    Computation* prefixedComp3 = comp2->getUniquelyNamedClone();
+    EXPECT_EQ("_iegen_2$product$[i] += _iegen_2$x$[i][j] * _iegen_2$y$[j];",
+              prefixedComp3->getStmt(0)->getStmtSourceCode());
+    EXPECT_EQ(
+        iterSpaceStr,
+        prefixedComp3->getStmt(0)->getIterationSpace()->prettyPrintString());
+    EXPECT_EQ(
+        execScheduleStr,
+        prefixedComp3->getStmt(0)->getExecutionSchedule()->prettyPrintString());
+    EXPECT_EQ("_iegen_2$product$",
+              prefixedComp3->getStmt(0)->getReadDataSpace(0));
+    EXPECT_EQ("_iegen_2$x$", prefixedComp3->getStmt(0)->getReadDataSpace(1));
+    EXPECT_EQ("_iegen_2$y$", prefixedComp3->getStmt(0)->getReadDataSpace(2));
+    EXPECT_EQ("_iegen_2$product$",
+              prefixedComp3->getStmt(0)->getWriteDataSpace(0));
+
+    delete comp2, prefixedComp3;
 }

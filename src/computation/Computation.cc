@@ -42,6 +42,8 @@ namespace iegenlib {
 
 /* Computation */
 
+unsigned int Computation::numRenames = 0;
+
 Computation::Computation() {}
 
 Computation::~Computation() {
@@ -59,13 +61,13 @@ bool Computation::operator==(const Computation& other) const {
     return (this->dataSpaces == other.dataSpaces && this->stmts == other.stmts);
 }
 
-Computation* Computation::getDataPrefixedCopy() {
+Computation* Computation::getUniquelyNamedClone() const {
     std::string namePrefix = NAME_PREFIX_BASE + std::to_string(numRenames++);
     Computation* prefixedCopy = new Computation();
 
     // prefix all data in the Computation and insert it to the new one
     for (auto& stmt : this->stmts) {
-        prefixedCopy->addStmt(stmt->getDataPrefixedCopy(namePrefix));
+        prefixedCopy->addStmt(stmt->getUniquelyNamedClone(namePrefix));
     }
     for (auto& space : this->dataSpaces) {
         prefixedCopy->addDataSpace(namePrefix + space);
@@ -81,6 +83,10 @@ Computation* Computation::getDataPrefixedCopy() {
     }
 
     return prefixedCopy;
+}
+
+void Computation::resetNumRenames() {
+    Computation::numRenames = 0;
 }
 
 void Computation::addStmt(Stmt* stmt) {
@@ -244,12 +250,12 @@ void Computation::clear() {
     dataSpaces.clear();
 }
 
-AppendComputationResult Computation::appendComputation(Computation* other,
-                                   std::vector<std::string> arguments,
-                                   unsigned int depth) {
+AppendComputationResult Computation::appendComputation(
+    const Computation* other, std::vector<std::string> arguments,
+    unsigned int depth) {
     // create a working copy of the other Computation, with unique data space
     // names; this copy is discarded after use
-    Computation* toAppend = other->getDataPrefixedCopy();
+    Computation* toAppend = other->getUniquelyNamedClone();
     const unsigned int numArgs = arguments.size();
 
     // store last statement's execution schedule information
@@ -771,7 +777,7 @@ bool Stmt::operator==(const Stmt& other) const {
     return true;
 }
 
-Stmt* Stmt::getDataPrefixedCopy(std::string prefix) const {
+Stmt* Stmt::getUniquelyNamedClone(std::string prefix) const {
     Stmt* prefixedCopy = new Stmt(*this);
 
     // modify reads and writes, keeping track of original names for further replacing in other fields

@@ -70,7 +70,11 @@ class Computation {
     //! Uses string find-and-replace to change data space names, with the
     //! assumption that incoming names will be unique enough for this to work
     //! without unintended replacements occuring.
-    Computation* getDataPrefixedCopy();
+    Computation* getUniquelyNamedClone() const;
+    //! Reset the counter for number of renames.
+    //! **This method should only be used for testing purposes. Using it in
+    //! production will cause name conflicts.**
+    static void resetNumRenames();
 
     //! Add a statement to this Computation.
     //! Statements are numbered sequentially from 0 as they are inserted.
@@ -138,9 +142,9 @@ class Computation {
     //! at, to define the level of nesting the new Computation is within
     //! \return State information to be used in Stmts following what was
     //! appended.
-    AppendComputationResult appendComputation(Computation* other,
-                          std::vector<std::string> arguments = {},
-                          unsigned int depth = 0);
+    AppendComputationResult appendComputation(
+        const Computation* other, std::vector<std::string> arguments = {},
+        unsigned int depth = 0);
 
     void toDot(std::fstream& dotFileStream, string fileName);
 
@@ -169,9 +173,9 @@ class Computation {
     //! Pair of name/literal : whether it's a data space name
     std::vector<std::pair<std::string, bool>> returnValues;
 
-    //! Number of times this Computation has been called by (appended on to)
-    //! others, monitored for name mangling
-    unsigned int numRenames = 0;
+    //! Number of times *any* Computation has been appended into
+    //! others, for creating unique name prefixes.
+    static unsigned int numRenames;
 };
 
 /*!
@@ -219,9 +223,8 @@ class Stmt {
     //! Checks equality, NOT mathematical equivalence
     bool operator==(const Stmt& other) const;
 
-    //! Get a copy of this Stmt with the given prefix applied to all data space
-    //! names
-    Stmt* getDataPrefixedCopy(std::string prefix) const;
+    //! Get a copy of this Stmt with the given prefix applied to all names
+    Stmt* getUniquelyNamedClone(std::string prefix) const;
 
     //! Get whether or not all necessary information for this Stmt is set
     bool isComplete() const;
