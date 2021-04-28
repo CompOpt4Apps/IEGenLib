@@ -21,6 +21,7 @@
 #include <vector>
 #include <string>
 #include <list>
+#include <ostream>
 #include "expression.h"
 namespace iegenlib{
 
@@ -62,7 +63,7 @@ public:
     
     //! Function returns list of terms, these
     //  terms are owned by the object.
-    std::list<Term*> getTermList() const {return terms;}
+    std::list<Term*> &getTermList() {return terms;}
    
     //! Function deletes term from vertex.
     void deleteTerm(Term *t);
@@ -95,12 +96,24 @@ private:
     
     //! This outlines the combination of two edges.
     EdgeType edgeOp (const EdgeType e1, const EdgeType e2);
+
+    //! Converts an edge to an actual string.
+    std::string edgeToString (const EdgeType e)const;
 public:
     
     DiGraph();
     
     ~DiGraph();
     
+    /*!
+     * Function looks for monotonic vertices
+     * and appropriates monotonicity to enclosing
+     * vertices.
+     * rowptr(i) <= col(i,j) < rowptr(i+1)
+     * col(i,j) < col(i+1,j)
+     */
+    void findAddMonotonicity () ;
+
     /*! Adds an edge to the graph.
      * */
     void addEdge(Vertex u, Vertex v, EdgeType e); 
@@ -119,7 +132,14 @@ public:
      * Dump debug information of the graph.
      * *
      * */
-    void dumpGraph() const;
+    void dumpGraph(std::ostream& os) const;
+    
+    /**
+     * !
+     * Dump graph as a dot format to string.
+     */
+    std::string toDotString() const;
+
 
     /**
      * !
@@ -128,7 +148,7 @@ public:
      *          Expression =  -row(n) - 1 >=  0
      * Expressions are owned by the caller, caller must deallocate.          
      */
-    std::vector<Exp*> getExpressions() const;   
+    std::vector<Exp*> getExpressions();   
 };
 }// namespace iegen
 

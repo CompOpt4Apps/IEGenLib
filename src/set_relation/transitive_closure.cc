@@ -3,6 +3,8 @@
 #include <assert.h>
 #include <iostream>
 #include <typeinfo>
+#include <sstream>
+#include <map>
 namespace iegenlib{
 
 
@@ -285,22 +287,51 @@ void DiGraph::simplifyGreaterOrEqual(){
     }
 
 }
-void DiGraph::dumpGraph() const{
-    std::cerr << "\nVertices:\n";
+void DiGraph::dumpGraph(std::ostream& os) const{
+    os << "\nVertices:\n";
     int i = 0;
     for(auto v : vertices){
-       std::cerr << "[" << i++ << "]->" << v.toString() << "\n";
+       os << "[" << i++ << "]->" << v.toString() << "\n";
     }
-   
+    // TODO: Make enum to string function  
     for(int i = 0 ; i < adj.size(); i++){
-       std::cerr<< "\n";
+       os<< "\n";
        for(int j = 0; j < adj[i].size(); j++){
-           std::cerr << (adj[i][j] == EdgeType::GREATER_THAN?">":
-			   adj[i][j] == EdgeType::GREATER_OR_EQUAL_TO?">=":
-			   adj[i][j] == EdgeType::EQUAL ? "=": "#") << " ";
+           os <<edgeToString(adj[i][j])<< " ";
        }
     }
-    std::cerr << "\n";
+    os << "\n";
+}
+
+//! Converts an edge to an actual string.
+std::string DiGraph::edgeToString (const EdgeType e) const{
+   return (e == EdgeType::GREATER_THAN?">":
+	   e == EdgeType::GREATER_OR_EQUAL_TO?">=":
+	   e == EdgeType::EQUAL ? "=": "#"); 
+}
+
+/**
+ * !
+ * Dump graph as a dot format to string.
+*/
+std::string DiGraph::toDotString() const{
+    std::stringstream ss;
+    ss << "digraph constraintGraph { \n";
+    // Outline all edges.
+    for(int i = 0; i < adj.size() ; i++){
+        for(int j = 0; j < adj[i].size(); j++){
+            if(adj[i][j] != EdgeType::NONE){
+               ss << i << "->" << j << "[label=\""<<
+		       edgeToString(adj[i][j])<<"\"] ;\n" ;   
+	    }
+	}
+    }
+    // label all vertices
+    for(int i =0; i < vertices.size(); i++){
+        ss << i << "[label=\""<< vertices[i].toString() <<"\"];\n";
+    }
+    ss << "}\n";
+    return ss.str();
 }
 
 /**
@@ -310,15 +341,15 @@ void DiGraph::dumpGraph() const{
   *          Expression =  -row(n) - 1 >=  0
   * Expressions are owned by the caller, caller must deallocate.          
   */
-std::vector<Exp*> DiGraph::getExpressions() const {
+std::vector<Exp*> DiGraph::getExpressions() {
     std::vector<Exp*> res;
     for (int i = 0 ; i < adj.size(); ++i){
         for(int j = 0; j < adj[i].size();  ++j){
 	    if(adj[i][j] == EdgeType::NONE)
                 continue;
             Exp * e = new Exp;
-	    std::list<Term*> lhsTerms = vertices[i].getTermList();
-	    std::list<Term*> rhsTerms = vertices[j].getTermList();
+	    std::list<Term*>& lhsTerms = vertices[i].getTermList();
+	    std::list<Term*>& rhsTerms = vertices[j].getTermList();
             for(auto t: rhsTerms){
 	        Term* tClone = t->clone();
 		// rhs getTermList() are multiplied by -1 to move 
@@ -355,4 +386,48 @@ std::vector<Exp*> DiGraph::getExpressions() const {
     return res;
 }	
 
+/*!
+ * Function looks for monotonic vertices
+ * and appropriates monotonicity to enclosing
+ * vertices.
+ * rowptr(i) <= col(i,j) < rowptr(i+1)
+ * col(i,j) < col(i+1,j)
+*/
+/*
+void DiGraph::findAddMonotonicity (){
+    for( int i = 0 ;  i < vertices.size(); i ++ ){
+        if (vertices[i].getTermList().size() == 1 && 
+			vertices[i].getTermList()[0].isUFCall()){
+	    for (int j = i+1; j < vertices.size(); j++){
+	        if(vertices[j].getTermList().size() == 1 && 
+			vertices[j].getTermList()[0].isUFCall()){
+		    UFCallTerm* u1 = vertices[i].getTermList()[0];
+		    UFCallTerm* u2 = vertices[j].getTermList()[0];
+		    if(u1->name()!=u2->name() || u1->numArgs() != u2->numArgs())
+	                continue;
+                    bool isMonotonic = true;
+		    for(int q = 0 ;  q < u1->numArgs() ; q++ ){
+		        // Relationship in adjacency matrix must 
+			// be consitent with each param expression 
+			if(adj[i][j] == EdgeType::GREATER_THAN && 
+			   u1->getParamExp(q) < u2->getParamExp(q)){
+			    isMonotonic = false;
+			    break;
+			}else 
+			if(adj[j][i] == EdgeType::GREATER_THAN && 
+			   u2->getParamExp(q) < u1->getParamExp(q)){
+			    isMonotonic = false;
+			    break;
+			}
+                        
+		    }
+
+
+
+		}
+	    }
+	}	
+    }    
+}
+*/
 }

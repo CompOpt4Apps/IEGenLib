@@ -1568,7 +1568,11 @@ Conjunction*  Conjunction::TransitiveClosure(){
         g->addEdge(lhsNode,rhsNode,EdgeType::GREATER_OR_EQUAL_TO);	
     }
     g->simplifyGreaterOrEqual();
+    std::cerr << "Dump Before Trans Closure \n";
+    std::cerr << g->toDotString();
     g->transitiveClosure();
+    std::cerr << "Dump After Trans Closure \n";
+    std::cerr << g->toDotString();
     // Delete all expressions in the retVal conjunction.
     retVal->reset();
     

@@ -4585,6 +4585,26 @@ TEST_F(SetRelationTest, TransitiveClosure){
 	       " N_R - row1 - 1 >= 0 && -col2in + rowptr1 - 1 >= 0 &&"
 	       " -rowptr + rowptr1 - 1 >= 0 }",clo3->prettyPrintString());
      
+     Relation * rel4 = new Relation(
+		     "{[i,j] -> [k]: A(i,j) > 0 and rowptr(i) <= k"
+		     " and k < rowptr(i + 1) and col_inv(i,j) = k and 0 <= i"
+		     " and i < NR and 0 <= j and j < NC}");
+     
+     Relation* clo4 = rel4->TransitiveClosure();
+     
+     
+     Relation * rel5 = new Relation(
+		     "{[n] -> [k]: A(row(n),col1(n)) > 0 and rowptr(row(n)) <= k"
+		     " and k < rowptr(row(n) + 1) and col2_inv(row(n),col1(n)) = k"
+		     " and 0 <= row(n) and col2(k) = col1(n)"
+		     " and row(n) < NR and 0 <= col1(n) and col1(n) < NC}");
+     
+     Relation* clo5 = rel5->TransitiveClosure();
+     
+     delete rel5;
+     delete clo5; 
+     delete rel4;
+     delete clo4; 
      delete clo3;
      delete rel3;
      delete clo2;
