@@ -259,7 +259,7 @@ void Computation::clear() {
 
 AppendComputationResult Computation::appendComputation(
     const Computation* other, std::vector<std::string> arguments,
-    unsigned int depth) {
+    unsigned int nestingDepth) {
     // create a working copy of the other Computation, with unique data space
     // names; this copy is discarded after use
     Computation* toAppend = other->getUniquelyNamedClone();
@@ -267,34 +267,34 @@ AppendComputationResult Computation::appendComputation(
 
     // store last statement's execution schedule information
     Relation* precedingExecSchedule = stmts.back()->getExecutionSchedule();
-    int precedingInArity = precedingExecSchedule->inArity();
-    int precedingOutArity = precedingExecSchedule->outArity();
+    const int precedingExecInArity = precedingExecSchedule->inArity();
+    const int precedingExecOutArity = precedingExecSchedule->outArity();
     if (precedingExecSchedule->getNumConjuncts() != 1) {
         throw assert_exception(
             "Execution schedule should have exactly 1 Conjunction.");
     }
+    // store last statement's iteration space information
+    Set* precedingIterSpace = stmts.back()->getIterationSpace();
+    const int precedingIterArity = precedingIterSpace->arity();
 
     // ensure valid append depth
-    if ((depth % 2) != 0) {
+    if (nestingDepth > precedingIterArity) {
         throw assert_exception(
-            "Append depth should be an even number -- odd numbers indicate "
-            "loop iterator names.");
-    }
-    // this is a strict < because depth is 0-indexed whereas arity is a count
-    if (!(depth < precedingOutArity)) {
-        throw assert_exception(
-            "Cannot append at depth " + std::to_string(depth) +
-            " (0-indexed), preceding schedule only has length of " +
-            std::to_string(precedingOutArity));
+            "Cannot append at depth " + std::to_string(nestingDepth) +
+            " (0-indexed), preceding iteration domain only has arity of " +
+            std::to_string(precedingIterArity));
     }
 
     // calculate indexes/offsets for tuple modifications
-    TupleDecl precedingTuple = precedingExecSchedule->getTupleDecl();
+    const TupleDecl precedingExecTuple = precedingExecSchedule->getTupleDecl();
+    // depth within execution schedule (because every iterator follows a scalar
+    // number)
+    const int scheduleDepth = nestingDepth * 2;
     // index within the tuple corresponding to the specified depth, adjusted for
     // input size that comes before it
-    const int adjustedLevelIndex = depth + precedingInArity;
+    const int adjustedLevelIndex = scheduleDepth + precedingExecInArity;
     // Value to offset schedule tuples by at specified depth.
-    int offsetValue = precedingTuple.elemConstVal(adjustedLevelIndex) + 1;
+    int offsetValue = precedingExecTuple.elemConstVal(adjustedLevelIndex) + 1;
     // Keep track of the latest execution schedule position used.
     // This initial value is chosen for the case where no statements are
     // appended, so the latest position is simply the previous one.
@@ -339,14 +339,14 @@ AppendComputationResult Computation::appendComputation(
     // keep track of all iterators that exist at the depth we're using, others
     // will be discarded
     std::vector<std::string> savedIterators;
-    for (int i = precedingInArity; i < adjustedLevelIndex; ++i) {
-        if (!precedingTuple.elemIsConst(i)) {
-            savedIterators.push_back(precedingTuple.elemToString(i));
+    for (int i = precedingExecInArity; i < adjustedLevelIndex; ++i) {
+        if (!precedingExecTuple.elemIsConst(i)) {
+            savedIterators.push_back(precedingExecTuple.elemToString(i));
         }
     }
 
-    // adjust execution schedule for each statement, including parameter
-    // declarations
+    // adjust execution schedule for each statement,
+    // including parameter declarations
     unsigned int remainingParamDeclStmts = numArgs;
     bool processingOriginalStmts = false;
     for (auto currentStmt = toAppend->stmtsBegin();
@@ -363,26 +363,27 @@ AppendComputationResult Computation::appendComputation(
             }
         }
 
+        /* execution schedule adjustment */
         // original execution schedule for statement to be appended
         Relation* appendExecSchedule = (*currentStmt)->getExecutionSchedule();
-        TupleDecl appendTuple = appendExecSchedule->getTupleDecl();
+        TupleDecl appendExecTuple = appendExecSchedule->getTupleDecl();
         int appendInArity = appendExecSchedule->inArity();
 
         // construct new execution schedule tuple
-        int newInArity = savedIterators.size() + appendInArity;
-        int newOutArity = depth + appendExecSchedule->outArity();
-        TupleDecl newTuple = TupleDecl(newInArity + newOutArity);
+        int newExecInArity = savedIterators.size() + appendInArity;
+        int newExecOutArity = scheduleDepth + appendExecSchedule->outArity();
+        TupleDecl newExecTuple = TupleDecl(newExecInArity + newExecOutArity);
         unsigned int currentTuplePos = 0;
         bool haveInsertedIterator = false;
         bool skippedAZero = false;
         // insert iterators from surrounding context
         for (const std::string& iterator : savedIterators) {
-            newTuple.setTupleElem(currentTuplePos++, iterator);
+            newExecTuple.setTupleElem(currentTuplePos++, iterator);
             haveInsertedIterator = true;
         }
         // insert iterators from schedule of appended statement
         // skip '0' iterator placeholder, if present
-        if (appendTuple.elemIsConst(0) && appendTuple.elemConstVal(0) == 0) {
+        if (appendExecTuple.elemIsConst(0) && appendExecTuple.elemConstVal(0) == 0) {
             skippedAZero = true;
             if (appendInArity != 1) {
                 throw assert_exception(
@@ -393,44 +394,48 @@ AppendComputationResult Computation::appendComputation(
         } else {
             for (int iteratorPos = 0; iteratorPos < appendInArity;
                  ++iteratorPos) {
-                newTuple.copyTupleElem(appendTuple, iteratorPos,
+                newExecTuple.copyTupleElem(appendExecTuple, iteratorPos,
                                        currentTuplePos++);
                 haveInsertedIterator = true;
             }
         }
         // if there are no iterators, insert a constant 0 instead
         if (!haveInsertedIterator) {
-            newTuple.setTupleElem(currentTuplePos++, 0);
+            newExecTuple.setTupleElem(currentTuplePos++, 0);
             // if a zero was skipped earlier, it is now re-inserted, which is
             // equivalent to having never been skipped
             skippedAZero = false;
         }
         // insert base tuple elements up to specified depth
-        for (int it = precedingInArity; it < adjustedLevelIndex; ++it) {
-            newTuple.copyTupleElem(precedingTuple, it, currentTuplePos++);
+        for (int it = precedingExecInArity; it < adjustedLevelIndex; ++it) {
+            newExecTuple.copyTupleElem(precedingExecTuple, it, currentTuplePos++);
         }
         // insert specified depth value, with offset, and save it
-        latestTupleValue = appendTuple.elemConstVal(appendInArity) + offsetValue;
-        newTuple.setTupleElem(currentTuplePos++, latestTupleValue);
+        latestTupleValue = appendExecTuple.elemConstVal(appendInArity) + offsetValue;
+        newExecTuple.setTupleElem(currentTuplePos++, latestTupleValue);
         // insert remaining append tuple values
-        for (int it = appendInArity + 1; it < appendTuple.size(); ++it) {
-            newTuple.copyTupleElem(appendTuple, it, currentTuplePos++);
+        for (int it = appendInArity + 1; it < appendExecTuple.size(); ++it) {
+            newExecTuple.copyTupleElem(appendExecTuple, it, currentTuplePos++);
         }
         // if we've skipped a 0-iterator, shrink the tuple appropriately
         if (skippedAZero) {
             TupleDecl tmpTuple = TupleDecl(currentTuplePos);
             for (unsigned int i = 0; i < currentTuplePos; ++i) {
-                tmpTuple.copyTupleElem(newTuple, i, i);
+                tmpTuple.copyTupleElem(newExecTuple, i, i);
             }
-            newTuple = tmpTuple;
+            newExecTuple = tmpTuple;
             // the 0 iterator has been removed, reducing input arity
-            newInArity--;
+            newExecInArity--;
         }
 
         // insert a new execution schedule Relation using (only) the new tuple
         (*currentStmt)
-            ->setExecutionSchedule("{" + newTuple.toString(true, newInArity) +
+            ->setExecutionSchedule("{" + newExecTuple.toString(true, newExecInArity) +
                                    "}");
+
+        /* iteration domain adjustment */
+        Set* appendIterSpace = (*currentStmt)->getIterationSpace();
+        TupleDecl appendIterTuple =appendIterSpace->getTupleDecl();
 
         // copy the modified statement into this Computation
         this->addStmt(new Stmt(*(*currentStmt)));

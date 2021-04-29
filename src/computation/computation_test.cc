@@ -91,13 +91,11 @@ class ComputationTest : public ::testing::Test {
     //! \param[in] appendedComp Computation appended onto another (the 'callee'
     //! function)
     //! \param[in] argsList list of arguments to pass the appended Computation
-    //! \param[in] appendedAtLevel the level (exechution schedule tuple
-    //! position) to append onto, analogous to the nesting depth of the
-    //! 'function call'
-    //! \param[in] expectedTuplePosition expected last used tuple position at
-    //! insertion level
-    //! \param[in] expectedReturnValues string versions of expected return
-    //! values
+    //! \param[in] appendedAtLevel the level to append onto, analogous to the
+    //! nesting depth of the 'function call'
+    //! \param[in] expectedTuplePosition
+    //! expected last used tuple position at insertion level \param[in]
+    //! expectedReturnValues string versions of expected return values
     //! \param[in] expectedExecSchedules string versions of expected
     //! execution schedules for the appended Computation after appending
     //! modifications are done
@@ -374,7 +372,7 @@ TEST_F(ComputationTest, AppendComputationNonzeroDepth) {
     Computation* comp2 = new Computation();
     comp2->addStmt(s2);
 
-    checkAppendComputation(comp1, comp2, {}, 2, 2, {},
+    checkAppendComputation(comp1, comp2, {}, 1, 2, {},
                            {"{[i,k] -> [2,i,2,k,1]}"});
 
     delete comp1, comp2;
@@ -397,7 +395,7 @@ TEST_F(ComputationTest, AppendComputationArgumentPassing) {
     comp2->addParameter("b", "double");
     comp2->addParameter("c", "float");
 
-    checkAppendComputation(comp1, comp2, {"myInt", "myDouble", "0"}, 2, 5, {},
+    checkAppendComputation(comp1, comp2, {"myInt", "myDouble", "0"}, 1, 5, {},
                            {"{[i]->[2,i,2]}", "{[i]->[2,i,3]}",
                             "{[i]->[2,i,4]}", "{[i,k]->[2,i,5,k,1]}"});
 
@@ -420,7 +418,7 @@ TEST_F(ComputationTest, AppendComputationEmpty) {
 
     Computation* comp2 = new Computation();
 
-    checkAppendComputation(comp1, comp2, {}, 2, 1, {}, {});
+    checkAppendComputation(comp1, comp2, {}, 1, 1, {}, {});
 
     delete comp1, comp2;
 
@@ -434,7 +432,7 @@ TEST_F(ComputationTest, AppendComputationEmpty) {
     comp2->addParameter("a", "int");
     comp2->addParameter("b", "double");
 
-    checkAppendComputation(comp1, comp2, {"myInt", "3.14159"}, 2, 3, {},
+    checkAppendComputation(comp1, comp2, {"myInt", "3.14159"}, 1, 3, {},
                            {"{[i]->[2,i,2]}", "{[i]->[2,i,3]}"});
 
     delete comp1, comp2;
@@ -453,7 +451,7 @@ TEST_F(ComputationTest, AppendComputationReturnValues) {
     comp2->addReturnValue("res");
     comp2->addReturnValue("0");
 
-    checkAppendComputation(comp1, comp2, {}, 2, 2, {"_iegen_0res", "0"},
+    checkAppendComputation(comp1, comp2, {}, 1, 2, {"_iegen_0res", "0"},
                            {"{[i,k] -> [2,i,2,k,1]}"});
 
     delete comp1, comp2;

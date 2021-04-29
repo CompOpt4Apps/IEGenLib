@@ -138,13 +138,14 @@ class Computation {
     //! but its statements will not be modified
     //! \param[in] arguments Arguments to pass in to the appended Computation
     //! (if any)
-    //! \param[in] depth 0-indexed execution schedule tuple position to append
-    //! at, to define the level of nesting the new Computation is within
-    //! \return State information to be used in Stmts following what was
-    //! appended.
+    //! \param[in] nestingDepth Number of surrounding loop nests the appended
+    //! statements should be in. Should be between 0 (outside of all loops)
+    //! and arity of iteration space (inside all loops).
+    //! \return State information to be used in Stmts
+    //! following what was appended.
     AppendComputationResult appendComputation(
         const Computation* other, std::vector<std::string> arguments = {},
-        unsigned int depth = 0);
+        unsigned int nestingDepth = 0);
 
     void toDot(std::fstream& dotFileStream, string fileName);
 
