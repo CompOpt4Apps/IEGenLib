@@ -275,7 +275,12 @@ AppendComputationResult Computation::appendComputation(
     }
     // store last statement's iteration space information
     Set* precedingIterSpace = stmts.back()->getIterationSpace();
+    const TupleDecl precedingIterTuple = precedingIterSpace->getTupleDecl();
     const int precedingIterArity = precedingIterSpace->arity();
+    if (precedingIterSpace->getNumConjuncts() != 1) {
+        throw assert_exception(
+            "Execution schedule should have exactly 1 Conjunction.");
+    }
 
     // ensure valid append depth
     if (nestingDepth > precedingIterArity) {
@@ -285,7 +290,7 @@ AppendComputationResult Computation::appendComputation(
             std::to_string(precedingIterArity));
     }
 
-    // calculate indexes/offsets for tuple modifications
+    // calculate indexes/offsets for execution tuple modifications
     const TupleDecl precedingExecTuple = precedingExecSchedule->getTupleDecl();
     // depth within execution schedule (because every iterator follows a scalar
     // number)
@@ -345,8 +350,8 @@ AppendComputationResult Computation::appendComputation(
         }
     }
 
-    // adjust execution schedule for each statement,
-    // including parameter declarations
+    // adjust execution schedule, iteration domain for each statement of
+    // appendee, including parameter declarations
     unsigned int remainingParamDeclStmts = numArgs;
     bool processingOriginalStmts = false;
     for (auto currentStmt = toAppend->stmtsBegin();
@@ -434,8 +439,62 @@ AppendComputationResult Computation::appendComputation(
                                    "}");
 
         /* iteration domain adjustment */
+        std::cout << "reached iter domain adjustment\n";
+        // collect information about iter space of appended statement
         Set* appendIterSpace = (*currentStmt)->getIterationSpace();
-        TupleDecl appendIterTuple =appendIterSpace->getTupleDecl();
+        const int appendIterArity = appendIterSpace->arity();
+        TupleDecl appendIterTuple = appendIterSpace->getTupleDecl();
+
+        // construct a Relation which can be applied to the preceding iter space
+        // to yield the desired new iter space for appended statement
+        Relation* iterSpaceAdjuster =
+            new Relation(precedingIterArity, nestingDepth + appendIterArity);
+        TupleDecl iterAdjustTuple = TupleDecl(iterSpaceAdjuster->arity());
+        // input tuple: tuple of preceding iter space
+        for (unsigned int i = 0; i < precedingIterArity; ++i) {
+            iterAdjustTuple.copyTupleElem(precedingIterTuple, i, i);
+        }
+        // first part of output: preceding iterators that exist at this level
+        for (unsigned int i = 0; i < nestingDepth; ++i) {
+            iterAdjustTuple.copyTupleElem(precedingIterTuple, i,
+                                          precedingIterArity + i);
+        }
+        // remainder of output: iterators from the appendee
+        for (unsigned int i = 0; i < appendIterArity; ++i) {
+            iterAdjustTuple.copyTupleElem(
+                appendIterTuple, i, precedingIterArity + nestingDepth + i);
+        }
+        iterSpaceAdjuster->setTupleDecl(iterAdjustTuple);
+        // create the constraints for the adjuster Relation
+        Conjunction* iterAdjusterConj = new Conjunction(iterAdjustTuple.size(), precedingIterArity);
+        iterAdjusterConj->setTupleDecl(iterAdjustTuple);
+        // copy constraints on preceding iter space as-is
+        iterAdjusterConj->copyConstraintsFrom(
+            *precedingIterSpace->conjunctionBegin());
+        // create new constraints linking preceding iterators in input and output
+        for (unsigned int i = 0; i < nestingDepth; ++i) {
+            Exp* linker = new Exp();
+            linker->setEquality();
+            linker->addTerm(new TupleVarTerm(1, i));
+            linker->addTerm(new TupleVarTerm(-1, precedingIterArity + i));
+            iterAdjusterConj->addEquality(linker);
+        }
+        // remap constraints from appendee iteration space to fit new tuple,
+        // then copy them in
+        Conjunction* shiftedAppendIterSpaceConj = new Conjunction(**appendIterSpace->conjunctionBegin());
+        std::vector<int> shiftAppendeeIters;
+        for (unsigned int i = 0; i < appendIterArity; ++i) {
+            shiftAppendeeIters.push_back(precedingIterArity + nestingDepth + i);
+        }
+        shiftedAppendIterSpaceConj->remapTupleVars(shiftAppendeeIters);
+        iterAdjusterConj->copyConstraintsFrom(shiftedAppendIterSpaceConj);
+        iterSpaceAdjuster->addConjunction(iterAdjusterConj);
+        // finally, apply the adjuster Relation to the original iteration space
+        // to yield the desired result
+        std::cout << "iter space adjuster completed: " << iterSpaceAdjuster->prettyPrintString() << "\n";
+        std::cout << "applying to preceding iter space of " << precedingIterSpace->prettyPrintString() << "\n";
+        Set* newIterSpace = iterSpaceAdjuster->Apply(precedingIterSpace);
+        std::cout << "new iter space: " << newIterSpace->prettyPrintString() << "\n";
 
         // copy the modified statement into this Computation
         this->addStmt(new Stmt(*(*currentStmt)));
