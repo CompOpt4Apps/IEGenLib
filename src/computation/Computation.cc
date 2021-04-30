@@ -674,7 +674,10 @@ std::string Computation::codeGen(Set* knownConstraints) {
         // Stmt Macro:
         stmtMacroUndefs << "#undef s" << stmtCount << "\n";
         stmtMacroDefs << "#define s" << stmtCount << "(" << tupleString
-                      << ")   " << stmt->getStmtSourceCode() << " \n";
+                      << ")   "
+                      << iegenlib::replaceInString(stmt->getStmtSourceCode(), "$",
+                                               "")
+                      << " \n";
         stmtCount++;
 
         std::string omegaIterString =
