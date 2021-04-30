@@ -102,6 +102,8 @@ void Computation::addStmt(Stmt* stmt) {
 
 Stmt* Computation::getStmt(unsigned int index) { return stmts.at(index); }
 
+unsigned int Computation::getNumStmts() const { return stmts.size(); }
+
 void Computation::addDataSpace(std::string dataSpaceName) {
     dataSpaces.emplace(dataSpaceName);
 }
@@ -149,8 +151,6 @@ std::vector<std::string> Computation::getReturnValues() const {
 unsigned int Computation::getNumReturnValues() const {
     return returnValues.size();
 }
-
-unsigned int Computation::getNumStmts() const { return stmts.size(); }
 
 void Computation::printInfo() const {
     std::ostringstream stmtsOutput;
@@ -499,8 +499,7 @@ AppendComputationResult Computation::appendComputation(
             }
         }
 
-        std::cout << "new iter space: " << newIterSpace->prettyPrintString() << "\n";
-
+        (*currentStmt)->setIterationSpace(newIterSpace->prettyPrintString());
 
         // copy the modified statement into this Computation
         this->addStmt(new Stmt(*(*currentStmt)));

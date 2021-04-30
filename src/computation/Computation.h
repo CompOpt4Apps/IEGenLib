@@ -82,6 +82,8 @@ class Computation {
     void addStmt(Stmt* stmt);
     //! Get a statement by index
     Stmt* getStmt(unsigned int index);
+    //! Get the number of statements in this Computation
+    unsigned int getNumStmts() const;
 
     //! Add a data space to this Computation
     void addDataSpace(std::string dataSpaceName);
@@ -113,9 +115,6 @@ class Computation {
     //! Get the number of return values this Computation has (some languages
     //! support multiple return)
     unsigned int getNumReturnValues() const;
-
-    //! Get the number of statements in this Computation
-    unsigned int getNumStmts() const;
 
     //! Get an iterator to the first Stmt in this Computation
     std::vector<Stmt*>::iterator stmtsBegin() { return stmts.begin(); }

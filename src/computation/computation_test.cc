@@ -91,44 +91,69 @@ class ComputationTest : public ::testing::Test {
     //! \param[in] appendedComp Computation appended onto another (the 'callee'
     //! function)
     //! \param[in] argsList list of arguments to pass the appended Computation
-    //! \param[in] appendedAtLevel the level to append onto, analogous to the
-    //! nesting depth of the 'function call'
-    //! \param[in] expectedTuplePosition
-    //! expected last used tuple position at insertion level \param[in]
-    //! expectedReturnValues string versions of expected return values
-    //! \param[in] expectedExecSchedules string versions of expected
-    //! execution schedules for the appended Computation after appending
-    //! modifications are done
+    //! \param[in] appendDepth loop nesting depth to append into
+    //! \param[in] expectedTuplePosition expected last used tuple position at
+    //! insertion level
+    //! \param[in] expectedReturnValues string versions of expected return values
+    //! \param[in] expectedComp Computation that appender should equal after append
     void checkAppendComputation(
         Computation* appendedTo, Computation* appendedComp,
-        std::vector<std::string> argsList, unsigned int appendAtLevel,
+        std::vector<std::string> argsList, unsigned int appendDepth,
         int expectedTuplePosition,
-        std::vector<std::string> expectedReturnValues,
-        std::vector<std::string> expectedExecSchedules) {
-        // remember number of original statements, for testing only appended
-        // ones later
-        unsigned int origNumStmts = appendedTo->getNumStmts();
-        // perform actual append
+        std::vector<std::string> expectedReturnValues, Computation* expectedComp) {
         AppendComputationResult result = appendedTo->appendComputation(appendedComp, argsList,
-                                                   appendAtLevel);
+                                                   appendDepth);
+
         EXPECT_EQ(expectedTuplePosition, result.tuplePosition);
         EXPECT_EQ(expectedReturnValues, result.returnValues);
+        expectComputationsEqual(expectedComp, appendedTo);
+    }
 
-        // sanity check correct number of expected schedules
-        ASSERT_EQ(expectedExecSchedules.size(),
-                  appendedTo->getNumStmts() - origNumStmts);
-        // verify that all execution schedules match expected values
-        int i = origNumStmts;
-        for (const auto& it : expectedExecSchedules) {
-            SCOPED_TRACE("Statement " +
-                         appendedTo->getStmt(i)->getStmtSourceCode());
-            iegenlib::Relation* testRel = new iegenlib::Relation(it);
-            EXPECT_EQ(testRel->prettyPrintString(), appendedTo->getStmt(i)
-                                                        ->getExecutionSchedule()
-                                                        ->prettyPrintString());
-            delete testRel;
-            i++;
+    //! EXPECT with gTest that two Computations are equal, component by component.
+    void expectComputationsEqual(Computation* expectedComp, Computation* actualComp) {
+        ASSERT_EQ(expectedComp->getNumStmts(), actualComp->getNumStmts());
+
+        for (unsigned int i = 0; i < expectedComp->getNumStmts(); ++i) {
+            SCOPED_TRACE("Statement " + std::to_string(i));
+
+            Stmt* expectedStmt = expectedComp->getStmt(i);
+            Stmt* actualStmt = actualComp->getStmt(i);
+
+            EXPECT_EQ(expectedStmt->getStmtSourceCode(), actualStmt->getStmtSourceCode());
+
+            EXPECT_EQ(expectedStmt->getIterationSpace()->prettyPrintString(),
+                      actualStmt->getIterationSpace()->prettyPrintString());
+
+            EXPECT_EQ(expectedStmt->getExecutionSchedule()->prettyPrintString(),
+                      actualStmt->getExecutionSchedule()->prettyPrintString());
+
+            ASSERT_EQ(expectedStmt->getNumReads(), actualStmt->getNumReads());
+            for (unsigned int j = 0; j < expectedStmt->getNumReads(); ++j) {
+                EXPECT_EQ(expectedStmt->getReadDataSpace(j),
+                          actualStmt->getReadDataSpace(j));
+                EXPECT_EQ(expectedStmt->getReadRelation(j)->prettyPrintString(),
+                          actualStmt->getReadRelation(j)->prettyPrintString());
+            }
+
+            ASSERT_EQ(expectedStmt->getNumWrites(), actualStmt->getNumWrites());
+            for (unsigned int j = 0; j < expectedStmt->getNumWrites(); ++j) {
+                EXPECT_EQ(expectedStmt->getWriteDataSpace(j),
+                          actualStmt->getWriteDataSpace(j));
+                EXPECT_EQ(expectedStmt->getWriteRelation(j)->prettyPrintString(),
+                          actualStmt->getWriteRelation(j)->prettyPrintString());
+            }
         }
+
+        EXPECT_EQ(expectedComp->getDataSpaces(), actualComp->getDataSpaces());
+
+        ASSERT_EQ(expectedComp->getNumParams(), actualComp->getNumParams());
+        for (unsigned int i = 0; i < expectedComp->getNumParams(); ++i) {
+            SCOPED_TRACE("Parameter " + std::to_string(i));
+            EXPECT_EQ(expectedComp->getParameterName(i), actualComp->getParameterName(i));
+            EXPECT_EQ(expectedComp->getParameterType(i), actualComp->getParameterType(i));
+        }
+
+        EXPECT_EQ(expectedComp->getReturnValues(), actualComp->getReturnValues());
     }
 };
 
@@ -306,125 +331,110 @@ __x6 = 0 && B_0(__x0,i,__x2,j,__x4,k) = 0 && __x4 = 1 \
 #pragma mark AppendComputation0Depth
 TEST_F(ComputationTest, AppendComputation0Depth) {
     // initial Computation that will be appended to
-    Stmt* s1 = new Stmt("s1;", "{[i,j]}", "{[i,j] -> [0,i,0,j,0]}", {}, {});
-    Stmt* s2 = new Stmt("asdf();", "{[i]}", "{[i] -> [1,i,0,0,0]}", {}, {});
     Computation* comp1 = new Computation();
+    Stmt* s1 = new Stmt("s1;", "{[i,j]}", "{[i,j] -> [0,i,0,j,0]}", {}, {});
+    Stmt* s2 = new Stmt("s2;", "{[i]}", "{[i] -> [1,i,0,0,0]}", {}, {});
     comp1->addStmt(s1);
     comp1->addStmt(s2);
+
     // Computation to append
+    Computation* comp2 = new Computation();
     Stmt* s3 = new Stmt("s3;", "{[i]}", "{[i] -> [0,i,0,0,0]}", {}, {});
     Stmt* s4 = new Stmt("s4;", "{[0]}", "{[0] -> [1,0,0,0,0]}", {}, {});
-    Computation* comp2 = new Computation();
     comp2->addStmt(s3);
     comp2->addStmt(s4);
-    // perform test
-    checkAppendComputation(comp1, comp2, {}, 0, 3, {},
-                           {"{[i] -> [2,i,0,0,0]}", "{[0] -> [3,0,0,0,0]}"});
 
-    delete comp1, comp2;
-}
-
-#pragma mark AppendComputationGeoAc
-TEST_F(ComputationTest, AppendComputationGeoAc) {
-    // Initial Computation that will be appended to
-    Computation* EvalSplineFComputation = new Computation();
-
-    // Creating s0
-    // int k;
-    Stmt* s0 = new Stmt("int k", "{[0]}", "{[0]->[0, 0, 0]}", {}, {});
-    // Adding s0
-    EvalSplineFComputation->addStmt(s0);
-
-    // Creating s1
-    // int k = Find_Segment(x, Spline.x_vals, Spline.length, Spline.accel);
-    // Find_Segment(double x, double* x_vals, int length, int & prev){
-    Stmt* s1 = new Stmt(
-        "double* x_vals = Spline.x_vals; int length = Spline.length; int& "
-        "prev "
-        "= Spline.accel",
-        "{[0]}", "{[0]->[1, 0, 0]}", {}, {});
-    // Adding s1
-    EvalSplineFComputation->addStmt(s1);
-
-    // Computation that gets appended
-    Computation* FindSegmentComputation = new Computation();
-    // Creating statement1
-    // if(x >= x_vals[i] && x <= x_vals[i+1]) prev = i;
-    Stmt* s00 = new Stmt("if(x >= x_vals[i] && x <= x_vals[i+1]) prev = i",
-                         "{[i]: i>=0 && i<length}", "{[i]->[0, i, 0]}", {}, {});
-    // Adding statement2
-    FindSegmentComputation->addStmt(s00);
+    // Computation expected to result from appending
+    Computation* expectedComp = new Computation();
+    Stmt* es1 = new Stmt(*s1);
+    Stmt* es2 = new Stmt(*s2);
+    Stmt* es3 = new Stmt("s3;", "{[i]}", "{[i] -> [2,i,0,0,0]}", {}, {});
+    Stmt* es4 = new Stmt("s4;", "{[0]}", "{[0] -> [3,0,0,0,0]}", {}, {});
+    expectedComp->addStmt(es1);
+    expectedComp->addStmt(es2);
+    expectedComp->addStmt(es3);
+    expectedComp->addStmt(es4);
 
     // perform test
-    checkAppendComputation(EvalSplineFComputation, FindSegmentComputation, {},
-                           0, 2, {}, {"{[i] -> [2, i, 0]}"});
+    checkAppendComputation(comp1, comp2, {}, 0, 3, {}, expectedComp);
 
-    delete EvalSplineFComputation, FindSegmentComputation;
+    delete comp1, comp2, expectedComp;
 }
 
 #pragma mark AppendComputationNonzeroDepth
 TEST_F(ComputationTest, AppendComputationNonzeroDepth) {
-    Stmt* s1 = new Stmt("s1;", "{[i,j]}", "{[i,j] -> [2,i,1,j,1]}", {}, {});
     Computation* comp1 = new Computation();
+    Stmt* s1 = new Stmt("s1;", "{[i,j]}", "{[i,j] -> [2,i,1,j,1]}", {}, {});
     comp1->addStmt(s1);
 
-    Stmt* s2 = new Stmt("s3;", "{[k]}", "{[k] -> [0,k,1]}", {}, {});
     Computation* comp2 = new Computation();
+    Stmt* s2 = new Stmt("s2;", "{[k]}", "{[k] -> [0,k,1]}", {}, {});
     comp2->addStmt(s2);
 
-    checkAppendComputation(comp1, comp2, {}, 1, 2, {},
-                           {"{[i,k] -> [2,i,2,k,1]}"});
+    Computation* ecomp = new Computation();
+    Stmt* es1 = new Stmt(*s1);
+    Stmt* es2 = new Stmt("s2;", "{[i,k]}", "{[i,k] -> [2,i,2,k,1]}", {}, {});
+    ecomp->addStmt(es1);
+    ecomp->addStmt(es2);
 
-    delete comp1, comp2;
+    checkAppendComputation(comp1, comp2, {}, 1, 2, {}, ecomp);
+
+    delete comp1, comp2, ecomp;
 }
 
 #pragma mark AppendComputationArgumentPassing
 TEST_F(ComputationTest, AppendComputationArgumentPassing) {
-    SCOPED_TRACE("Basic argument passing test");
-
-    Stmt* s1 = new Stmt("s1;", "{[i,j]}", "{[i,j] -> [2,i,1,j,1]}", {}, {});
     Computation* comp1 = new Computation();
+    Stmt* s1 = new Stmt("s1;", "{[i,j]}", "{[i,j] -> [2,i,1,j,1]}", {}, {});
     comp1->addStmt(s1);
     comp1->addDataSpace("myInt");
     comp1->addDataSpace("myDouble");
 
-    Stmt* s2 = new Stmt("s2;", "{[k]}", "{[k] -> [0,k,1]}", {}, {});
     Computation* comp2 = new Computation();
+    Stmt* s2 = new Stmt("s2;", "{[k]}", "{[k] -> [0,k,1]}", {}, {});
     comp2->addStmt(s2);
     comp2->addParameter("a", "int");
     comp2->addParameter("b", "double");
     comp2->addParameter("c", "float");
 
+    Computation* ecomp = new Computation();
+    Stmt* es1 = new Stmt(*s1);
+    Stmt* e_gen_s1 = new Stmt("int _iegen_0a = myInt;", "{[i]}", "{[i] -> [2,i,2]}", {{"myInt", "{[i]->[0]}"}}, {{"_iegen_0a", "{[i]->[0]}"}});
+    Stmt* e_gen_s2 = new Stmt("double _iegen_0b = myDouble;", "{[i]}", "{[i] -> [2,i,3]}", {{"myDouble", "{[i]->[0]}"}}, {{"_iegen_0b", "{[i]->[0]}"}});
+    Stmt* e_gen_s3 = new Stmt("float _iegen_0c = 0;", "{[i]}", "{[i] -> [2,i,4]}", {}, {{"_iegen_0c", "{[i]->[0]}"}});
+    Stmt* es2 = new Stmt("s2;", "{[i,k]}", "{[i,k] -> [2,i,5,k,1]}", {}, {});
+    ecomp->addStmt(es1);
+    ecomp->addStmt(e_gen_s1);
+    ecomp->addStmt(e_gen_s2);
+    ecomp->addStmt(e_gen_s3);
+    ecomp->addStmt(es2);
+
     checkAppendComputation(comp1, comp2, {"myInt", "myDouble", "0"}, 1, 5, {},
-                           {"{[i]->[2,i,2]}", "{[i]->[2,i,3]}",
-                            "{[i]->[2,i,4]}", "{[i,k]->[2,i,5,k,1]}"});
+                           ecomp);
 
-    // additional checks for parameter decls, which the helper function
-    // doesn't generally do -- may be rolled into checkAppendComputation at
-    // some point
-    EXPECT_EQ("int _iegen_0a = myInt;", comp1->getStmt(1)->getStmtSourceCode());
-    EXPECT_EQ("double _iegen_0b = myDouble;",
-              comp1->getStmt(2)->getStmtSourceCode());
-
-    delete comp1, comp2;
+    delete comp1, comp2, ecomp;
 }
 
 #pragma mark AppendComputationEmpty
 TEST_F(ComputationTest, AppendComputationEmpty) {
     // without params
-    Stmt* s1 = new Stmt("s1;", "{[i,j]}", "{[i,j] -> [2,i,1,j,1]}", {}, {});
     Computation* comp1 = new Computation();
+    Stmt* s1 = new Stmt("s1;", "{[i,j]}", "{[i,j] -> [2,i,1,j,1]}", {}, {});
     comp1->addStmt(s1);
 
     Computation* comp2 = new Computation();
 
-    checkAppendComputation(comp1, comp2, {}, 1, 1, {}, {});
+    Computation* ecomp = new Computation();
+    Stmt* es1 = new Stmt(*s1);
+    ecomp->addStmt(es1);
 
-    delete comp1, comp2;
+    checkAppendComputation(comp1, comp2, {}, 1, 1, {}, ecomp);
+
+    delete comp1, comp2, ecomp;
 
     // with params
-    s1 = new Stmt("s1;", "{[i,j]}", "{[i,j] -> [2,i,1,j,1]}", {}, {});
     comp1 = new Computation();
+    s1 = new Stmt("s1;", "{[i,j]}", "{[i,j] -> [2,i,1,j,1]}", {}, {});
     comp1->addStmt(s1);
     comp1->addDataSpace("myInt");
 
@@ -432,10 +442,17 @@ TEST_F(ComputationTest, AppendComputationEmpty) {
     comp2->addParameter("a", "int");
     comp2->addParameter("b", "double");
 
-    checkAppendComputation(comp1, comp2, {"myInt", "3.14159"}, 1, 3, {},
-                           {"{[i]->[2,i,2]}", "{[i]->[2,i,3]}"});
+    ecomp = new Computation();
+    es1 = new Stmt(*s1);
+    Stmt* e_gen_s1 = new Stmt("int _iegen_1a = myInt;", "{[i]}", "{[i] -> [2,i,2]}", {{"myInt", "{[i]->[0]}"}}, {{"_iegen_1a", "{[i]->[0]}"}});
+    Stmt* e_gen_s2 = new Stmt("double _iegen_1b = 3.14159;", "{[i]}", "{[i] -> [2,i,3]}", {}, {{"_iegen_1b", "{[i]->[0]}"}});
+    ecomp->addStmt(es1);
+    ecomp->addStmt(e_gen_s1);
+    ecomp->addStmt(e_gen_s2);
 
-    delete comp1, comp2;
+    checkAppendComputation(comp1, comp2, {"myInt", "3.14159"}, 1, 3, {}, ecomp);
+
+    delete comp1, comp2, ecomp;
 }
 
 #pragma mark AppendComputationReturnValues
@@ -451,10 +468,15 @@ TEST_F(ComputationTest, AppendComputationReturnValues) {
     comp2->addReturnValue("res");
     comp2->addReturnValue("0");
 
-    checkAppendComputation(comp1, comp2, {}, 1, 2, {"_iegen_0res", "0"},
-                           {"{[i,k] -> [2,i,2,k,1]}"});
+    Computation* ecomp = new Computation();
+    Stmt* es1 = new Stmt("s1;", "{[i,j]}", "{[i,j] -> [2,i,1,j,1]}", {}, {});
+    Stmt* es2 = new Stmt("s2;", "{[i,k]}", "{[i,k] -> [2,i,2,k,1]}", {}, {});
+    ecomp->addStmt(es1);
+    ecomp->addStmt(es2);
 
-    delete comp1, comp2;
+    checkAppendComputation(comp1, comp2, {}, 1, 2, {"_iegen_0res", "0"}, ecomp);
+
+    delete comp1, comp2, ecomp;
 }
 
 #pragma mark ComputationNamePrefixing
