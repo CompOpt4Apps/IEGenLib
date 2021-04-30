@@ -53,12 +53,19 @@ Computation::~Computation() {
 Computation::Computation(const Computation& other) { *this = other; }
 
 Computation& Computation::operator=(const Computation& other) {
-    this->dataSpaces = other.dataSpaces;
     this->stmts = other.stmts;
+    this->dataSpaces = other.dataSpaces;
+    this->parameters = other.parameters;
+    this->returnValues = other.returnValues;
+
+    return *this;
 }
 
 bool Computation::operator==(const Computation& other) const {
-    return (this->dataSpaces == other.dataSpaces && this->stmts == other.stmts);
+    return (this->stmts == other.stmts &&
+            this->dataSpaces == other.dataSpaces &&
+            this->parameters == other.parameters &&
+            this->returnValues == other.returnValues);
 }
 
 Computation* Computation::getUniquelyNamedClone() const {
