@@ -70,6 +70,8 @@ list of symbols below*/
 "exists"  {return EXISTS;}
 "inverse" {return INVERSE;}
 "INVERSE" {return INVERSE;}
+"project" {return PROJECT;}
+"PROJECT" {return PROJECT;}
 
 {WORDAND} {return WAND;}
 
