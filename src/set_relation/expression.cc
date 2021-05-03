@@ -1254,21 +1254,23 @@ Exp* Exp::invertFuncToExposeFactor(Term * factor_ptr) const {
                 relevant_arg = arg;
             }
         }
-        // create a new UFCall term for the inverse function
+        
+        UFCallTerm *invCall;
+
+	// create a new UFCall term for the inverse function
         // with the current clone Exp as the only argument
         // running example: invCall = -f_inv(x)
         // If original function only had one argument do not have
         // to index into result of inverse function call.
-        UFCallTerm *invCall;
         if (arg_count==1) {
-            invCall = new UFCallTerm(-1, inverseFuncName, 1);
-            invCall->setParamExp(0, expClone);
+             invCall = new UFCallTerm(-1, inverseFuncName, 1);
+             invCall->setParamExp(0, expClone);
         } else {
-            // otherwise do need to know what arg index
-            invCall = new UFCallTerm(-1, inverseFuncName, 1, arg_index);
-            invCall->setParamExp(0, expClone);
+             // otherwise do need to know what arg index
+             invCall = new UFCallTerm(-1, inverseFuncName, 1, arg_index);
+             invCall->setParamExp(0, expClone);
         }
-
+     
         // create an expression that contains the inverted function
         // call and add in the expression argument to the original
         // UFCall to that expression

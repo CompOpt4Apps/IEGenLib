@@ -82,6 +82,20 @@ class ComputationTest : public ::testing::Test {
         delete omegaRel;
         vOmegaReplacer->reset();
     }
+    
+    //! Test that for a set, codegen tuple variables are correctly initialized.
+    //
+    void checkTupleAssignments(
+        std::string setString, std::vector<std::string> expectedAssignments){
+        SCOPED_TRACE(setString);
+
+	iegenlib::Set* set = new iegenlib::Set(setString);
+        set->acceptVisitor(vOmegaReplacer);
+        for(auto& t : vOmegaReplacer->getTupleAssignments()){
+            EXPECT_EQ(expectedAssignments[t.first],t.second);
+	}
+        delete set;
+    }
 
     //! Test that appending a computation to another yields the correct results.
     //! The passed-in computations are modified but not adopted, and should be
@@ -560,4 +574,10 @@ TEST_F(ComputationTest, ComputationNamePrefixing) {
               prefixedComp3->getStmt(0)->getWriteDataSpace(0));
 
     delete comp2, prefixedComp3;
+}
+
+
+#pragma mark TupleAssignmentUnitTest
+TEST_F(ComputationTest, TupleAssignmentUnitTest) {
+    checkTupleAssignments("{[i,j]: i = 3 && j = row(i)}", { "3","0"});
 }
