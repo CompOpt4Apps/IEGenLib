@@ -4012,6 +4012,35 @@ TEST_F(SetRelationTest, projectOut) {
    delete s1;
    delete ex_r1;
    delete ex_s1;
+
+
+    s1 = new Set("{[x,y]: 1 <= y && y <= x && x <= 100}");
+    ex_s1 = new Set("{[y]: 1 <= y <= 100}");
+
+    s2 = s1->projectOut(0); // project out x
+
+    if (s2) {
+        delete s1;
+        s1 = s2;
+    }
+
+    EXPECT_EQ(ex_s1->toISLString(), s1->toISLString());
+
+    delete s1, ex_s1;
+
+    s1 = new Set("{[x,y]: 1 <= y && y <= x && x <= 100}"); // 1<=y<=x<=100
+    ex_s1 = new Set("{[y]: 1 <= y && y <= 100}"); // 1<=y<=100
+
+    s2 = s1->projectOut(0); // project out x
+
+    if (s2) {
+        delete s1;
+        s1 = s2;
+    }
+
+    EXPECT_EQ(ex_s1->toISLString(), s1->toISLString());
+
+    delete s1, ex_s1;
 }
 #if 0
 #pragma mark debuggingForILU
