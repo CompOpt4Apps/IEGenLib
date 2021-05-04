@@ -650,6 +650,13 @@ public:
             return false;
         }
     }
+    
+   
+    
+    //! Performs transitive closure in presence of UFs
+    //! Returns a new set, which the user is responsible
+    //  for deallocating.
+    Set* TransitiveClosure();
 
     int getArity(){ return mArity;}
 

@@ -4622,15 +4622,15 @@ TEST_F(SetRelationTest, TransitiveClosure){
      Relation* clo4 = rel4->TransitiveClosure();
      
      
-     Relation * rel5 = new Relation(
-		     "{[n] -> [k]: A(row(n),col1(n)) > 0 and rowptr(row(n)) <= k"
+     Set * set = new Set(
+		     "{[n,k]: A(row(n),col1(n)) > 0 and rowptr(row(n)) <= k"
 		     " and k < rowptr(row(n) + 1) and col2_inv(row(n),col1(n)) = k"
 		     " and 0 <= row(n) and col2(k) = col1(n)"
 		     " and row(n) < NR and 0 <= col1(n) and col1(n) < NC}");
      
-     Relation* clo5 = rel5->TransitiveClosure();
+     Set* clo5 = set->TransitiveClosure();
      
-     delete rel5;
+     delete set;
      delete clo5; 
      delete rel4;
      delete clo4; 

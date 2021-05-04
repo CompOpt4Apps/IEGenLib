@@ -2228,6 +2228,24 @@ void Set::normalize(bool bdr) {
     delete superset_normalized;
 }
 
+
+ //! Performs transitive closure in presence of UFs
+//! Returns a new set, which the user is responsible
+//  for deallocating.
+Set* Set::TransitiveClosure(){
+    Set *result = new Set(mArity);
+
+    // Compute the transitive closure of each Conjunction.
+    for (std::list<Conjunction*>::const_iterator i=mConjunctions.begin();
+        i != mConjunctions.end(); i++) {
+        result->addConjunction((*i)->TransitiveClosure());
+    }
+
+    result->cleanUp(); 
+    return result;
+}
+
+
 /******************************************************************************/
 #pragma mark -
 
