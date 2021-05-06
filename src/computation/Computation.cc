@@ -258,57 +258,27 @@ void Computation::clear() {
 }
 
 AppendComputationResult Computation::appendComputation(
-    const Computation* other, std::vector<std::string> arguments,
-    unsigned int nestingDepth) {
-    // create a working copy of the other Computation, with unique data space
-    // names; this copy is discarded after use
+    const Computation* other, Set* surroundingIterDomain,
+    Relation* surroundingExecSchedule,
+    const std::vector<std::string>& arguments) {
+    // create a working copy of the appendee
     Computation* toAppend = other->getUniquelyNamedClone();
     const unsigned int numArgs = arguments.size();
 
-    // store last statement's execution schedule information
-    Relation* precedingExecSchedule = stmts.back()->getExecutionSchedule();
-    const int precedingExecInArity = precedingExecSchedule->inArity();
-    const int precedingExecOutArity = precedingExecSchedule->outArity();
-    if (precedingExecSchedule->getNumConjuncts() != 1) {
+    // gather append context's information
+    const TupleDecl surroundingExecTuple = surroundingExecSchedule->getTupleDecl();
+    const unsigned int surroundingExecInArity = surroundingExecSchedule->inArity();
+    const unsigned int surroundingExecOutArity = surroundingExecSchedule->outArity();
+    if (surroundingExecSchedule->getNumConjuncts() != 1) {
         throw assert_exception(
-            "Execution schedule should have exactly 1 Conjunction.");
+            "Surrounding execution schedule should have exactly 1 Conjunction.");
     }
-    // store last statement's iteration space information
-    Set* precedingIterSpace = stmts.back()->getIterationSpace();
-    const TupleDecl precedingIterTuple = precedingIterSpace->getTupleDecl();
-    const int precedingIterArity = precedingIterSpace->arity();
-    if (precedingIterSpace->getNumConjuncts() != 1) {
+    const TupleDecl surroundingIterTuple = surroundingIterDomain->getTupleDecl();
+    const int surroundingIterArity = surroundingIterDomain->arity();
+    if (surroundingIterDomain->getNumConjuncts() != 1) {
         throw assert_exception(
-            "Execution schedule should have exactly 1 Conjunction.");
+            "Surrounding iteration domain should have exactly 1 Conjunction.");
     }
-
-    // ensure valid append depth
-    if (nestingDepth > precedingIterArity) {
-        throw assert_exception(
-            "Cannot append at depth " + std::to_string(nestingDepth) +
-            " (0-indexed), preceding iteration domain only has arity of " +
-            std::to_string(precedingIterArity));
-    }
-    // if iteration domain is {[0]} singleton, nesting depth must be 0
-    if (nestingDepth != 0 && precedingIterTuple.elemIsConst(0)) {
-        throw assert_exception(
-            "Cannot append at non-zero depth outside of a loop!");
-    }
-
-    // calculate indexes/offsets for execution tuple modifications
-    const TupleDecl precedingExecTuple = precedingExecSchedule->getTupleDecl();
-    // depth within execution schedule (because every iterator follows a scalar
-    // number)
-    const int scheduleDepth = nestingDepth * 2;
-    // index within the tuple corresponding to the specified depth, adjusted for
-    // input size that comes before it
-    const int adjustedLevelIndex = scheduleDepth + precedingExecInArity;
-    // Value to offset schedule tuples by at specified depth.
-    int offsetValue = precedingExecTuple.elemConstVal(adjustedLevelIndex) + 1;
-    // Keep track of the latest execution schedule position used.
-    // This initial value is chosen for the case where no statements are
-    // appended, so the latest position is simply the previous one.
-    int latestTupleValue = offsetValue - 1;
 
     // ensure that arguments match parameter list length
     if (numArgs != toAppend->getNumParams()) {
@@ -346,14 +316,12 @@ AppendComputationResult Computation::appendComputation(
         toAppend->stmts.insert(toAppend->stmts.begin(), paramDeclStmt);
     }
 
-    // keep track of all iterators that exist at the depth we're using, others
-    // will be discarded
-    std::vector<std::string> savedIterators;
-    for (int i = precedingExecInArity; i < adjustedLevelIndex; ++i) {
-        if (!precedingExecTuple.elemIsConst(i)) {
-            savedIterators.push_back(precedingExecTuple.elemToString(i));
-        }
-    }
+    // calculate indexes/offsets for execution tuple modifications
+    // value to offset 0th position of appended schedule tuples by
+    int offsetValue =
+        surroundingExecTuple.elemConstVal(surroundingExecSchedule->arity() - 1);
+    // Keep track of the latest execution schedule position used.
+    int latestTupleValue = offsetValue;
 
     // adjust execution schedule, iteration domain for each statement of
     // appendee, including parameter declarations
@@ -377,65 +345,59 @@ AppendComputationResult Computation::appendComputation(
         // original execution schedule for statement to be appended
         Relation* appendExecSchedule = (*currentStmt)->getExecutionSchedule();
         TupleDecl appendExecTuple = appendExecSchedule->getTupleDecl();
-        int appendInArity = appendExecSchedule->inArity();
+        int appendExecInArity = appendExecSchedule->inArity();
+        int appendExecOutArity = appendExecSchedule->outArity();
 
         // construct new execution schedule tuple
-        int newExecInArity = savedIterators.size() + appendInArity;
-        int newExecOutArity = scheduleDepth + appendExecSchedule->outArity();
+        int newExecInArity = surroundingExecInArity + appendExecInArity;
+        // Subtract space for '0' iterator placeholder, if present. Only counted
+        // once because if neither one has real iterators, a '0' will be used.
+        if (surroundingExecTuple.elemIsConst(0) ||
+            appendExecTuple.elemIsConst(0)) {
+            newExecInArity -= 1;
+        }
+        int newExecOutArity = surroundingExecSchedule->outArity() + appendExecSchedule->outArity() - 1;
         TupleDecl newExecTuple = TupleDecl(newExecInArity + newExecOutArity);
+
         unsigned int currentTuplePos = 0;
         bool haveInsertedIterator = false;
-        bool skippedAZero = false;
         // insert iterators from surrounding context
-        for (const std::string& iterator : savedIterators) {
-            newExecTuple.setTupleElem(currentTuplePos++, iterator);
+        for (int i = 0; i < surroundingExecSchedule->inArity(); ++i) {
+            // skip '0' iterator placeholder
+            if (i == 0 && surroundingExecTuple.elemIsConst(0)) {
+                continue;
+            }
+            newExecTuple.copyTupleElem(surroundingExecTuple, i, currentTuplePos++);
             haveInsertedIterator = true;
         }
-        // insert iterators from schedule of appended statement
-        // skip '0' iterator placeholder, if present
-        if (appendExecTuple.elemIsConst(0) && appendExecTuple.elemConstVal(0) == 0) {
-            skippedAZero = true;
-            if (appendInArity != 1) {
-                throw assert_exception(
-                    "Found a 0 iterator placeholder, so there shouldn't be "
-                    "other iterators present (but found a total of " +
-                    std::to_string(appendInArity) + " instead of 1).");
+        // insert iterators from appended statement
+        for (int i = 0; i < appendExecInArity;
+             ++i) {
+            // skip '0' iterator placeholder
+            if (i == 0 && appendExecTuple.elemIsConst(0)) {
+                continue;
             }
-        } else {
-            for (int iteratorPos = 0; iteratorPos < appendInArity;
-                 ++iteratorPos) {
-                newExecTuple.copyTupleElem(appendExecTuple, iteratorPos,
-                                       currentTuplePos++);
-                haveInsertedIterator = true;
-            }
+            newExecTuple.copyTupleElem(appendExecTuple, i,
+                                   currentTuplePos++);
+            haveInsertedIterator = true;
         }
-        // if there are no iterators, insert a constant 0 instead
+        // if neither surroundings nor appended stmt have iterators, insert the
+        // placeholder '0' iterator
         if (!haveInsertedIterator) {
-            newExecTuple.setTupleElem(currentTuplePos++, 0);
-            // if a zero was skipped earlier, it is now re-inserted, which is
-            // equivalent to having never been skipped
-            skippedAZero = false;
+            newExecTuple.setTupleElem(0, 0);
         }
-        // insert base tuple elements up to specified depth
-        for (int it = precedingExecInArity; it < adjustedLevelIndex; ++it) {
-            newExecTuple.copyTupleElem(precedingExecTuple, it, currentTuplePos++);
+        // insert surrounding schedule tuple elements except the last one, which
+        // must be combined with first append tuple value
+        for (int i = surroundingExecSchedule->inArity();
+             i < surroundingExecSchedule->arity() - 1; ++i) {
+            newExecTuple.copyTupleElem(surroundingExecTuple, i, currentTuplePos++);
         }
-        // insert specified depth value, with offset, and save it
-        latestTupleValue = appendExecTuple.elemConstVal(appendInArity) + offsetValue;
+        // offset and insert first append tuple value
+        latestTupleValue = appendExecTuple.elemConstVal(appendExecInArity) + offsetValue;
         newExecTuple.setTupleElem(currentTuplePos++, latestTupleValue);
         // insert remaining append tuple values
-        for (int it = appendInArity + 1; it < appendExecTuple.size(); ++it) {
-            newExecTuple.copyTupleElem(appendExecTuple, it, currentTuplePos++);
-        }
-        // if we've skipped a 0-iterator, shrink the tuple appropriately
-        if (skippedAZero) {
-            TupleDecl tmpTuple = TupleDecl(currentTuplePos);
-            for (unsigned int i = 0; i < currentTuplePos; ++i) {
-                tmpTuple.copyTupleElem(newExecTuple, i, i);
-            }
-            newExecTuple = tmpTuple;
-            // the 0 iterator has been removed, reducing input arity
-            newExecInArity--;
+        for (int i = appendExecInArity + 1; i < appendExecTuple.size(); ++i) {
+            newExecTuple.copyTupleElem(appendExecTuple, i, currentTuplePos++);
         }
 
         // insert a new execution schedule Relation using (only) the new tuple
@@ -449,57 +411,60 @@ AppendComputationResult Computation::appendComputation(
         const int appendIterArity = appendIterSpace->arity();
         TupleDecl appendIterTuple = appendIterSpace->getTupleDecl();
 
+
+        // construct new iteration space
         Set* newIterSpace;
-        if (nestingDepth == 0) {
-            // if we are not inside any loops, appending doesn't change the
-            // iteration domain
+        if (surroundingIterTuple.elemIsConst(0)) {
+            // if iteration domain for surrounding context is a singleton, leave
+            // append iteration domain as-is
             newIterSpace = new Set(*appendIterSpace);
+        } else if (appendIterTuple.elemIsConst(0)) {
+            // if iteration domain to append is a singleton, adopt surrounding
+            // iteration domain
+            newIterSpace = new Set(*surroundingIterDomain);
         } else {
-            // project out variables from preceding iter space that do not exist
-            // at this depth
-            Set* projectedPrecedingIterSpace =
-                precedingIterSpace->projectOut(nestingDepth);
+            // if neither iteration domain is trivial, combine the two
+            // collect information about iter space of appended statement
+            Set* appendIterSpace = (*currentStmt)->getIterationSpace();
+            const int appendIterArity = appendIterSpace->arity();
+            TupleDecl appendIterTuple = appendIterSpace->getTupleDecl();
 
-            if (appendIterTuple.elemIsConst(0)) {
-                // iteration domain for appended statement is a singleton, just
-                // adopt surrounding context
-                newIterSpace = projectedPrecedingIterSpace;
-            } else {
-                // collect information about iter space of appended statement
-                Set* appendIterSpace = (*currentStmt)->getIterationSpace();
-                const int appendIterArity = appendIterSpace->arity();
-                TupleDecl appendIterTuple = appendIterSpace->getTupleDecl();
-
-                // collect pieces for a new iteration space
-                // construct tuple with desired iterators after appending
-                TupleDecl newIterTuple = TupleDecl(nestingDepth + appendIterArity);
-                for (unsigned int i = 0; i < nestingDepth; ++i) {
-                    newIterTuple.copyTupleElem(precedingIterTuple, i, i);
-                }
-                for (unsigned int i = 0; i < appendIterArity; ++i) {
-                    newIterTuple.copyTupleElem(appendIterTuple, i, nestingDepth + i);
-                }
-
-                // gather applicable constraints
-                Conjunction* newIterSpaceConj = new Conjunction(newIterTuple);
-                newIterSpaceConj->copyConstraintsFrom(*projectedPrecedingIterSpace->conjunctionBegin());
-                // remap constraints from appendee iteration space to fit new tuple,
-                // then copy them in
-                Conjunction* shiftedAppendIterSpaceConj = new Conjunction(**appendIterSpace->conjunctionBegin());
-                std::vector<int> shiftAppendeeIters;
-                for (unsigned int i = 0; i < appendIterArity; ++i) {
-                    shiftAppendeeIters.push_back(nestingDepth + i);
-                }
-                shiftedAppendIterSpaceConj->remapTupleVars(shiftAppendeeIters);
-                newIterSpaceConj->copyConstraintsFrom(shiftedAppendIterSpaceConj);
-
-                // construct the new iteration space
-                newIterSpace = new Set(newIterTuple);
-                newIterSpace->addConjunction(newIterSpaceConj);
+            // collect pieces for a new iteration space
+            // construct tuple with desired iterators after appending
+            TupleDecl newIterTuple =
+                TupleDecl(surroundingIterArity + appendIterArity);
+            for (unsigned int i = 0; i < surroundingIterArity; ++i) {
+                newIterTuple.copyTupleElem(surroundingIterTuple, i, i);
             }
-        }
+            for (unsigned int i = 0; i < appendIterArity; ++i) {
+                newIterTuple.copyTupleElem(appendIterTuple, i,
+                                           surroundingIterArity + i);
+            }
 
-        (*currentStmt)->setIterationSpace(newIterSpace->prettyPrintString());
+            // add constraints from surroundings
+            Conjunction* newIterSpaceConj = new Conjunction(newIterTuple);
+            newIterSpaceConj->copyConstraintsFrom(
+                *surroundingIterDomain->conjunctionBegin());
+
+            // remap constraints from appendee iteration space to fit new tuple,
+            // then copy them in
+            Conjunction* shiftedAppendIterSpaceConj =
+                new Conjunction(**appendIterSpace->conjunctionBegin());
+            std::vector<int> shiftAppendeeIters;
+            for (unsigned int i = 0; i < appendIterArity; ++i) {
+                shiftAppendeeIters.push_back(surroundingIterArity + i);
+            }
+            shiftedAppendIterSpaceConj->remapTupleVars(shiftAppendeeIters);
+            newIterSpaceConj->copyConstraintsFrom(shiftedAppendIterSpaceConj);
+            delete shiftedAppendIterSpaceConj;
+
+            // construct the new iteration space
+            newIterSpace = new Set(newIterTuple);
+            newIterSpace->addConjunction(newIterSpaceConj);
+        }
+        (*currentStmt)
+            ->setIterationSpace(newIterSpace->prettyPrintString());
+
 
         // copy the modified statement into this Computation
         this->addStmt(new Stmt(*(*currentStmt)));
@@ -701,11 +666,11 @@ std::string Computation::codeGen(Set* knownConstraints) {
     }
     generatedCode << stmtMacroUndefs.str() << stmtMacroDefs.str() << "\n";
     generatedCode << UFMacroUndefs.str() << UFMacroDefs.str() << "\n";
-    
+
     // initialize tuple variables
     std::ostringstream TupleAssignments;
     for(const auto& tupleA: vOmegaReplacer->getTupleAssignments()){
-        TupleAssignments << "t" << (tupleA.first + 1) << " = " 
+        TupleAssignments << "t" << (tupleA.first + 1) << " = "
 		<< tupleA.second << "; \n";
     }
     generatedCode << TupleAssignments.str() << "\n";
@@ -1041,12 +1006,12 @@ void VisitorChangeUFsForOmega::preVisitConjunction(Conjunction* c){
     currentTupleDecl = decl;
     // Initilize all tuple variable to zero
     for (unsigned int i = 0; i < decl.size(); i++ ){
-       tupleAssignments[i] = "0"; 
-    }   
+       tupleAssignments[i] = "0";
+    }
 }
 
 void VisitorChangeUFsForOmega::preVisitExp(iegenlib::Exp * e){
-    // The goal of this code section is to generate tuple 
+    // The goal of this code section is to generate tuple
     // variable intiializations. The code is currently buggy
     // and will be bypassed for now.
     /*
@@ -1071,7 +1036,7 @@ void VisitorChangeUFsForOmega::preVisitExp(iegenlib::Exp * e){
 	for(auto it = terms.begin();!term && it != terms.end(); it++){
 	   if((*it)->isUFCall()){
 	       isValid = false;
-	       break; 
+	       break;
 	   }
 	   term = dynamic_cast<TupleVarTerm*>(*it);
 	}
@@ -1081,12 +1046,12 @@ void VisitorChangeUFsForOmega::preVisitExp(iegenlib::Exp * e){
 	    std::cerr << "Is Valid: " << term->toString() << "\n" ;
 	    if(terms.size()==1){
 	        tupleAssignments[term->tvloc()] = "0";
-	        return;	
+	        return;
 	    }
 	    term->setCoefficient(1);
 	    Exp * solveFor = e->solveForFactor(term);
-	    std::string solvedForString = solveFor->toString(); 
-	    tupleAssignments[term->tvloc()] =  solvedForString; 
+	    std::string solvedForString = solveFor->toString();
+	    tupleAssignments[term->tvloc()] =  solvedForString;
 	    delete solveFor;
 	}
 
