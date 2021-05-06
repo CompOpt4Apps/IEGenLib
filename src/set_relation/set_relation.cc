@@ -14,7 +14,7 @@
  */
 
 #include "set_relation.h"
-#include "transitive_closure.h" 
+#include "transitive_closure.h"
 #include "UFCallMap.h"
 #include "Visitor.h"
 #include <stack>
@@ -1516,15 +1516,15 @@ Conjunction*  Conjunction::TransitiveClosure(){
 
     // copy in all of the constraints from ourselves
     Conjunction* retVal = new Conjunction(*this);
-    
+
     // Build Transitive Closure Graph.
     DiGraph* g = new DiGraph();
-    
+
     // Graph only supports = , >= and > relationships,
-    // the next section of code goes through each 
+    // the next section of code goes through each
     // equality or inequality to build the graph. Vertices
     // contains terms. See documentation of DiGraph for more
-    // information. 
+    // information.
     for (std::list<Exp*>::const_iterator i=retVal->mEqualities.begin();
          i != retVal->mEqualities.end(); i++) {
         //TODO: Make this a function.
@@ -1540,14 +1540,14 @@ Conjunction*  Conjunction::TransitiveClosure(){
 	       rhsNode.addTerm(tClone);
 	    }else{
 	       lhsNode.addTerm(t->clone());
-	    }    
+	    }
 	}
         // TODO: Remove current expression from the list.
 	// Add edge between lhs and rhs in the graph.
         g->addEdge(lhsNode,rhsNode,EdgeType::EQUAL);
 
 	// Equality leads to two edges.
-        g->addEdge(rhsNode,lhsNode,EdgeType::EQUAL);	
+        g->addEdge(rhsNode,lhsNode,EdgeType::EQUAL);
     }
     for (std::list<Exp*>::const_iterator i=retVal->mInequalities.begin();
          i != retVal->mInequalities.end(); i++ ) {
@@ -1561,11 +1561,11 @@ Conjunction*  Conjunction::TransitiveClosure(){
 	       rhsNode.addTerm(tClone);
 	    }else{
 	       lhsNode.addTerm(t->clone());
-	    }    
+	    }
 	}
         // TODO: Remove current expression from the list.
 	// Add edge between lhs and rhs in the graph.
-        g->addEdge(lhsNode,rhsNode,EdgeType::GREATER_OR_EQUAL_TO);	
+        g->addEdge(lhsNode,rhsNode,EdgeType::GREATER_OR_EQUAL_TO);
     }
     g->simplifyGreaterOrEqual();
     std::cerr << "Dump Before Trans Closure \n";
@@ -1575,7 +1575,7 @@ Conjunction*  Conjunction::TransitiveClosure(){
     std::cerr << g->toDotString();
     // Delete all expressions in the retVal conjunction.
     retVal->reset();
-    
+
     std::vector<Exp*> newConstraints = g->getExpressions();
     for(auto e : newConstraints){
         if(e->isInequality()){
@@ -1585,7 +1585,7 @@ Conjunction*  Conjunction::TransitiveClosure(){
 	}
     }
     delete g;
-    return retVal; 
+    return retVal;
 }
 /******************************************************************************/
 #pragma mark -
@@ -2241,7 +2241,7 @@ Set* Set::TransitiveClosure(){
         result->addConjunction((*i)->TransitiveClosure());
     }
 
-    result->cleanUp(); 
+    result->cleanUp();
     return result;
 }
 
@@ -2381,7 +2381,7 @@ bool Relation::hasInverseFamily(Exp* expr){
             if (!firstExp->dependsOn(*outTerm)){
 	        delete outTerm;
 		return false;
-	    } 
+	    }
 
 	}else{
 	    tupTerm = dynamic_cast<TupleVarTerm*>(t);
@@ -2391,7 +2391,7 @@ bool Relation::hasInverseFamily(Exp* expr){
     delete outTerm;
     return ufTerm && tupTerm;
 }
-    
+
 //! Returns a list of constraints in the inverse family of
 //! of exp. Inverse family is a concept used in synthesis
 //! as it provides an inverse for an uninvertible function
@@ -2419,7 +2419,7 @@ std::list<Exp*> Relation::getInverseFamily(Exp* exp){
         ufTerm->name()+"_inv",inArity());
     for(int i = 0; i < mInArity; i++){
        Exp* arg = new Exp();
-       TupleVarTerm * tupTerm= new TupleVarTerm(i); 
+       TupleVarTerm * tupTerm= new TupleVarTerm(i);
        arg->addTerm(tupTerm->clone());
        invRoot->setParamExp(i,arg);
 
@@ -2631,7 +2631,7 @@ Relation* Relation::TransitiveClosure(){
         result->addConjunction((*i)->TransitiveClosure());
     }
 
-    result->cleanUp(); 
+    result->cleanUp();
     return result;
 }
 
@@ -2743,7 +2743,7 @@ void Relation::normalize(bool bdr) {
 /******************************************************************************/
 #pragma mark -
 /*************** ExpTermVisitor *****************************/
-/*! Vistor Class used for locating expressions involving 
+/*! Vistor Class used for locating expressions involving
 **  a tuple variable. This class is used by solveForOutputTuple
 **  to solve expressions involving output tuples.
 */
@@ -2761,14 +2761,14 @@ class ExpTermVisitor: public Visitor {
     void postVisitExp(Exp* e) override;
     void preVisitUFCallTerm ( UFCallTerm* t) override;
     void postVisitUFCallTerm (UFCallTerm* t) override;
-    std::list<Exp*> getExpressions(); 
+    std::list<Exp*> getExpressions();
 
 };
 
 void ExpTermVisitor::preVisitTupleVarTerm(TupleVarTerm *t){
     if(t->tvloc() == term->tvloc() && expStack.size()!=0){
        auto expression= expStack.top();
-       
+
        auto it = std::find(exps.begin(),exps.end(), expression);
        if(it == exps.end()){
            exps.push_back(expression);
@@ -2786,7 +2786,7 @@ void ExpTermVisitor::postVisitUFCallTerm ( UFCallTerm* t){
 
 std::list<Exp*> ExpTermVisitor::getExpressions(){
     return exps;
-}	
+}
 
 void ExpTermVisitor::preVisitExp(Exp* e){
     // Only push expression to the stack
@@ -2799,18 +2799,18 @@ void ExpTermVisitor::postVisitExp(Exp* e){
 }
 
 // Returns a list of constraints directly
-// involving output tuple variables and attempts to solve for these 
-// variables. Deallocating expressions is required by the caller. 
+// involving output tuple variables and attempts to solve for these
+// variables. Deallocating expressions is required by the caller.
 std::list<Exp*> Relation::solveForOutputTuple(){
     if(mOutArity != 1){
         throw assert_exception("Output arity must be 1");
     }
     std::list<Exp*> res;
-    
+
     TupleVarTerm * term= new TupleVarTerm(mInArity);
     ExpTermVisitor expVisit(term);
     this->acceptVisitor(&expVisit);
-    std::list<Exp*> resT = expVisit.getExpressions(); 
+    std::list<Exp*> resT = expVisit.getExpressions();
     for(auto exp : resT){
 	//Skip inequalities
 	if(exp->isInequality()){
@@ -2819,7 +2819,7 @@ std::list<Exp*> Relation::solveForOutputTuple(){
 	}
         if(hasInverseFamily(exp)){
 	    std::list<Exp*> inverseFamily = getInverseFamily(exp);
-	    res.insert(res.end(),inverseFamily.begin(),inverseFamily.end()); 
+	    res.insert(res.end(),inverseFamily.begin(),inverseFamily.end());
             res.push_back(exp->clone());
 	    continue;
 	}
@@ -2831,10 +2831,10 @@ std::list<Exp*> Relation::solveForOutputTuple(){
 	    auto t = term->clone();
 	    t->setCoefficient(-1);
 	    solution->addTerm(t);
-	    res.push_back(solution); 
+	    res.push_back(solution);
 	}
 
-    } 
+    }
     delete term;
     return res;
 }
@@ -3599,6 +3599,74 @@ Set* Set::projectOut(int tvar)
     return result;
 }
 
+/*!
+ * \class VisitorFindMultiVarUFCalls
+ *
+ * Checks if there are UF calls involving the specified tuple variable as well
+ * as other tuple variables.
+ * Used for projection with UFs involved.
+ */
+class VisitorFindMultiVarUFCalls : public Visitor {
+   private:
+    int tvar;
+    int nc_ufc;
+    bool encounteredMultiVarCall;
+    bool currentUfcInvolvesTvar;
+    bool currentUfcInvolvesOtherVar;
+
+   public:
+    VisitorFindMultiVarUFCalls(int itvar) {
+        tvar = itvar;
+        nc_ufc = 0;
+        encounteredMultiVarCall = false;
+    };
+    bool hasMultiVarCall() { return encounteredMultiVarCall; }
+    void preVisitUFCallTerm(UFCallTerm* t) {
+        if (nc_ufc == 0) {
+            currentUfcInvolvesTvar = false;
+            currentUfcInvolvesOtherVar = false;
+        }
+        nc_ufc++;
+    }
+    void postVisitUFCallTerm(UFCallTerm* t) {
+        if (currentUfcInvolvesTvar && currentUfcInvolvesOtherVar) {
+            encounteredMultiVarCall = true;
+        }
+        nc_ufc--;
+    }
+    void preVisitTupleVarTerm(TupleVarTerm* t) {
+        if (nc_ufc > 0) {
+            if (t->tvloc() == tvar) {
+                currentUfcInvolvesTvar = true;
+            } else {
+                currentUfcInvolvesOtherVar = true;
+            }
+        }
+    }
+};
+
+Set* Set::projectOutWithUFs(int tvar) {
+    // find transitive closure
+    Set* closure = this->TransitiveClosure();
+
+    // make sure there are no UFs involving both this tuple variable and others
+    VisitorFindMultiVarUFCalls* v = new VisitorFindMultiVarUFCalls(tvar);
+    closure->acceptVisitor(v);
+
+    Set* result;
+    if (v->hasMultiVarCall()) {
+        result = NULL;
+    } else {
+        closure->removeUFCallConsts(tvar);
+        result = closure->projectOut(tvar);
+    }
+
+    delete closure;
+    delete v;
+
+    return result;
+}
+
 /*! Projects out tuple varrable No. tvar if tvar is not argument to any UFCall
 **  tvar is calculated based on total ariety (in+out) starting from 0.
 **  Consequently, to project out jp from R: tvar = 5
@@ -3635,6 +3703,28 @@ Relation* Relation::projectOut(int tvar)
     delete sup_r;
     delete cv;
     delete pv;
+
+    return result;
+}
+
+Relation* Relation::projectOutWithUFs(int tvar) {
+    // find transitive closure
+    Relation* closure = this->TransitiveClosure();
+
+    // make sure there are no UFs involving both this tuple variable and others
+    VisitorFindMultiVarUFCalls* v = new VisitorFindMultiVarUFCalls(tvar);
+    closure->acceptVisitor(v);
+
+    Relation* result;
+    if (v->hasMultiVarCall()) {
+        result = NULL;
+    } else {
+        closure->removeUFCallConsts(tvar);
+        result = closure->projectOut(tvar);
+    }
+
+    delete closure;
+    delete v;
 
     return result;
 }
