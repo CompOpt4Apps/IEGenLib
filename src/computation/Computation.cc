@@ -266,14 +266,19 @@ AppendComputationResult Computation::appendComputation(
     const unsigned int numArgs = arguments.size();
 
     // gather append context's information
-    const TupleDecl surroundingExecTuple = surroundingExecSchedule->getTupleDecl();
-    const unsigned int surroundingExecInArity = surroundingExecSchedule->inArity();
-    const unsigned int surroundingExecOutArity = surroundingExecSchedule->outArity();
+    const TupleDecl surroundingExecTuple =
+        surroundingExecSchedule->getTupleDecl();
+    const unsigned int surroundingExecInArity =
+        surroundingExecSchedule->inArity();
+    const unsigned int surroundingExecOutArity =
+        surroundingExecSchedule->outArity();
     if (surroundingExecSchedule->getNumConjuncts() != 1) {
         throw assert_exception(
-            "Surrounding execution schedule should have exactly 1 Conjunction.");
+            "Surrounding execution schedule should have exactly 1 "
+            "Conjunction.");
     }
-    const TupleDecl surroundingIterTuple = surroundingIterDomain->getTupleDecl();
+    const TupleDecl surroundingIterTuple =
+        surroundingIterDomain->getTupleDecl();
     const int surroundingIterArity = surroundingIterDomain->arity();
     if (surroundingIterDomain->getNumConjuncts() != 1) {
         throw assert_exception(
@@ -323,12 +328,12 @@ AppendComputationResult Computation::appendComputation(
     // Keep track of the latest execution schedule position used.
     int latestTupleValue = offsetValue;
 
-    // adjust execution schedule, iteration domain for each statement of
-    // appendee, including parameter declarations
+    // construct and insert an adjusted version of each statement of appendee,
+    // including parameter declaration statements
     unsigned int remainingParamDeclStmts = numArgs;
     bool processingOriginalStmts = false;
-    for (auto currentStmt = toAppend->stmtsBegin();
-         currentStmt != toAppend->stmtsEnd(); ++currentStmt) {
+    for (unsigned int stmtNum = 0;
+         stmtNum < toAppend->getNumStmts(); ++stmtNum) {
         // once we've finished processing prepended parameter declaration
         // statements, increase the offset for remaining (original) statements
         // by the number of prepended statements
@@ -341,76 +346,21 @@ AppendComputationResult Computation::appendComputation(
             }
         }
 
-        /* execution schedule adjustment */
-        // original execution schedule for statement to be appended
-        Relation* appendExecSchedule = (*currentStmt)->getExecutionSchedule();
-        TupleDecl appendExecTuple = appendExecSchedule->getTupleDecl();
-        int appendExecInArity = appendExecSchedule->inArity();
-        int appendExecOutArity = appendExecSchedule->outArity();
+        // statement to copy and modify from the appendee
+        Stmt* appendeeStmt = toAppend->getStmt(stmtNum);
+        // new statement built up from appendee which will be inserted
+        Stmt* newStmt = new Stmt();
 
-        // construct new execution schedule tuple
-        int newExecInArity = surroundingExecInArity + appendExecInArity;
-        // Subtract space for '0' iterator placeholder, if present. Only counted
-        // once because if neither one has real iterators, a '0' will be used.
-        if (surroundingExecTuple.elemIsConst(0) ||
-            appendExecTuple.elemIsConst(0)) {
-            newExecInArity -= 1;
-        }
-        int newExecOutArity = surroundingExecSchedule->outArity() + appendExecSchedule->outArity() - 1;
-        TupleDecl newExecTuple = TupleDecl(newExecInArity + newExecOutArity);
 
-        unsigned int currentTuplePos = 0;
-        bool haveInsertedIterator = false;
-        // insert iterators from surrounding context
-        for (int i = 0; i < surroundingExecSchedule->inArity(); ++i) {
-            // skip '0' iterator placeholder
-            if (i == 0 && surroundingExecTuple.elemIsConst(0)) {
-                continue;
-            }
-            newExecTuple.copyTupleElem(surroundingExecTuple, i, currentTuplePos++);
-            haveInsertedIterator = true;
-        }
-        // insert iterators from appended statement
-        for (int i = 0; i < appendExecInArity;
-             ++i) {
-            // skip '0' iterator placeholder
-            if (i == 0 && appendExecTuple.elemIsConst(0)) {
-                continue;
-            }
-            newExecTuple.copyTupleElem(appendExecTuple, i,
-                                   currentTuplePos++);
-            haveInsertedIterator = true;
-        }
-        // if neither surroundings nor appended stmt have iterators, insert the
-        // placeholder '0' iterator
-        if (!haveInsertedIterator) {
-            newExecTuple.setTupleElem(0, 0);
-        }
-        // insert surrounding schedule tuple elements except the last one, which
-        // must be combined with first append tuple value
-        for (int i = surroundingExecSchedule->inArity();
-             i < surroundingExecSchedule->arity() - 1; ++i) {
-            newExecTuple.copyTupleElem(surroundingExecTuple, i, currentTuplePos++);
-        }
-        // offset and insert first append tuple value
-        latestTupleValue = appendExecTuple.elemConstVal(appendExecInArity) + offsetValue;
-        newExecTuple.setTupleElem(currentTuplePos++, latestTupleValue);
-        // insert remaining append tuple values
-        for (int i = appendExecInArity + 1; i < appendExecTuple.size(); ++i) {
-            newExecTuple.copyTupleElem(appendExecTuple, i, currentTuplePos++);
-        }
+        /* Source code */
+        newStmt->setStmtSourceCode(appendeeStmt->getStmtSourceCode());
 
-        // insert a new execution schedule Relation using (only) the new tuple
-        (*currentStmt)
-            ->setExecutionSchedule("{" + newExecTuple.toString(true, newExecInArity) +
-                                   "}");
 
-        /* iteration domain adjustment */
+        /* Iteration domain */
         // collect information about current iteration space
-        Set* appendIterSpace = (*currentStmt)->getIterationSpace();
+        Set* appendIterSpace = appendeeStmt->getIterationSpace();
         const int appendIterArity = appendIterSpace->arity();
         TupleDecl appendIterTuple = appendIterSpace->getTupleDecl();
-
 
         // construct new iteration space
         Set* newIterSpace;
@@ -425,7 +375,7 @@ AppendComputationResult Computation::appendComputation(
         } else {
             // if neither iteration domain is trivial, combine the two
             // collect information about iter space of appended statement
-            Set* appendIterSpace = (*currentStmt)->getIterationSpace();
+            Set* appendIterSpace = appendeeStmt->getIterationSpace();
             const int appendIterArity = appendIterSpace->arity();
             TupleDecl appendIterTuple = appendIterSpace->getTupleDecl();
 
@@ -462,12 +412,83 @@ AppendComputationResult Computation::appendComputation(
             newIterSpace = new Set(newIterTuple);
             newIterSpace->addConjunction(newIterSpaceConj);
         }
-        (*currentStmt)
-            ->setIterationSpace(newIterSpace->prettyPrintString());
+        newStmt->setIterationSpace(newIterSpace->prettyPrintString());
 
 
-        // copy the modified statement into this Computation
-        this->addStmt(new Stmt(*(*currentStmt)));
+        /* Execution schedule */
+        // original execution schedule for statement to be appended
+        Relation* appendExecSchedule = appendeeStmt->getExecutionSchedule();
+        TupleDecl appendExecTuple = appendExecSchedule->getTupleDecl();
+        int appendExecInArity = appendExecSchedule->inArity();
+        int appendExecOutArity = appendExecSchedule->outArity();
+
+        // construct new execution schedule tuple
+        int newExecInArity = surroundingExecInArity + appendExecInArity;
+        // Subtract space for '0' iterator placeholder, if present. Only counted
+        // once because if neither one has real iterators, a '0' will be used.
+        if (surroundingExecTuple.elemIsConst(0) ||
+            appendExecTuple.elemIsConst(0)) {
+            newExecInArity -= 1;
+        }
+        int newExecOutArity = surroundingExecSchedule->outArity() +
+                              appendExecSchedule->outArity() - 1;
+        TupleDecl newExecTuple = TupleDecl(newExecInArity + newExecOutArity);
+
+        unsigned int currentTuplePos = 0;
+        bool haveInsertedIterator = false;
+        // insert iterators from surrounding context
+        for (int i = 0; i < surroundingExecSchedule->inArity(); ++i) {
+            // skip '0' iterator placeholder
+            if (i == 0 && surroundingExecTuple.elemIsConst(0)) {
+                continue;
+            }
+            newExecTuple.copyTupleElem(surroundingExecTuple, i,
+                                       currentTuplePos++);
+            haveInsertedIterator = true;
+        }
+        // insert iterators from appended statement
+        for (int i = 0; i < appendExecInArity; ++i) {
+            // skip '0' iterator placeholder
+            if (i == 0 && appendExecTuple.elemIsConst(0)) {
+                continue;
+            }
+            newExecTuple.copyTupleElem(appendExecTuple, i, currentTuplePos++);
+            haveInsertedIterator = true;
+        }
+        // if neither surroundings nor appended stmt have iterators, insert the
+        // placeholder '0' iterator
+        if (!haveInsertedIterator) {
+            newExecTuple.setTupleElem(0, 0);
+        }
+        // insert surrounding schedule tuple elements except the last one, which
+        // must be combined with first append tuple value
+        for (int i = surroundingExecSchedule->inArity();
+             i < surroundingExecSchedule->arity() - 1; ++i) {
+            newExecTuple.copyTupleElem(surroundingExecTuple, i,
+                                       currentTuplePos++);
+        }
+        // offset and insert first append tuple value
+        latestTupleValue =
+            appendExecTuple.elemConstVal(appendExecInArity) + offsetValue;
+        newExecTuple.setTupleElem(currentTuplePos++, latestTupleValue);
+        // insert remaining append tuple values
+        for (int i = appendExecInArity + 1; i < appendExecTuple.size(); ++i) {
+            newExecTuple.copyTupleElem(appendExecTuple, i, currentTuplePos++);
+        }
+
+        // create new execution schedule Relation using (only) the new tuple
+        newStmt->setExecutionSchedule(
+            "{" + newExecTuple.toString(true, newExecInArity) + "}");
+
+        /* Data reads */
+        // TODO
+
+        /* Data writes */
+        // TODO
+
+
+        // add the adapted statement into this Computation
+        this->addStmt(newStmt);
     }
 
     // collect append result information to return
