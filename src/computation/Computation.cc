@@ -280,6 +280,8 @@ AppendComputationResult Computation::appendComputation(
     const TupleDecl surroundingIterTuple =
         surroundingIterDomain->getTupleDecl();
     const int surroundingIterArity = surroundingIterDomain->arity();
+    const bool surroundingContextHasIterators =
+        !surroundingIterTuple.elemIsConst(0);
     if (surroundingIterDomain->getNumConjuncts() != 1) {
         throw assert_exception(
             "Surrounding iteration domain should have exactly 1 Conjunction.");
@@ -332,8 +334,8 @@ AppendComputationResult Computation::appendComputation(
     // including parameter declaration statements
     unsigned int remainingParamDeclStmts = numArgs;
     bool processingOriginalStmts = false;
-    for (unsigned int stmtNum = 0;
-         stmtNum < toAppend->getNumStmts(); ++stmtNum) {
+    for (unsigned int stmtNum = 0; stmtNum < toAppend->getNumStmts();
+         ++stmtNum) {
         // once we've finished processing prepended parameter declaration
         // statements, increase the offset for remaining (original) statements
         // by the number of prepended statements
@@ -351,10 +353,8 @@ AppendComputationResult Computation::appendComputation(
         // new statement built up from appendee which will be inserted
         Stmt* newStmt = new Stmt();
 
-
         /* Source code */
         newStmt->setStmtSourceCode(appendeeStmt->getStmtSourceCode());
-
 
         /* Iteration domain */
         // collect information about current iteration space
@@ -364,7 +364,7 @@ AppendComputationResult Computation::appendComputation(
 
         // construct new iteration space
         Set* newIterSpace;
-        if (surroundingIterTuple.elemIsConst(0)) {
+        if (!surroundingContextHasIterators) {
             // if iteration domain for surrounding context is a singleton, leave
             // append iteration domain as-is
             newIterSpace = new Set(*appendIterSpace);
@@ -414,7 +414,6 @@ AppendComputationResult Computation::appendComputation(
         }
         newStmt->setIterationSpace(newIterSpace->prettyPrintString());
 
-
         /* Execution schedule */
         // original execution schedule for statement to be appended
         Relation* appendExecSchedule = appendeeStmt->getExecutionSchedule();
@@ -426,8 +425,7 @@ AppendComputationResult Computation::appendComputation(
         int newExecInArity = surroundingExecInArity + appendExecInArity;
         // Subtract space for '0' iterator placeholder, if present. Only counted
         // once because if neither one has real iterators, a '0' will be used.
-        if (surroundingExecTuple.elemIsConst(0) ||
-            appendExecTuple.elemIsConst(0)) {
+        if (!surroundingContextHasIterators || appendExecTuple.elemIsConst(0)) {
             newExecInArity -= 1;
         }
         int newExecOutArity = surroundingExecSchedule->outArity() +
@@ -481,11 +479,95 @@ AppendComputationResult Computation::appendComputation(
             "{" + newExecTuple.toString(true, newExecInArity) + "}");
 
         /* Data reads */
-        // TODO
+        for (unsigned int i = 0; i < appendeeStmt->getNumReads(); ++i) {
+            Relation* appendeeReadRel = appendeeStmt->getReadRelation(i);
+            Relation* newReadRel;
+            // only need to adjust if there are iterators in surrounding context
+            if (surroundingContextHasIterators) {
+                const int oldAppendInArity = appendeeReadRel->inArity();
+                const int oldAppendOutArity = appendeeReadRel->outArity();
+                // shift appendee relation tuple to make room for new iterators
+                int shiftDistance = surroundingIterArity;
+                if (appendeeReadRel->getTupleDecl().elemIsConst(0)) {
+                    // no need to shift out a 0, it can be written over
+                    shiftDistance -= 1;
+                }
+                std::vector<int> shiftReadRel;
+                for (unsigned int pos = 0; pos < appendeeReadRel->arity();
+                     ++pos) {
+                    shiftReadRel.push_back(shiftDistance + pos);
+                }
+                appendeeReadRel->remapTupleVars(shiftReadRel);
+                appendeeReadRel->SetinArity(shiftDistance + oldAppendInArity);
+
+                // insert new iterators into tuple
+                TupleDecl shiftedAppendeeReadTuple =
+                    appendeeReadRel->getTupleDecl();
+                for (unsigned int pos = 0; pos < surroundingIterArity; ++pos) {
+                    shiftedAppendeeReadTuple.copyTupleElem(surroundingIterTuple,
+                                                           pos, pos);
+                }
+
+                // construct new read relation
+                newReadRel = new Relation(oldAppendInArity + shiftDistance, oldAppendOutArity);
+                Conjunction* newReadRelConj = new Conjunction(newReadRel->inArity(), newReadRel->outArity());
+                newReadRelConj->setTupleDecl(shiftedAppendeeReadTuple);
+                newReadRelConj->copyConstraintsFrom(*appendeeReadRel->conjunctionBegin());
+                newReadRel->addConjunction(newReadRelConj);
+            } else {
+                newReadRel = new Relation(*appendeeReadRel);
+            }
+
+            // add the new read using the new Relation
+            newStmt->addRead(appendeeStmt->getReadDataSpace(i),
+                             newReadRel->prettyPrintString());
+        }
+
 
         /* Data writes */
-        // TODO
+        for (unsigned int i = 0; i < appendeeStmt->getNumWrites(); ++i) {
+            Relation* appendeeWriteRel = appendeeStmt->getWriteRelation(i);
+            Relation* newWriteRel;
+            // only need to adjust if there are iterators in surrounding context
+            if (surroundingContextHasIterators) {
+                const int oldAppendInArity = appendeeWriteRel->inArity();
+                const int oldAppendOutArity = appendeeWriteRel->outArity();
+                // shift appendee relation tuple to make room for new iterators
+                int shiftDistance = surroundingIterArity;
+                if (appendeeWriteRel->getTupleDecl().elemIsConst(0)) {
+                    // no need to shift out a 0, it can be written over
+                    shiftDistance -= 1;
+                }
+                std::vector<int> shiftWriteRel;
+                for (unsigned int pos = 0; pos < appendeeWriteRel->arity();
+                     ++pos) {
+                    shiftWriteRel.push_back(shiftDistance + pos);
+                }
+                appendeeWriteRel->remapTupleVars(shiftWriteRel);
+                appendeeWriteRel->SetinArity(shiftDistance + oldAppendInArity);
 
+                // insert new iterators into tuple
+                TupleDecl shiftedAppendeeWriteTuple =
+                    appendeeWriteRel->getTupleDecl();
+                for (unsigned int pos = 0; pos < surroundingIterArity; ++pos) {
+                    shiftedAppendeeWriteTuple.copyTupleElem(surroundingIterTuple,
+                                                           pos, pos);
+                }
+
+                // construct new write relation
+                newWriteRel = new Relation(oldAppendInArity + shiftDistance, oldAppendOutArity);
+                Conjunction* newWriteRelConj = new Conjunction(newWriteRel->inArity(), newWriteRel->outArity());
+                newWriteRelConj->setTupleDecl(shiftedAppendeeWriteTuple);
+                newWriteRelConj->copyConstraintsFrom(*appendeeWriteRel->conjunctionBegin());
+                newWriteRel->addConjunction(newWriteRelConj);
+            } else {
+                newWriteRel = new Relation(*appendeeWriteRel);
+            }
+
+            // add the new write using the new Relation
+            newStmt->addWrite(appendeeStmt->getWriteDataSpace(i),
+                             newWriteRel->prettyPrintString());
+        }
 
         // add the adapted statement into this Computation
         this->addStmt(newStmt);
