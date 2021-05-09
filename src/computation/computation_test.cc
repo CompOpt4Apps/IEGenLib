@@ -364,16 +364,16 @@ TEST_F(ComputationTest, AppendComputationBasic) {
     comp1->addStmt(s1);
 
     Computation* comp2 = new Computation();
-    Stmt* s2 = new Stmt("s2;", "{[k]}", "{[k] -> [0,k,1]}", {}, {});
+    Stmt* s2 = new Stmt("s2;", "{[k]: 0 <= k < M}", "{[k] -> [0,k,1]}", {}, {});
     comp2->addStmt(s2);
 
     Computation* ecomp = new Computation();
     Stmt* es1 = new Stmt(*s1);
-    Stmt* es2 = new Stmt("s2;", "{[i,k]}", "{[i,k] -> [2,i,2,k,1]}", {}, {});
+    Stmt* es2 = new Stmt("s2;", "{[i,k]: 0 <= i < N && 0 <= k < M}", "{[i,k] -> [2,i,2,k,1]}", {}, {});
     ecomp->addStmt(es1);
     ecomp->addStmt(es2);
 
-    checkAppendComputation(comp1, comp2, "{[i]}", "{[i]->[2,i,2]}", {}, 2,
+    checkAppendComputation(comp1, comp2, "{[i]: 0 <= i < N}", "{[i]->[2,i,2]}", {}, 2,
                            {}, ecomp);
 
     delete comp1, comp2, ecomp;
@@ -382,27 +382,32 @@ TEST_F(ComputationTest, AppendComputationBasic) {
 #pragma mark AppendComputationArgumentPassing
 TEST_F(ComputationTest, AppendComputationArgumentPassing) {
     Computation* comp1 = new Computation();
-    comp1->addDataSpace("myInt");
-    comp1->addDataSpace("myDouble");
+    comp1->addDataSpace("$myInt$");
+    comp1->addDataSpace("$myDouble$");
 
     Computation* comp2 = new Computation();
     Stmt* s2 = new Stmt("s2;", "{[k]}", "{[k] -> [0,k,1]}", {}, {});
     comp2->addStmt(s2);
-    comp2->addParameter("a", "int");
-    comp2->addParameter("b", "double");
-    comp2->addParameter("c", "float");
+    comp2->addParameter("$a$", "int");
+    comp2->addParameter("$b$", "double");
+    comp2->addParameter("$c$", "float");
 
     Computation* ecomp = new Computation();
-    Stmt* e_gen_s1 = new Stmt("int _iegen_0a = myInt;", "{[i]}", "{[i] -> [2,i,2]}", {{"myInt", "{[i]->[0]}"}}, {{"_iegen_0a", "{[i]->[0]}"}});
-    Stmt* e_gen_s2 = new Stmt("double _iegen_0b = myDouble;", "{[i]}", "{[i] -> [2,i,3]}", {{"myDouble", "{[i]->[0]}"}}, {{"_iegen_0b", "{[i]->[0]}"}});
-    Stmt* e_gen_s3 = new Stmt("float _iegen_0c = 0;", "{[i]}", "{[i] -> [2,i,4]}", {}, {{"_iegen_0c", "{[i]->[0]}"}});
+    ecomp->addDataSpace("$myInt$");
+    ecomp->addDataSpace("$myDouble$");
+    ecomp->addDataSpace("$a$");
+    ecomp->addDataSpace("$b$");
+    ecomp->addDataSpace("$c$");
+    Stmt* e_gen_s1 = new Stmt("int _iegen_0$a$ = $myInt$;", "{[i]}", "{[i] -> [2,i,2]}", {{"$myInt$", "{[i]->[0]}"}}, {{"_iegen_0$a$", "{[i]->[0]}"}});
+    Stmt* e_gen_s2 = new Stmt("double _iegen_0$b$ = $myDouble$;", "{[i]}", "{[i] -> [2,i,3]}", {{"$myDouble$", "{[i]->[0]}"}}, {{"_iegen_0$b$", "{[i]->[0]}"}});
+    Stmt* e_gen_s3 = new Stmt("float _iegen_0$c$ = 0;", "{[i]}", "{[i] -> [2,i,4]}", {}, {{"_iegen_0$c$", "{[i]->[0]}"}});
     Stmt* es1 = new Stmt("s2;", "{[i,k]}", "{[i,k] -> [2,i,5,k,1]}", {}, {});
     ecomp->addStmt(e_gen_s1);
     ecomp->addStmt(e_gen_s2);
     ecomp->addStmt(e_gen_s3);
     ecomp->addStmt(es1);
 
-    checkAppendComputation(comp1, comp2, "{[i]}", "{[i]->[2,i,2]}", {"myInt", "myDouble", "0"}, 5, {},
+    checkAppendComputation(comp1, comp2, "{[i]}", "{[i]->[2,i,2]}", {"$myInt$", "$myDouble$", "0"}, 5, {},
                            ecomp);
 
     delete comp1, comp2, ecomp;
@@ -417,25 +422,28 @@ TEST_F(ComputationTest, DISABLED_AppendComputationEmpty) {
 
     Computation* ecomp = new Computation();
 
-    checkAppendComputation(comp1, comp2, "{[]}", "{[0]->[0]}", {}, 0, {}, ecomp);
+    checkAppendComputation(comp1, comp2, "{[0]}", "{[0]->[0]}", {}, 0, {}, ecomp);
 
     delete comp1, comp2, ecomp;
 
     // with params
     comp1 = new Computation();
-    comp1->addDataSpace("myInt");
+    comp1->addDataSpace("$myInt$");
 
     comp2 = new Computation();
-    comp2->addParameter("a", "int");
-    comp2->addParameter("b", "double");
+    comp2->addParameter("$a$", "int");
+    comp2->addParameter("$b$", "double");
 
     ecomp = new Computation();
-    Stmt* e_gen_s1 = new Stmt("int _iegen_1a = myInt;", "{[i]}", "{[i] -> [2,i,2]}", {{"myInt", "{[i]->[0]}"}}, {{"_iegen_1a", "{[i]->[0]}"}});
-    Stmt* e_gen_s2 = new Stmt("double _iegen_1b = 3.14159;", "{[i]}", "{[i] -> [2,i,3]}", {}, {{"_iegen_1b", "{[i]->[0]}"}});
+    ecomp->addDataSpace("$myInt$");
+    ecomp->addDataSpace("_iegen_1$a$");
+    ecomp->addDataSpace("_iegen_1$b$");
+    Stmt* e_gen_s1 = new Stmt("int _iegen_1$a$ = $myInt$;", "{[i]}", "{[i] -> [2,i,2]}", {{"$myInt$", "{[i]->[0]}"}}, {{"_iegen_1$a$", "{[i]->[0]}"}});
+    Stmt* e_gen_s2 = new Stmt("double _iegen_1$b$ = 3.14159;", "{[i]}", "{[i] -> [2,i,3]}", {}, {{"_iegen_1$b$", "{[i]->[0]}"}});
     ecomp->addStmt(e_gen_s1);
     ecomp->addStmt(e_gen_s2);
 
-    checkAppendComputation(comp1, comp2, "{[i]}", "{[i]->[2,i,2]}", {"myInt", "3.14159"}, 3, {}, ecomp);
+    checkAppendComputation(comp1, comp2, "{[i]}", "{[i]->[2,i,2]}", {"$myInt$", "3.14159"}, 3, {}, ecomp);
 
     delete comp1, comp2, ecomp;
 }
@@ -458,6 +466,94 @@ TEST_F(ComputationTest, AppendComputationReturnValues) {
     checkAppendComputation(comp1, comp2, "{[i]}", "{[i]->[2,i,2]}", {}, 2, {"_iegen_0res", "0"}, ecomp);
 
     delete comp1, comp2, ecomp;
+}
+
+#pragma mark AppendComputationComplex
+TEST_F(ComputationTest, AppendComputationComplex) {
+    // This is an attempt to simulate a more realistic inlining situation,
+    // where all features are exercised. Not all details of what we actually
+    // want are ironed out yet so it will change.
+    // comp3 is appended onto comp2, which is then appended on to comp1.
+    Computation* comp1 = new Computation();
+    comp1->addDataSpace("$index$");
+    comp1->addDataSpace("$N$");
+    comp1->addDataSpace("$tmp$");
+    Stmt* s1 = new Stmt("$tmp$ = $index$[0] + 1;", "{[0]}", "{[0]->[0]}",
+                        {{"$index$", "{[0]->[0]}"}}, {{"$tmp$", "{[0]->[0]}"}});
+    Stmt* s2 =
+        new Stmt("$index$[i+1] = i;", "{[i]: 0 <= i < $N$}", "{[i]->[1,i,0]}",
+                 {}, {{"$index$", "{[i]->[r]: r=i+1}"}});
+    comp1->addStmt(s1);
+    comp1->addStmt(s2);
+
+    Computation* comp2 = new Computation();
+    comp2->addDataSpace("$A$");
+    comp2->addDataSpace("$tmp$");
+    comp2->addParameter("$someInteger$", "int");
+    comp2->addReturnValue("$tmp$");
+    Stmt* s3 =
+        new Stmt("$A$[k] += $A$[k+1];", "{[k]: 0 <= k < 5}", "{[k]->[0,k,0]}",
+                 {{"$A$", "{[k]->[k]}"}, {"$A$", "{[k]->[r]: r=k+1}"}},
+                 {{"$A$", "{[k]->[k]}"}});
+    Stmt* s4 =
+        new Stmt("$tmp$ = $A$[2] + $someInteger$;", "{[0]}", "{[0]->[1]}",
+                 {{"$A$", "{[0]->[2]}"}, {"$someInteger$", "{[0]->[0]}"}},
+                 {{"$tmp$", "{[0]->[0]}"}});
+    comp2->addStmt(s3);
+    comp2->addStmt(s4);
+
+    Computation* comp3 = new Computation();
+    comp3->addDataSpace("$asdf$");
+    Stmt* s5 = new Stmt("$asdf$ = 2;", "{[0]}", "{[0]->[0]}", {}, {{"$asdf$", "{[0]->[0]}"}});
+    comp3->addStmt(s5);
+
+    Computation* ecomp2 = new Computation();
+    ecomp2->addDataSpace("$A$");
+    ecomp2->addDataSpace("$tmp$");
+    ecomp2->addDataSpace("_iegen_0$asdf$");
+    ecomp2->addParameter("$someInteger$", "int");
+    ecomp2->addReturnValue("$tmp$");
+    Stmt* e1s1 = new Stmt(*s3);
+    Stmt* e1s2 = new Stmt(*s4);
+    Stmt* e1s3 = new Stmt("_iegen_0$asdf$ = 2;", "{[0]}", "{[0]->[2]}", {}, {{"_iegen_0$asdf$", "{[0]->[0]}"}});
+    ecomp2->addStmt(e1s1);
+    ecomp2->addStmt(e1s2);
+    ecomp2->addStmt(e1s3);
+
+    // append comp3 onto comp2
+    checkAppendComputation(comp2, comp3, "{[0]}", "{[0]->[2]}", {}, 2, {}, ecomp2);
+
+    Computation* ecomp1 = new Computation();
+    ecomp1->addDataSpace("$index$");
+    ecomp1->addDataSpace("$N$");
+    ecomp1->addDataSpace("$tmp$");
+    ecomp1->addDataSpace("_iegen_1$A$");
+    ecomp1->addDataSpace("_iegen_1$tmp$");
+    ecomp1->addDataSpace("_iegen_1$someInteger$");
+    Stmt* e2s1 = new Stmt(*s1);
+    Stmt* e2s2 = new Stmt(*s2);
+    Stmt* e2s3 = new Stmt("int _iegen_1$someInteger$ = $tmp$;", "{[i]: 0<=i<$N$}", "{[i]->[1,i,1]}", {{"$tmp$", "{[i]->[0]}"}}, {{"_iegen_1$someInteger$", "{[i]->[0]}"}});
+    Stmt* e2s4 = new Stmt("_iegen_1$A$[k] += _iegen_1$A$[k+1];",
+                         "{[i,k]: 0<=i<$N$ && 0<=k<5}", "{[i,k]->[1,i,2,k,0]}",
+                         {{"_iegen_1$A$", "{[i,k]->[k]}"},
+                          {"_iegen_1$A$", "{[i,k]->[r]: r=k+1}"}},
+                         {{"_iegen_1$A$", "{[i,k]->[k]}"}});
+    Stmt* e2s5 = new Stmt("_iegen_1$tmp$ = _iegen_1$A$[2] + _iegen_1$someInteger$;", "{[i]: 0<=i<$N$}",
+                         "{[i]->[1,i,3]}", {{"_iegen_1$A$", "{[i]->[2]}"}, {"_iegen_1$someInteger$", "{[i]->[0]}"}},
+                         {{"_iegen_1$tmp$", "{[i]->[0]}"}});
+    Stmt* e2s6 = new Stmt("_iegen_1_iegen_0$asdf$ = 2;", "{[i]: 0<=i<$N$}", "{[i]->[1,i,4]}", {}, {{"_iegen_1_iegen_0$asdf$", "{[i]->[0]}"}});
+    ecomp1->addStmt(e2s1);
+    ecomp1->addStmt(e2s2);
+    ecomp1->addStmt(e2s3);
+    ecomp1->addStmt(e2s4);
+    ecomp1->addStmt(e2s5);
+    ecomp1->addStmt(e2s6);
+
+    // append comp2 (which already has comp3 appended on) onto comp1
+    checkAppendComputation(comp1, comp2, "{[i]: 0 <= i < $N$}",
+                           "{[i]->[1,i,1]}", {"$tmp$"}, 4, {"_iegen_1$tmp$"}, ecomp1);
+
+    delete comp1, comp2, comp3, ecomp2, ecomp1;
 }
 
 #pragma mark ComputationNamePrefixing
