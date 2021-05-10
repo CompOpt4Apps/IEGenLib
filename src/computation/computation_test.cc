@@ -405,7 +405,7 @@ TEST_F(ComputationTest, AppendComputationArgumentPassing) {
 }
 
 #pragma mark AppendComputationEmpty
-TEST_F(ComputationTest, AppendComputationEmpty) {
+TEST_F(ComputationTest, DISABLED_AppendComputationEmpty) {
     // without params
     Computation* comp1 = new Computation();
 
