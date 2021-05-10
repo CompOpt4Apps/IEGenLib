@@ -135,16 +135,18 @@ class Computation {
     //! Add statements from another Computation to this one for inlining.
     //! \param[in] other Computation to append to this one, which will be copied
     //! but its statements will not be modified
-    //! \param[in] arguments Arguments to pass in to the appended Computation
-    //! (if any)
-    //! \param[in] nestingDepth Number of surrounding loop nests the appended
-    //! statements should be in. Should be between 0 (outside of all loops)
-    //! and arity of iteration space (inside all loops).
-    //! \return State information to be used in Stmts
-    //! following what was appended.
+    //! \param[in] surroundingIterDomain Iteration domain of append context (not
+    //! adopted)
+    //! \param[in] surroundingExecSchedule Execution schedule of append
+    //! context (not adopted). Final tuple position will be the position used by
+    //! the first appended statement.
+    //! \param[in] arguments Arguments to pass in
+    //! to the appended Computation \return Information about the state of the
+    //! appender after appending.
     AppendComputationResult appendComputation(
-        const Computation* other, std::vector<std::string> arguments = {},
-        unsigned int nestingDepth = 0);
+        const Computation* other, Set* surroundingIterDomain,
+        Relation* surroundingExecSchedule,
+        const std::vector<std::string>& arguments = {});
 
     void toDot(std::fstream& dotFileStream, string fileName);
 
@@ -298,6 +300,10 @@ class VisitorChangeUFsForOmega : public Visitor {
     //! stored tuple decl for variable retrieval
     TupleDecl currentTupleDecl;
 
+    //! Information stored for tuple variable
+    //! assignments.
+    std::map<int,std::string> tupleAssignments;
+
    public:
     //! Construct a new VisitorChangeUFsForOmega
     VisitorChangeUFsForOmega();
@@ -316,6 +322,11 @@ class VisitorChangeUFsForOmega : public Visitor {
     //! Computation.
     void prepareForNext();
 
+    //! Get tuple assignments. A tuple is initially assigned
+    //! to zero, unless there is an equality constraint
+    //! involving that tuple variable and constants
+    std::map<int,std::string>& getTupleAssignments();
+
     //! Get the UF call macros required for the code corresponding to the
     //! set/relation to function correctly, as a string
     std::map<std::string, std::string>* getUFMacros();
@@ -328,6 +339,8 @@ class VisitorChangeUFsForOmega : public Visitor {
     void preVisitConjunction(Conjunction* c);
 
     void postVisitUFCallTerm(UFCallTerm*);
+
+    void preVisitExp(iegenlib::Exp * e);
 };
 
 }  // namespace iegenlib

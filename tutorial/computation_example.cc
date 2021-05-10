@@ -145,4 +145,21 @@ cout << forwardSolve->codeGen();
 
 cout << "Forward Solve Dot File: forward_solve.dot";
 forwardSolve->toDot(dotFileStream,"forward_solve.dot");
+
+
+Computation* simpleComp = new Computation;
+Stmt * ss5 = new Stmt("u[i] =  A[i][i]",
+		"{[i]: 0 <= i && i < NR}",
+		"{[i] -> [i,0,0,0]}",
+		{
+		   {"A", "{[i] -> [i,i]}"}
+		},
+		{
+		   {"u","{[i]->[i]}"},
+		});
+simpleComp->addStmt(ss5);
+cout << "To Dot \n" << simpleComp->toDot() << "\n";
+
+cout << "Code Gen \n" << simpleComp->codeGen() << "\n";
+
 }

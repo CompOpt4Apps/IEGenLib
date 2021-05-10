@@ -60,6 +60,7 @@
 %token OR
 %token UNION
 %token INVERSE
+%token PROJECT
 %token EXISTS
 %token EQ
 %token ARROW
@@ -184,6 +185,10 @@
             $$ = set;
             delete $2;
             delete $1;
+         } 
+         | omega_set PROJECT ID
+         {
+	   did you
          }
 
    isl_set: in_symbolic LBRACE semi_conjunct SEMI semi_conjunct_list RBRACE

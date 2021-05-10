@@ -211,6 +211,14 @@ public:
     //! \return
     Conjunction* Restrict (const Conjunction* rhs) const;
 
+
+
+    //! Performs transitive closure in presence of UFs
+    //! Returns a new conjunction, which the user is responsible
+    //  for deallocating.
+    Conjunction* TransitiveClosure();
+
+
     /*! Treating this Conjunction like a domain or range.  Creates
     ** a new set where passed in tuple expression is
     ** bound assuming this domain, or range.
@@ -623,6 +631,14 @@ public:
     //! If tvar is an argument to some UFCall, then returns NULL.
     Set* projectOut(int tvar);
 
+    //! Attempts to project out the specified tuple variable, with some
+    //! support for tuple variables used in UF calls. Includes taking a
+    //! transitive closure.
+    //! If tvar is an argument to a UFCall *that also has other arguments*,
+    //! then returns NULL.
+    //! \param tvar tuple variable location to project out
+    Set* projectOutWithUFs(int tvar);
+
     /*! This function simplifies constraints sets of non-affine sets that
         are targeted for level set parallelism. These sets are representative
         of data access dependency relations. For level set parallelism,
@@ -642,6 +658,13 @@ public:
             return false;
         }
     }
+
+
+
+    //! Performs transitive closure in presence of UFs
+    //! Returns a new set, which the user is responsible
+    //  for deallocating.
+    Set* TransitiveClosure();
 
     int getArity(){ return mArity;}
 
@@ -843,6 +866,9 @@ public:
     //! If tvar is an argument to some UFCall, then returns NULL.
     Relation* projectOut(int tvar);
 
+    //! Same as Set::projectOutWithUFs
+    Relation* projectOutWithUFs(int tvar);
+
     /*! This function simplifies constraints sets of non-affine sets that
         are targeted for level set parallelism. These sets are representative
         of data access dependency relations. For level set parallelism,
@@ -875,6 +901,25 @@ public:
     //
     SetRelationshipType dataDependenceRelationship(Relation* rightSide, int parallelLoopLevel=0);
 
+    // Returns a list of constraints directly
+    // involving output tuple variables and attempts to solve for these
+    // variables. Deallocating expressions is required by the caller.
+    std::list<Exp*> solveForOutputTuple();
+
+    //! Returns true if expression is part of an inverse family.
+    bool hasInverseFamily(Exp* expr);
+
+    //! Returns a list of constraints in the inverse family of
+    //! of exp. Inverse family is a concept used in synthesis
+    //! as it provides an inverse for an uninvertible function
+    //! by using the charactersitics of the mapping it belongs to.
+    std::list<Exp*> getInverseFamily(Exp* exp);
+
+    //! Performs transitive closure in presence of UFs
+    //! Returns a new relation, which the user is responsible
+    //  for deallocating.
+    Relation* TransitiveClosure();
+
 private:
     int mInArity;
     int mOutArity;
@@ -894,6 +939,8 @@ std::set<std::pair <std::string,std::string>> ruleInstantiation
                           (std::set<Exp> instExps, bool *useRule,
                            TupleDecl origTupleDecl, UFCallMap *ufcmap);
 Set* islSetProjectOut(Set* s, unsigned pos);
+
+Relation* islRelTransitiveClosure(Relation*r,bool& isExact);
 
 }//end namespace iegenlib
 
