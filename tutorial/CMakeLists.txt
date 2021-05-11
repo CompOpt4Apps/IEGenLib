@@ -11,23 +11,14 @@ add_dependencies(computation_example iegenlib)
 target_link_libraries(computation_example iegenlib isl codegen omega gmp)
 target_include_directories(computation_example PUBLIC ${CMAKE_SOURCE_DIR}/src)
 
-
-file(GLOB_RECURSE geoac_example_SOURCES geoac_example.cc)
-add_executable(geoac_example EXCLUDE_FROM_ALL ${geoac_example_SOURCES})
-add_dependencies(geoac_example iegenlib)
-target_link_libraries(geoac_example iegenlib isl codegen omega gmp)
-target_include_directories(geoac_example PUBLIC ${CMAKE_SOURCE_DIR}/src)
-
-
 file(GLOB_RECURSE geoac_codegen_driver_SOURCES geoac_codegen_driver.cc)
 add_executable(geoac_codegen_driver EXCLUDE_FROM_ALL ${geoac_codegen_driver_SOURCES})
 add_dependencies(geoac_codegen_driver iegenlib)
 target_link_libraries(geoac_codegen_driver iegenlib isl codegen omega gmp)
 target_include_directories(geoac_codegen_driver PUBLIC ${CMAKE_SOURCE_DIR}/src)
 
-
 # Set binary output directory for examples
-set_target_properties(sparse_format_example computation_example geoac_example geoac_codegen_driver
+set_target_properties(sparse_format_example computation_example geoac_codegen_driver
     PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/tutorial"
 )
@@ -36,7 +27,6 @@ set_target_properties(sparse_format_example computation_example geoac_example ge
 add_custom_target(tutorial
     DEPENDS sparse_format_example
             computation_example
-            geoac_example
             geoac_codegen_driver
     COMMENT "Building tutorial examples"
 )

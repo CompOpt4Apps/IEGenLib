@@ -4053,6 +4053,85 @@ TEST_F(SetRelationTest, projectOut) {
 
     delete s1, ex_s1;
 }
+
+#pragma mark projectOutWithUFs
+TEST_F(SetRelationTest, projectOutWithUFs) {
+    /* Sets */
+    Set* s1;
+    Set* ex_s1;
+    Set* s2;
+
+    // projection without UFs should still work
+    s1 = new Set("{[x,y]: 1 <= y && y <= x && x <= 100}"); // 1<=y<=x<=100
+    ex_s1 = new Set("{[y]: 1 <= y && y <= 100}"); // 1<=y<=100
+    s2 = s1->projectOutWithUFs(0);
+    if (s2) {
+        delete s1;
+        s1 = s2;
+    }
+    EXPECT_EQ(s1->toISLString(), ex_s1->toISLString());
+    delete s1, ex_s1;
+
+    s1 = new Set("{[i,j]: 0 <= i < A(j) && 0 <= j < A(i)}");
+    ex_s1 = new Set("{[i]: 0 <= i && 0 < A(i)}");
+    s2 = s1->projectOutWithUFs(1);
+    if (s2) {
+        delete s1;
+        s1 = s2;
+    }
+    EXPECT_EQ(s1->toISLString(), ex_s1->toISLString());
+    delete s1, ex_s1;
+
+    s1 = new Set("{[i,j]: 0 <= A(i,j) && 0 <= i < N}");
+    s2 = s1->projectOutWithUFs(1);
+    delete s1;
+    EXPECT_EQ(s2, nullptr);
+    if (s2) {
+        delete s2;
+    }
+
+    s1 = new Set("{[i,j]: 0 <= A(i,B(j)) && 0 <= i < N}");
+    s2 = s1->projectOutWithUFs(1);
+    delete s1;
+    EXPECT_EQ(s2, nullptr);
+    if (s2) {
+        delete s2;
+    }
+
+    s1 = new Set("{[i,j]: 0 <= A(j,B(j)) && 0 <= i < N}");
+    ex_s1 = new Set("{[i]: 0 <= i < N && 0 < N}");
+    s2 = s1->projectOutWithUFs(1);
+    if (s2) {
+        delete s1;
+        s1 = s2;
+    }
+    EXPECT_EQ(s1->toISLString(), ex_s1->toISLString());
+    delete s1, ex_s1;
+
+    /* Relations (same as sets) */
+    Relation* r1;
+    Relation* ex_r1;
+    Relation* r2;
+
+    r1 = new Relation("{[i,j]->[k]: j = k && i < A(k)}");
+    ex_r1 = new Relation("{[i]->[k]: i < A(k)}");
+    r2 = r1->projectOutWithUFs(1);
+    if (r2) {
+        delete r1;
+        r1 = r2;
+    }
+    EXPECT_EQ(r1->toISLString(), ex_r1->toISLString());
+    delete r1, ex_r1;
+
+    r1 = new Relation("{[i]->[j]: 0 <= A(i,B(j)) && 0 <= i < N}");
+    r2 = r1->projectOutWithUFs(1);
+    delete r1;
+    EXPECT_EQ(r2, nullptr);
+    if (r2) {
+        delete r2;
+    }
+}
+
 #if 0
 #pragma mark debuggingForILU
 TEST_F(SetRelationTest, debuggingForILU){
@@ -4511,7 +4590,7 @@ TEST_F(SetRelationTest, RestrictDomainTest){
      delete rel3;
      delete set1;
      delete set2;
-     delete set3;                                                              
+     delete set3;
      delete restrictRel2;
      delete restrictRel3;
 }
@@ -4519,24 +4598,24 @@ TEST_F(SetRelationTest, RestrictDomainTest){
 
 // Test solve for output tuple.
 TEST_F(SetRelationTest, SolveForOutputTuple){
-     
+
      Relation * rel = new Relation(
 		     "{[i,j] -> [k]: A(i,j) > 0 and rowptr(i) <= k"
 		     " and k < rowptr(i+ 1) and col(k) =j and 0 <= i"
 		     " and i < NR and 0 <= j and j < NC}");
-     
+
      auto solveForList = rel->solveForOutputTuple();
      EXPECT_EQ(solveForList.size(),5);
-     
-     
+
+
      // Check contents of list.
      Exp * constraint1 = (*solveForList.begin());
      Exp * constraint2 = (*(++solveForList.begin()));
      Exp * constraint3 = (*(++(++solveForList.begin())));
      Exp * constraint4 = (*(++(++(++solveForList.begin()))));
      Exp * constraint5 = (*(++(++(++(++solveForList.begin())))));
-     
-     // Expression toString does not attach = 0 | >= 0 to the 
+
+     // Expression toString does not attach = 0 | >= 0 to the
      // epression.
      EXPECT_EQ(constraint1->prettyPrintString(rel->getTupleDecl()),
           "i - col_aux0(k)");
@@ -4544,14 +4623,14 @@ TEST_F(SetRelationTest, SolveForOutputTuple){
           "k - col_inv(i, j)");
      EXPECT_EQ(constraint3->prettyPrintString(rel->getTupleDecl()),
           "j - col(k)");
-     
+
      EXPECT_EQ(constraint4->prettyPrintString(rel->getTupleDecl()),
           "k - rowptr(i)");
-     
+
      EXPECT_EQ(constraint5->prettyPrintString(rel->getTupleDecl()),
           "-k + rowptr(i + 1) - 1");
 
-     
+
 
 
      Relation * re2 = new Relation(
@@ -4564,7 +4643,7 @@ TEST_F(SetRelationTest, SolveForOutputTuple){
      Exp * constraint21 = (*solveForList2.begin());
      Exp * constraint22 = (*(++solveForList2.begin()));
      Exp * constraint23 = (*(++(++solveForList2.begin())));
-     
+
      EXPECT_EQ(constraint21->prettyPrintString(re2->getTupleDecl()),
           "-n + rowcol_inv(i,j) = 0 ");
      EXPECT_EQ(constraint22->prettyPrintString(re2->getTupleDecl()),
@@ -4596,7 +4675,7 @@ TEST_F(SetRelationTest, TransitiveClosure){
 	       " && -j + NC - 1 >= 0 && -k + rowptr(i + 1) - 1 >= 0 &&"
 	       " NC - col(k) - 1 >= 0 && -rowptr(i) + rowptr(i + 1) - 1 >= 0 }",
 	       closure->prettyPrintString());
-     
+
      Relation * rel2= new Relation(
 		     "{[i1,i2]->[j1,j2]: j1 - i1 = 1 and j2-i2 >= 2"
 		     " and 1 <= i1 and 1 <= j1 and 1 <= j2 and i1 <= n"
@@ -4607,7 +4686,7 @@ TEST_F(SetRelationTest, TransitiveClosure){
 	       " -i2 + n >= 0 && -j1 + n >= 0 && j1 - 1 >= 0 && -j2 + n"
 	       " >= 0 && n - 1 >= 0 && -i1 + n - 1 >= 0 && -i2 + j2 - 3"
 	       " >= 0 && -i2 + n - 3 >= 0 }",clo2->prettyPrintString());
-     
+
      Relation* rel3 = new Relation(
 		     "{[n] -> [k] : rowptr <= k and k < rowptr1"
 		     " and col2 = col1 and 0 <= row1 and row1 < N_R"
@@ -4622,27 +4701,27 @@ TEST_F(SetRelationTest, TransitiveClosure){
 	       " N_C - col1 - 1 >= 0 && N_C - col2 - 1 >= 0 &&"
 	       " N_R - row1 - 1 >= 0 && -col2in + rowptr1 - 1 >= 0 &&"
 	       " -rowptr + rowptr1 - 1 >= 0 }",clo3->prettyPrintString());
-     
+
      Relation * rel4 = new Relation(
 		     "{[i,j] -> [k]: A(i,j) > 0 and rowptr(i) <= k"
 		     " and k < rowptr(i + 1) and col_inv(i,j) = k and 0 <= i"
 		     " and i < NR and 0 <= j and j < NC}");
-     
+
      Relation* clo4 = rel4->TransitiveClosure();
-     
-     
+
+
      Set * set = new Set(
 		     "{[n,k]: A(row(n),col1(n)) > 0 and rowptr(row(n)) <= k"
 		     " and k < rowptr(row(n) + 1) and col2_inv(row(n),col1(n)) = k"
 		     " and 0 <= row(n) and col2(k) = col1(n)"
 		     " and row(n) < NR and 0 <= col1(n) and col1(n) < NC}");
-     
+
      Set* clo5 = set->TransitiveClosure();
-     
+
      delete set;
-     delete clo5; 
+     delete clo5;
      delete rel4;
-     delete clo4; 
+     delete clo4;
      delete clo3;
      delete rel3;
      delete clo2;
