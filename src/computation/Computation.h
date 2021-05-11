@@ -29,6 +29,9 @@
 #include <utility>
 #include <vector>
 
+
+#include <basic/boolset.h>
+
 #include "set_relation/Visitor.h"
 #include "set_relation/environment.h"
 #include "set_relation/expression.h"
@@ -147,6 +150,14 @@ class Computation {
         unsigned int nestingDepth = 0);
 
     void toDot(std::fstream& dotFileStream, string fileName);
+    
+    
+
+    //! Function returns a dot string representing nesting
+    //  and loop carrie dependency. Internally it uses
+    //  a lite version of polyhedral scanning to generate
+    //  subgraphs in the dot file.
+    std::string toDotString();
 
     //! Environment used by this Computation
     Environment env;
@@ -161,6 +172,27 @@ class Computation {
     std::string toOmegaString();
 
    private:
+    //! Helper function that checks if a condition results in active
+    //  sets.
+    omega::BoolSet<> getActive(omega::BoolSet<>&active,Set* cond,
+                           std::vector<Set*> Rs );
+    //! Recursively generate nodes in 
+    //  to dot.
+    //  param projectedIS presaved projections and levels 
+    //  param maxLevel    max level in set of disjunct poly
+    //                    hedrons.
+    //  param active      Set of active statements.
+    //  param restriction Set containing current constraint restrictions
+    //                    from split points in polyhedral scanning
+    //  param currentLevel 
+    //  param ss          A reference to the string stream where todot
+    //                    will be written to.
+    //
+    void generateToDotClusters(std::vector<std::vector<Set*> >&projectedIS,
+		    int maxLevel,omega::BoolSet<>& active,Set* restriction,
+		    int currentLevel,std::ostringstream& ss);
+
+    
     //! Information on all statements in the Computation
     std::vector<Stmt*> stmts;
     //! Data spaces accessed in the Computation

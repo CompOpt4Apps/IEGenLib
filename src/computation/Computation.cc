@@ -25,6 +25,7 @@
 #include <code_gen/parser/parser.h>
 #include <codegen.h>
 
+
 #include <algorithm>
 #include <set>
 #include <sstream>
@@ -514,6 +515,320 @@ AppendComputationResult Computation::appendComputation(
 
     return result;
 }
+
+//! Function returns a dot string representing nesting
+//  and loop carrie dependency. Internally it uses
+//  a lite version of polyhedral scanning to generate
+//  subgraphs in the dot file.
+//
+std::string Computation::toDotString(){
+
+    
+    // First apply all transformations to a clone of computation.
+    std::vector<Set*> newIS;
+    std::ostringstream ss;
+    //TODO: Deal with disjunction of cunjunctions later.
+    for(Stmt* st : stmts){
+        Set* appSet = st->getExecutionSchedule()->Apply(
+			st->getIterationSpace());
+	newIS.push_back(appSet);
+    }
+    int maxLevel = newIS[0]->arity();
+    std::vector<std::vector<Set*> > projectedIS(maxLevel);
+    
+    for(int i = 0 ; i < maxLevel; i++ ){
+        projectedIS[i] = std::vector<Set*>(newIS.size());
+    }
+
+    for(int i = 0; i < stmts.size(); i++){
+        if (maxLevel > 0)
+            projectedIS[maxLevel-1][i] = newIS[i];
+	//Perform projections for each column
+	for (int j = maxLevel -1; j >= 1 ; j --){
+	    projectedIS[j -1][i] = projectedIS[j][i]->projectOut(j);   
+	}
+    }
+    omega::BoolSet<>active;
+    active.set_all();
+    Set * restriction  = new Set(maxLevel);
+    ss << "digraph dataFlowGraph_1{ \n";
+    
+    generateToDotClusters(projectedIS,maxLevel,active,restriction,
+		    1,ss);
+    
+    // Add Data Dependence edges , Extracted directly from Shivani's
+    // codebase
+     
+    std::vector<string>
+        data_spaces;  // Maintains the list of dataspaces already created
+    
+    // Adding the participating dataspaces for each statement and mapping out
+    // the read and write access.
+    for (int i = 0; i < getNumStmts(); i++) {
+        // Iterates over the read-DataSpaces
+        for (int data_read_index = 0;
+             data_read_index < getStmt(i)->getNumReads(); data_read_index++) {
+            string readDataSpace =
+                getStmt(i)->getReadDataSpace(data_read_index);
+            // Check to make sure the data space is not created if it already
+            // exists
+            if (!(std::count(data_spaces.begin(), data_spaces.end(),
+                             readDataSpace))) {
+                // Creates data space
+                ss
+                    << "\t\t"
+                    << "subgraph cluster_dataspace" << readDataSpace << "{ \n"
+                    << "\t\t\t"
+                    << "style = filled; \n"
+                    << "\t\t\t"
+                    << "color = lightgrey; \n"
+                    << "\t\t\t"
+                    << "label=\" \"; \n"
+                    << "\t\t\t" << readDataSpace << "[label=\"" << readDataSpace
+                    << "[] \"] [shape=box][style=filled][color=lightgrey];\n"
+                    << "\t\t\t"
+                    << "}\n";
+
+                data_spaces.push_back(readDataSpace);
+            }
+
+            size_t start_pos = getStmt(i)
+                                   ->getReadRelation(data_read_index)
+                                   ->getString()
+                                   .rfind("[");
+            size_t end_pos = getStmt(i)
+                                 ->getReadRelation(data_read_index)
+                                 ->getString()
+                                 .rfind("]");
+
+            ss << "\t\t" << readDataSpace << "->"
+                    << "S" << i << "[label=\"["
+                    << getStmt(i)
+                           ->getReadRelation(data_read_index)
+                           ->getString()
+                           .substr(start_pos + 1, end_pos - start_pos - 1)
+                    << "]\"]"
+                    << "\n";
+        }
+
+        // Iterates over the read-DataSpaces
+        for (int data_write_index = 0;
+             data_write_index < getStmt(i)->getNumWrites();
+             data_write_index++) {
+            string writeDataSpace =
+                getStmt(i)->getWriteDataSpace(data_write_index);
+            // Check to make sure the data space is not created if it already
+            // exists
+            if (!(std::count(data_spaces.begin(), data_spaces.end(),
+                             writeDataSpace))) {
+                ss
+                    << "\t\t"
+                    << "subgraph cluster_dataspace" << writeDataSpace << "{ \n"
+                    << "\t\t\t"
+                    << "style = filled; \n"
+                    << "\t\t\t"
+                    << "color = lightgrey; \n"
+                    << "\t\t\t"
+                    << "label= \" \"; \n"
+                    << "\t\t\t" << writeDataSpace << "[label=\""
+                    << writeDataSpace
+                    << "[] \"] [shape=box][style=filled][color=lightgrey];\n"
+                    << "\t\t\t"
+                    << "}\n";
+
+                data_spaces.push_back(writeDataSpace);
+            }
+
+            size_t start_pos = getStmt(i)
+                                   ->getWriteRelation(data_write_index)
+                                   ->getString()
+                                   .find("[");
+            size_t end_pos = getStmt(i)
+                                 ->getWriteRelation(data_write_index)
+                                 ->getString()
+                                 .find("]");
+
+            ss << "\t\t"
+                    << "S" << i << "->" << writeDataSpace << "[label=\"["
+                    << getStmt(i)
+                           ->getWriteRelation(data_write_index)
+                           ->getString()
+                           .substr(start_pos + 1, end_pos - start_pos - 1)
+                    << "]\"]"
+                    << "\n";
+        }
+    }
+
+    ss << "}\n";
+    return ss.str();
+}
+
+//! Helper function that checks if a condition results in active
+//  sets.
+omega::BoolSet<> Computation::getActive(omega::BoolSet<>&active,Set* cond,
+                           std::vector<Set*> Rs ){
+    omega::BoolSet<> result(active.size());
+    for (omega::BoolSet<>::const_iterator i = active.begin();
+		i != active.end(); i++){
+        Set* splitSet = Rs[*i]->Intersect(cond);
+	auto conj = *(splitSet->conjunctionBegin());
+        if (conj->satisfiable()){
+	    result.set(*i);  
+	}
+	delete splitSet;
+         
+    }
+    return result;    
+}
+
+//! Recursively generate nodes in 
+//  to dot.
+//  param projectedIS presaved projections and levels 
+//  param maxLevel    max level in set of disjunct poly
+//                    hedrons.
+void Computation::generateToDotClusters(std::vector<std::vector<Set*> >&projectedIS,
+		    int maxLevel,omega::BoolSet<>& active,Set* restriction,
+		    int currentLevel,std::ostringstream& ss){
+    if (currentLevel > maxLevel){
+        for (omega::BoolSet<>::const_iterator i = active.begin();
+		i != active.end(); i++){
+            // Print statement
+	    ss << "S" << (*i) << "[label= \" " 
+	       << stmts[(*i)]->getStmtSourceCode()
+               << "\"][shape=Mrecord][style=filled][color=lightgrey] ; \n"
+               << "\t\t";
+        
+	}  
+	return;
+    }
+    int numActiveStmts = active.num_elem();
+
+    if (numActiveStmts == 0)
+        return;
+    else if (numActiveStmts == 1){
+        
+        ss << '\t' << "subgraph cluster_D" << currentLevel << " { \n"
+            << "\t\t"
+            << "style = bold; \n"
+            << "\t\t"
+            << "color = grey; \n"
+            << "\t\t"
+            << ""
+            << "\t\t"
+            << "label = \" Domain: "
+            << restriction->prettyPrintString()
+            << "\"; \n";
+    	generateToDotClusters(projectedIS,maxLevel,active,restriction,
+	    currentLevel+1,ss);
+        ss << "}";
+	return;
+    }
+    // Look for a split
+    std::vector<Set*> Rs(active.size());
+    for (omega::BoolSet<>::const_iterator i = active.begin();
+		i != active.end(); i++){
+        Rs[*i] = projectedIS[currentLevel-1][*i]->Intersect(restriction); 
+    }    
+    
+    for (omega::BoolSet<>::const_iterator i = active.begin();
+		i != active.end(); i++){
+        // for reach constraint in Rs
+	
+	// conjunction must be one at this point
+	
+        if (Rs[*i]->getNumConjuncts() != 1) {
+            throw assert_exception(
+                "Must have exactly one conjunction for Graph Visualization");
+        }
+        
+	auto conj = *(Rs[*i]->conjunctionBegin());
+        for(auto equalityConstraint: conj->equalities()){
+           if (equalityConstraint->dependsOn(TupleVarTerm(currentLevel-1))){
+               
+               Set * cond = new Set(Rs[*i]->arity());
+               Conjunction* condConj = new Conjunction(Rs[*i]->arity());
+	       condConj->addEquality(equalityConstraint);
+               cond->addConjunction(condConj);
+               
+               Set * condComp = islSetComplement(cond);
+	      
+               omega::BoolSet<>active1 = getActive(active,cond,Rs);
+	       omega::BoolSet<>active2 = getActive(active,condComp,Rs);
+               // Split if constraint splits the range 
+	       // of the current level
+	       if(!active1.empty() && !active2.empty() && 
+	           /*active1 n active2 = 0*/
+	           (active1 & active2).empty()){
+	           // Add the condition to the restrictions
+		   Set* restriction1 = restriction->Intersect(cond);
+		   Set* restriction2 = restriction->Intersect(condComp);
+		   generateToDotClusters(projectedIS,maxLevel,active1,
+		       restriction1,currentLevel,ss);
+                   
+		   generateToDotClusters(projectedIS,maxLevel,active2,
+		       restriction2,currentLevel,ss);
+		   delete restriction1;
+		   delete restriction2;
+	       }
+               delete cond;
+               delete condComp;	      
+	   } 
+	}
+        
+	for(auto constraint: conj->inequalities()){
+           if (constraint->dependsOn(TupleVarTerm(currentLevel-1))){
+               Set * cond = new Set(Rs[*i]->arity());
+	       Conjunction* condConj = new Conjunction(Rs[*i]->arity());
+	       condConj->addInequality(constraint);
+               cond->addConjunction(condConj);
+
+
+               Set * condComp = islSetComplement(cond);
+	      
+               omega::BoolSet<>active1 = getActive(active,cond,Rs);
+	       omega::BoolSet<>active2 = getActive(active,condComp,Rs);
+               // Split if constraint splits the range 
+	       // of the current level
+	       if(!active1.empty() && !active2.empty() && 
+	           /*active1 n active2 = 0*/
+	           (active1 & active2).empty()){
+	           // Add the condition to the restrictions
+		   Set* restriction1 = restriction->Intersect(cond);
+		   Set* restriction2 = restriction->Intersect(condComp);
+		   generateToDotClusters(projectedIS,maxLevel,active1,
+		       restriction1,currentLevel,ss);
+		   generateToDotClusters(projectedIS,maxLevel,active2,
+		       restriction2,currentLevel,ss);
+		   delete restriction1;
+		   delete restriction2;
+	       }
+               delete cond;
+               delete condComp;	      
+	   } 
+	}	
+
+    }
+    // TODO: only generate subcluster if there exist a non
+    //       constant constraint involvolving the current level    
+    // Domain subgraph
+    ss << '\t' << "subgraph cluster_D" << currentLevel << " { \n"
+        << "\t\t"
+        << "style = bold; \n"
+        << "\t\t"
+        << "color = grey; \n"
+        << "\t\t"
+        << ""
+        << "\t\t"
+        << "label = \" Domain: "
+        << restriction->prettyPrintString()
+        << "\"; \n";
+    generateToDotClusters(projectedIS,maxLevel,active,restriction,
+        currentLevel+1,ss);
+    ss << "}";
+    return;
+
+}
+
 
 void Computation::toDot(std::fstream& dotFile, string fileName) {
     std::vector<string>
@@ -1044,9 +1359,8 @@ void VisitorChangeUFsForOmega::preVisitConjunction(Conjunction* c){
        tupleAssignments[i] = "0"; 
     }   
 }
-
 void VisitorChangeUFsForOmega::preVisitExp(iegenlib::Exp * e){
-    // The goal of this code section is to generate tuple 
+    // The goal of this code section is to generate tuple
     // variable intiializations. The code is currently buggy
     // and will be bypassed for now.
     /*
@@ -1063,15 +1377,13 @@ void VisitorChangeUFsForOmega::preVisitExp(iegenlib::Exp * e){
 	// as a candidate for tuple initialization.
 	int tv_count = std::count_if(terms.begin(), terms.end(),
 	    [](Term* t){return dynamic_cast<TupleVarTerm*>(t)!=NULL;});
-
 	if (tv_count != 1){
 	    return;
 	}
-
 	for(auto it = terms.begin();!term && it != terms.end(); it++){
 	   if((*it)->isUFCall()){
 	       isValid = false;
-	       break; 
+	       break;
 	   }
 	   term = dynamic_cast<TupleVarTerm*>(*it);
 	}
@@ -1081,15 +1393,14 @@ void VisitorChangeUFsForOmega::preVisitExp(iegenlib::Exp * e){
 	    std::cerr << "Is Valid: " << term->toString() << "\n" ;
 	    if(terms.size()==1){
 	        tupleAssignments[term->tvloc()] = "0";
-	        return;	
+	        return;
 	    }
 	    term->setCoefficient(1);
 	    Exp * solveFor = e->solveForFactor(term);
-	    std::string solvedForString = solveFor->toString(); 
-	    tupleAssignments[term->tvloc()] =  solvedForString; 
+	    std::string solvedForString = solveFor->toString();
+	    tupleAssignments[term->tvloc()] =  solvedForString;
 	    delete solveFor;
 	}
-
     }*/
 }
 

@@ -651,8 +651,6 @@ public:
         }
     }
     
-   
-    
     //! Performs transitive closure in presence of UFs
     //! Returns a new set, which the user is responsible
     //  for deallocating.
@@ -930,6 +928,11 @@ std::set<std::pair <std::string,std::string>> ruleInstantiation
 Set* islSetProjectOut(Set* s, unsigned pos);
 
 Relation* islRelTransitiveClosure(Relation*r,bool& isExact);
+
+//TODO: Make this a paart of IEGenLib and also write documentation
+Set* islSetComplement (Set* s);
+
+Relation* islRelComplement(Relation *r);
 
 }//end namespace iegenlib
 

@@ -133,6 +133,29 @@ Relation* islRelTransitiveClosure(Relation* r,bool& isExact){
   return result;
 }
 
+Set* islSetComplement (Set* s){
+   
+    // Geting a map of UFCalls
+    iegenlib::UFCallMap *ufcmap = new UFCallMap();;
+    // Getting the super affine set of constraints with no UFCallTerms
+    Set* sup_s = s->superAffineSet(ufcmap, false);
+    string sstr = sup_s->toISLString();
+    delete sup_s;
+    // Using isl to project out tuple variable #pos
+    isl_ctx *ctx = isl_ctx_alloc();
+    string islStr = islSetToString (
+                 isl_set_complement(islStringToSet(sstr,ctx)),ctx);
+    isl_ctx_free(ctx);
+    int inArity = sup_s->arity(), outArity = 0; 
+    string corrected = revertISLTupDeclToOrig( sstr, islStr, inArity, outArity);
+    sup_s = new Set(corrected); 
+
+    Set* result = sup_s->reverseAffineSubstitution(ufcmap);
+    delete sup_s;
+    return result;
+}
+
+
 
 // This function can be used for Projecting out a tuple variable
 // from an affine set string using isl library

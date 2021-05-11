@@ -2377,12 +2377,22 @@ TEST_F(SetRelationTest, SetZeroArityIntersect) {
     Set* s1 = new Set("{ : N > 0}");
     Set* s2 = new Set("{ : M > 0}");
     Set* s3 = s1->Intersect(s2);
+   /* 
+    Set* s4 = new Set(5);
+    Set* s5 = new Set("{[0]}");
+    Set* s6 = s4->Intersect(s5);
+    EXPECT_EQ("",s6->prettyPrintString());
+    */
     EXPECT_EQ( "[ M, N ] -> {  : M - 1 >= 0 && N - 1 >= 0 }",
                s3->toISLString() );
 
     delete s1;
     delete s2;
     delete s3;
+    /*
+    delete s4;
+    delete s5;
+    delete s6;*/
 }
 
 #pragma mark SetIntersect
@@ -3994,7 +4004,6 @@ TEST_F(SetRelationTest, projectOut) {
 
   // Projecting out 'j' from s1
   s2 = s1->projectOut(1);     // 1 == index of 'j'
-
   if ( s2 ){
      delete s1;               // removing old s1
      s1 = s2;
