@@ -414,7 +414,7 @@ TEST_F(ComputationTest, AppendComputationArgumentPassing) {
 }
 
 #pragma mark AppendComputationEmpty
-TEST_F(ComputationTest, DISABLED_AppendComputationEmpty) {
+TEST_F(ComputationTest, AppendComputationEmpty) {
     // without params
     Computation* comp1 = new Computation();
 
@@ -560,7 +560,7 @@ TEST_F(ComputationTest, AppendComputationComplex) {
 
 #pragma mark ComputationNamePrefixing
 // Check creating a copy of a Computation with prefixed names works properly
-TEST_F(ComputationTest, DISABLED_ComputationNamePrefixing) {
+TEST_F(ComputationTest, ComputationNamePrefixing) {
     Computation* comp1 = new Computation();
     Stmt* s0 = new Stmt("$product$[i] += $x$[i][j] * $y$[j];",
                         "{[i,j]: i >= 0 && i < a && j >= 0 && j < b}",
