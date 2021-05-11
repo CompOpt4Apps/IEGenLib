@@ -550,7 +550,7 @@ TEST_F(ComputationTest, TupleAssignmentUnitTest) {
 }
 
 #pragma mark ToDotTest
-TEST_F(ComputationTest, ToDotUnitTest){
+TEST_F(ComputationTest, DISABLED_ToDotUnitTest){
     Computation* forwardSolve = new Computation();
     std::vector<std::pair<std::string, std::string> > dataReads;
     std::vector<std::pair<std::string, std::string> > dataWrites;
@@ -581,5 +581,5 @@ TEST_F(ComputationTest, ToDotUnitTest){
     forwardSolve->addStmt(ss0);
     forwardSolve->addStmt(ss1);
     forwardSolve->addStmt(ss2);
-    
+    checkToDotString(forwardSolve,"");   
 }

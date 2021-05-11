@@ -613,10 +613,10 @@ std::string Computation::toDotString(){
             projectedIS[maxLevel-1][i] = newIS[i];
 	//Perform projections for each column
 	for (int j = maxLevel -1; j >= 1 ; j --){
-	    projectedIS[j -1][i] = projectedIS[j][i]->projectOut(j);   
+	    projectedIS[j -1][i] = projectedIS[j][i]->projectOut(j,false);   
 	}
     }
-    omega::BoolSet<>active;
+    omega::BoolSet<>active(stmts.size());
     active.set_all();
     Set * restriction  = new Set(maxLevel);
     ss << "digraph dataFlowGraph_1{ \n";
