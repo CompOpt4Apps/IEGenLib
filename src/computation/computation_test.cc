@@ -395,9 +395,9 @@ TEST_F(ComputationTest, AppendComputationArgumentPassing) {
     Computation* ecomp = new Computation();
     ecomp->addDataSpace("$myInt$");
     ecomp->addDataSpace("$myDouble$");
-    ecomp->addDataSpace("$a$");
-    ecomp->addDataSpace("$b$");
-    ecomp->addDataSpace("$c$");
+    ecomp->addDataSpace("_iegen_0$a$");
+    ecomp->addDataSpace("_iegen_0$b$");
+    ecomp->addDataSpace("_iegen_0$c$");
     Stmt* e_gen_s1 = new Stmt("int _iegen_0$a$ = $myInt$;", "{[i]}", "{[i] -> [2,i,2]}", {{"$myInt$", "{[i]->[0]}"}}, {{"_iegen_0$a$", "{[i]->[0]}"}});
     Stmt* e_gen_s2 = new Stmt("double _iegen_0$b$ = $myDouble$;", "{[i]}", "{[i] -> [2,i,3]}", {{"$myDouble$", "{[i]->[0]}"}}, {{"_iegen_0$b$", "{[i]->[0]}"}});
     Stmt* e_gen_s3 = new Stmt("float _iegen_0$c$ = 0;", "{[i]}", "{[i] -> [2,i,4]}", {}, {{"_iegen_0$c$", "{[i]->[0]}"}});
@@ -455,15 +455,16 @@ TEST_F(ComputationTest, AppendComputationReturnValues) {
     Computation* comp2 = new Computation();
     Stmt* s1 = new Stmt("s2;", "{[k]}", "{[k] -> [0,k,1]}", {}, {});
     comp2->addStmt(s1);
-    comp2->addDataSpace("res");
-    comp2->addReturnValue("res");
+    comp2->addDataSpace("$res$");
+    comp2->addReturnValue("$res$");
     comp2->addReturnValue("0");
 
     Computation* ecomp = new Computation();
+    ecomp->addDataSpace("_iegen_0$res$");
     Stmt* es1 = new Stmt("s2;", "{[i,k]}", "{[i,k] -> [2,i,2,k,1]}", {}, {});
     ecomp->addStmt(es1);
 
-    checkAppendComputation(comp1, comp2, "{[i]}", "{[i]->[2,i,2]}", {}, 2, {"_iegen_0res", "0"}, ecomp);
+    checkAppendComputation(comp1, comp2, "{[i]}", "{[i]->[2,i,2]}", {}, 2, {"_iegen_0$res$", "0"}, ecomp);
 
     delete comp1, comp2, ecomp;
 }
@@ -530,6 +531,7 @@ TEST_F(ComputationTest, AppendComputationComplex) {
     ecomp1->addDataSpace("_iegen_1$A$");
     ecomp1->addDataSpace("_iegen_1$tmp$");
     ecomp1->addDataSpace("_iegen_1$someInteger$");
+    ecomp1->addDataSpace("_iegen_1_iegen_0$asdf$");
     Stmt* e2s1 = new Stmt(*s1);
     Stmt* e2s2 = new Stmt(*s2);
     Stmt* e2s3 = new Stmt("int _iegen_1$someInteger$ = $tmp$;", "{[i]: 0<=i<$N$}", "{[i]->[1,i,1]}", {{"$tmp$", "{[i]->[0]}"}}, {{"_iegen_1$someInteger$", "{[i]->[0]}"}});

@@ -567,6 +567,11 @@ AppendComputationResult Computation::appendComputation(
         this->addStmt(newStmt);
     }
 
+    // add (already name prefixed) data spaces from appendee to appender
+    for (const auto& dataSpace : toAppend->getDataSpaces()) {
+        this->addDataSpace(dataSpace);
+    }
+
     // collect append result information to return
     AppendComputationResult result;
     result.tuplePosition = latestTupleValue;
