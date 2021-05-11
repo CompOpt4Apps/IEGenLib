@@ -3931,150 +3931,81 @@ TEST_F(SetRelationTest, reverseAffineSubstitution) {
 #pragma mark projectOut
 // Testing projectOut: project out tuple variable # tvar
 TEST_F(SetRelationTest, projectOut) {
-
     iegenlib::setCurrEnv();
-    iegenlib::appendCurrEnv("col",
-        new Set("{[i]:0<=i &&i<n}"),
-        new Set("{[j]:0<=j &&j<n}"), true, iegenlib::Monotonic_NONE);
-    iegenlib::appendCurrEnv("idx",
-        new Set("{[i]:0<=i &&i<n}"),
-        new Set("{[j]:0<=j &&j<n}"), true, iegenlib::Monotonic_NONE);
-    iegenlib::appendCurrEnv("row",
-        new Set("{[i]:0<=i &&i<n}"),
-        new Set("{[j]:0<=j &&j<n}"), true, iegenlib::Monotonic_NONE);
-    iegenlib::appendCurrEnv("diag",
-        new Set("{[i]:0<=i &&i<n}"),
-        new Set("{[j]:0<=j &&j<n}"), true, iegenlib::Monotonic_NONE);
+    iegenlib::appendCurrEnv("col", new Set("{[i]:0<=i &&i<n}"),
+                            new Set("{[j]:0<=j &&j<n}"), true,
+                            iegenlib::Monotonic_NONE);
+    iegenlib::appendCurrEnv("idx", new Set("{[i]:0<=i &&i<n}"),
+                            new Set("{[j]:0<=j &&j<n}"), true,
+                            iegenlib::Monotonic_NONE);
+    iegenlib::appendCurrEnv("row", new Set("{[i]:0<=i &&i<n}"),
+                            new Set("{[j]:0<=j &&j<n}"), true,
+                            iegenlib::Monotonic_NONE);
+    iegenlib::appendCurrEnv("diag", new Set("{[i]:0<=i &&i<n}"),
+                            new Set("{[j]:0<=j &&j<n}"), true,
+                            iegenlib::Monotonic_NONE);
 
-   // Note that, current project_out function first checks to see
-   // whether the tuple variable that is going to be projected out
-   // is argument to any UFS, if it is, it terminates, and returns NULL.
-   // However, if the tuple variable is not argument to any UFS,
-   // it will project it out, and return new Relation/Set.
-   // Additionally, we add the constraints that are due to domain
-   //  and range info of all UFCall terms in the Set/Relation, before calling project out,
-   //  for instance:
-   //  if we have: col( x ) + y > 5    then
-   //                             ldb <= x <= udb and lrb <= col(x) <= urb
-   //              will be added to constraints.
-   //              * ldb = lower domain bound, urb = upper range bound
+    // We add the constraints that are due to domain
+    // and range info of all UFCall terms in the Set/Relation, before calling
+    // project out, for instance: if we have: col( x ) + y > 5    then
+    //                            ldb <= x <= udb and lrb <= col(x) <= urb
+    //             will be added to constraints.
+    //             * ldb = lower domain bound, urb = upper range bound
 
-    Relation *r1 = new Relation("{ [i,k] -> [ip,kp] :  i = kp and col(i) < n"
-                                     " and i < ip and diag(col(i))+1 <= k }");
-    Relation *r2;
+    /* Sets */
+    Set* s1;
+    Set* s2;
+    Set* ex_s1;
 
-    Relation *ex_r1 = new Relation("{ [i] -> [ip] : i < ip  and "
-     "0 <= i and i < n and col(i) >= 0 and diag(col(i)) >= 0 and"
-                             " col(i) < n and diag(col(i)) < n }");
-    r2 = r1->boundDomainRange();
-    *r1 = *r2;
-
-    r2 = r1->projectOut(3);    // 3 == index of 'kp'
-    if ( r2 ){                 // Did we project out 'jp': YES!
-        delete r1;             // removing old r1
-        r1 = r2;
-    }
-
-    r2 = r1->projectOut(0);    // 0 == index of 'i'
-    if ( r2 ){                 // Did we project out 'i': NO!
-        delete r1;             // The reason is that k is argumnet to col().
-        r1 = r2;               // We don't project out variables
-    }                          // that are argument to an UFCall.
-
-    r2 = r1->projectOut(1);    // 2 == index of 'k'
-    if ( r2 ){                 // did we project out 'j': YES!
-        delete r1;             // removing old r1
-        r1 = r2;
-    }
-
-//   std::cout << std::endl << "r1 = " << r1->toISLString() << std::endl;
-
-   EXPECT_EQ( ex_r1->toISLString() , r1->toISLString() );
-
-    Set *s1 = new Set("{ [i,j,ip,jp] : i = col(jp)+1 and 0 <= i and i < n"
-                                     " and idx(i) <= j and j < idx(i+1) }");
-    Set *s2;
-
-    Set *ex_s1 = new Set("{ [i, jp] : i = col(jp)+1 && jp >= 0 && col(jp) >= 0 && idx(i) >= 0 && jp < n && col(jp) < n-2 && idx(i+1) < n && idx(i) < idx(i+1)}");
-
+    s1 = new Set(
+        "{ [i,j,ip,jp] : i = col(jp)+1 and 0 <= i and i < n"
+        " and idx(i) <= j and j < idx(i+1) }");
+    ex_s1 = new Set(
+        "{ [i, jp] : i = col(jp)+1 && jp >= 0 && col(jp) >= 0 && idx(i) >= 0 "
+        "&& jp < n && col(jp) < n-2 && idx(i+1) < n && idx(i) < idx(i+1)}");
     s2 = s1->boundDomainRange();
     *s1 = *s2;
-
-   // projectOut has the same behaivor for both Relation and Set
-
-  // Projecting out 'j' from s1
-  s2 = s1->projectOut(1);     // 1 == index of 'j'
-  if ( s2 ){
-     delete s1;               // removing old s1
-     s1 = s2;
-  }
-  // Projecting out 'ip' from s1
-  s2 = s1->projectOut(1);     // 1 == index of 'ip' (in new results)
-
-  if ( s2 ){
-     delete s1;               // removing old s1
-     s1 = s2;
-  }
-//   std::cout << std::endl << "s1 = " << s1->toISLString() << std::endl;
-
-   EXPECT_EQ( ex_s1->toISLString() , s1->toISLString() );
-
-   delete r1;
-   delete s1;
-   delete ex_r1;
-   delete ex_s1;
-
+    // j
+    s2 = s1->projectOut(1);
+    if (s2) {
+        delete s1;
+        s1 = s2;
+    }
+    // ip
+    s2 = s1->projectOut(1);
+    if (s2) {
+        delete s1;
+        s1 = s2;
+    }
+    EXPECT_EQ(ex_s1->toISLString(), s1->toISLString());
+    delete s1;
+    delete ex_s1;
 
     s1 = new Set("{[x,y]: 1 <= y && y <= x && x <= 100}");
     ex_s1 = new Set("{[y]: 1 <= y <= 100}");
-
-    s2 = s1->projectOut(0); // project out x
-
+    // x
+    s2 = s1->projectOut(0);
     if (s2) {
         delete s1;
         s1 = s2;
     }
-
     EXPECT_EQ(ex_s1->toISLString(), s1->toISLString());
-
     delete s1, ex_s1;
 
-    s1 = new Set("{[x,y]: 1 <= y && y <= x && x <= 100}"); // 1<=y<=x<=100
-    ex_s1 = new Set("{[y]: 1 <= y && y <= 100}"); // 1<=y<=100
-
-    s2 = s1->projectOut(0); // project out x
-
+    s1 = new Set("{[x,y]: 1 <= y && y <= x && x <= 100}");
+    ex_s1 = new Set("{[y]: 1 <= y && y <= 100}");
+    // x
+    s2 = s1->projectOut(0);
     if (s2) {
         delete s1;
         s1 = s2;
     }
-
     EXPECT_EQ(ex_s1->toISLString(), s1->toISLString());
-
-    delete s1, ex_s1;
-}
-
-#pragma mark projectOutWithUFs
-TEST_F(SetRelationTest, projectOutWithUFs) {
-    /* Sets */
-    Set* s1;
-    Set* ex_s1;
-    Set* s2;
-
-    // projection without UFs should still work
-    s1 = new Set("{[x,y]: 1 <= y && y <= x && x <= 100}"); // 1<=y<=x<=100
-    ex_s1 = new Set("{[y]: 1 <= y && y <= 100}"); // 1<=y<=100
-    s2 = s1->projectOutWithUFs(0);
-    if (s2) {
-        delete s1;
-        s1 = s2;
-    }
-    EXPECT_EQ(s1->toISLString(), ex_s1->toISLString());
     delete s1, ex_s1;
 
     s1 = new Set("{[i,j]: 0 <= i < A(j) && 0 <= j < A(i)}");
     ex_s1 = new Set("{[i]: 0 <= i && 0 < A(i)}");
-    s2 = s1->projectOutWithUFs(1);
+    s2 = s1->projectOut(1);
     if (s2) {
         delete s1;
         s1 = s2;
@@ -4083,7 +4014,7 @@ TEST_F(SetRelationTest, projectOutWithUFs) {
     delete s1, ex_s1;
 
     s1 = new Set("{[i,j]: 0 <= A(i,j) && 0 <= i < N}");
-    s2 = s1->projectOutWithUFs(1);
+    s2 = s1->projectOut(1);
     delete s1;
     EXPECT_EQ(s2, nullptr);
     if (s2) {
@@ -4091,7 +4022,7 @@ TEST_F(SetRelationTest, projectOutWithUFs) {
     }
 
     s1 = new Set("{[i,j]: 0 <= A(i,B(j)) && 0 <= i < N}");
-    s2 = s1->projectOutWithUFs(1);
+    s2 = s1->projectOut(1);
     delete s1;
     EXPECT_EQ(s2, nullptr);
     if (s2) {
@@ -4100,7 +4031,7 @@ TEST_F(SetRelationTest, projectOutWithUFs) {
 
     s1 = new Set("{[i,j]: 0 <= A(j,B(j)) && 0 <= i < N}");
     ex_s1 = new Set("{[i]: 0 <= i < N && 0 < N}");
-    s2 = s1->projectOutWithUFs(1);
+    s2 = s1->projectOut(1);
     if (s2) {
         delete s1;
         s1 = s2;
@@ -4108,14 +4039,39 @@ TEST_F(SetRelationTest, projectOutWithUFs) {
     EXPECT_EQ(s1->toISLString(), ex_s1->toISLString());
     delete s1, ex_s1;
 
-    /* Relations (same as sets) */
+    /* Relations (same functionality as sets) */
     Relation* r1;
-    Relation* ex_r1;
     Relation* r2;
+    Relation* ex_r1;
+
+    r1 = new Relation(
+        "{ [i,k] -> [ip,kp] :  i = kp and col(i) < n"
+        " and i < ip and diag(col(i))+1 <= k }");
+    ex_r1 = new Relation(
+        "{ [i] -> [ip] : i < ip  and "
+        "0 <= i and i < n and col(i) >= 0 and diag(col(i)) >= 0 and"
+        " col(i) < n and diag(col(i)) < n }");
+    r2 = r1->boundDomainRange();
+    *r1 = *r2;
+    // kp
+    r2 = r1->projectOut(3);
+    if (r2) {
+        delete r1;
+        r1 = r2;
+    }
+    // k
+    r2 = r1->projectOut(1);
+    if (r2) {
+        delete r1;
+        r1 = r2;
+    }
+    EXPECT_EQ(ex_r1->toISLString(), r1->toISLString());
+    delete r1;
+    delete ex_r1;
 
     r1 = new Relation("{[i,j]->[k]: j = k && i < A(k)}");
     ex_r1 = new Relation("{[i]->[k]: i < A(k)}");
-    r2 = r1->projectOutWithUFs(1);
+    r2 = r1->projectOut(1);
     if (r2) {
         delete r1;
         r1 = r2;
@@ -4124,7 +4080,7 @@ TEST_F(SetRelationTest, projectOutWithUFs) {
     delete r1, ex_r1;
 
     r1 = new Relation("{[i]->[j]: 0 <= A(i,B(j)) && 0 <= i < N}");
-    r2 = r1->projectOutWithUFs(1);
+    r2 = r1->projectOut(1);
     delete r1;
     EXPECT_EQ(r2, nullptr);
     if (r2) {

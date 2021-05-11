@@ -159,7 +159,7 @@ Set* islSetComplement (Set* s){
 
 // This function can be used for Projecting out a tuple variable
 // from an affine set string using isl library
-Set* islSetProjectOut(Set* s, unsigned pos) {
+Set* islSetProjectOut(Set* s, unsigned pos, bool removeFromTuple) {
 
     string sstr = s->toISLString();
 
@@ -181,10 +181,12 @@ Set* islSetProjectOut(Set* s, unsigned pos) {
     // projected = { [i1,i3] : ...}
     // For more detail refer to projectOutStrCorrection function's comments.
     // After getting projected string the process becomes like passSetThruISL.
-    string projected = projectOutStrCorrection(sstr, pos, s->arity(), 0);
-    string corrected = revertISLTupDeclToOrig( projected, islStr, s->arity(), 0);
+    if (removeFromTuple) {
+        string projected = projectOutStrCorrection(sstr, pos, s->arity(), 0);
+        islStr = revertISLTupDeclToOrig( projected, islStr, s->arity(), 0);
+    }
 
-    Set* result = new Set( corrected);
+    Set* result = new Set(islStr);
 
     return result;
 }
@@ -1591,11 +1593,11 @@ Conjunction*  Conjunction::TransitiveClosure(){
         g->addEdge(lhsNode,rhsNode,EdgeType::GREATER_OR_EQUAL_TO);
     }
     g->simplifyGreaterOrEqual();
-    std::cerr << "Dump Before Trans Closure \n";
-    std::cerr << g->toDotString();
+//    std::cerr << "Dump Before Trans Closure \n";
+//    std::cerr << g->toDotString();
     g->transitiveClosure();
-    std::cerr << "Dump After Trans Closure \n";
-    std::cerr << g->toDotString();
+//    std::cerr << "Dump After Trans Closure \n";
+//    std::cerr << g->toDotString();
     // Delete all expressions in the retVal conjunction.
     retVal->reset();
 
@@ -3491,15 +3493,17 @@ Relation* Relation::reverseAffineSubstitution(UFCallMap* ufcmap)
 class VisitorProjectOut : public Visitor {
   private:
     int tvar;
+    bool removeFromTuple;
     int inArity;
     Set* newSet;
     Relation* newRelation;
     std::list<Conjunction*> mNewConj;
   public:
-    VisitorProjectOut(int itvar, int ia=0){
+    VisitorProjectOut(int itvar, bool iremoveFromTuple, int ia=0){
         tvar = itvar;
+        removeFromTuple = iremoveFromTuple;
         // Adjust inArity for after projection
-        if( tvar < ia && ia != 0 ){
+        if( removeFromTuple && tvar < ia && ia != 0 ){
             ia--;
         }
         inArity = ia;
@@ -3514,7 +3518,7 @@ class VisitorProjectOut : public Visitor {
         cs->addConjunction(cc);
 
         // Send through ISL to project out desired tuple variable
-        Set* islSet = islSetProjectOut(cs, tvar);
+        Set* islSet = islSetProjectOut(cs, tvar, removeFromTuple);
 
         if( !(islSet->mConjunctions.empty()) ){
             Conjunction* crc = new Conjunction ( *(islSet->mConjunctions.front()) );
@@ -3529,7 +3533,11 @@ class VisitorProjectOut : public Visitor {
     }
     //! Add Conjunctions in mnewConj to newSet
     void postVisitSet(iegenlib::Set * s){
-        newSet = new Set( (s->arity()-1) );
+      int newArity = s->arity();
+      if (removeFromTuple) {
+        newArity -= 1;
+      }
+        newSet = new Set( newArity );
 
         for(std::list<Conjunction*>::const_iterator i=mNewConj.begin();
                       i != mNewConj.end(); i++) {
@@ -3538,14 +3546,16 @@ class VisitorProjectOut : public Visitor {
     }
     //! Add Conjunctions in mnewConj to newRelation
     void postVisitRelation(iegenlib::Relation * r){
+      int ia = r->inArity(), oa = r->outArity();
+      if (removeFromTuple) {
         // Adjusting new in and out arity depending projected tvar
-        int ia = r->inArity(), oa = r->outArity();
         if( tvar < ia ){
-            ia--;
+          ia--;
         } else {
-            oa--;
+          oa--;
         }
-        newRelation = new Relation( ia , oa );
+      }
+      newRelation = new Relation( ia , oa );
 
         for(std::list<Conjunction*>::const_iterator i=mNewConj.begin();
                      i != mNewConj.end(); i++) {
@@ -3581,46 +3591,6 @@ class VisitorProjectOutCleanUp : public Visitor {
         }
     }
 };
-
-/*! Projects out tuple varrable No. tvar if tvar is not argument to any UFCall
-**  tvar is calculated based on ariety starting from 0.
-**  Consequently, to project out jp from S: tvar = 5
-**     S = {[i,j,k,ip,jp,kp] : ...}
-**
-**  NOTE: if tvar is argument some UFCall, then we cannot project it out
-**        and functions returns NULL.
-**        Ex: if col(k) in constraints exists we cannot project out 'k'
-*/
-Set* Set::projectOut(int tvar)
-{
-    if (isUFCallParam(tvar)){
-      return NULL;
-    }
-
-    // Geting a map of UFCalls
-    iegenlib::UFCallMap *ufcmap = new UFCallMap();;
-    // Getting the super affine set of constraints with no UFCallTerms
-    Set* sup_s = this->superAffineSet(ufcmap, false);
-
-    // Projecting out tvar using ISL library
-    VisitorProjectOut* pv = new VisitorProjectOut(tvar, 0);
-    sup_s->acceptVisitor(pv);
-    delete sup_s;
-    sup_s = pv->getSet();
-
-    // Getting the reverseAffineSubstitution
-    Set* result = sup_s->reverseAffineSubstitution(ufcmap);
-
-    // Adjusting changes in UFCTerms due to projection: _tvN -> _tvN-1
-    VisitorProjectOutCleanUp* cv = new VisitorProjectOutCleanUp(tvar);
-    result->acceptVisitor(cv);
-
-    delete sup_s;
-    delete cv;
-    delete pv;
-
-    return result;
-}
 
 /*!
  * \class VisitorFindMultiVarUFCalls
@@ -3668,7 +3638,8 @@ class VisitorFindMultiVarUFCalls : public Visitor {
     }
 };
 
-Set* Set::projectOutWithUFs(int tvar) {
+Set* Set::projectOut(int tvar, bool removeFromTuple)
+{
     // find transitive closure
     Set* closure = this->TransitiveClosure();
 
@@ -3681,7 +3652,29 @@ Set* Set::projectOutWithUFs(int tvar) {
         result = NULL;
     } else {
         closure->removeUFCallConsts(tvar);
-        result = closure->projectOut(tvar);
+        // Geting a map of UFCalls
+        iegenlib::UFCallMap *ufcmap = new UFCallMap();
+        // Getting the super affine set of constraints with no UFCallTerms
+        Set* sup_s = closure->superAffineSet(ufcmap, false);
+
+        // Projecting out tvar using ISL library
+        VisitorProjectOut* pv = new VisitorProjectOut(tvar, removeFromTuple, 0);
+        sup_s->acceptVisitor(pv);
+        delete sup_s;
+        sup_s = pv->getSet();
+
+        // Getting the reverseAffineSubstitution
+        result = sup_s->reverseAffineSubstitution(ufcmap);
+
+        if (removeFromTuple) {
+            // Adjusting changes in UFCTerms due to projection: _tvN -> _tvN-1
+            VisitorProjectOutCleanUp* cv = new VisitorProjectOutCleanUp(tvar);
+            result->acceptVisitor(cv);
+            delete cv;
+        }
+
+        delete sup_s;
+        delete pv;
     }
 
     delete closure;
@@ -3690,47 +3683,8 @@ Set* Set::projectOutWithUFs(int tvar) {
     return result;
 }
 
-/*! Projects out tuple varrable No. tvar if tvar is not argument to any UFCall
-**  tvar is calculated based on total ariety (in+out) starting from 0.
-**  Consequently, to project out jp from R: tvar = 5
-**     R = {[i,j,k] -> [ip,jp,kp] : ...}
-**
-**  NOTE: if tvar is argument some UFCall, then we cannot project it out
-**        and functions returns NULL.
-**        Ex: if col(k) in constraints exists we cannot project out 'k'
-*/
-Relation* Relation::projectOut(int tvar)
+Relation* Relation::projectOut(int tvar, bool removeFromTuple)
 {
-    if (isUFCallParam(tvar)){
-      return NULL;
-    }
-
-    // Geting a map of UFCalls
-    iegenlib::UFCallMap *ufcmap = new UFCallMap();
-    // Getting the super affine set of constraints with no UFCallTerms
-    Relation* sup_r = this->superAffineRelation(ufcmap, false);
-
-    // Projecting out tvar using ISL library
-    VisitorProjectOut* pv = new VisitorProjectOut(tvar, sup_r->inArity());
-    sup_r->acceptVisitor(pv);
-    delete sup_r;
-    sup_r = pv->getRelation();
-
-    // Getting the reverseAffineSubstitution
-    Relation* result = sup_r->reverseAffineSubstitution(ufcmap);
-
-    // Adjusting changes in UFCTerms due to projection: _tvN -> _tvN-1
-    VisitorProjectOutCleanUp* cv = new VisitorProjectOutCleanUp(tvar);
-    result->acceptVisitor(cv);
-
-    delete sup_r;
-    delete cv;
-    delete pv;
-
-    return result;
-}
-
-Relation* Relation::projectOutWithUFs(int tvar) {
     // find transitive closure
     Relation* closure = this->TransitiveClosure();
 
@@ -3743,7 +3697,30 @@ Relation* Relation::projectOutWithUFs(int tvar) {
         result = NULL;
     } else {
         closure->removeUFCallConsts(tvar);
-        result = closure->projectOut(tvar);
+
+        // Geting a map of UFCalls
+        iegenlib::UFCallMap *ufcmap = new UFCallMap();
+        // Getting the super affine set of constraints with no UFCallTerms
+        Relation* sup_r = closure->superAffineRelation(ufcmap, false);
+
+        // Projecting out tvar using ISL library
+        VisitorProjectOut* pv = new VisitorProjectOut(tvar, removeFromTuple, sup_r->inArity());
+        sup_r->acceptVisitor(pv);
+        delete sup_r;
+        sup_r = pv->getRelation();
+
+        // Getting the reverseAffineSubstitution
+        result = sup_r->reverseAffineSubstitution(ufcmap);
+
+        if (removeFromTuple) {
+            // Adjusting changes in UFCTerms due to projection: _tvN -> _tvN-1
+            VisitorProjectOutCleanUp* cv = new VisitorProjectOutCleanUp(tvar);
+            result->acceptVisitor(cv);
+            delete cv;
+        }
+
+        delete sup_r;
+        delete pv;
     }
 
     delete closure;

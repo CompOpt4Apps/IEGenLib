@@ -627,17 +627,23 @@ public:
     */
     Set* reverseAffineSubstitution(UFCallMap* ufcmap);
 
-    //! Projects out tuple var No. tvar, if it is not an argument to a UFCall.
-    //! If tvar is an argument to some UFCall, then returns NULL.
-    Set* projectOut(int tvar);
-
-    //! Attempts to project out the specified tuple variable, with some
-    //! support for tuple variables used in UF calls. Includes taking a
-    //! transitive closure.
-    //! If tvar is an argument to a UFCall *that also has other arguments*,
-    //! then returns NULL.
-    //! \param tvar tuple variable location to project out
-    Set* projectOutWithUFs(int tvar);
+    /*!
+    * Projects out specified tuple variable if it is not an argument to any UFCall
+    * that also uses other tuple variables. tvar is calculated based on arity
+    * starting from 0.
+    * Consequently, to project out jp from S:
+    *   S = {[i,j,k,ip,jp,kp] : ...}
+    *   tvar = 4
+    *
+    * removeFromTuple parameter specifies if the tuple variable should be taken
+    * out of the TupleDecl after it is projected. True means it will be removed
+    * ("normal" behavior), false means it will remain.
+    *
+    * NOTE: if tvar is an argument to some UFCall that also has other tuple
+    * variable arguments, then we cannot project it out and function returns NULL.
+    *        Ex: if col(i,k) exists in constraints we cannot project out 'k'
+    */
+    Set* projectOut(int tvar, bool removeFromTuple = true);
 
     /*! This function simplifies constraints sets of non-affine sets that
         are targeted for level set parallelism. These sets are representative
@@ -859,12 +865,8 @@ public:
     */
     Relation* reverseAffineSubstitution(UFCallMap* ufcmap);
 
-    //! Projects out tuple var No. tvar, if it is not an argument to a UFCall.
-    //! If tvar is an argument to some UFCall, then returns NULL.
-    Relation* projectOut(int tvar);
-
-    //! Same as Set::projectOutWithUFs
-    Relation* projectOutWithUFs(int tvar);
+    //! Same as Set::projectOut
+    Relation* projectOut(int tvar, bool removeFromTuple = true);
 
     /*! This function simplifies constraints sets of non-affine sets that
         are targeted for level set parallelism. These sets are representative
@@ -935,7 +937,7 @@ std::pair <std::string,std::string> instantiate(
 std::set<std::pair <std::string,std::string>> ruleInstantiation
                           (std::set<Exp> instExps, bool *useRule,
                            TupleDecl origTupleDecl, UFCallMap *ufcmap);
-Set* islSetProjectOut(Set* s, unsigned pos);
+Set* islSetProjectOut(Set* s, unsigned pos, bool removeFromTuple = true);
 
 Relation* islRelTransitiveClosure(Relation*r,bool& isExact);
 
