@@ -3476,8 +3476,9 @@ class VisitorProjectOut : public Visitor {
     Relation* newRelation;
     std::list<Conjunction*> mNewConj;
   public:
-    VisitorProjectOut(int itvar, bool removeFromTuple, int ia=0){
+    VisitorProjectOut(int itvar, bool iremoveFromTuple, int ia=0){
         tvar = itvar;
+        removeFromTuple = iremoveFromTuple;
         // Adjust inArity for after projection
         if( removeFromTuple && tvar < ia && ia != 0 ){
             ia--;
@@ -3509,7 +3510,11 @@ class VisitorProjectOut : public Visitor {
     }
     //! Add Conjunctions in mnewConj to newSet
     void postVisitSet(iegenlib::Set * s){
-        newSet = new Set( (s->arity()-1) );
+      int newArity = s->arity();
+      if (removeFromTuple) {
+        newArity -= 1;
+      }
+        newSet = new Set( newArity );
 
         for(std::list<Conjunction*>::const_iterator i=mNewConj.begin();
                       i != mNewConj.end(); i++) {
@@ -3518,14 +3523,16 @@ class VisitorProjectOut : public Visitor {
     }
     //! Add Conjunctions in mnewConj to newRelation
     void postVisitRelation(iegenlib::Relation * r){
+      int ia = r->inArity(), oa = r->outArity();
+      if (removeFromTuple) {
         // Adjusting new in and out arity depending projected tvar
-        int ia = r->inArity(), oa = r->outArity();
         if( tvar < ia ){
-            ia--;
+          ia--;
         } else {
-            oa--;
+          oa--;
         }
-        newRelation = new Relation( ia , oa );
+      }
+      newRelation = new Relation( ia , oa );
 
         for(std::list<Conjunction*>::const_iterator i=mNewConj.begin();
                      i != mNewConj.end(); i++) {

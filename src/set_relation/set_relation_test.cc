@@ -3961,7 +3961,6 @@ TEST_F(SetRelationTest, projectOut) {
         delete s1;
         s1 = s2;
     }
-    std::cout << s1->toISLString() << "\n";
     // ip
     s2 = s1->projectOut(1);
     if (s2) {
