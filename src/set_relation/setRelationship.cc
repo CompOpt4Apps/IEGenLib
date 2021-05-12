@@ -1,8 +1,8 @@
 /*!
  * \file setRelationship.cc
  *
- * \brief Implementation of functionality that tries to determine set type relationship
- * (SuperSet, SubSetEqual, etc) between IEGenLib Sets and Relations that can have
+ * \brief Implementation of functionality that tries to determine set type relationship 
+ * (SuperSet, SubSetEqual, etc) between IEGenLib Sets and Relations that can have 
  * uninterpreted function symbols in their constraints.
  *
  * \date Started: 9/07/18
@@ -31,19 +31,19 @@ namespace iegenlib{
 
 
 /**
- ** This function uses islSetProjectOut function to project out all
- ** iterators in a given set except for the specified ones in eigenTvs
+ ** This function uses islSetProjectOut function to project out all 
+ ** iterators in a given set except for the specified ones in eigenTvs 
  ** Note, an important assumption is that the given set only has affine constraints.
  ** The function owns the inSet object, and it deletes it at the end
  **/
-Set* islSetProjectOutAll(Set *inSet, std::set<int> eigenTvs, bool removeFromTuple = true){
+Set* islSetProjectOutAll(Set *inSet, std::set<int> eigenTvs){
   bool at_least_one_projected = false;
   Set *retSet;
   for(int tV = (inSet->arity()-1); tV >= 0; tV--){
     if( eigenTvs.find(tV) != eigenTvs.end() ){
       continue;
     } else {
-       retSet = islSetProjectOut(inSet, tV, removeFromTuple);
+       retSet = islSetProjectOut(inSet, tV);
        delete inSet;
        inSet = retSet;
        at_least_one_projected = true;
@@ -56,12 +56,12 @@ Set* islSetProjectOutAll(Set *inSet, std::set<int> eigenTvs, bool removeFromTupl
 
 /**
  ** This function determines the relationship between 2 iegenlib:sets
- ** using isl's function.
+ ** using isl's function. 
  ** Currently, it only supports sets with one conjunction.
    A ?? B
 
  ** Inputs:
-
+ 
     set1:  Left-hand side dependence  (A)
     set1EigenTvs:
        Tuple variables in the first set that are not going to be projected out.
@@ -70,11 +70,11 @@ Set* islSetProjectOutAll(Set *inSet, std::set<int> eigenTvs, bool removeFromTupl
        Tuple variables in the second set that are not going to be projected out.
 
  ** Output is one of following:
-
-     SetEqual, SubSetEqual, SubSet, SuperSet, SuperSetEqual, UnKnown
- **
+     
+     SetEqual, SubSetEqual, SubSet, SuperSet, SuperSetEqual, UnKnown  
+ ** 
  **/
-SetRelationshipType iegenSetRelationship(Set *set1, std::set<int> set1EigenTvs,
+SetRelationshipType iegenSetRelationship(Set *set1, std::set<int> set1EigenTvs, 
                                 Set *set2, std::set<int> set2EigenTvs){
   SetRelationshipType ret = UnKnown;
   UFCallMap *ufcmap1 = new UFCallMap(set1->getTupleDecl());
@@ -90,7 +90,7 @@ SetRelationshipType iegenSetRelationship(Set *set1, std::set<int> set1EigenTvs,
   Set* islSet2 = islSetProjectOutAll(affineSet2, set2EigenTvs);
 
   ret = strISLSetRelationship(islSet1->toISLString(), islSet2->toISLString());
-
+  
   return ret;
 }
 
@@ -101,7 +101,7 @@ SetRelationshipType iegenSetRelationship(Set *set1, std::set<int> set1EigenTvs,
    A ?? B
 
  ** Inputs:
-
+ 
     *this:     Left-hand side dependence  (A)
     rightSide: Right-hand side dependence (B)
     parallelLoopLevel:
@@ -111,10 +111,10 @@ SetRelationshipType iegenSetRelationship(Set *set1, std::set<int> set1EigenTvs,
        all but the itv($parallelLoopLevel$) and otv($parallelLoopLevel$), are projected out.
 
  ** Output is one of following:
+     
+     SetEqual, SubSetEqual, SubSet, SuperSet, SuperSetEqual, UnKnown  
 
-     SetEqual, SubSetEqual, SubSet, SuperSet, SuperSetEqual, UnKnown
-
- **
+ ** 
  **/
 SetRelationshipType Relation::dataDependenceRelationship(Relation* rightSide, int parallelLoopLevel){
 
@@ -126,7 +126,7 @@ SetRelationshipType Relation::dataDependenceRelationship(Relation* rightSide, in
 
   // Getting a set representation of the relations
   Set *eqSet1 = new Set( relationStr2SetStr(genericStringDep1 , inArity(), outArity()) );
-  Set *eqSet2 = new Set( relationStr2SetStr(genericStringDep2 ,
+  Set *eqSet2 = new Set( relationStr2SetStr(genericStringDep2 , 
                          rightSide->inArity(), rightSide->outArity()) );
 
   // What tuple variables are not going to be projected out?

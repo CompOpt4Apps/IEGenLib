@@ -642,7 +642,7 @@ TEST_F(ComputationTest, TupleAssignmentUnitTest) {
     checkTupleAssignments("{[i,j]: i = 3 && j = row(i)}", { "3","0"});
 }
 
-#pragma mark ToDotTest
+#pragma mark PolyhedralSplit
 TEST_F(ComputationTest, PolyhedralSplit){
     Computation c;
     Set * s0 = new Set("{[0,i,0]: 0 <= i && i < N}");
@@ -683,6 +683,7 @@ TEST_F(ComputationTest, PolyhedralSplit){
     delete s2;
 }
 
+#pragma mark ToDotUnitTest
 TEST_F(ComputationTest, DISABLED_ToDotUnitTest){
     Computation* forwardSolve = new Computation();
     std::vector<std::pair<std::string, std::string> > dataReads;
@@ -714,5 +715,5 @@ TEST_F(ComputationTest, DISABLED_ToDotUnitTest){
     forwardSolve->addStmt(ss0);
     forwardSolve->addStmt(ss1);
     forwardSolve->addStmt(ss2);
-    checkToDotString(forwardSolve,"");   
+    
 }
