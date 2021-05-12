@@ -261,9 +261,12 @@ void Computation::clear() {
 }
 
 AppendComputationResult Computation::appendComputation(
-    const Computation* other, Set* surroundingIterDomain,
-    Relation* surroundingExecSchedule,
+    const Computation* other, std::string surroundingIterDomainStr,
+    std::string surroundingExecScheduleStr,
     const std::vector<std::string>& arguments) {
+    Set* surroundingIterDomain = new Set(surroundingIterDomainStr);
+    Relation* surroundingExecSchedule = new Relation(surroundingExecScheduleStr);
+
     // create a working copy of the appendee
     Computation* toAppend = other->getUniquelyNamedClone();
     const unsigned int numArgs = arguments.size();
@@ -377,10 +380,6 @@ AppendComputationResult Computation::appendComputation(
             newIterSpace = new Set(*surroundingIterDomain);
         } else {
             // if neither iteration domain is trivial, combine the two
-            // collect information about iter space of appended statement
-            Set* appendIterSpace = appendeeStmt->getIterationSpace();
-            const int appendIterArity = appendIterSpace->arity();
-            TupleDecl appendIterTuple = appendIterSpace->getTupleDecl();
 
             // collect pieces for a new iteration space
             // construct tuple with desired iterators after appending
@@ -436,7 +435,6 @@ AppendComputationResult Computation::appendComputation(
         TupleDecl newExecTuple = TupleDecl(newExecInArity + newExecOutArity);
 
         unsigned int currentTuplePos = 0;
-        bool haveInsertedIterator = false;
         // insert iterators from surrounding context
         for (int i = 0; i < surroundingExecSchedule->inArity(); ++i) {
             // skip '0' iterator placeholder
@@ -445,7 +443,6 @@ AppendComputationResult Computation::appendComputation(
             }
             newExecTuple.copyTupleElem(surroundingExecTuple, i,
                                        currentTuplePos++);
-            haveInsertedIterator = true;
         }
         // insert iterators from appended statement
         for (int i = 0; i < appendExecInArity; ++i) {
@@ -454,12 +451,11 @@ AppendComputationResult Computation::appendComputation(
                 continue;
             }
             newExecTuple.copyTupleElem(appendExecTuple, i, currentTuplePos++);
-            haveInsertedIterator = true;
         }
         // if neither surroundings nor appended stmt have iterators, insert the
         // placeholder '0' iterator
-        if (!haveInsertedIterator) {
-            newExecTuple.setTupleElem(0, 0);
+        if (currentTuplePos == 0) {
+            newExecTuple.setTupleElem(currentTuplePos++, 0);
         }
         // insert surrounding schedule tuple elements except the last one, which
         // must be combined with first append tuple value
@@ -513,8 +509,8 @@ AppendComputationResult Computation::appendComputation(
 
                 // construct new read relation
                 newReadRel = new Relation(oldAppendInArity + shiftDistance, oldAppendOutArity);
-                Conjunction* newReadRelConj = new Conjunction(newReadRel->inArity(), newReadRel->outArity());
-                newReadRelConj->setTupleDecl(shiftedAppendeeReadTuple);
+                Conjunction* newReadRelConj = new Conjunction(shiftedAppendeeReadTuple);
+                newReadRelConj->setInArity(newReadRel->inArity());
                 newReadRelConj->copyConstraintsFrom(*appendeeReadRel->conjunctionBegin());
                 newReadRel->addConjunction(newReadRelConj);
             } else {
@@ -559,8 +555,8 @@ AppendComputationResult Computation::appendComputation(
 
                 // construct new write relation
                 newWriteRel = new Relation(oldAppendInArity + shiftDistance, oldAppendOutArity);
-                Conjunction* newWriteRelConj = new Conjunction(newWriteRel->inArity(), newWriteRel->outArity());
-                newWriteRelConj->setTupleDecl(shiftedAppendeeWriteTuple);
+                Conjunction* newWriteRelConj = new Conjunction(shiftedAppendeeWriteTuple);
+                newWriteRelConj->setInArity(newWriteRel->inArity());
                 newWriteRelConj->copyConstraintsFrom(*appendeeWriteRel->conjunctionBegin());
                 newWriteRel->addConjunction(newWriteRelConj);
             } else {
@@ -576,11 +572,18 @@ AppendComputationResult Computation::appendComputation(
         this->addStmt(newStmt);
     }
 
+    // add (already name prefixed) data spaces from appendee to appender
+    for (const auto& dataSpace : toAppend->getDataSpaces()) {
+        this->addDataSpace(dataSpace);
+    }
+
     // collect append result information to return
     AppendComputationResult result;
     result.tuplePosition = latestTupleValue;
     result.returnValues = toAppend->getReturnValues();
 
+    delete surroundingIterDomain;
+    delete surroundingExecSchedule;
     delete toAppend;
 
     return result;
