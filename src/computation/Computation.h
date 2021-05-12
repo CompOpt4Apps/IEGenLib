@@ -138,17 +138,17 @@ class Computation {
     //! Add statements from another Computation to this one for inlining.
     //! \param[in] other Computation to append to this one, which will be copied
     //! but its statements will not be modified
-    //! \param[in] surroundingIterDomain Iteration domain of append context (not
+    //! \param[in] surroundingIterDomainStr Iteration domain of append context (not
     //! adopted)
-    //! \param[in] surroundingExecSchedule Execution schedule of append
+    //! \param[in] surroundingExecScheduleStr Execution schedule of append
     //! context (not adopted). Final tuple position will be the position used by
     //! the first appended statement.
     //! \param[in] arguments Arguments to pass in
     //! to the appended Computation \return Information about the state of the
     //! appender after appending.
     AppendComputationResult appendComputation(
-        const Computation* other, Set* surroundingIterDomain,
-        Relation* surroundingExecSchedule,
+        const Computation* other, std::string surroundingIterDomainStr,
+        std::string surroundingExecScheduleStr,
         const std::vector<std::string>& arguments = {});
 
     void toDot(std::fstream& dotFileStream, string fileName);

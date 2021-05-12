@@ -259,9 +259,12 @@ void Computation::clear() {
 }
 
 AppendComputationResult Computation::appendComputation(
-    const Computation* other, Set* surroundingIterDomain,
-    Relation* surroundingExecSchedule,
+    const Computation* other, std::string surroundingIterDomainStr,
+    std::string surroundingExecScheduleStr,
     const std::vector<std::string>& arguments) {
+    Set* surroundingIterDomain = new Set(surroundingIterDomainStr);
+    Relation* surroundingExecSchedule = new Relation(surroundingExecScheduleStr);
+
     // create a working copy of the appendee
     Computation* toAppend = other->getUniquelyNamedClone();
     const unsigned int numArgs = arguments.size();
@@ -577,6 +580,8 @@ AppendComputationResult Computation::appendComputation(
     result.tuplePosition = latestTupleValue;
     result.returnValues = toAppend->getReturnValues();
 
+    delete surroundingIterDomain;
+    delete surroundingExecSchedule;
     delete toAppend;
 
     return result;

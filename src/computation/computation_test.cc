@@ -119,15 +119,10 @@ class ComputationTest : public ::testing::Test {
                                 int expectedTuplePosition,
                                 std::vector<std::string> expectedReturnValues,
                                 Computation* expectedComp) {
-        Set* surroundingIterDomain = new Set(surroundingIterDomainStr);
-        iegenlib::Relation* surroundingExecSchedule = new iegenlib::Relation(surroundingExecScheduleStr);
 
         AppendComputationResult result =
-            appendedTo->appendComputation(appendedComp, surroundingIterDomain,
-                                          surroundingExecSchedule, argsList);
-
-        delete surroundingIterDomain;
-        delete surroundingExecSchedule;
+            appendedTo->appendComputation(appendedComp, surroundingIterDomainStr,
+                                          surroundingExecScheduleStr, argsList);
 
         EXPECT_EQ(expectedTuplePosition, result.tuplePosition);
         EXPECT_EQ(expectedReturnValues, result.returnValues);
