@@ -33,6 +33,8 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
+#include <map>
+
 
 #include "set_relation/set_relation.h"
 
@@ -896,7 +898,29 @@ void Computation::generateToDotClusters(std::vector<std::vector<Set*> >&projecte
     return;
 
 }
-
+//! param  activeStmt is assumed to be sorted lexicographically
+std::vector<std::vector<Set*> > Computation::
+   split (int level, std::vector<Set*> activeStmt){
+   std::map<std::string,std::vector<Set*> > grouping;
+   
+   for(Set* s : activeStmt){
+      if(s->getTupleDecl().elemIsConst(level)){
+          grouping[std::to_string(
+			  s->getTupleDecl().elemConstVal(level))].push_back(s); 
+	     	  
+      }else {
+	  // This will be expanded further to use constraints;
+          grouping["t"].push_back(s);
+      }  
+   }
+   std::vector<std::vector <Set*> > res;
+   for( auto k : grouping){
+       //Next iteration of the algorithm will be
+       //focused on this section. 
+       res.push_back(k.second);
+   }
+   return res;
+}
 
 void Computation::toDot(std::fstream& dotFile, string fileName) {
     std::vector<string>

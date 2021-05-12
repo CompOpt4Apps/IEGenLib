@@ -4683,139 +4683,139 @@ TEST_F(SetRelationTest, RestrictDomainTest){
 
 
 
-     auto set1 = new Set("{[i,j]: i >= 0 and i < NR and"
+    auto set1 = new Set("{[i,j]: i >= 0 and i < NR and"
                           " j >= 0 and j < NC and Ad(i,j) > 0}");
-     auto rel1 = new Relation("{[i,j] -> [n]:"
+    auto rel1 = new Relation("{[i,j] -> [n]:"
                                     " row(n) = i and col(n) = j and  i >= 0 and "
                                     " i < NR and j >= 0 and j < NC}");
-     Relation* restrictRel2 = rel1->Restrict(set1);
-     EXPECT_EQ("{ [i, j] -> [n] : i - row(n) = 0 && j - col(n) = 0"
-               " && i >= 0 && j >= 0 && Ad(i, j) - 1 >= 0 && -i + NR"
-               " - 1 >= 0 && -j + NC - 1 >= 0 }",restrictRel2->
-               prettyPrintString());
+    Relation* restrictRel2 = rel1->Restrict(set1);
+    EXPECT_EQ("{ [i, j] -> [n] : i - row(n) = 0 && j - col(n) = 0"
+              " && i >= 0 && j >= 0 && Ad(i, j) - 1 >= 0 && -i + NR"
+              " - 1 >= 0 && -j + NC - 1 >= 0 }",restrictRel2->
+              prettyPrintString());
 
 
-     // Test with Relation and set with mismatched arities.
-     Relation *rel2 = new Relation(
-             "{[l] -> [k]: 1 <= i and i <= 10 and k = i + 1}");
-     Set * set2 = new Set(
-             "{[i,l]: 5 <= i and i <= 25 and l = row(i)}");
+    // Test with Relation and set with mismatched arities.
+    Relation *rel2 = new Relation(
+            "{[l] -> [k]: 1 <= i and i <= 10 and k = i + 1}");
+    Set * set2 = new Set(
+            "{[i,l]: 5 <= i and i <= 25 and l = row(i)}");
 
-     // Expect exception about arity mismatch.
-     EXPECT_THROW(rel2->Restrict(set2),
-                  iegenlib::assert_exception );
+    // Expect exception about arity mismatch.
+    EXPECT_THROW(rel2->Restrict(set2),
+                 iegenlib::assert_exception );
 
-     delete restrictRel;
-     delete rel1;
-     delete rel2;
-     delete rel3;
-     delete set1;
-     delete set2;
-     delete set3;
-     delete restrictRel2;
-     delete restrictRel3;
+    delete restrictRel;
+    delete rel1;
+    delete rel2;
+    delete rel3;
+    delete set1;
+    delete set2;
+    delete set3;
+    delete restrictRel2;
+    delete restrictRel3;
 }
 
 
 // Test solve for output tuple.
 TEST_F(SetRelationTest, SolveForOutputTuple){
 
-     Relation * rel = new Relation(
-		     "{[i,j] -> [k]: A(i,j) > 0 and rowptr(i) <= k"
-		     " and k < rowptr(i+ 1) and col(k) =j and 0 <= i"
-		     " and i < NR and 0 <= j and j < NC}");
+    Relation * rel = new Relation(
+	     "{[i,j] -> [k]: A(i,j) > 0 and rowptr(i) <= k"
+	     " and k < rowptr(i+ 1) and col(k) =j and 0 <= i"
+	     " and i < NR and 0 <= j and j < NC}");
 
-     auto solveForList = rel->solveForOutputTuple();
-     EXPECT_EQ(solveForList.size(),5);
-
-
-     // Check contents of list.
-     Exp * constraint1 = (*solveForList.begin());
-     Exp * constraint2 = (*(++solveForList.begin()));
-     Exp * constraint3 = (*(++(++solveForList.begin())));
-     Exp * constraint4 = (*(++(++(++solveForList.begin()))));
-     Exp * constraint5 = (*(++(++(++(++solveForList.begin())))));
-
-     // Expression toString does not attach = 0 | >= 0 to the
-     // epression.
-     EXPECT_EQ(constraint1->prettyPrintString(rel->getTupleDecl()),
-          "i - col_aux0(k)");
-     EXPECT_EQ(constraint2->prettyPrintString(rel->getTupleDecl()),
-          "k - col_inv(i, j)");
-     EXPECT_EQ(constraint3->prettyPrintString(rel->getTupleDecl()),
-          "j - col(k)");
-
-     EXPECT_EQ(constraint4->prettyPrintString(rel->getTupleDecl()),
-          "k - rowptr(i)");
-
-     EXPECT_EQ(constraint5->prettyPrintString(rel->getTupleDecl()),
-          "-k + rowptr(i + 1) - 1");
+    auto solveForList = rel->solveForOutputTuple();
+    EXPECT_EQ(solveForList.size(),5);
 
 
+    // Check contents of list.
+    Exp * constraint1 = (*solveForList.begin());
+    Exp * constraint2 = (*(++solveForList.begin()));
+    Exp * constraint3 = (*(++(++solveForList.begin())));
+    Exp * constraint4 = (*(++(++(++solveForList.begin()))));
+    Exp * constraint5 = (*(++(++(++(++solveForList.begin())))));
+
+    // Expression toString does not attach = 0 | >= 0 to the
+    // epression.
+    EXPECT_EQ(constraint1->prettyPrintString(rel->getTupleDecl()),
+         "i - col_aux0(k)");
+    EXPECT_EQ(constraint2->prettyPrintString(rel->getTupleDecl()),
+         "k - col_inv(i, j)");
+    EXPECT_EQ(constraint3->prettyPrintString(rel->getTupleDecl()),
+         "j - col(k)");
+
+    EXPECT_EQ(constraint4->prettyPrintString(rel->getTupleDecl()),
+         "k - rowptr(i)");
+
+    EXPECT_EQ(constraint5->prettyPrintString(rel->getTupleDecl()),
+         "-k + rowptr(i + 1) - 1");
 
 
-     Relation * re2 = new Relation(
-		     "{[i,j] -> [n]: A(i,j) > 0 and 0 <= n"
-		     " and n < NNZ and rowcol(n) = (i,j) "
-		     " and 0 <= i and i < NR and 0 <= j and j < NC}");
-     auto solveForList2 = re2->solveForOutputTuple();
-     EXPECT_EQ(solveForList.size(),3);
-     // Check contents of list.
-     Exp * constraint21 = (*solveForList2.begin());
-     Exp * constraint22 = (*(++solveForList2.begin()));
-     Exp * constraint23 = (*(++(++solveForList2.begin())));
 
-     EXPECT_EQ(constraint21->prettyPrintString(re2->getTupleDecl()),
-          "-n + rowcol_inv(i,j) = 0 ");
-     EXPECT_EQ(constraint22->prettyPrintString(re2->getTupleDecl()),
-          "n >= 0");
-     EXPECT_EQ(constraint23->prettyPrintString(re2->getTupleDecl()),
-          "-n + NNZ - 1 >= 0");
 
-     delete constraint21;
-     delete constraint22;
-     delete constraint23;
-     delete constraint1;
-     delete constraint2;
-     delete constraint3;
-     delete re2;
-     delete rel;
+    Relation * re2 = new Relation(
+	     "{[i,j] -> [n]: A(i,j) > 0 and 0 <= n"
+	     " and n < NNZ and rowcol(n) = (i,j) "
+	     " and 0 <= i and i < NR and 0 <= j and j < NC}");
+    auto solveForList2 = re2->solveForOutputTuple();
+    EXPECT_EQ(solveForList.size(),3);
+    // Check contents of list.
+    Exp * constraint21 = (*solveForList2.begin());
+    Exp * constraint22 = (*(++solveForList2.begin()));
+    Exp * constraint23 = (*(++(++solveForList2.begin())));
+
+    EXPECT_EQ(constraint21->prettyPrintString(re2->getTupleDecl()),
+         "-n + rowcol_inv(i,j) = 0 ");
+    EXPECT_EQ(constraint22->prettyPrintString(re2->getTupleDecl()),
+         "n >= 0");
+    EXPECT_EQ(constraint23->prettyPrintString(re2->getTupleDecl()),
+         "-n + NNZ - 1 >= 0");
+
+    delete constraint21;
+    delete constraint22;
+    delete constraint23;
+    delete constraint1;
+    delete constraint2;
+    delete constraint3;
+    delete re2;
+    delete rel;
 }
 
 
 // Test transitive closure.
 TEST_F(SetRelationTest, TransitiveClosure){
-     Relation * rel = new Relation(
-		     "{[i,j] -> [k]: A(i,j) > 0 and rowptr(i) <= k"
-		     " and k < rowptr(i+ 1) and col(k) =j and 0 <= i"
-		     " and i < NR and 0 <= j and j < NC}");
-     Relation * closure = rel->TransitiveClosure() ;
-     EXPECT_EQ("{ [i, j] -> [k] : j - col(k) = 0 && i >= 0 && j >= 0"
+    Relation * rel = new Relation(
+	     "{[i,j] -> [k]: A(i,j) > 0 and rowptr(i) <= k"
+	     " and k < rowptr(i+ 1) and col(k) =j and 0 <= i"
+	     " and i < NR and 0 <= j and j < NC}");
+    Relation * closure = rel->TransitiveClosure() ;
+    EXPECT_EQ("{ [i, j] -> [k] : j - col(k) = 0 && i >= 0 && j >= 0"
 	       " && col(k) >= 0 && k - rowptr(i) >= 0 && NC - 1 >= 0"
 	       " && NR - 1 >= 0 && A(i, j) - 1 >= 0 && -i + NR - 1 >= 0"
 	       " && -j + NC - 1 >= 0 && -k + rowptr(i + 1) - 1 >= 0 &&"
 	       " NC - col(k) - 1 >= 0 && -rowptr(i) + rowptr(i + 1) - 1 >= 0 }",
-	       closure->prettyPrintString());
+       closure->prettyPrintString());
 
-     Relation * rel2= new Relation(
+    Relation * rel2= new Relation(
 		     "{[i1,i2]->[j1,j2]: j1 - i1 = 1 and j2-i2 >= 2"
 		     " and 1 <= i1 and 1 <= j1 and 1 <= j2 and i1 <= n"
 		     " and j1 <= n and j2 <= n and i1 <= i2 and i2 <= n}");
-     Relation* clo2 = rel2->TransitiveClosure();
-     EXPECT_EQ("{ [i1, i2] -> [j1, j2] : i1 - j1 + 1 = 0 && i1 >= 0 &&"
-	       " i2 >= 0 && j2 >= 0 && -i1 + i2 >= 0 && -i1 + n >= 0 &&"
-	       " -i2 + n >= 0 && -j1 + n >= 0 && j1 - 1 >= 0 && -j2 + n"
-	       " >= 0 && n - 1 >= 0 && -i1 + n - 1 >= 0 && -i2 + j2 - 3"
-	       " >= 0 && -i2 + n - 3 >= 0 }",clo2->prettyPrintString());
+    Relation* clo2 = rel2->TransitiveClosure();
+    EXPECT_EQ("{ [i1, i2] -> [j1, j2] : i1 - j1 + 1 = 0 && i1 >= 0 &&"
+       " i2 >= 0 && j2 >= 0 && -i1 + i2 >= 0 && -i1 + n >= 0 &&"
+       " -i2 + n >= 0 && -j1 + n >= 0 && j1 - 1 >= 0 && -j2 + n"
+       " >= 0 && n - 1 >= 0 && -i1 + n - 1 >= 0 && -i2 + j2 - 3"
+       " >= 0 && -i2 + n - 3 >= 0 }",clo2->prettyPrintString());
 
-     Relation* rel3 = new Relation(
-		     "{[n] -> [k] : rowptr <= k and k < rowptr1"
-		     " and col2 = col1 and 0 <= row1 and row1 < N_R"
-		     " and  0 <= col1 < N_C and row1in = n and col2in = k }");
+    Relation* rel3 = new Relation(
+	     "{[n] -> [k] : rowptr <= k and k < rowptr1"
+	     " and col2 = col1 and 0 <= row1 and row1 < N_R"
+	     " and  0 <= col1 < N_C and row1in = n and col2in = k }");
 
 
-     Relation* clo3 = rel3->TransitiveClosure();
-     EXPECT_EQ("{ [n] -> [k] : n - row1in = 0 && k - col2in = 0 &&"
+    Relation* clo3 = rel3->TransitiveClosure();
+    EXPECT_EQ("{ [n] -> [k] : n - row1in = 0 && k - col2in = 0 &&"
 	       " col1 - col2 = 0 && col1 >= 0 && col2 >= 0 && row1 >= 0 &&"
 	       " k - rowptr >= 0 && N_C - 1 >= 0 && N_R - 1 >= 0 &&"
 	       " col2in - rowptr >= 0 && -k + rowptr1 - 1 >= 0 &&"
@@ -4823,33 +4823,35 @@ TEST_F(SetRelationTest, TransitiveClosure){
 	       " N_R - row1 - 1 >= 0 && -col2in + rowptr1 - 1 >= 0 &&"
 	       " -rowptr + rowptr1 - 1 >= 0 }",clo3->prettyPrintString());
 
-     Relation * rel4 = new Relation(
-		     "{[i,j] -> [k]: A(i,j) > 0 and rowptr(i) <= k"
-		     " and k < rowptr(i + 1) and col_inv(i,j) = k and 0 <= i"
-		     " and i < NR and 0 <= j and j < NC}");
+    Relation * rel4 = new Relation(
+	     "{[i,j] -> [k]: A(i,j) > 0 and rowptr(i) <= k"
+	     " and k < rowptr(i + 1) and col_inv(i,j) = k and 0 <= i"
+	     " and i < NR and 0 <= j and j < NC}");
 
-     Relation* clo4 = rel4->TransitiveClosure();
+    Relation* clo4 = rel4->TransitiveClosure();
 
 
-     Set * set = new Set(
-		     "{[n,k]: A(row(n),col1(n)) > 0 and rowptr(row(n)) <= k"
-		     " and k < rowptr(row(n) + 1) and col2_inv(row(n),col1(n)) = k"
-		     " and 0 <= row(n) and col2(k) = col1(n)"
-		     " and row(n) < NR and 0 <= col1(n) and col1(n) < NC}");
+    Set * set = new Set(
+	     "{[n,k]: A(row(n),col1(n)) > 0 and rowptr(row(n)) <= k"
+	     " and k < rowptr(row(n) + 1) and col2_inv(row(n),col1(n)) = k"
+	     " and 0 <= row(n) and col2(k) = col1(n)"
+	     " and row(n) < NR and 0 <= col1(n) and col1(n) < NC}");
 
-     Set* clo5 = set->TransitiveClosure();
+    Set* clo5 = set->TransitiveClosure();
 
-     delete set;
-     delete clo5;
-     delete rel4;
-     delete clo4;
-     delete clo3;
-     delete rel3;
-     delete clo2;
-     delete rel2;
-     delete closure;
-     delete rel;
+    delete set;
+    delete clo5;
+    delete rel4;
+    delete clo4;
+    delete clo3;
+    delete rel3;
+    delete clo2;
+    delete rel2;
+    delete closure;
+    delete rel;
 }
 
 
-
+TEST_F(SetRelationTest,Complement){
+           
+}

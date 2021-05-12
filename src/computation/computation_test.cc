@@ -550,6 +550,46 @@ TEST_F(ComputationTest, TupleAssignmentUnitTest) {
 }
 
 #pragma mark ToDotTest
+TEST_F(ComputationTest, PolyhedralSplit){
+    Computation c;
+    Set * s0 = new Set("{[0,i,0]: 0 <= i && i < N}");
+    Set * s1 = new Set("{[0,i,1]:  0 <= i && i < N}");
+    Set * s2 = new Set("{[0,i,2]:   0 <= i && i < N}");
+    std::vector<Set*> PS = {s0,s1,s2};
+  
+    std::vector<std::vector<Set*> > res =
+	    c.split(2,PS);
+    EXPECT_EQ(res.size(),3);
+    
+    res = c.split(0,PS);
+    EXPECT_EQ(res.size(),1); 
+    
+    res = c.split(1,PS);
+    EXPECT_EQ(res.size(),1); 
+    
+    delete s0;
+    delete s1;
+    delete s2;
+    
+    s0 = new Set("{[0,i,1]: 0 <= i && i < N}");
+    s1 = new Set("{[0,i,1]:  0 <= i && i < N}");
+    s2 = new Set("{[0,i,2]:   0 <= i && i < N}");
+    PS = {s0,s1,s2} ;
+  
+    res = c.split(2,PS);
+    EXPECT_EQ(res.size(),2);
+    
+    res = c.split(0,PS);
+    EXPECT_EQ(res.size(),1); 
+    
+    res = c.split(1,PS);
+    EXPECT_EQ(res.size(),1); 
+    
+    delete s0;
+    delete s1;
+    delete s2;
+}
+
 TEST_F(ComputationTest, DISABLED_ToDotUnitTest){
     Computation* forwardSolve = new Computation();
     std::vector<std::pair<std::string, std::string> > dataReads;

@@ -172,12 +172,15 @@ class Computation {
 
     //! Method returns omega strings for each statement
     std::string toOmegaString();
-
-   private:
+    
     //! Helper function that checks if a condition results in active
     //  sets.
     omega::BoolSet<> getActive(omega::BoolSet<>&active,Set* cond,
                            std::vector<Set*> Rs );
+
+    std::vector<std::vector<Set*> > split
+	    (int level, std::vector<Set*> activeStmt);
+   private:
     //! Recursively generate nodes in 
     //  to dot.
     //  param projectedIS presaved projections and levels 
