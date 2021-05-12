@@ -35,7 +35,6 @@
 #include <vector>
 #include <map>
 
-
 #include "set_relation/set_relation.h"
 
 //! Base string for use in name prefixing
@@ -121,6 +120,8 @@ bool Computation::isDataSpace(std::string name) const {
 
 void Computation::addParameter(std::string paramName, std::string paramType) {
     parameters.push_back({paramName, paramType});
+    // parameters are automatically available as data spaces to the Computation
+    addDataSpace(paramName);
 }
 
 std::string Computation::getParameterName(unsigned int index) const {
@@ -323,7 +324,6 @@ AppendComputationResult Computation::appendComputation(
         if (this->isDataSpace(arguments[i])) {
             paramDeclStmt->addRead(arguments[i], "{[0]->[0]}");
         }
-        this->addDataSpace(toAppend->getParameterName(i));
         paramDeclStmt->addWrite(toAppend->getParameterName(i), "{[0]->[0]}");
 
         toAppend->stmts.insert(toAppend->stmts.begin(), paramDeclStmt);

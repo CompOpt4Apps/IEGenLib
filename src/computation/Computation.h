@@ -95,7 +95,7 @@ class Computation {
     //! Check if a given string is a name of a data space of this Computation
     bool isDataSpace(std::string name) const;
 
-    //! Add a (formal) parameter to this Computation
+    //! Add a (formal) parameter to this Computation, including adding it as a data space.
     //! @param paramName Name of the parameter
     //! @param paramType C data type of the parameter
     void addParameter(std::string paramName, std::string paramType);
@@ -200,9 +200,9 @@ class Computation {
     
     //! Information on all statements in the Computation
     std::vector<Stmt*> stmts;
-    //! Data spaces accessed in the Computation
+    //! Data spaces available in the Computation
     std::unordered_set<std::string> dataSpaces;
-    //! Parameters of the computation, pair of name : type
+    //! Parameters of the computation, pair of name : type. All parameters should also be data spaces.
     std::vector<std::pair<std::string, std::string>> parameters;
     //! Names of values that are returned if this Computation is called. May be
     //! data space names or literals. This is an ordered list because some
