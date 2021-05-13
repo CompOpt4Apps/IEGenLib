@@ -555,7 +555,7 @@ TEST_F(ComputationTest, AppendComputationComplex) {
 
 #pragma mark ComputationNamePrefixing
 // Check creating a copy of a Computation with prefixed names works properly
-TEST_F(ComputationTest, ComputationNamePrefixing) {
+TEST_F(ComputationTest, DISABLED_ComputationNamePrefixing) {
     Computation* comp1 = new Computation();
     Stmt* s0 = new Stmt("$product$[i] += $x$[i][j] * $y$[j];",
                         "{[i,j]: i >= 0 && i < a && j >= 0 && j < b}",
@@ -648,9 +648,14 @@ TEST_F(ComputationTest, PolyhedralSplit){
     Set * s0 = new Set("{[0,i,0]: 0 <= i && i < N}");
     Set * s1 = new Set("{[0,i,1]:  0 <= i && i < N}");
     Set * s2 = new Set("{[0,i,2]:   0 <= i && i < N}");
-    std::vector<Set*> PS = {s0,s1,s2};
+    std::vector< std::pair<int,Set*> > PS 
+	    = {
+		    std::make_pair(0,s0),
+		    std::make_pair(1,s1),
+		    std::make_pair(2,s2)
+	    };
   
-    std::vector<std::vector<Set*> > res =
+    std::vector<std::vector<std::pair<int,Set*> > > res =
 	    c.split(2,PS);
     EXPECT_EQ(res.size(),3);
     
@@ -667,7 +672,12 @@ TEST_F(ComputationTest, PolyhedralSplit){
     s0 = new Set("{[0,i,1]: 0 <= i && i < N}");
     s1 = new Set("{[0,i,1]:  0 <= i && i < N}");
     s2 = new Set("{[0,i,2]:   0 <= i && i < N}");
-    PS = {s0,s1,s2} ;
+    PS = {
+		    std::make_pair(0,s0),
+		    std::make_pair(1,s1),
+		    std::make_pair(2,s2),
+	    };
+ 
   
     res = c.split(2,PS);
     EXPECT_EQ(res.size(),2);
@@ -683,36 +693,60 @@ TEST_F(ComputationTest, PolyhedralSplit){
     delete s2;
 }
 
-TEST_F(ComputationTest, DISABLED_ToDotUnitTest){
-    Computation* forwardSolve = new Computation();
-    std::vector<std::pair<std::string, std::string> > dataReads;
-    std::vector<std::pair<std::string, std::string> > dataWrites;
-    dataWrites.push_back(make_pair("tmp", "{[i]->[]}"));
-    dataReads.push_back(make_pair("f", "{[i]->[i]}"));
-    Stmt* ss0 = new Stmt("tmp = f[i];", "{[i]: 0 <= i < NR}", "{[i] ->[i,0,0,0]}",
-             dataReads, dataWrites);
-    dataReads.clear();
-    dataWrites.clear();
-    dataReads.push_back(make_pair("tmp", "{[i,k]->[]}"));
-    dataReads.push_back(make_pair("val", "{[i,k]->[k]}"));
-    dataReads.push_back(make_pair("u", "{[i,k]->[t]: t = col(k)}"));
-    dataWrites.push_back(make_pair("tmp", "{[i,k]->[]}"));
-
-    Stmt* ss1 = new Stmt("tmp -= val[k] * u[col[k]];",
-             "{[i,k]: 0 <= i && i < NR && rowptr(i) <= k && k < rowptr(i+1)-1}",
-             "{[i,k] -> [i,1,k,0]}", dataReads, dataWrites);
-    dataReads.clear();
-    dataWrites.clear();
-    dataReads.push_back(make_pair("tmp","{[i]->[]}"));
-    dataReads.push_back(make_pair("val","{[i]->[t]: t = rowptr(i+1) - 1}"));
-    dataWrites.push_back(make_pair("u","{[i]->[i]}"));
-
-    Stmt* ss2  = new Stmt("u[i] = tmp/ val[rowptr[i+1]-1];",
-		"{[i]: 0 <= i && i < NR}",
-		"{[i] -> [i,2,0,0]}",
-                dataReads,dataWrites);
-    forwardSolve->addStmt(ss0);
-    forwardSolve->addStmt(ss1);
-    forwardSolve->addStmt(ss2);
-    checkToDotString(forwardSolve,"");   
+TEST_F(ComputationTest, ToDotUnitTest){
+    Computation* comp  = new Computation();
+    comp->addStmt(new Stmt("tmp(i) = f(i)", "{[i]: 0 <= i and i < N}",
+                  "{[i] -> [0,i,0,0,0]}",
+                  { {"f","{[i]->[i]}"}},
+                  { {"tmp","{[i]->[i]}"}}));
+    
+    comp->addStmt(new Stmt("tmp(i) -= A(i,j) * u(j)", 
+                  "{[i,j]: 0 <= i and i < N and 0 <= j and  j < i }",
+                  "{[i,j] -> [0,i,1,j,0]}",
+                  { 
+                     {"A"  ,"{[i,j]->[i,j]}"},
+		     {"tmp","{[i,j]->[i]}"},
+		     {"u"  ,"{[i,j]->[j]}"},
+                  },
+                 { {"tmp","{[i,j]->[i]}"}}));
+    
+    comp->addStmt(new Stmt("u(i) = tmp(i)/A(i,i)", 
+                  "{[i]: 0 <= i and i < N }",
+                  "{[i] -> [0,i,2,0,0]}",
+                  { 
+                     {"A"  ,"{[i]->[i,i]}"},
+		     {"tmp","{[i]->[i]}"},
+		     {"u"  ,"{[i]->[i]}"},
+                  },
+                  { {"u"  ,"{[i]->[i]}"}}));
+    EXPECT_EQ(comp->toDotString(),
+              "digraph dataFlowGraph_1{"
+              " \nsubgraph cluster2"
+	      " {\nstyle = filled;\n"
+	      " color = \"\";\n "
+	      "label = \"Domain :\\{ [0, i] : i \\>\\= 0"
+	      " && N - 1 \\>\\= 0 && -i + N - 1 \\>\\= 0 \\} \""
+	      " \nS0[label=\"\\{ [0, i, 0, 0, 0] : i \\>\\= 0 && -i"
+	      " + N - 1 \\>\\= 0 \\}\\n tmp(i) = f(i)\"][shape=Mrecord]"
+	      "[style=bold]  [color=grey];\nS1[label=\"\\{ [0, i, 1, j, 0]"
+	      " : i \\>\\= 0 && j \\>\\= 0 && -i + N - 1 \\>\\= 0 &&"
+	      " i - j - 1 \\>\\= 0 \\}\\n"
+	      " tmp(i) -= A(i,j) * u(j)\"][shape=Mrecord][style=bold]"
+	      "  [color=grey];"
+	      "\nS2[label=\"\\{ [0, i, 2, 0, 0] : i \\>\\= 0 &&"
+	      " -i + N - 1 \\>\\= 0 \\}\\n u(i) = tmp(i)/A(i,i)\"]"
+	      "[shape=Mrecord][style=bold]  [color=grey];"
+	      "\n}\n"
+	      "f[label=\"f[] \"] [shape=box][style=bold][color=grey];\n"
+	      "\t\tf->S0[label=\"[i]\"]\n"
+	      "tmp[label=\"tmp[] \"] [shape=box][style=bold][color=grey];\n"
+	      "\t\tS0->tmp[label=\"[i]\"]\n"
+	      "A[label=\"A[] \"] [shape=box][style=bold][color=grey];\n"
+	      "\t\tA->S1[label=\"[i, j]\"]\n\t\t"
+	      "tmp->S1[label=\"[i]\"]\n"
+	      "u[label=\"u[] \"] [shape=box][style=bold][color=grey];\n"
+	      "\t\tu->S1[label=\"[j]\"]\n\t\tS1->tmp[label=\"[i]\"]\n\t\t"
+	      "A->S2[label=\"[i, i]\"]\n\t\ttmp->S2[label=\"[i]\"]\n\t\t"
+	      "u->S2[label=\"[i]\"]\n\t\t"
+	      "S2->u[label=\"[i]\"]\n}");
 }

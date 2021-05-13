@@ -598,24 +598,35 @@ std::string Computation::toDotString(){
 
     
     // First apply all transformations to a clone of computation.
-    std::vector<Set*> newIS;
+    std::vector<std::pair<int,Set*> > newIS;
     std::ostringstream ss;
     //TODO: Deal with disjunction of cunjunctions later.
+    int i = 0;
     for(Stmt* st : stmts){
         Set* appSet = st->getExecutionSchedule()->Apply(
 			st->getIterationSpace());
-	newIS.push_back(appSet);
+	newIS.push_back(std::make_pair(i,appSet));
+        i++;
     }
-    int maxLevel = newIS[0]->arity();
+    // TODO: Sort statements by lexicographical order
+    // just in case some transformation has happend some
+    // where.
+
+    int maxLevel = newIS[0].second->arity();
     std::vector<std::vector<Set*> > projectedIS(maxLevel);
     
     for(int i = 0 ; i < maxLevel; i++ ){
         projectedIS[i] = std::vector<Set*>(newIS.size());
     }
-
+    //TODO: Move deletiing of active statements to
+    //      toDotScan. This is because overlapping 
+    //      statements might result to new disjoint
+    //      active iteration spaces of the same statement.
+    //      and these disjoint active statements cannot
+    //      be seen at this point.
     for(int i = 0; i < stmts.size(); i++){
         if (maxLevel > 0)
-            projectedIS[maxLevel-1][i] = newIS[i];
+            projectedIS[maxLevel-1][i] = newIS[i].second;
 	//Perform projections for each column
 	for (int j = maxLevel -1; j >= 1 ; j --){
 	    projectedIS[j -1][i] = projectedIS[j][i]->projectOut(j,false);   
@@ -625,16 +636,19 @@ std::string Computation::toDotString(){
     active.set_all();
     Set * restriction  = new Set(maxLevel);
     ss << "digraph dataFlowGraph_1{ \n";
-    
-    generateToDotClusters(projectedIS,maxLevel,active,restriction,
-		    1,ss);
-    
-    // Add Data Dependence edges , Extracted directly from Shivani's
-    // codebase
-     
+    toDotScan(newIS,0,ss,projectedIS);
+    // Cleanup.
+    /*
+    for (int i = 0; i < stmts.size(); i++){
+        delete newIS[i].second;
+	for(int j = 0 ; j < maxLevel; j++)
+            delete projectedIS[j][i];
+    }*/
+    // Code section from shivani for adding 
+    // data nodes
     std::vector<string>
         data_spaces;  // Maintains the list of dataspaces already created
-    
+
     // Adding the participating dataspaces for each statement and mapping out
     // the read and write access.
     for (int i = 0; i < getNumStmts(); i++) {
@@ -649,18 +663,9 @@ std::string Computation::toDotString(){
                              readDataSpace))) {
                 // Creates data space
                 ss
-                    << "\t\t"
-                    << "subgraph cluster_dataspace" << readDataSpace << "{ \n"
-                    << "\t\t\t"
-                    << "style = filled; \n"
-                    << "\t\t\t"
-                    << "color = lightgrey; \n"
-                    << "\t\t\t"
-                    << "label=\" \"; \n"
-                    << "\t\t\t" << readDataSpace << "[label=\"" << readDataSpace
-                    << "[] \"] [shape=box][style=filled][color=lightgrey];\n"
-                    << "\t\t\t"
-                    << "}\n";
+                    << readDataSpace << "[label=\""
+                    << readDataSpace
+                    << "[] \"] [shape=box][style=bold][color=grey];\n";
 
                 data_spaces.push_back(readDataSpace);
             }
@@ -695,19 +700,9 @@ std::string Computation::toDotString(){
             if (!(std::count(data_spaces.begin(), data_spaces.end(),
                              writeDataSpace))) {
                 ss
-                    << "\t\t"
-                    << "subgraph cluster_dataspace" << writeDataSpace << "{ \n"
-                    << "\t\t\t"
-                    << "style = filled; \n"
-                    << "\t\t\t"
-                    << "color = lightgrey; \n"
-                    << "\t\t\t"
-                    << "label= \" \"; \n"
-                    << "\t\t\t" << writeDataSpace << "[label=\""
+                    << writeDataSpace << "[label=\""
                     << writeDataSpace
-                    << "[] \"] [shape=box][style=filled][color=lightgrey];\n"
-                    << "\t\t\t"
-                    << "}\n";
+                    << "[] \"] [shape=box][style=bold][color=grey];\n";
 
                 data_spaces.push_back(writeDataSpace);
             }
@@ -715,11 +710,11 @@ std::string Computation::toDotString(){
             size_t start_pos = getStmt(i)
                                    ->getWriteRelation(data_write_index)
                                    ->getString()
-                                   .find("[");
+                                   .rfind("[");
             size_t end_pos = getStmt(i)
                                  ->getWriteRelation(data_write_index)
                                  ->getString()
-                                 .find("]");
+                                 .rfind("]");
 
             ss << "\t\t"
                     << "S" << i << "->" << writeDataSpace << "[label=\"["
@@ -732,10 +727,11 @@ std::string Computation::toDotString(){
         }
     }
 
-    ss << "}\n";
+    ss << "}"; 
     return ss.str();
 }
-
+/*
+ * Deprecated function used by generateToDotClusters
 //! Helper function that checks if a condition results in active
 //  sets.
 omega::BoolSet<> Computation::getActive(omega::BoolSet<>&active,Set* cond,
@@ -752,8 +748,9 @@ omega::BoolSet<> Computation::getActive(omega::BoolSet<>&active,Set* cond,
          
     }
     return result;    
-}
+}*/
 
+/* Deprecated function use toDotScan
 //! Recursively generate nodes in 
 //  to dot.
 //  param projectedIS presaved projections and levels 
@@ -830,7 +827,6 @@ void Computation::generateToDotClusters(std::vector<std::vector<Set*> >&projecte
                // Split if constraint splits the range 
 	       // of the current level
 	       if(!active1.empty() && !active2.empty() && 
-	           /*active1 n active2 = 0*/
 	           (active1 & active2).empty()){
 	           // Add the condition to the restrictions
 		   Set* restriction1 = restriction->Intersect(cond);
@@ -863,7 +859,6 @@ void Computation::generateToDotClusters(std::vector<std::vector<Set*> >&projecte
                // Split if constraint splits the range 
 	       // of the current level
 	       if(!active1.empty() && !active2.empty() && 
-	           /*active1 n active2 = 0*/
 	           (active1 & active2).empty()){
 	           // Add the condition to the restrictions
 		   Set* restriction1 = restriction->Intersect(cond);
@@ -901,22 +896,23 @@ void Computation::generateToDotClusters(std::vector<std::vector<Set*> >&projecte
     return;
 
 }
+*/
 //! param  activeStmt is assumed to be sorted lexicographically
-std::vector<std::vector<Set*> > Computation::
-   split (int level, std::vector<Set*> activeStmt){
-   std::map<std::string,std::vector<Set*> > grouping;
+std::vector<std::vector<std::pair<int,Set*> > > Computation::split
+	(int level, std::vector<std::pair<int,Set*> >& activeStmt){
+   std::map<std::string,std::vector<std::pair<int,Set*> > > grouping;
    
-   for(Set* s : activeStmt){
-      if(s->getTupleDecl().elemIsConst(level)){
+   for(std::pair<int,Set*> s : activeStmt){
+      if(s.second->getTupleDecl().elemIsConst(level)){
           grouping[std::to_string(
-			  s->getTupleDecl().elemConstVal(level))].push_back(s); 
+			  s.second->getTupleDecl().elemConstVal(level))].push_back(s); 
 	     	  
       }else {
 	  // This will be expanded further to use constraints;
           grouping["t"].push_back(s);
       }  
    }
-   std::vector<std::vector <Set*> > res;
+   std::vector<std::vector <std::pair<int,Set*> > > res;
    for( auto k : grouping){
        //Next iteration of the algorithm will be
        //focused on this section. 
@@ -925,6 +921,51 @@ std::vector<std::vector<Set*> > Computation::
    return res;
 }
 
+//! Lite version of polyhedra scanning to generate 
+//! toDot Clusters
+void Computation::toDotScan(std::vector<std::pair<int,Set*>> &activeStmts, int level,
+	       std::ostringstream& ss ,
+	       std::vector<std::vector<Set*> >&projectedIS){
+    if(activeStmts.size() == 1){
+	std::string stmIter = activeStmts[0].second->prettyPrintString();
+	//Format to be toDot compatible
+	stmIter = replaceInString(stmIter,">","\\>",0);
+	stmIter = replaceInString(stmIter,"=","\\=",0);
+	stmIter = replaceInString(stmIter,"{","\\{",0);
+	stmIter = replaceInString(stmIter,"}","\\}",0);
+
+        ss << "S"<< activeStmts[0].first
+		<<"[label=\""
+		<< stmIter
+	        << "\\n "
+	        << getStmt(activeStmts[0].first)->getStmtSourceCode()	
+		<< "\"][shape=Mrecord][style=bold]  [color=grey];\n";
+        return;
+    }
+    std::vector<std::vector< std::pair <int, Set*> > > bins=
+	    split(level,activeStmts);
+    if(bins.size() > 1 && level > 0 ){
+	std::string domainIter = projectedIS[level-1]
+		[activeStmts[0].first]->prettyPrintString();
+
+	domainIter = replaceInString(domainIter,">","\\>",0);
+	domainIter = replaceInString(domainIter,"=","\\=",0);
+	domainIter = replaceInString(domainIter,"{","\\{",0);
+	domainIter = replaceInString(domainIter,"}","\\}",0);
+        ss << "subgraph cluster"<< level << " {\n"
+           << "style = filled;\n"
+           << " color = \"\";\n"
+           << " label = \"Domain :"
+	   <<domainIter<< " \" \n";
+    }
+    for(auto active : bins){
+        toDotScan(active,level+1,ss,projectedIS);
+    }
+    if(bins.size() > 1 && level > 0 ){
+        ss << "}\n"; 
+    }
+}
+/* Stale code on toDot Generaation*/
 void Computation::toDot(std::fstream& dotFile, string fileName) {
     std::vector<string>
         data_spaces;  // Maintains the list of dataspaces already created

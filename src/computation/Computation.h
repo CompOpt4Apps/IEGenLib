@@ -178,8 +178,8 @@ class Computation {
     omega::BoolSet<> getActive(omega::BoolSet<>&active,Set* cond,
                            std::vector<Set*> Rs );
 
-    std::vector<std::vector<Set*> > split
-	    (int level, std::vector<Set*> activeStmt);
+    std::vector<std::vector<std::pair<int,Set*> > > split
+	    (int level, std::vector<std::pair<int,Set*> >& activeStmt);
    private:
     //! Recursively generate nodes in 
     //  to dot.
@@ -196,7 +196,12 @@ class Computation {
     void generateToDotClusters(std::vector<std::vector<Set*> >&projectedIS,
 		    int maxLevel,omega::BoolSet<>& active,Set* restriction,
 		    int currentLevel,std::ostringstream& ss);
-
+    
+    //! Lite version of polyhedra scanning to generate 
+    //! toDot Clusters
+    void toDotScan(std::vector<std::pair<int,Set*>> &activeStmts, int level,
+		    std::ostringstream& ss ,
+		    std::vector<std::vector<Set*> >&projectedIS);
     
     //! Information on all statements in the Computation
     std::vector<Stmt*> stmts;
