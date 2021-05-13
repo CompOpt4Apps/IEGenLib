@@ -238,7 +238,7 @@ struct AppendComputationResult {
 class Stmt {
    public:
     //! Construct an empty Stmt
-    Stmt(){};
+    Stmt() = default;
 
     //! Destructor
     ~Stmt();
@@ -275,14 +275,20 @@ class Stmt {
     Set* getIterationSpace() const;
     //! Set the iteration space, constructing it from the given string
     void setIterationSpace(std::string newIterationSpaceStr);
+    //! Set the iteration space (adopted)
+    void setIterationSpace(Set* newIterationSpace);
 
     //! Get the execution schedule Relation
     Relation* getExecutionSchedule() const;
     //! Set the execution schedule, constructing it from the given string
     void setExecutionSchedule(std::string newExecutionScheduleStr);
+    //! Set the execution schedule (adopted)
+    void setExecutionSchedule(Relation* newExecutionSchedule);
 
     //! Add a data read
     void addRead(std::string dataSpace, std::string relationStr);
+    //! Add a data read, adopting the given relation
+    void addRead(std::string dataSpace, Relation* relation);
     //! Get the number of data reads for this statement
     unsigned int getNumReads() const;
     //! Get a data read's data space by index
@@ -292,6 +298,8 @@ class Stmt {
 
     //! Add a data write
     void addWrite(std::string dataSpace, std::string relationStr);
+    //! Add a data write, adopting the given relation
+    void addWrite(std::string dataSpace, Relation* relation);
     //! Get the number of data writes for this statement
     unsigned int getNumWrites() const;
     //! Get a data write's data space by index

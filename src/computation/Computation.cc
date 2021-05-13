@@ -364,7 +364,7 @@ AppendComputationResult Computation::appendComputation(
 
         /* Iteration domain */
         // collect information about current iteration space
-        Set* appendIterSpace = appendeeStmt->getIterationSpace();
+        const Set* appendIterSpace = appendeeStmt->getIterationSpace();
         const int appendIterArity = appendIterSpace->arity();
         TupleDecl appendIterTuple = appendIterSpace->getTupleDecl();
 
@@ -414,11 +414,11 @@ AppendComputationResult Computation::appendComputation(
             newIterSpace = new Set(newIterTuple);
             newIterSpace->addConjunction(newIterSpaceConj);
         }
-        newStmt->setIterationSpace(newIterSpace->prettyPrintString());
+        newStmt->setIterationSpace(newIterSpace);
 
         /* Execution schedule */
         // original execution schedule for statement to be appended
-        Relation* appendExecSchedule = appendeeStmt->getExecutionSchedule();
+        const Relation* appendExecSchedule = appendeeStmt->getExecutionSchedule();
         TupleDecl appendExecTuple = appendExecSchedule->getTupleDecl();
         int appendExecInArity = appendExecSchedule->inArity();
         int appendExecOutArity = appendExecSchedule->outArity();
@@ -518,8 +518,7 @@ AppendComputationResult Computation::appendComputation(
             }
 
             // add the new read using the new Relation
-            newStmt->addRead(appendeeStmt->getReadDataSpace(i),
-                             newReadRel->prettyPrintString());
+            newStmt->addRead(appendeeStmt->getReadDataSpace(i), newReadRel);
         }
 
 
@@ -564,8 +563,7 @@ AppendComputationResult Computation::appendComputation(
             }
 
             // add the new write using the new Relation
-            newStmt->addWrite(appendeeStmt->getWriteDataSpace(i),
-                             newWriteRel->prettyPrintString());
+            newStmt->addWrite(appendeeStmt->getWriteDataSpace(i), newWriteRel);
         }
 
         // add the adapted statement into this Computation
@@ -1322,16 +1320,30 @@ void Stmt::setIterationSpace(std::string newIterationSpaceStr) {
     this->iterationSpace = std::unique_ptr<Set>(new Set(newIterationSpaceStr));
 }
 
+void Stmt::setIterationSpace(Set* newIterationSpace) {
+    this->iterationSpace = std::unique_ptr<Set>(newIterationSpace);
+}
+
 Relation* Stmt::getExecutionSchedule() const { return executionSchedule.get(); }
 
 void Stmt::setExecutionSchedule(std::string newExecutionScheduleStr) {
     this->executionSchedule =
-        std::unique_ptr<Relation>(new Relation(newExecutionScheduleStr));
+            std::unique_ptr<Relation>(new Relation(newExecutionScheduleStr));
+}
+
+void Stmt::setExecutionSchedule(Relation* newExecutionSchedule) {
+    this->executionSchedule =
+            std::unique_ptr<Relation>(newExecutionSchedule);
 }
 
 void Stmt::addRead(std::string dataSpace, std::string relationStr) {
     dataReads.push_back(
         {dataSpace, std::unique_ptr<Relation>(new Relation(relationStr))});
+}
+
+void Stmt::addRead(std::string dataSpace, Relation* relation) {
+    dataReads.push_back(
+        {dataSpace, std::unique_ptr<Relation>(relation)});
 }
 
 unsigned int Stmt::getNumReads() const { return dataReads.size(); }
@@ -1347,6 +1359,11 @@ Relation* Stmt::getReadRelation(unsigned int index) const {
 void Stmt::addWrite(std::string dataSpace, std::string relationStr) {
     dataWrites.push_back(
         {dataSpace, std::unique_ptr<Relation>(new Relation(relationStr))});
+}
+
+void Stmt::addWrite(std::string dataSpace, Relation* relation) {
+    dataWrites.push_back(
+        {dataSpace, std::unique_ptr<Relation>(relation)});
 }
 
 unsigned int Stmt::getNumWrites() const { return dataWrites.size(); }
