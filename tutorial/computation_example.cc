@@ -63,9 +63,6 @@ MyComp->addStmt(statement2);
 cout << "Stmt2 initialised" << "\n";
 
 //Calling toDot() on the Computation structure
-fstream dotFileStream;
-cout << "Entering toDot()" << "\n";
-MyComp->toDot(dotFileStream,"Example.txt");
 
 cout << "Polynomial product Codegen:\n";
 cout << MyComp->codeGen();
@@ -92,7 +89,6 @@ spmv->addStmt(s1);
 std::string code = spmv->codeGen();
 cout << "SPMV CodeGen: \n";
 cout << code;
-spmv->toDot(dotFileStream,"spmv.dot");
 cout << "To Omega String \n"
    << spmv->toOmegaString();
 // Forward Solve CSR
@@ -143,8 +139,6 @@ cout << "Forward Solve Codegen";
 cout << forwardSolve->codeGen();
 
 
-cout << "Forward Solve Dot File: forward_solve.dot";
-forwardSolve->toDot(dotFileStream,"forward_solve.dot");
 
 
 Computation* simpleComp = new Computation;
@@ -158,7 +152,6 @@ Stmt * ss5 = new Stmt("u[i] =  A[i][i]",
 		   {"u","{[i]->[i]}"},
 		});
 simpleComp->addStmt(ss5);
-cout << "To Dot \n" << simpleComp->toDot() << "\n";
 
 cout << "Code Gen \n" << simpleComp->codeGen() << "\n";
 

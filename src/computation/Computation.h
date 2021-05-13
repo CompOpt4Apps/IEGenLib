@@ -151,9 +151,6 @@ class Computation {
         std::string surroundingExecScheduleStr,
         const std::vector<std::string>& arguments = {});
 
-    void toDot(std::fstream& dotFileStream, string fileName);
-    
-    
 
     //! Function returns a dot string representing nesting
     //  and loop carrie dependency. Internally it uses
@@ -173,29 +170,9 @@ class Computation {
     //! Method returns omega strings for each statement
     std::string toOmegaString();
     
-    //! Helper function that checks if a condition results in active
-    //  sets.
-    omega::BoolSet<> getActive(omega::BoolSet<>&active,Set* cond,
-                           std::vector<Set*> Rs );
-
-    std::vector<std::vector<std::pair<int,Set*> > > split
+   std::vector<std::vector<std::pair<int,Set*> > > split
 	    (int level, std::vector<std::pair<int,Set*> >& activeStmt);
    private:
-    //! Recursively generate nodes in 
-    //  to dot.
-    //  param projectedIS presaved projections and levels 
-    //  param maxLevel    max level in set of disjunct poly
-    //                    hedrons.
-    //  param active      Set of active statements.
-    //  param restriction Set containing current constraint restrictions
-    //                    from split points in polyhedral scanning
-    //  param currentLevel 
-    //  param ss          A reference to the string stream where todot
-    //                    will be written to.
-    //
-    void generateToDotClusters(std::vector<std::vector<Set*> >&projectedIS,
-		    int maxLevel,omega::BoolSet<>& active,Set* restriction,
-		    int currentLevel,std::ostringstream& ss);
     
     //! Lite version of polyhedra scanning to generate 
     //! toDot Clusters
