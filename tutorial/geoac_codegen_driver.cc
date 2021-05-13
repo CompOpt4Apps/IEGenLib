@@ -34,11 +34,11 @@ int main(int argc, char **argv){
   cCompArgs.push_back("$phi$");
   cCompArgs.push_back("$spl.Temp_Spline$");
 
-
-
   // Return values are stored in a struct of the computation: AppendComputationResult
   AppendComputationResult cCompRes = temp->appendComputation(cComputation, "{[0]}", "{[0]->[0]}", cCompArgs);
 
+  //Creating s1
+  //sources.c = c(r,theta,phi,spl.Temp_Spline);
   Stmt*s1 = new Stmt("$sources.c$ = "+cCompRes.returnValues.back()+";", 
       "{[0]}",
       "{[0]->["+std::to_string(cCompRes.tuplePosition+1)+", 0, 0]}",
@@ -47,6 +47,44 @@ int main(int argc, char **argv){
       );
   
   temp->addStmt(s1);
+
+  //Creating s2
+  //sources.w = w(r,theta,phi); The w function always return 0!
+  Stmt*s2 = new Stmt("$sources.w$ = 0;", 
+      "{[0]}",  //Iteration schedule
+      "{[0]->["+std::to_string(cCompRes.tuplePosition+2)+", 0, 0]}",  //Execution schedule
+      {}, //Data reads
+      {{"$sources.w$", "{[0]->[0]}"}} //Data writes
+      );
+  
+  temp->addStmt(s2);
+
+  //Add the args of the v function (computation to be appended) as data spaces to temp
+  //r, theta and phi have already been added
+  temp->addDataSpace("$spl.Windv_Spline$");
+
+  //Args to the c_Computation
+  vector<std::string> vCompArgs;
+  vCompArgs.push_back("$r$");
+  vCompArgs.push_back("$theta$");
+  vCompArgs.push_back("$phi$");
+  vCompArgs.push_back("$spl.Windv_Spline$");
+
+  Computation* vcComputation = v_Computation();
+
+  // Return values are stored in a struct of the computation: AppendComputationResult
+  AppendComputationResult vCompRes = temp->appendComputation(vcComputation, "{[0]}", "{[0]->["+std::to_string(cCompRes.tuplePosition+3)+"]}", vCompArgs);
+
+  //Creating s3
+  //sources.v = v(r,theta,phi,spl.Temp_Spline);
+  Stmt*s3 = new Stmt("$sources.v$ = "+vCompRes.returnValues.back()+";", 
+      "{[0]}",
+      "{[0]->["+std::to_string(vCompRes.tuplePosition+1)+", 0, 0]}",
+      {{vCompRes.returnValues.back(), "{[0]->[0]}"}},
+      {{"$sources.v$", "{[0]->[0]}"}}
+      );
+  
+  temp->addStmt(s3);
 
 
   // Computation* EvalSplineF = Eval_Spline_f_Computation();
@@ -86,7 +124,7 @@ int main(int argc, char **argv){
 */
 Computation* v_Computation(){
   
-  Computation* VComputation;
+  Computation* VComputation = new Computation();
   VComputation->addParameter("$r$","double");
   VComputation->addParameter("$theta$","double");
   VComputation->addParameter("$phi$","double");
