@@ -84,7 +84,7 @@ class Computation {
     //! @param[in] stmt Stmt to add (adopted)
     void addStmt(Stmt* stmt);
     //! Get a statement by index
-    Stmt* getStmt(unsigned int index);
+    Stmt* getStmt(unsigned int index) const;
     //! Get the number of statements in this Computation
     unsigned int getNumStmts() const;
 
@@ -161,6 +161,13 @@ class Computation {
     //! Environment used by this Computation
     Environment env;
 
+    //! Add a transformation (adopted) to the specified Stmt
+    void addTransformation(unsigned int stmtIndex, Relation* rel);
+
+    //! Sequentially apply added transformations to all statements.
+    //! Returns a list of final statement schedules after transformation.
+    std::vector<Set*> applyTransformations() const;
+
     //! Method generates c code.
     //! Known constraints are constraints that can be considered already
     //! enforced/are known to be true without need for checking in generated
@@ -191,6 +198,9 @@ class Computation {
     //! languages allow multiple returns.
     //! Pair of name/literal : whether it's a data space name
     std::vector<std::pair<std::string, bool>> returnValues;
+
+    //! List of statement transformation lists
+    std::vector<std::vector<Relation*>> transformationLists;
 
     //! Number of times *any* Computation has been appended into
     //! others, for creating unique name prefixes.

@@ -59,6 +59,7 @@ Computation& Computation::operator=(const Computation& other) {
     this->dataSpaces = other.dataSpaces;
     this->parameters = other.parameters;
     this->returnValues = other.returnValues;
+    this->transformationLists = other.transformationLists;
 
     return *this;
 }
@@ -67,7 +68,8 @@ bool Computation::operator==(const Computation& other) const {
     return (this->stmts == other.stmts &&
             this->dataSpaces == other.dataSpaces &&
             this->parameters == other.parameters &&
-            this->returnValues == other.returnValues);
+            this->returnValues == other.returnValues &&
+            this->transformationLists == other.transformationLists);
 }
 
 Computation* Computation::getUniquelyNamedClone() const {
@@ -100,9 +102,10 @@ void Computation::resetNumRenames() {
 
 void Computation::addStmt(Stmt* stmt) {
     stmts.push_back(stmt);
+    transformationLists.push_back({});
 }
 
-Stmt* Computation::getStmt(unsigned int index) { return stmts.at(index); }
+Stmt* Computation::getStmt(unsigned int index) const { return stmts.at(index); }
 
 unsigned int Computation::getNumStmts() const { return stmts.size(); }
 
@@ -728,6 +731,27 @@ std::string Computation::toDotString(){
     ss << "}"; 
     return ss.str();
 }
+
+void Computation::addTransformation(unsigned int stmtIndex, Relation* rel) {
+    transformationLists.at(stmtIndex).emplace_back(rel);
+}
+
+std::vector<Set*> Computation::applyTransformations() const {
+    std::vector<Set*> transformedSchedules;
+    for (int stmtNum = 0; stmtNum < this->getNumStmts(); ++stmtNum) {
+        Stmt* currentStmt = getStmt(stmtNum);
+        Set* schedule = currentStmt->getExecutionSchedule()->Apply(currentStmt->getIterationSpace());
+        // apply transformations in order, chaining together outputs and inputs
+        for (Relation* transformation : transformationLists.at(stmtNum)) {
+            Set* scheduleAfterTransformation = transformation->Apply(schedule);
+            delete schedule;
+            schedule = scheduleAfterTransformation;
+        }
+        transformedSchedules.push_back(schedule);
+    }
+    return transformedSchedules;
+}
+
 //! param  activeStmt is assumed to be sorted lexicographically
 std::vector<std::vector<std::pair<int,Set*> > > Computation::split
 	(int level, std::vector<std::pair<int,Set*> >& activeStmt){
