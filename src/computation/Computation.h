@@ -95,7 +95,7 @@ class Computation {
     //! Check if a given string is a name of a data space of this Computation
     bool isDataSpace(std::string name) const;
 
-    //! Add a (formal) parameter to this Computation
+    //! Add a (formal) parameter to this Computation, including adding it as a data space.
     //! @param paramName Name of the parameter
     //! @param paramType C data type of the parameter
     void addParameter(std::string paramName, std::string paramType);
@@ -205,9 +205,9 @@ class Computation {
     
     //! Information on all statements in the Computation
     std::vector<Stmt*> stmts;
-    //! Data spaces accessed in the Computation
+    //! Data spaces available in the Computation
     std::unordered_set<std::string> dataSpaces;
-    //! Parameters of the computation, pair of name : type
+    //! Parameters of the computation, pair of name : type. All parameters should also be data spaces.
     std::vector<std::pair<std::string, std::string>> parameters;
     //! Names of values that are returned if this Computation is called. May be
     //! data space names or literals. This is an ordered list because some
@@ -243,7 +243,7 @@ struct AppendComputationResult {
 class Stmt {
    public:
     //! Construct an empty Stmt
-    Stmt(){};
+    Stmt() = default;
 
     //! Destructor
     ~Stmt();
@@ -280,14 +280,20 @@ class Stmt {
     Set* getIterationSpace() const;
     //! Set the iteration space, constructing it from the given string
     void setIterationSpace(std::string newIterationSpaceStr);
+    //! Set the iteration space (adopted)
+    void setIterationSpace(Set* newIterationSpace);
 
     //! Get the execution schedule Relation
     Relation* getExecutionSchedule() const;
     //! Set the execution schedule, constructing it from the given string
     void setExecutionSchedule(std::string newExecutionScheduleStr);
+    //! Set the execution schedule (adopted)
+    void setExecutionSchedule(Relation* newExecutionSchedule);
 
     //! Add a data read
     void addRead(std::string dataSpace, std::string relationStr);
+    //! Add a data read, adopting the given relation
+    void addRead(std::string dataSpace, Relation* relation);
     //! Get the number of data reads for this statement
     unsigned int getNumReads() const;
     //! Get a data read's data space by index
@@ -297,6 +303,8 @@ class Stmt {
 
     //! Add a data write
     void addWrite(std::string dataSpace, std::string relationStr);
+    //! Add a data write, adopting the given relation
+    void addWrite(std::string dataSpace, Relation* relation);
     //! Get the number of data writes for this statement
     unsigned int getNumWrites() const;
     //! Get a data write's data space by index

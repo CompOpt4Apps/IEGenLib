@@ -635,15 +635,11 @@ public:
     *   S = {[i,j,k,ip,jp,kp] : ...}
     *   tvar = 4
     *
-    * removeFromTuple parameter specifies if the tuple variable should be taken
-    * out of the TupleDecl after it is projected. True means it will be removed
-    * ("normal" behavior), false means it will remain.
-    *
     * NOTE: if tvar is an argument to some UFCall that also has other tuple
     * variable arguments, then we cannot project it out and function returns NULL.
     *        Ex: if col(i,k) exists in constraints we cannot project out 'k'
     */
-    Set* projectOut(int tvar, bool removeFromTuple = true);
+    Set* projectOut(int tvar);
 
     /*! This function simplifies constraints sets of non-affine sets that
         are targeted for level set parallelism. These sets are representative
@@ -866,7 +862,7 @@ public:
     Relation* reverseAffineSubstitution(UFCallMap* ufcmap);
 
     //! Same as Set::projectOut
-    Relation* projectOut(int tvar, bool removeFromTuple = true);
+    Relation* projectOut(int tvar);
 
     /*! This function simplifies constraints sets of non-affine sets that
         are targeted for level set parallelism. These sets are representative
@@ -937,7 +933,7 @@ std::pair <std::string,std::string> instantiate(
 std::set<std::pair <std::string,std::string>> ruleInstantiation
                           (std::set<Exp> instExps, bool *useRule,
                            TupleDecl origTupleDecl, UFCallMap *ufcmap);
-Set* islSetProjectOut(Set* s, unsigned pos, bool removeFromTuple = true);
+Set* islSetProjectOut(Set* s, unsigned pos);
 
 Relation* islRelTransitiveClosure(Relation*r,bool& isExact);
 

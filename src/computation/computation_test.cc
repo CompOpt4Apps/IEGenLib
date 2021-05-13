@@ -642,7 +642,7 @@ TEST_F(ComputationTest, TupleAssignmentUnitTest) {
     checkTupleAssignments("{[i,j]: i = 3 && j = row(i)}", { "3","0"});
 }
 
-#pragma mark ToDotTest
+#pragma mark PolyhedralSplit
 TEST_F(ComputationTest, PolyhedralSplit){
     Computation c;
     Set * s0 = new Set("{[0,i,0]: 0 <= i && i < N}");
