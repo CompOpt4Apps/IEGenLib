@@ -12,6 +12,7 @@ Computation* Eval_Spline_f_Computation();
 
 Computation* c_Computation();
 Computation* v_Computation();
+Computation* u_Computation();
 
 /**
  * Main function
@@ -63,17 +64,17 @@ int main(int argc, char **argv){
   //r, theta and phi have already been added
   temp->addDataSpace("$spl.Windv_Spline$");
 
-  //Args to the c_Computation
+  //Args to the v_Computation
   vector<std::string> vCompArgs;
   vCompArgs.push_back("$r$");
   vCompArgs.push_back("$theta$");
   vCompArgs.push_back("$phi$");
   vCompArgs.push_back("$spl.Windv_Spline$");
 
-  Computation* vcComputation = v_Computation();
+  Computation* vComputation = v_Computation();
 
   // Return values are stored in a struct of the computation: AppendComputationResult
-  AppendComputationResult vCompRes = temp->appendComputation(vcComputation, "{[0]}", "{[0]->["+std::to_string(cCompRes.tuplePosition+3)+"]}", vCompArgs);
+  AppendComputationResult vCompRes = temp->appendComputation(vComputation, "{[0]}", "{[0]->["+std::to_string(cCompRes.tuplePosition+3)+"]}", vCompArgs);
 
   //Creating s3
   //sources.v = v(r,theta,phi,spl.Temp_Spline);
@@ -85,6 +86,22 @@ int main(int argc, char **argv){
       );
   
   temp->addStmt(s3);
+
+  //Add the args of the u function (computation to be appended) as data spaces to temp
+  //r, theta and phi have already been added
+  temp->addDataSpace("$spl.Windu_Spline$");
+
+  //Args to the u_Computation
+  vector<std::string> uCompArgs;
+  uCompArgs.push_back("$r$");
+  uCompArgs.push_back("$theta$");
+  uCompArgs.push_back("$phi$");
+  uCompArgs.push_back("$spl.Windu_Spline$");
+
+  Computation* uComputation = u_Computation();
+  
+  // Return values are stored in a struct of the computation: AppendComputationResult
+  AppendComputationResult uCompRes = temp->appendComputation(uComputation, "{[0]}", "{[0]->["+std::to_string(vCompRes.tuplePosition+2)+"]}", uCompArgs);
 
 
   // Computation* EvalSplineF = Eval_Spline_f_Computation();
@@ -116,11 +133,58 @@ int main(int argc, char **argv){
 
 
 /*
-  double v(double r, double theta, double phi, NaturalCubicSpline_1D &Windv_Spline){
-    double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);    // Check that r_min <= r_eval <= r_max
-    
-    return Eval_Spline_f(r_eval, Windv_Spline);
+  double u(double r, double theta, double phi, NaturalCubicSpline_1D &Windu_Spline){
+      double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);    // Check that r_min <= r_eval <= r_max
+      
+      return Eval_Spline_f(r_eval, Windu_Spline);
+  }
+*/
+Computation* u_Computation(){
+  
+  Computation* UComputation = new Computation();
+  UComputation->addParameter("$r$","double");
+  UComputation->addParameter("$theta$","double");
+  UComputation->addParameter("$phi$","double");
+  UComputation->addParameter("$Windu_Spline$","NaturalCubicSpline_1D &");
+
+  //Creating statement1
+  //double r_eval = min(r, r_max);
+  Stmt* s1 = new Stmt("double $r_eval$ = min($r$, r_max); $r_eval$ = max($r_eval$, r_min)",
+      "{[0]}",  //Iteration schedule - Only happening one time (not iterating)
+      "{[0]->[0, 0, 0]}", //Execution schedule - scheduling statement to be first (scheduling function)
+      {{"$r$","{[0]->[0]}"},{"$r_eval$","{[0]->[0]}"}}, //Data reads
+      {{"$r_eval$","{[0]->[0]}"}} //Data writes
+      );
+  cout << "Source statement : " << s1->getStmtSourceCode() << "\n\t"
+    <<"- Iteration Space : "<< s1->getIterationSpace()->prettyPrintString() << "\n\t"
+    << "- Execution Schedule : "<< s1->getExecutionSchedule()->prettyPrintString() << "\n\t" ;
+
+  //Adding statement2
+  UComputation->addStmt(s1);
+
+  //Args to the Eval_Spline_f_Computation
+  vector<std::string> eSpFArgs;
+  eSpFArgs.push_back("$r_eval$");
+  eSpFArgs.push_back("$Windu_Spline$");
+
+  //Call Eval_Spline_f_Computation() returen values is stored in result
+  Computation* EvalSplineFComputation = Eval_Spline_f_Computation();
+  // Return values are stored in a struct of the computation: AppendComputationResult
+  AppendComputationResult eSpFCompRes = UComputation->appendComputation(EvalSplineFComputation, "{[0]}","{[0]->[1, 0, 0]}",eSpFArgs);
+
+  //Add return value to the current computation
+  UComputation->addReturnValue(eSpFCompRes.returnValues.back(), true);
+
+  return UComputation;
 }
+
+
+/*
+  double v(double r, double theta, double phi, NaturalCubicSpline_1D &Windv_Spline){
+      double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);    // Check that r_min <= r_eval <= r_max
+      
+      return Eval_Spline_f(r_eval, Windv_Spline);
+  }
 */
 Computation* v_Computation(){
   
@@ -150,7 +214,6 @@ Computation* v_Computation(){
   eSpFArgs.push_back("$r_eval$");
   eSpFArgs.push_back("$Windv_Spline$");
 
-
   //Call Eval_Spline_f_Computation() returen values is stored in result
   Computation* EvalSplineFComputation = Eval_Spline_f_Computation();
   // Return values are stored in a struct of the computation: AppendComputationResult
@@ -158,7 +221,6 @@ Computation* v_Computation(){
 
   //Add return value to the current computation
   VComputation->addReturnValue(eSpFCompRes.returnValues.back(), true);
-
 
   return VComputation;
 }
