@@ -272,7 +272,7 @@ class Stmt {
     bool operator==(const Stmt& other) const;
 
     //! Get a copy of this Stmt with the given prefix applied to all names
-    Stmt* getUniquelyNamedClone(std::string prefix) const;
+    Stmt* getUniquelyNamedClone(std::string prefix, std::unordered_set<std::string> dataSpaceNames) const;
 
     //! Get whether or not all necessary information for this Stmt is set
     bool isComplete() const;

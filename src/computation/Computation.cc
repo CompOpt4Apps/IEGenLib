@@ -78,7 +78,7 @@ Computation* Computation::getUniquelyNamedClone() const {
 
     // prefix all data in the Computation and insert it to the new one
     for (auto& stmt : this->stmts) {
-        prefixedCopy->addStmt(stmt->getUniquelyNamedClone(namePrefix));
+        prefixedCopy->addStmt(stmt->getUniquelyNamedClone(namePrefix, this->getDataSpaces()));
     }
     for (auto& space : this->dataSpaces) {
         prefixedCopy->addDataSpace(namePrefix + space);
@@ -1205,17 +1205,14 @@ bool Stmt::operator==(const Stmt& other) const {
     return true;
 }
 
-Stmt* Stmt::getUniquelyNamedClone(std::string prefix) const {
+Stmt* Stmt::getUniquelyNamedClone(std::string prefix, std::unordered_set<std::string> dataSpaceNames) const {
     Stmt* prefixedCopy = new Stmt(*this);
 
-    // modify reads and writes, keeping track of original names for further replacing in other fields
-    std::unordered_set<std::string> dataSpaceNames;
+    // modify reads and writes
     for (auto& read : prefixedCopy->dataReads) {
-        dataSpaceNames.emplace(read.first);
         read.first = prefix + read.first;
     }
     for (auto& write : prefixedCopy->dataWrites) {
-        dataSpaceNames.emplace(write.first);
         write.first = prefix + write.first;
     }
 
