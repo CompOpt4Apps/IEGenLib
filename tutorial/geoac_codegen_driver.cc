@@ -213,7 +213,7 @@ Computation* u_Computation(){
   //Call Eval_Spline_f_Computation() returen values is stored in result
   Computation* EvalSplineFComputation = Eval_Spline_f_Computation();
   // Return values are stored in a struct of the computation: AppendComputationResult
-  AppendComputationResult eSpFCompRes = UComputation->appendComputation(EvalSplineFComputation, "{[0]}","{[0]->[1, 0, 0]}",eSpFArgs);
+  AppendComputationResult eSpFCompRes = UComputation->appendComputation(EvalSplineFComputation, "{[0]}","{[0]->[1]}",eSpFArgs);
 
   //Add return value to the current computation
   UComputation->addReturnValue(eSpFCompRes.returnValues.back(), true);
@@ -260,7 +260,7 @@ Computation* v_Computation(){
   //Call Eval_Spline_f_Computation() returen values is stored in result
   Computation* EvalSplineFComputation = Eval_Spline_f_Computation();
   // Return values are stored in a struct of the computation: AppendComputationResult
-  AppendComputationResult eSpFCompRes = VComputation->appendComputation(EvalSplineFComputation, "{[0]}","{[0]->[1, 0, 0]}",eSpFArgs);
+  AppendComputationResult eSpFCompRes = VComputation->appendComputation(EvalSplineFComputation, "{[0]}","{[0]->[1]}",eSpFArgs);
 
   //Add return value to the current computation
   VComputation->addReturnValue(eSpFCompRes.returnValues.back(), true);
@@ -331,7 +331,7 @@ Computation* c_Computation(){
   Computation* EvalSplineFComputation = Eval_Spline_f_Computation();
 
   // Return values are stored in a struct of the computation: AppendComputationResult
-  AppendComputationResult eSpFCompRes = CComputation->appendComputation(EvalSplineFComputation, "{[0]}","{[0]->[2, 0, 0]}",eSpFArgs);
+  AppendComputationResult eSpFCompRes = CComputation->appendComputation(EvalSplineFComputation, "{[0]}","{[0]->[2]}",eSpFArgs);
 
   CComputation->addDataSpace("$c_result$");
   //Creating statement3
@@ -406,7 +406,7 @@ Computation* Eval_Spline_f_Computation(){
   findSegArgs.push_back("$Spline.accel$");
 
   // Return values are stored in a struct of the AppendComputationResult data structure
-  AppendComputationResult fSegCompRes = EvalSplineFComputation->appendComputation(FindSegmentComputation, "{[0]}", "{[0]->[0, 0, 0]}", findSegArgs);
+  AppendComputationResult fSegCompRes = EvalSplineFComputation->appendComputation(FindSegmentComputation, "{[0]}", "{[0]->[0]}", findSegArgs);
 
   EvalSplineFComputation->addDataSpace("$k$");
   //Creating s1
