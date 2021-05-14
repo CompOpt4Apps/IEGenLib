@@ -476,9 +476,22 @@ AppendComputationResult Computation::appendComputation(
             newExecTuple.copyTupleElem(appendExecTuple, i, currentTuplePos++);
         }
 
-        // create new execution schedule Relation using (only) the new tuple
-        newStmt->setExecutionSchedule(
-            "{" + newExecTuple.toString(true, newExecInArity) + "}");
+        // create new execution schedule Relation using the new tuple
+        Relation* newExecSchedule = new Relation(newExecInArity, newExecOutArity);
+        Conjunction* newExecScheduleConj = new Conjunction(newExecTuple);
+        newExecScheduleConj->setInArity(newExecInArity);
+        // if there are iterators, add equality constraints between iterators in input and output tuples
+        if (!newExecTuple.elemIsConst(0)) {
+            for (unsigned int i = 0; i < newExecInArity; ++i) {
+                Exp* equality = new Exp();
+                equality->setEquality();
+                equality->addTerm(new TupleVarTerm(1, i));
+                equality->addTerm(new TupleVarTerm(-1, newExecInArity + i*2 + 1));
+                newExecScheduleConj->addEquality(equality);
+            }
+        }
+        newExecSchedule->addConjunction(newExecScheduleConj);
+        newStmt->setExecutionSchedule(newExecSchedule);
 
         /* Data reads */
         for (unsigned int i = 0; i < appendeeStmt->getNumReads(); ++i) {
