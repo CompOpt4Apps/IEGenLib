@@ -603,6 +603,10 @@ bool Computation::activeStatementComparator(const std::pair<int,Set*>& a,
 //  statement s2
 //  \param s1 First statement.
 //  \param s2 Second statement getting rescheduled.
+//! Function reschudles statment s1 to come before 
+//  statement s2
+//  \param s1 First statement.
+//  \param s2 Second statement getting rescheduled.
 void Computation::reschedule(int s1, int s2){
     if (s1 >= stmts.size() || s1 < 0 || s2 >= stmts.size()
 		    || s2 < 0){
@@ -634,29 +638,105 @@ void Computation::reschedule(int s1, int s2){
     std::sort(newIS.begin(),newIS.end(),
 		    Computation::activeStatementComparator);
     
-    // Find split level.
-    // Should detect if reschedule is not possible.
+    //TODO: take another pass to correctly rename 
+    //      variables in the algorithm. 
+
     int splitLevel = 0;
     bool isFirst  = false;
-    
-    for(i  = 0 ; i < s1Set->getTupleDecl().getSize(); i++){
-       if (s1Set->getTupleDecl().elemToString(i,true)!=
-                s2Set->getTupleDecl().elemToString(i,true)){
+    TupleDecl s1Tuple =  s1Set->getTupleDecl();
+    TupleDecl s2Tuple =  s2Set->getTupleDecl();
+    int s1PVal = -1;
+    int s2PVal = -1;
+    for(i  = 0 ; i < s1Tuple.getSize(); i++){
+        if (s1Tuple.elemToString(i,true)!=
+                s2Tuple.elemToString(i,true)){
 	    splitLevel = i;
+            s1PVal = s1Tuple.elemConstVal(i);
+	    s2PVal = s2Tuple.elemConstVal(i);  
 	    break;
 	}
     }
-    // Create a relation to let s1 have s2's schedule
+    std::string prefix = "t";
+    // Construct new relation for s1
+    TupleDecl newInputTuple (s1Tuple.size());
+    TupleDecl newOutputTuple (s1Tuple.size());
+    for(int j = 0; j < newInputTuple.size(); j++){
+        newInputTuple.setTupleElem(j,prefix+std::to_string(j));
+	std::string outTupleVar= prefix+std::to_string(j);
+	// Use a different tuple variable for output
+	// if it is the split level.
+	// Example:
+	// {[t0,t1,t2,t3] -> [t0,t1p,tp2,tp3]} 
+	// t1p for a split level of 1
+	if(j == splitLevel){
+            outTupleVar+="p";
+	}
+	newOutputTuple.setTupleElem(j,outTupleVar);
+    }
     
-    Relation * r = 
-	    new Relation("{"+ s1Set->getTupleDecl().toString(true,0,true) + "->"
-			   +s2Set->getTupleDecl().toString(true,0,true) +" }");
     
+    int newS1PositionVal = s2Tuple.elemConstVal(splitLevel) - 1;
+    if (newS1PositionVal < 0){ 
+        newS1PositionVal  = 0;
+    }
+
+    // Create constraint for new position of S1
+    std::string constraint = newOutputTuple.elemVarString(splitLevel)
+	    +" + "+ newInputTuple.elemVarString(splitLevel)+ 
+	     " - "+ std::to_string(s1PVal)+ " = "+
+	     std::to_string(newS1PositionVal);  
+
+    std::string rString ="{"+ newInputTuple.toString(true,0,false) + "->"
+			   +newOutputTuple.toString(true,0,false) +
+			   +": "+constraint+" }";
+    Relation * rS1 = 
+	    new Relation(rString);
+    // Adds s1's transformation
+    addTransformation(s1,rS1); 
 
     // Now go through each statement and update 
     // statment's siblings at that level.
     for(std::pair<int,Set*> p : newIS ){
-        
+        // Ignore s1 
+	if (p.first == s1)
+            continue;
+        // Check if this statement is a sibling
+	// to s1 and s2.
+	if (splitLevel - 1 >= 0 && 
+	    p.second->getTupleDecl().elemToString(splitLevel-1)!=
+	    s1Tuple.elemToString(splitLevel-1)){
+            continue;
+        }
+	
+        int val = p.second->getTupleDecl().elemConstVal(splitLevel);     
+	// if s1 is lexicagrphically less than s2
+        if (s1PVal < s2PVal){
+	    if (val <= newS1PositionVal && val > s1PVal){
+	        constraint = newOutputTuple.elemVarString(splitLevel)
+	 	        +" = "+ newInputTuple.elemVarString(splitLevel)+ 
+		        " - 1";  
+	        std::string rSiString =  
+		        "{"+ newInputTuple.toString(true,0,false) + "->"
+			    +newOutputTuple.toString(true,0,false) +
+			    +": "+constraint+" }";
+	        Relation* rSi = new Relation(rSiString); 
+                addTransformation(p.first,rSi);
+	    }
+	} else{
+	    // if s1 is lexicographically greater than s2
+            if (val >= s2PVal && val < s1PVal){
+	        constraint = newOutputTuple.elemVarString(splitLevel)
+	 	        +" = "+ newInputTuple.elemVarString(splitLevel)+ 
+		        " + 1";  
+	        std::string rSiString =  
+		        "{"+ newInputTuple.toString(true,0,false) + "->"
+			    +newOutputTuple.toString(true,0,false) +
+			    +": "+constraint+" }";
+	        Relation* rSi = new Relation(rSiString); 
+                addTransformation(p.first,rSi);
+	        
+	    }
+	}	
     }
      
 

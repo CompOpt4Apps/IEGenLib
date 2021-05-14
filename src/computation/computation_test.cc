@@ -64,14 +64,15 @@ class ComputationTest : public ::testing::Test {
         vOmegaReplacer->reset();
     }
 
-    void checkTransformation(Computation*comp,
+    void checkRescheduleTransformation(Computation*comp,
 		                  std::vector<std::string> expectedSet){
         std::vector<Set*> transforms=  comp->applyTransformations();
         for(int i =0 ; i < transforms.size() ; i++){
 	    Set* s = transforms[i];
 	    Set* expected= new Set(expectedSet[i]);
 	    SCOPED_TRACE(("S"+std::to_string(i)).c_str());
-	    EXPECT_EQ(expected->prettyPrintString(),s->prettyPrintString());
+	    // Check if they are lexicographically equal.
+	    EXPECT_TRUE(*expected==*s);
 	    delete s;
 	    delete expected;
 	}	
@@ -143,7 +144,7 @@ class ComputationTest : public ::testing::Test {
     }
     
     void checkToDotString(Computation* comp, std::string expectedDot){
-        EXPECT_EQ(comp->toDotString(),expectedDot);
+        EXPECT_EQ(expectedDot, comp->toDotString());
     }
 
     //! EXPECT with gTest that two Computations are equal, component by component.
@@ -805,17 +806,23 @@ TEST_F(ComputationTest, RescheduleUnitTest){
     
     // Reschedule statement S0 to come just before S2
     comp->reschedule(0,2);
-    checkTransformation(comp, 
-		    {"{[1,i,0,0,0]:0 <= i && i < NR}",
-		    "{[0,i,0,0,0]:0 <= i && i < NR}",
-		    "{[2,i,0,0,0]:0 <= i && i < NR}"});
+    checkRescheduleTransformation(comp, 
+		    {"{[1,t1,0,0,0]:0 <= t1 && t1 < NR}",
+		    "{[0,t1,0,0,0]:0 <= t1 && t1 < NR}",
+		    "{[2,t1,0,0,0]:0 <= t1 && t1 < NR}"});
 
     // Reschedule statement S1 to come just before S2
     comp->reschedule(1,2);
     
-    checkTransformation(comp, 
-		    {"{[0,i,0,0,0]:0 <= i && i < NR}",
-		    "{[1,i,0,0,0]:0 <= i && i < NR}",
-		    "{[2,i,0,0,0]:0 <= i && i < NR}"});
-   
+    checkRescheduleTransformation(comp, 
+		   {"{[0,t1,0,0,0]:0 <= t1 && t1 < NR}",
+		    "{[1,t1,0,0,0]:0 <= t1 && t1 < NR}",
+		    "{[2,t1,0,0,0]:0 <= t1 && t1 < NR}"});
+    
+    // Reschdule statement S2 to come just befoer S0
+    comp->reschedule(2,0);
+    checkRescheduleTransformation(comp,
+                   {"{[1,t1,0,0,0]:0 <= t1 && t1 < NR}",
+		    "{[2,t1,0,0,0]:0 <= t1 && t1 < NR}",
+		    "{[0,t1,0,0,0]:0 <= t1 && t1 < NR}"});
 }
