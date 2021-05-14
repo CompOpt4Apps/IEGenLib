@@ -64,6 +64,19 @@ class ComputationTest : public ::testing::Test {
         vOmegaReplacer->reset();
     }
 
+    void checkTransformation(Computation*comp,
+		                  std::vector<std::string> expectedSet){
+        std::vector<Set*> transforms=  comp->applyTransformations();
+        for(int i =0 ; i < transforms.size() ; i++){
+	    Set* s = transforms[i];
+	    Set* expected= new Set(expectedSet[i]);
+	    SCOPED_TRACE(("S"+std::to_string(i)).c_str());
+	    EXPECT_EQ(expected->prettyPrintString(),s->prettyPrintString());
+	    delete s;
+	    delete expected;
+	}	
+    }
+
     //! attempt to convert the given Relation to Omega format,
     //! EXPECTing that it will equal the given Omega string
     void checkOmegaRelationConversion(std::string iegenRelStr,
@@ -443,6 +456,7 @@ TEST_F(ComputationTest, AppendComputationEmpty) {
     delete comp1, comp2, ecomp;
 }
 
+
 #pragma mark AppendComputationReturnValues
 TEST_F(ComputationTest, AppendComputationReturnValues) {
     Computation* comp1 = new Computation();
@@ -749,4 +763,59 @@ TEST_F(ComputationTest, ToDotUnitTest){
 	      "A->S2[label=\"[i, i]\"]\n\t\ttmp->S2[label=\"[i]\"]\n\t\t"
 	      "u->S2[label=\"[i]\"]\n\t\t"
 	      "S2->u[label=\"[i]\"]\n}");
+    delete comp;
+}
+
+
+TEST_F(ComputationTest, RescheduleUnitTest){
+    Computation * comp = new Computation();
+    //S0
+    comp->addStmt(new Stmt("u[i] =  A[i][i]",
+		"{[i]: 0 <= i && i < NR}",
+		"{[i] -> [0,i,0,0,0]}",
+		{
+		   {"A", "{[i] -> [i,i]}"}
+		},
+		{
+		   {"u","{[i]->[i]}"},
+		}));
+    //S1
+    comp->addStmt(new Stmt("t[i] =  A[i][i]",
+		"{[i]: 0 <= i && i < NR}",
+		"{[i] -> [1,i,0,0,0]}",
+		{
+		   {"A", "{[i] -> [i,i]}"}
+		},
+		{
+		   {"t","{[i]->[i]}"},
+		}));
+    //S2
+    comp->addStmt(new Stmt("t[i] =  A[i][i]",
+		"{[i]: 0 <= i && i < NR}",
+		"{[i] -> [2,i,0,0,0]}",
+		{
+		   {"A", "{[i] -> [i,i]}"}
+		},
+		{
+		   {"t","{[i]->[i]}"},
+		}));
+
+    // Test out of bounds.
+    EXPECT_ANY_THROW(comp->reschedule(-5,10));
+    
+    // Reschedule statement S0 to come just before S2
+    comp->reschedule(0,2);
+    checkTransformation(comp, 
+		    {"{[1,i,0,0,0]:0 <= i && i < NR}",
+		    "{[0,i,0,0,0]:0 <= i && i < NR}",
+		    "{[2,i,0,0,0]:0 <= i && i < NR}"});
+
+    // Reschedule statement S1 to come just before S2
+    comp->reschedule(1,2);
+    
+    checkTransformation(comp, 
+		    {"{[0,i,0,0,0]:0 <= i && i < NR}",
+		    "{[1,i,0,0,0]:0 <= i && i < NR}",
+		    "{[2,i,0,0,0]:0 <= i && i < NR}"});
+   
 }

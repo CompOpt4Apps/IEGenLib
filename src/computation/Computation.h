@@ -177,8 +177,26 @@ class Computation {
     //! Method returns omega strings for each statement
     std::string toOmegaString();
     
-   std::vector<std::vector<std::pair<int,Set*> > > split
+
+    //! Function compares two statement pair 
+    //  and returns the true if a is lexicographically 
+    //  lower in order to b. 
+    static bool activeStatementComparator(const std::pair<int,Set*>& a, 
+		   const std::pair<int,Set*>& b);
+    
+    //! Function splits an active statement to disjoint
+    //! list of statements.
+    //  \param   level
+    //  \param   activeStmt current active statements.
+    std::vector<std::vector<std::pair<int,Set*> > > split
 	    (int level, std::vector<std::pair<int,Set*> >& activeStmt);
+   
+    //! Function reschudles statment s1 to come before 
+    //  statement s2
+    //  \param s1 First statement.
+    //  \param s2 Second statement getting rescheduled.
+    void reschedule(int s1, int s2);
+   
    private:
     
     //! Lite version of polyhedra scanning to generate 
@@ -186,6 +204,7 @@ class Computation {
     void toDotScan(std::vector<std::pair<int,Set*>> &activeStmts, int level,
 		    std::ostringstream& ss ,
 		    std::vector<std::vector<Set*> >&projectedIS);
+    
     
     //! Information on all statements in the Computation
     std::vector<Stmt*> stmts;

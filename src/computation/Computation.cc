@@ -590,6 +590,80 @@ AppendComputationResult Computation::appendComputation(
     return result;
 }
 
+//! Function compares two statement pair 
+//  and returns the true if a is lexicographically 
+//  lower in order to b. 
+bool Computation::activeStatementComparator(const std::pair<int,Set*>& a, 
+		    const std::pair<int,Set*>& b){
+    return (*a.second) < (*b.second);
+}
+
+
+//! Function reschudles statment s1 to come before 
+//  statement s2
+//  \param s1 First statement.
+//  \param s2 Second statement getting rescheduled.
+void Computation::reschedule(int s1, int s2){
+    if (s1 >= stmts.size() || s1 < 0 || s2 >= stmts.size()
+		    || s2 < 0){
+        throw assert_exception("s1 & s2 must be in bounds ");
+    }
+
+    if (s1 == s2){
+        throw assert_exception("s1 cannot be s2"); 
+    }
+    // newIS is a list of pairs of statement id
+    // to their transformed spaces.
+    std::vector<std::pair<int,Set*> > newIS;
+    
+    int i = 0;
+    std::vector<Set*> transformedSpaces = applyTransformations();
+    Set * s1Set = nullptr;
+    Set * s2Set = nullptr;
+    for(Set* set : transformedSpaces){
+	newIS.push_back(std::make_pair(i,set));
+	if(s1 == i){
+	    s1Set = set;
+	}
+	if(s2 == i){
+	    s2Set = set;
+	}
+        i++;
+    }
+    // Sort by lexicographical order
+    std::sort(newIS.begin(),newIS.end(),
+		    Computation::activeStatementComparator);
+    
+    // Find split level.
+    // Should detect if reschedule is not possible.
+    int splitLevel = 0;
+    bool isFirst  = false;
+    
+    for(i  = 0 ; i < s1Set->getTupleDecl().getSize(); i++){
+       if (s1Set->getTupleDecl().elemToString(i,true)!=
+                s2Set->getTupleDecl().elemToString(i,true)){
+	    splitLevel = i;
+	    break;
+	}
+    }
+    // Create a relation to let s1 have s2's schedule
+    
+    Relation * r = 
+	    new Relation("{"+ s1Set->getTupleDecl().toString(true,0,true) + "->"
+			   +s2Set->getTupleDecl().toString(true,0,true) +" }");
+    
+
+    // Now go through each statement and update 
+    // statment's siblings at that level.
+    for(std::pair<int,Set*> p : newIS ){
+        
+    }
+     
+
+
+}
+
+
 //! Function returns a dot string representing nesting
 //  and loop carrie dependency. Internally it uses
 //  a lite version of polyhedral scanning to generate
@@ -597,34 +671,37 @@ AppendComputationResult Computation::appendComputation(
 //
 std::string Computation::toDotString(){
 
-    
-    // First apply all transformations to a clone of computation.
-    std::vector<std::pair<int,Set*> > newIS;
     std::ostringstream ss;
     //TODO: Deal with disjunction of cunjunctions later.
+    
+    // newIS is a list of pairs of statement id
+    // to their transformed spaces.
+    std::vector<std::pair<int,Set*> > newIS;
+    
     int i = 0;
-    for(Stmt* st : stmts){
-        Set* appSet = st->getExecutionSchedule()->Apply(
-			st->getIterationSpace());
-	newIS.push_back(std::make_pair(i,appSet));
+    std::vector<Set*> transformedSpaces = applyTransformations();
+    for(Set* set : transformedSpaces){
+	newIS.push_back(std::make_pair(i,set));
         i++;
     }
-    // TODO: Sort statements by lexicographical order
-    // just in case some transformation has happend some
-    // where.
-
+    // Sort by lexicographical order
+    std::sort(newIS.begin(),newIS.end(),
+		    Computation::activeStatementComparator);
+    
     int maxLevel = newIS[0].second->arity();
     std::vector<std::vector<Set*> > projectedIS(maxLevel);
     
     for(int i = 0 ; i < maxLevel; i++ ){
         projectedIS[i] = std::vector<Set*>(newIS.size());
     }
-    //TODO: Move deletiing of active statements to
+    //TODO: Move deletiing of active statement's set pointersto
     //      toDotScan. This is because overlapping 
     //      statements might result to new disjoint
     //      active iteration spaces of the same statement.
     //      and these disjoint active statements cannot
-    //      be seen at this point.
+    //      be seen at this point. Or use unique pointers
+    //      to help delete when sets get out of scope. 
+    //      Easier way. :) 
     for(int i = 0; i < stmts.size(); i++){
         if (maxLevel > 0)
             projectedIS[maxLevel-1][i] = newIS[i].second;
@@ -633,9 +710,6 @@ std::string Computation::toDotString(){
 	    projectedIS[j -1][i] = projectedIS[j][i]->projectOut(j);   
 	}
     }
-    omega::BoolSet<>active;
-    active.set_all();
-    Set * restriction  = new Set(maxLevel);
     ss << "digraph dataFlowGraph_1{ \n";
     toDotScan(newIS,0,ss,projectedIS);
     // Cleanup.
@@ -832,6 +906,7 @@ std::string Computation::codeGen(Set* knownConstraints) {
     std::ostringstream stmtMacroUndefs;
     std::ostringstream stmtMacroDefs;
     int stmtCount = 0;
+    std::vector<Set*> newIS = applyTransformations();
     for (const auto& stmt : stmts) {
 
 
@@ -839,8 +914,7 @@ std::string Computation::codeGen(Set* knownConstraints) {
 	// be performed first before the set is sent
 	// to omega. This is a temporary solution to
 	// circumvent Omega's schedulling bug.
-        Set * iterSpace = stmt->getExecutionSchedule()->
-		Apply(stmt->getIterationSpace());
+        Set * iterSpace = newIS[stmtCount];
 	iterSpace->acceptVisitor(vOmegaReplacer);
 	std::string tupleString =
             iterSpace->getTupleDecl().toString();
