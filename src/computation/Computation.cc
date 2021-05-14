@@ -856,7 +856,7 @@ std::string Computation::codeGen(Set* knownConstraints) {
         std::string omegaIterString =
             iterSpace->toOmegaString(vOmegaReplacer->getUFCallDecls());
         omega::Relation* omegaIterSpace =
-            omega::parser::ParseRelation(omegaIterString);
+            omega::parser::ParseRelation(iegenlib::replaceInString(omegaIterString, "$", ""));
 
         iterSpaces.push_back(omega::copy(*omegaIterSpace));
 	// Use identity transformation instead.
