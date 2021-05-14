@@ -38,6 +38,7 @@ int main(int argc, char **argv){
   // Return values are stored in a struct of the computation: AppendComputationResult
   AppendComputationResult cCompRes = temp->appendComputation(cComputation, "{[0]}", "{[0]->[0]}", cCompArgs);
 
+  temp->addDataSpace("$sources.c$");
   //Creating s1
   //sources.c = c(r,theta,phi,spl.Temp_Spline);
   Stmt*s1 = new Stmt("$sources.c$ = "+cCompRes.returnValues.back()+";", 
@@ -46,9 +47,14 @@ int main(int argc, char **argv){
       {{cCompRes.returnValues.back(), "{[0]->[0]}"}},
       {{"$sources.c$", "{[0]->[0]}"}}
       );
+  cout << "Source statement : " << s1->getStmtSourceCode() << "\n\t"
+    <<"- Iteration Space : "<< s1->getIterationSpace()->prettyPrintString() << "\n\t"
+    << "- Execution Schedule : "<< s1->getExecutionSchedule()->prettyPrintString() << "\n\t" ;
+
   
   temp->addStmt(s1);
 
+  /*
   //Creating s2
   //sources.w = w(r,theta,phi); The w function always return 0!
   Stmt*s2 = new Stmt("$sources.w$ = 0;", 
@@ -104,19 +110,20 @@ int main(int argc, char **argv){
   AppendComputationResult uCompRes = temp->appendComputation(uComputation, "{[0]}", "{[0]->["+std::to_string(vCompRes.tuplePosition+2)+"]}", uCompArgs);
 
 
-  // Computation* EvalSplineF = Eval_Spline_f_Computation();
+  Computation* EvalSplineF = Eval_Spline_f_Computation();
   
-  // vector < pair<string, string> > dataReads;
-  // vector < pair<string, string> > dataWrites;
-  //Statement 1 = {"C","[k]->[k]"};
-  //dataReads.push_back(make_pair(" "," "));
-  //dataWrites.push_back(make_pair("C","{[k]->[k]}"));
+  vector < pair<string, string> > dataReads;
+  vector < pair<string, string> > dataWrites;
+  Statement 1 = {"C","[k]->[k]"};
+  dataReads.push_back(make_pair(" "," "));
+  dataWrites.push_back(make_pair("C","{[k]->[k]}"));
 
 
-  //cout << FindSegment.codeGen() <<endl;
-
-  //Calling toDot() on the Computation structure
+  cout << FindSegment.codeGen() <<endl;
+  */
+  
   /*
+  //Calling toDot() on the Computation structure
   fstream dotFileStream;
   cout << "Entering toDot()" << "\n";
   temp->toDot(dotFileStream,"c_dot.txt");
@@ -130,6 +137,42 @@ int main(int argc, char **argv){
 
   return 0;
 }
+
+
+/*
+double c_diff(double r, double theta, double phi, int n, NaturalCubicSpline_1D &Temp_Spline){
+    double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);    // Check that r_min <= r_eval <= r_max
+    
+    if(n==0){   return gamR / (2.0 * c(r,theta,phi, Temp_Spline)) * Eval_Spline_df(r_eval,Temp_Spline);}
+    else {      return 0.0;}
+}
+*/
+Computation* c_diff_Computation(){
+  Computation* cDiffComputation = new Computation();
+  cDiffComputation->addParameter("$r$","double");
+  cDiffComputation->addParameter("$theta$","double");
+  cDiffComputation->addParameter("$phi$","double");
+  cDiffComputation->addParameter("$n$","int");
+  cDiffComputation->addParameter("$Temp_Spline$","NaturalCubicSpline_1D &");
+
+  //Creating statement1
+  //double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);
+  Stmt* s1 = new Stmt("double $r_eval$ = min($r$, r_max); $r_eval$ = max($r_eval$, r_min)",
+      "{[0]}",  //Iteration schedule - Only happening one time (not iterating)
+      "{[0]->[0, 0, 0]}", //Execution schedule - scheduling statement to be first (scheduling function)
+      {{"$r$","{[0]->[0]}"},{"$r_eval$","{[0]->[0]}"}}, //Data reads
+      {{"$r_eval$","{[0]->[0]}"}} //Data writes
+      );
+  cout << "Source statement : " << s1->getStmtSourceCode() << "\n\t"
+    <<"- Iteration Space : "<< s1->getIterationSpace()->prettyPrintString() << "\n\t"
+    << "- Execution Schedule : "<< s1->getExecutionSchedule()->prettyPrintString() << "\n\t" ;
+
+  //Adding statement1
+  cDiffComputation->addStmt(s1);
+  
+  return cDiffComputation;
+}
+
 
 
 /*
@@ -148,7 +191,7 @@ Computation* u_Computation(){
   UComputation->addParameter("$Windu_Spline$","NaturalCubicSpline_1D &");
 
   //Creating statement1
-  //double r_eval = min(r, r_max);
+  //double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);
   Stmt* s1 = new Stmt("double $r_eval$ = min($r$, r_max); $r_eval$ = max($r_eval$, r_min)",
       "{[0]}",  //Iteration schedule - Only happening one time (not iterating)
       "{[0]->[0, 0, 0]}", //Execution schedule - scheduling statement to be first (scheduling function)
@@ -159,7 +202,7 @@ Computation* u_Computation(){
     <<"- Iteration Space : "<< s1->getIterationSpace()->prettyPrintString() << "\n\t"
     << "- Execution Schedule : "<< s1->getExecutionSchedule()->prettyPrintString() << "\n\t" ;
 
-  //Adding statement2
+  //Adding statement1
   UComputation->addStmt(s1);
 
   //Args to the Eval_Spline_f_Computation
@@ -195,7 +238,7 @@ Computation* v_Computation(){
   VComputation->addParameter("$Windv_Spline$","NaturalCubicSpline_1D &");
 
   //Creating statement1
-  //double r_eval = min(r, r_max);
+  //double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);
   Stmt* s1 = new Stmt("double $r_eval$ = min($r$, r_max); $r_eval$ = max($r_eval$, r_min)",
       "{[0]}",  //Iteration schedule - Only happening one time (not iterating)
       "{[0]->[0, 0, 0]}", //Execution schedule - scheduling statement to be first (scheduling function)
@@ -206,7 +249,7 @@ Computation* v_Computation(){
     <<"- Iteration Space : "<< s1->getIterationSpace()->prettyPrintString() << "\n\t"
     << "- Execution Schedule : "<< s1->getExecutionSchedule()->prettyPrintString() << "\n\t" ;
 
-  //Adding statement2
+  //Adding statement1
   VComputation->addStmt(s1);
 
   //Args to the Eval_Spline_f_Computation
@@ -233,9 +276,9 @@ Computation* v_Computation(){
     //cout << "c: r_max = " << r_max << ", r_min = " << r_min << ", gamR = " << gamR << endl;
     double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);    // Check that r_min <= r_eval <= r_max
     //cout << "c: r_eval = " << r_eval << endl;
-    double result = sqrt(gamR * Eval_Spline_f(r_eval,Temp_Spline));
-    //cout << "c: result = " << result << endl;
-    return result;
+    double c_result = sqrt(gamR * Eval_Spline_f(r_eval,Temp_Spline));
+    //cout << "c: result = " << c_result << endl;
+    return c_result;
   }
 */
 Computation* c_Computation(){
@@ -246,8 +289,10 @@ Computation* c_Computation(){
   CComputation->addParameter("$phi$","double");
   CComputation->addParameter("$Temp_Spline$","NaturalCubicSpline_1D &");
 
+  //Add data space explicitly to the computation
+  CComputation->addDataSpace("$r_eval$");
   //Creating statement1
-  //double r_eval = min(r, r_max);
+  //double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);
   Stmt* s1 = new Stmt("double $r_eval$ = min($r$, r_max);",
       "{[0]}",  //Iteration schedule - Only happening one time (not iterating)
       "{[0]->[0, 0, 0]}", //Execution schedule - scheduling statement to be first (scheduling function)
@@ -288,14 +333,14 @@ Computation* c_Computation(){
   // Return values are stored in a struct of the computation: AppendComputationResult
   AppendComputationResult eSpFCompRes = CComputation->appendComputation(EvalSplineFComputation, "{[0]}","{[0]->[2, 0, 0]}",eSpFArgs);
 
-
+  CComputation->addDataSpace("$c_result$");
   //Creating statement3
-  //double result = sqrt(gamR * Eval_Spline_f(r_eval,Temp_Spline));
-  Stmt* s3 = new Stmt("double $result$ = sqrt(gamR * "+eSpFCompRes.returnValues.back()+");",
+  //double c_result = sqrt(gamR * Eval_Spline_f(r_eval,Temp_Spline));
+  Stmt* s3 = new Stmt("double $c_result$ = sqrt(gamR * "+eSpFCompRes.returnValues.back()+");",
       "{[0]}",  //Iteration schedule - Only happening one time (not iterating)
       "{[0]->["+std::to_string(eSpFCompRes.tuplePosition+1)+", 0, 0]}", //Execution schedule - scheduling statement to be first (scheduling function)
       {{eSpFCompRes.returnValues.back(), "{[0]->[0]}"}}, //Data reads
-      {{"$result$", "{[0]->[0]}"}} //Data writes
+      {{"$c_result$", "{[0]->[0]}"}} //Data writes
       );
   cout << "Source statement : " << s3->getStmtSourceCode() << "\n\t"
     <<"- Iteration Space : "<< s3->getIterationSpace()->prettyPrintString() << "\n\t"
@@ -303,7 +348,7 @@ Computation* c_Computation(){
 
   //Adding statement3b
   CComputation->addStmt(s3);
-  CComputation->addReturnValue("$result$", true);
+  CComputation->addReturnValue("$c_result$", true);
 
   
   return CComputation;
@@ -363,6 +408,7 @@ Computation* Eval_Spline_f_Computation(){
   // Return values are stored in a struct of the AppendComputationResult data structure
   AppendComputationResult fSegCompRes = EvalSplineFComputation->appendComputation(FindSegmentComputation, "{[0]}", "{[0]->[0, 0, 0]}", findSegArgs);
 
+  EvalSplineFComputation->addDataSpace("$k$");
   //Creating s1
   Stmt* s1a = new Stmt("int $k$ = "+fSegCompRes.returnValues.back()+";",
       "{[0]}",  //Iteration schedule - Only happening one time (not iterating)
@@ -377,6 +423,8 @@ Computation* Eval_Spline_f_Computation(){
   //Adding s1
   EvalSplineFComputation->addStmt(s1a);
 
+
+  EvalSplineFComputation->addDataSpace("$result$");
   //Creating s2
   Stmt* s2 = new Stmt("double $result$ = 0.0;",
       "{[0]}",  //Iteration schedule - Only happening one time (not iterating)
@@ -391,11 +439,17 @@ Computation* Eval_Spline_f_Computation(){
   //Adding s2
   EvalSplineFComputation->addStmt(s2);  
 
+  EvalSplineFComputation->addDataSpace("$X$");
+  EvalSplineFComputation->addDataSpace("$A$");
+  EvalSplineFComputation->addDataSpace("$B$");
+  EvalSplineFComputation->addDataSpace("$Spline.slopes$");
+  EvalSplineFComputation->addDataSpace("$Spline.f_vals$");
+
   //Creating s3 --> the entire if block, slightly modified
   Stmt* s3 = new Stmt("if($k$ < $Spline.length$) { double $X$ = ($x$ - $Spline.x_vals$[k])/($Spline.x_vals$[k+1] - $Spline.x_vals$[k]); double $A$ = $Spline.slopes$[k] * ($Spline.x_vals$[k+1] - $Spline.x_vals$[k]) - ($Spline.f_vals$[k+1] - $Spline.f_vals$[k]); double $B$ = -$Spline.slopes$[k+1] * ($Spline.x_vals$[k+1] - $Spline.x_vals$[k]) + ($Spline.f_vals$[k+1] - $Spline.f_vals$[k]); $result$ = (1.0 - $X$) * $Spline.f_vals$[k] + $X$ * $Spline.f_vals$[k+1] + $X$ * (1.0 - $X$) * ($A$ * (1.0 - $X$ ) + $B$ * $X$);}",
       "{[0]}",  //Iteration schedule - Only happening one time (not iterating)
       "{[0]->["+std::to_string(fSegCompRes.tuplePosition+3)+", 0, 0]}", //Execution schedule - scheduling statement to be first (scheduling function)
-      {{"$x$","{[0]->[0]}"}, {"Spline.x_vals","{[k]->[k]}"}, {"$Spline.x_vals$","{[k]->[kp1]: kp1 = k+1}"}, 
+      {{"$k$","{[0]->[0]}"}, {"$x$","{[0]->[0]}"}, {"Spline.x_vals","{[k]->[k]}"}, {"$Spline.x_vals$","{[k]->[kp1]: kp1 = k+1}"}, 
        {"$Spline.slopes$","{[k]->[k]}"}, {"$Spline.f_vals$","{[k]->[k]}"}, {"$Spline.f_vals$","{[k]->[kp1]: kp1 = k+1}"}, 
        {"$Spline.slopes$","{[k]->[kp1]: kp1 = k+1}"}, 
        {"$X$","{[0]->[0]}"}, {"$A$","{[0]->[0]}"}, {"$B$","{[0]->[0]}"}},//Data reads
@@ -436,7 +490,7 @@ Computation* Find_Segment_Computation(){
   //Creating s0
   //if(x >= x_vals[i] && x <= x_vals[i+1]) prev = i;
   Stmt*  s0 = new Stmt("if($x$ >= $x_vals$[i] && $x$ <= $x_vals$[i+1]) $prev$ = i;",
-      "{[i]: i>=0 && i<length}",  //Iteration schedule - Only happening one time (not iterating)
+      "{[i]: i>=0 && i<$length$}",  //Iteration schedule - Only happening one time (not iterating)
       "{[i]->[0, i, 0]}", //Execution schedule - scheduling statement to be first (scheduling function)
       {{"$x$","{[0]->[0]}"}, {"$x_vals$","{[i]->[i]}"}, {"$x_vals$","{[i]->[ip1]: ip1 = i+1}"}}, //Reads
       {{"$prev$","{[0]->[0]}"}}   //writes
