@@ -748,8 +748,10 @@ void Computation::reschedule(int s1, int s2){
 	}	
     }
      
-
-
+    
+    for(Set* set : transformedSpaces){
+        delete set;
+    }
 }
 
 
