@@ -64,6 +64,11 @@ class ComputationTest : public ::testing::Test {
         vOmegaReplacer->reset();
     }
 
+    //! Check if a reschedule transformation is valid.
+    //! \param comp        Computation
+    //! \param expectedSet List of sets and each set element must have 
+    //                     the same lexicographical ordering with applied
+    //                     transformations on the statements in comp.
     void checkRescheduleTransformation(Computation*comp,
 		                  std::vector<std::string> expectedSet){
         std::vector<Set*> transforms=  comp->applyTransformations();

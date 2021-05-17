@@ -614,12 +614,8 @@ bool Computation::activeStatementComparator(const std::pair<int,Set*>& a,
 
 //! Function reschudles statment s1 to come before 
 //  statement s2
-//  \param s1 First statement.
-//  \param s2 Second statement getting rescheduled.
-//! Function reschudles statment s1 to come before 
-//  statement s2
-//  \param s1 First statement.
-//  \param s2 Second statement getting rescheduled.
+//  \param s1 First statement Id
+//  \param s2 Second statement Id.
 void Computation::reschedule(int s1, int s2){
     if (s1 >= stmts.size() || s1 < 0 || s2 >= stmts.size()
 		    || s2 < 0){
