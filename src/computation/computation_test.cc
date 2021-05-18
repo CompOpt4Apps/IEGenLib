@@ -64,19 +64,23 @@ class ComputationTest : public ::testing::Test {
         vOmegaReplacer->reset();
     }
 
-    //! Check if a reschedule transformation is valid.
+    //! Tests if a transformation is valid.
     //! \param comp        Computation
-    //! \param expectedSet List of sets and each set element must have 
-    //                     the same lexicographical ordering with applied
-    //                     transformations on the statements in comp.
-    void checkRescheduleTransformation(Computation*comp,
+    //! \param expectedSet Transformations apply to each of the statement
+    //                     internally, and these statements are indexed from
+    //                     zero to N-1 where N is the number of statements.
+    //                     Transformation affect statemennts in a computation
+    //                     This paramter is the expected result of an applied
+    //                     transformation on each statement. Each set in the 
+    //                     vector represent the corresponding result of 
+    //                     transformation on a statement id. 
+    void checkTransformation(Computation*comp,
 		                  std::vector<std::string> expectedSet){
         std::vector<Set*> transforms=  comp->applyTransformations();
         for(int i =0 ; i < transforms.size() ; i++){
 	    Set* s = transforms[i];
 	    Set* expected= new Set(expectedSet[i]);
 	    SCOPED_TRACE(("S"+std::to_string(i)).c_str());
-	    // Check if they are lexicographically equal.
 	    EXPECT_TRUE(*expected==*s);
 	    delete s;
 	    delete expected;
@@ -811,7 +815,7 @@ TEST_F(ComputationTest, RescheduleUnitTest){
     
     // Reschedule statement S0 to come just before S2
     comp->reschedule(0,2);
-    checkRescheduleTransformation(comp, 
+    checkTransformation(comp, 
 		    {"{[1,t1,0,0,0]:0 <= t1 && t1 < NR}",
 		    "{[0,t1,0,0,0]:0 <= t1 && t1 < NR}",
 		    "{[2,t1,0,0,0]:0 <= t1 && t1 < NR}"});
@@ -819,15 +823,78 @@ TEST_F(ComputationTest, RescheduleUnitTest){
     // Reschedule statement S1 to come just before S2
     comp->reschedule(1,2);
     
-    checkRescheduleTransformation(comp, 
+    checkTransformation(comp, 
 		   {"{[0,t1,0,0,0]:0 <= t1 && t1 < NR}",
 		    "{[1,t1,0,0,0]:0 <= t1 && t1 < NR}",
 		    "{[2,t1,0,0,0]:0 <= t1 && t1 < NR}"});
     
     // Reschdule statement S2 to come just befoer S0
     comp->reschedule(2,0);
-    checkRescheduleTransformation(comp,
+    checkTransformation(comp,
                    {"{[1,t1,0,0,0]:0 <= t1 && t1 < NR}",
 		    "{[2,t1,0,0,0]:0 <= t1 && t1 < NR}",
 		    "{[0,t1,0,0,0]:0 <= t1 && t1 < NR}"});
+    delete comp;
+}
+
+
+
+TEST_F(ComputationTest, FusionUnitTest){
+    Computation* comp = new Computation();
+    //S0
+    comp->addStmt(new Stmt("S0",
+		"{[i,j]: 0 <= i && i < NR && 0 <= j && j < NC}",
+		"{[i,j] -> [0,i,0,j,0]}",
+		{},
+		{}));
+
+    //S1
+    comp->addStmt(new Stmt("S1",
+		"{[i,j]: 0 <= i && i < NR && 0 <= j && j < NQ}",
+		"{[i,j] -> [1,i,0,j,0]}",
+		{},
+		{}));
+
+    //S2
+    comp->addStmt(new Stmt("S2",
+		"{[i,j]: 0 <= i && i < NR && 0 <= j && j < NP}",
+		"{[i,j] -> [2,i,0,j,0]}",
+		{},
+		{}));
+
+
+    //S3
+    comp->addStmt(new Stmt("S3",
+		"{[i,j]: 0 <= i && i < NR && 0 <= j && j < NT}",
+		"{[i,j] -> [3,i,0,j,0]}",
+		{},
+		{}));
+    // Fise statements S0 and S1 at level 2.
+    comp->fuse(0,1,2);
+    checkTransformation(comp, 
+		    {"{[0,t1,0,t2,0]:0 <= t1 && t1 < NR && 0 <= t2 && t2 < NC}",
+		    "{[0,t1,1,t2,0]:0 <= t1 && t1 < NR && 0 <= t2 && t2 < NQ}",
+		    "{[1,t1,0,t2,0]:0 <= t1 && t1 < NR && 0 <= t2 && t2 < NP}",
+		    "{[2,t1,0,t2,0]:0 <= t1 && t1 < NR && 0 <= t2 && t2 < NT}"
+		    });
+
+    // Fuse statements S2 and S3 at level 4
+    comp->fuse(2,3,4);
+    checkTransformation(comp, 
+		    {"{[0,t1,0,t2,0]:0 <= t1 && t1 < NR && 0 <= t2 && t2 < NC}",
+		    "{[0,t1,1,t2,0]:0 <= t1 && t1 < NR && 0 <= t2 && t2 < NQ}",
+		    "{[1,t1,0,t2,0]:0 <= t1 && t1 < NR && 0 <= t2 && t2 < NP}",
+		    "{[1,t1,0,t2,1]:0 <= t1 && t1 < NR && 0 <= t2 && t2 < NT}"
+		    });
+    // Fuse statements S3 and S1 at level 4
+    comp->fuse(3,1,4);
+
+    checkTransformation(comp, 
+		    {"{[0,t1,0,t2,0]:0 <= t1 && t1 < NR && 0 <= t2 && t2 < NC}",
+		    "{[1,t1,1,t2,2]:0 <= t1 && t1 < NR && 0 <= t2 && t2 < NQ}",
+		    "{[1,t1,0,t2,0]:0 <= t1 && t1 < NR && 0 <= t2 && t2 < NP}",
+		    "{[1,t1,0,t2,1]:0 <= t1 && t1 < NR && 0 <= t2 && t2 < NT}"
+		    });
+
+    delete comp;
 }
