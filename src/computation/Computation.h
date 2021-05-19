@@ -78,6 +78,8 @@ class Computation {
     //! **This method should only be used for testing purposes. Using it in
     //! production will cause name conflicts.**
     static void resetNumRenames();
+    //! Get the new name for a data space that has the given prefix applied
+    static std::string getPrefixedDataSpaceName(const std::string& originalName, const std::string& prefix);
 
     //! Add a statement to this Computation.
     //! Statements are numbered sequentially from 0 as they are inserted.
@@ -239,6 +241,9 @@ class Computation {
     //! List of statement transformation lists
     std::vector<std::vector<Relation*>> transformationLists;
 
+    //! Assert that a given string would be a valid data space name, that is, it is properly delimited by $'s
+    static bool assertValidDataSpaceName(const std::string& name);
+
     //! Number of times *any* Computation has been appended into
     //! others, for creating unique name prefixes.
     static unsigned int numRenames;
@@ -290,7 +295,7 @@ class Stmt {
     bool operator==(const Stmt& other) const;
 
     //! Get a copy of this Stmt with the given prefix applied to all names
-    Stmt* getUniquelyNamedClone(std::string prefix, std::unordered_set<std::string> dataSpaceNames) const;
+    Stmt* getUniquelyNamedClone(const std::string& prefix, const std::unordered_set<std::string>& dataSpaceNames) const;
 
     //! Get whether or not all necessary information for this Stmt is set
     bool isComplete() const;
