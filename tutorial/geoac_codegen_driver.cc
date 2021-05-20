@@ -54,7 +54,7 @@ int main(int argc, char **argv){
   
   temp->addStmt(s1);
 
-  /*
+  
   //Creating s2
   //sources.w = w(r,theta,phi); The w function always return 0!
   Stmt*s2 = new Stmt("$sources.w$ = 0;", 
@@ -81,12 +81,14 @@ int main(int argc, char **argv){
   //sources.v = v(r,theta,phi,spl.Temp_Spline);
   Stmt*s3 = new Stmt("$sources.v$ = "+vCompRes.returnValues.back()+";", 
       "{[0]}",
-      "{[0]->["+std::to_string(vCompRes.tuplePosition+1)+", 0, 0]}",
+      "{[0]->["+std::to_string(vCompRes.tuplePosition+1)+"]}",
       {{vCompRes.returnValues.back(), "{[0]->[0]}"}},
       {{"$sources.v$", "{[0]->[0]}"}}
       );
   
   temp->addStmt(s3);
+
+  /*
   //Add the args of the u function (computation to be appended) as data spaces to temp
   //r, theta and phi have already been added
   temp->addDataSpace("$spl.Windu_Spline$");
@@ -229,7 +231,7 @@ Computation* v_Computation(){
   //double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);
   Stmt* s1 = new Stmt("double $r_eval$ = min($r$, r_max); $r_eval$ = max($r_eval$, r_min)",
       "{[0]}",  //Iteration schedule - Only happening one time (not iterating)
-      "{[0]->[0, 0, 0]}", //Execution schedule - scheduling statement to be first (scheduling function)
+      "{[0]->[0]}", //Execution schedule - scheduling statement to be first (scheduling function)
       {{"$r$","{[0]->[0]}"},{"$r_eval$","{[0]->[0]}"}}, //Data reads
       {{"$r_eval$","{[0]->[0]}"}} //Data writes
       );
