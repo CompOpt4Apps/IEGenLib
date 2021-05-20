@@ -651,7 +651,7 @@ void Computation::reschedule(int s1, int s2){
     //      variables in the algorithm. 
 
     int splitLevel = 0;
-    bool isFirst  = false;
+   
     TupleDecl s1Tuple =  s1Set->getTupleDecl();
     TupleDecl s2Tuple =  s2Set->getTupleDecl();
     int s1PVal = -1;
@@ -665,8 +665,11 @@ void Computation::reschedule(int s1, int s2){
 	    break;
 	}
     }
+
+    // Create output and input tuple decl 
+    // that will be used for reschedule 
+    // transformations.
     std::string prefix = "t";
-    // Construct new relation for s1
     TupleDecl newInputTuple (s1Tuple.size());
     TupleDecl newOutputTuple (s1Tuple.size());
     for(int j = 0; j < newInputTuple.size(); j++){
@@ -675,7 +678,7 @@ void Computation::reschedule(int s1, int s2){
 	// Use a different tuple variable for output
 	// if it is the split level.
 	// Example:
-	// {[t0,t1,t2,t3] -> [t0,t1p,tp2,tp3]} 
+	// {[t0,t1,t2,t3] -> [t0,t1p,t2,t3]} 
 	// t1p for a split level of 1
 	if(j == splitLevel){
             outTupleVar+="p";
@@ -694,7 +697,8 @@ void Computation::reschedule(int s1, int s2){
 	    +" + "+ newInputTuple.elemVarString(splitLevel)+ 
 	     " - "+ std::to_string(s1PVal)+ " = "+
 	     std::to_string(newS1PositionVal);  
-
+    
+    // Construct new reiation for s1
     std::string rString ="{"+ newInputTuple.toString(true,0,false) + "->"
 			   +newOutputTuple.toString(true,0,false) +
 			   +": "+constraint+" }";
@@ -705,6 +709,8 @@ void Computation::reschedule(int s1, int s2){
 
     // Now go through each statement and update 
     // statment's siblings at that level.
+    // Should we add unit transformation to statements
+    // not affected by reschedule operation.
     for(std::pair<int,Set*> p : newIS ){
         // Ignore s1 
 	if (p.first == s1)
@@ -762,17 +768,236 @@ void Computation::reschedule(int s1, int s2){
 //  S2, other statements at that level will be adjusted accordingly
 //  so reflect the new changes.
 //
-//  \param s1    first statement id
-//  \param s2    second statement id
-//  \param level Level at which to fuse S1 and S2 
+//  \param s1        first statement id
+//  \param s2        second statement id
+//  \param fuseLevel fuseLevel at which to fuse S1 and S2 
 //  
 //
 //  Example S0: {[0,i,0,j,0] | stuff}; S1:{[1,i,0,j,0] | stuff}
 //  fuse(S0,S1,2);
 //  Result
 //  S0: {[0,i,0,j,0] | stuff}; S1:{[0,i,1,j,0] | stuff}
-void Computation::fuse (int s1, int s2, int level){
+void Computation::fuse (int s1, int s2, int fuseLevel){
+    if (s1 >= stmts.size() || s1 < 0 || s2 >= stmts.size()
+		    || s2 < 0){
+        throw assert_exception("s1 & s2 must be in bounds ");
+    }
+
+    if (s1 == s2){
+        throw assert_exception("s1 cannot be s2"); 
+    }
+    // newIS is a list of pairs of statement id
+    // to their transformed spaces.
+    std::vector<std::pair<int,Set*> > newIS;
     
+    int i = 0;
+    std::vector<Set*> transformedSpaces = applyTransformations();
+    Set * s1Set = nullptr;
+    Set * s2Set = nullptr;
+    for(Set* set : transformedSpaces){
+	newIS.push_back(std::make_pair(i,set));
+	if(s1 == i){
+	    s1Set = set;
+	}
+	if(s2 == i){
+	    s2Set = set;
+	}
+        i++;
+    }
+    // Sort by lexicographical order
+    std::sort(newIS.begin(),newIS.end(),
+		    Computation::activeStatementComparator);
+    
+    // Find Split level for S1 and s2 Set
+    // A split point is the point where
+    // S1 and S2 diverges
+    // Example S0: {[1,i,0,j,0] | stuff}; S1:{[1,i,1,j,0] | stuff}
+    // Split level is at 2
+    //
+    int splitLevel = 0;
+    TupleDecl s1Tuple =  s1Set->getTupleDecl();
+    TupleDecl s2Tuple =  s2Set->getTupleDecl();
+    
+    // Fuse level must be constant tuple variable.
+    if(!s1Tuple.elemIsConst(fuseLevel) ||
+		    !s2Tuple.elemIsConst(fuseLevel)){
+        throw assert_exception("fuse level must be constant tuple"
+			" variable in s1 and s2");
+    }
+    int s1PVal = -1;
+    int s2PVal = -1;
+    
+    for(i  = 0 ; i < s1Tuple.getSize(); i++){
+        if (s1Tuple.elemToString(i,true)!=
+                s2Tuple.elemToString(i,true)){
+	    splitLevel = i;
+            s1PVal = s1Tuple.elemConstVal(i);
+	    s2PVal = s2Tuple.elemConstVal(i);  
+	    break;
+	}
+    }
+
+    // If Split level is the same as the level
+    // of fusion, then fusion is not possible 
+    if (splitLevel == fuseLevel){
+        return;
+    }
+    
+     
+    //Create input and output tuple declarations
+    std::string prefix = "t";
+    TupleDecl newInputTuple (s1Tuple.size());
+    TupleDecl newOutputTuple (s1Tuple.size());
+    for(int j = 0; j < newInputTuple.size(); j++){
+        newInputTuple.setTupleElem(j,prefix+std::to_string(j));
+	std::string outTupleVar= prefix+std::to_string(j);
+	// Use a different tuple variable for output
+	// if it is the split level or level to be fused
+	// at. The split level and level to be fused at
+	// are important parts to make the transformation
+	// work.
+	// Example:
+	// {[t0,t1,t2,t3] -> [t0,t1p,t2,t3p]} 
+	// t1p for a split level of 1 and t3p 
+	// for fusion level 3.
+	if(j == splitLevel || j == fuseLevel){
+            outTupleVar+="p";
+	}
+	newOutputTuple.setTupleElem(j,outTupleVar);
+    }
+    
+
+
+    // Create new relation to fuse S2 with S1 
+    // S2 will be ordered after S1 at fuse level
+    
+    // First constraint places S2 and S1 on the 
+    // same split level. This involves transforming
+    // S2 to have the same value of s1 at split level
+    
+    std::string constraint =  
+	    newOutputTuple.elemVarString(splitLevel)
+	    +" + "+ newInputTuple.elemVarString(splitLevel)+ 
+	     " - "+ std::to_string(s2PVal)+ " = "+
+	     std::to_string(s1PVal); 
+    // Second constraint places S2 just after S1 on 
+    // fuse level. Note later we will have to update
+    // all siblings of fuse level to reflect this 
+    // insertion
+    constraint+= " && "+ 
+            newOutputTuple.elemVarString(fuseLevel)
+	    +" + "+ newInputTuple.elemVarString(fuseLevel)+ 
+	     " - "+ std::to_string(s2Tuple.elemConstVal(fuseLevel))
+	     + " = "+
+	     std::to_string(s1Tuple.elemConstVal(fuseLevel)) + " + 1" ;
+    
+
+    // Construct new reiation for s2
+    std::string rString ="{"+ newInputTuple.toString(true,0,false) + "->"
+			   +newOutputTuple.toString(true,0,false) +
+			   +": "+constraint+" }";
+    Relation * rS2 = 
+	    new Relation(rString);
+    // Adds s1's transformation
+    addTransformation(s2,rS2); 
+
+    // Now go through each statement and update 
+    // statment's siblings at split level
+    // Should we add unit transformation to statements
+    // not affected by reschedule operation.
+    for(std::pair<int,Set*> p : newIS ){
+        // Ignore s2 
+	if (p.first == s2)
+            continue;
+        // Check if this statement is a sibling
+	// to s1 and s2.
+	if (splitLevel - 1 >= 0 && 
+	    p.second->getTupleDecl().elemToString(splitLevel-1)!=
+	    s1Tuple.elemToString(splitLevel-1)){
+            continue;
+        }
+	
+        int val = p.second->getTupleDecl().elemConstVal(splitLevel);     
+	// if s1 is lexicagrphically less than s2
+        if (s1PVal < s2PVal){
+	    if (val <= newS1PositionVal && val > s1PVal){
+	        constraint = newOutputTuple.elemVarString(splitLevel)
+	 	        +" = "+ newInputTuple.elemVarString(splitLevel)+ 
+		        " - 1";  
+	        std::string rSiString =  
+		        "{"+ newInputTuple.toString(true,0,false) + "->"
+			    +newOutputTuple.toString(true,0,false) +
+			    +": "+constraint+" }";
+	        Relation* rSi = new Relation(rSiString); 
+                addTransformation(p.first,rSi);
+	    }
+	} else{
+	    // if s1 is lexicographically greater than s2
+            if (val >= s2PVal && val < s1PVal){
+	        constraint = newOutputTuple.elemVarString(splitLevel)
+	 	        +" = "+ newInputTuple.elemVarString(splitLevel)+ 
+		        " + 1";  
+	        std::string rSiString =  
+		        "{"+ newInputTuple.toString(true,0,false) + "->"
+			    +newOutputTuple.toString(true,0,false) +
+			    +": "+constraint+" }";
+	        Relation* rSi = new Relation(rSiString); 
+                addTransformation(p.first,rSi);
+	        
+	    }
+	}	
+    }
+    
+    
+    
+    // Now go through each statement and update 
+    // statment's siblings at fuse  level
+    for(std::pair<int,Set*> p : newIS ){
+        // Ignore s1 
+	if (p.first == s2)
+            continue;
+        // Check if this statement is a sibling
+	// to s1 and s2.
+	if (fuseLevel - 1 >= 0 && 
+	    p.second->getTupleDecl().elemToString(fuseLevel-1)!=
+	    s1Tuple.elemToString(fuseLevel-1)){
+            continue;
+        }
+	
+        int val = p.second->getTupleDecl().elemConstVal(splitLevel);     
+	// if s1 is lexicagrphically less than s2
+        if (s1PVal < s2PVal){
+	    if (val <= newS1PositionVal && val > s1PVal){
+	        constraint = newOutputTuple.elemVarString(splitLevel)
+	 	        +" = "+ newInputTuple.elemVarString(splitLevel)+ 
+		        " - 1";  
+	        std::string rSiString =  
+		        "{"+ newInputTuple.toString(true,0,false) + "->"
+			    +newOutputTuple.toString(true,0,false) +
+			    +": "+constraint+" }";
+	        Relation* rSi = new Relation(rSiString); 
+                addTransformation(p.first,rSi);
+	    }
+	} else{
+	    // if s1 is lexicographically greater than s2
+            if (val >= s2PVal && val < s1PVal){
+	        constraint = newOutputTuple.elemVarString(splitLevel)
+	 	        +" = "+ newInputTuple.elemVarString(splitLevel)+ 
+		        " + 1";  
+	        std::string rSiString =  
+		        "{"+ newInputTuple.toString(true,0,false) + "->"
+			    +newOutputTuple.toString(true,0,false) +
+			    +": "+constraint+" }";
+	        Relation* rSi = new Relation(rSiString); 
+                addTransformation(p.first,rSi);
+	        
+	    }
+	}	
+    }
+    
+    for(Set* set : transformedSpaces){
+        delete set;
+    }
 }
 
 

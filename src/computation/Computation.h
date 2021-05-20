@@ -204,16 +204,16 @@ class Computation {
     //  S2, other statements at that level will be adjusted accordingly
     //  so reflect the new changes.
     //
-    //  \param s1    first statement id
-    //  \param s2    second statement id
-    //  \param level Level at which to fuse S1 and S2 
+    //  \param s1        first statement id
+    //  \param s2        second statement id
+    //  \param fuseLevel Level at which to fuse S1 and S2 
     //  
     //
     //  Example S0: {[0,i,0,j,0] | stuff}; S1:{[1,i,0,j,0] | stuff}
     //  fuse(S0,S1,2);
     //  Result
     //  S0: {[0,i,0,j,0] | stuff}; S1:{[0,i,1,j,0] | stuff}
-    void fuse (int s1, int s2, int level);
+    void fuse (int s1, int s2, int fuseLevel);
    
     private:
     
