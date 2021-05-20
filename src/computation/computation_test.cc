@@ -413,12 +413,12 @@ TEST_F(ComputationTest, AppendComputationArgumentPassing) {
     Computation* ecomp = new Computation();
     ecomp->addDataSpace("$myInt$");
     ecomp->addDataSpace("$myDouble$");
-    ecomp->addDataSpace("_iegen_0$a$");
-    ecomp->addDataSpace("_iegen_0$b$");
-    ecomp->addDataSpace("_iegen_0$c$");
-    Stmt* e_gen_s1 = new Stmt("int _iegen_0$a$ = $myInt$;", "{[i]}", "{[i] -> [2,i,2]}", {{"$myInt$", "{[i]->[0]}"}}, {{"_iegen_0$a$", "{[i]->[0]}"}});
-    Stmt* e_gen_s2 = new Stmt("double _iegen_0$b$ = $myDouble$;", "{[i]}", "{[i] -> [2,i,3]}", {{"$myDouble$", "{[i]->[0]}"}}, {{"_iegen_0$b$", "{[i]->[0]}"}});
-    Stmt* e_gen_s3 = new Stmt("float _iegen_0$c$ = 0;", "{[i]}", "{[i] -> [2,i,4]}", {}, {{"_iegen_0$c$", "{[i]->[0]}"}});
+    ecomp->addDataSpace("$_iegen_0a$");
+    ecomp->addDataSpace("$_iegen_0b$");
+    ecomp->addDataSpace("$_iegen_0c$");
+    Stmt* e_gen_s1 = new Stmt("int $_iegen_0a$ = $myInt$;", "{[i]}", "{[i] -> [2,i,2]}", {{"$myInt$", "{[i]->[0]}"}}, {{"$_iegen_0a$", "{[i]->[0]}"}});
+    Stmt* e_gen_s2 = new Stmt("double $_iegen_0b$ = $myDouble$;", "{[i]}", "{[i] -> [2,i,3]}", {{"$myDouble$", "{[i]->[0]}"}}, {{"$_iegen_0b$", "{[i]->[0]}"}});
+    Stmt* e_gen_s3 = new Stmt("float $_iegen_0c$ = 0;", "{[i]}", "{[i] -> [2,i,4]}", {}, {{"$_iegen_0c$", "{[i]->[0]}"}});
     Stmt* es1 = new Stmt("s2;", "{[i,k]}", "{[i,k] -> [2,i,5,k,1]}", {}, {});
     ecomp->addStmt(e_gen_s1);
     ecomp->addStmt(e_gen_s2);
@@ -454,10 +454,10 @@ TEST_F(ComputationTest, AppendComputationEmpty) {
 
     ecomp = new Computation();
     ecomp->addDataSpace("$myInt$");
-    ecomp->addDataSpace("_iegen_1$a$");
-    ecomp->addDataSpace("_iegen_1$b$");
-    Stmt* e_gen_s1 = new Stmt("int _iegen_1$a$ = $myInt$;", "{[i]}", "{[i] -> [2,i,2]}", {{"$myInt$", "{[i]->[0]}"}}, {{"_iegen_1$a$", "{[i]->[0]}"}});
-    Stmt* e_gen_s2 = new Stmt("double _iegen_1$b$ = 3.14159;", "{[i]}", "{[i] -> [2,i,3]}", {}, {{"_iegen_1$b$", "{[i]->[0]}"}});
+    ecomp->addDataSpace("$_iegen_1a$");
+    ecomp->addDataSpace("$_iegen_1b$");
+    Stmt* e_gen_s1 = new Stmt("int $_iegen_1a$ = $myInt$;", "{[i]}", "{[i] -> [2,i,2]}", {{"$myInt$", "{[i]->[0]}"}}, {{"$_iegen_1a$", "{[i]->[0]}"}});
+    Stmt* e_gen_s2 = new Stmt("double $_iegen_1b$ = 3.14159;", "{[i]}", "{[i] -> [2,i,3]}", {}, {{"$_iegen_1b$", "{[i]->[0]}"}});
     ecomp->addStmt(e_gen_s1);
     ecomp->addStmt(e_gen_s2);
 
@@ -479,11 +479,11 @@ TEST_F(ComputationTest, AppendComputationReturnValues) {
     comp2->addReturnValue("0");
 
     Computation* ecomp = new Computation();
-    ecomp->addDataSpace("_iegen_0$res$");
+    ecomp->addDataSpace("$_iegen_0res$");
     Stmt* es1 = new Stmt("s2;", "{[i,k]}", "{[i,k] -> [2,i,2,k,1]}", {}, {});
     ecomp->addStmt(es1);
 
-    checkAppendComputation(comp1, comp2, "{[i]}", "{[i]->[2,i,2]}", {}, 2, {"_iegen_0$res$", "0"}, ecomp);
+    checkAppendComputation(comp1, comp2, "{[i]}", "{[i]->[2,i,2]}", {}, 2, {"$_iegen_0res$", "0"}, ecomp);
 
     delete comp1, comp2, ecomp;
 }
@@ -530,12 +530,12 @@ TEST_F(ComputationTest, AppendComputationComplex) {
     Computation* ecomp2 = new Computation();
     ecomp2->addDataSpace("$A$");
     ecomp2->addDataSpace("$tmp$");
-    ecomp2->addDataSpace("_iegen_0$asdf$");
+    ecomp2->addDataSpace("$_iegen_0asdf$");
     ecomp2->addParameter("$someInteger$", "int");
     ecomp2->addReturnValue("$tmp$");
     Stmt* e1s1 = new Stmt(*s3);
     Stmt* e1s2 = new Stmt(*s4);
-    Stmt* e1s3 = new Stmt("_iegen_0$asdf$ = 2;", "{[0]}", "{[0]->[2]}", {}, {{"_iegen_0$asdf$", "{[0]->[0]}"}});
+    Stmt* e1s3 = new Stmt("$_iegen_0asdf$ = 2;", "{[0]}", "{[0]->[2]}", {}, {{"$_iegen_0asdf$", "{[0]->[0]}"}});
     ecomp2->addStmt(e1s1);
     ecomp2->addStmt(e1s2);
     ecomp2->addStmt(e1s3);
@@ -547,22 +547,22 @@ TEST_F(ComputationTest, AppendComputationComplex) {
     ecomp1->addDataSpace("$index$");
     ecomp1->addDataSpace("$N$");
     ecomp1->addDataSpace("$tmp$");
-    ecomp1->addDataSpace("_iegen_1$A$");
-    ecomp1->addDataSpace("_iegen_1$tmp$");
-    ecomp1->addDataSpace("_iegen_1$someInteger$");
-    ecomp1->addDataSpace("_iegen_1_iegen_0$asdf$");
+    ecomp1->addDataSpace("$_iegen_1A$");
+    ecomp1->addDataSpace("$_iegen_1tmp$");
+    ecomp1->addDataSpace("$_iegen_1someInteger$");
+    ecomp1->addDataSpace("$_iegen_1_iegen_0asdf$");
     Stmt* e2s1 = new Stmt(*s1);
     Stmt* e2s2 = new Stmt(*s2);
-    Stmt* e2s3 = new Stmt("int _iegen_1$someInteger$ = $tmp$;", "{[i]: 0<=i<$N$}", "{[i]->[1,i,1]}", {{"$tmp$", "{[i]->[0]}"}}, {{"_iegen_1$someInteger$", "{[i]->[0]}"}});
-    Stmt* e2s4 = new Stmt("_iegen_1$A$[k] += _iegen_1$A$[k+1];",
+    Stmt* e2s3 = new Stmt("int $_iegen_1someInteger$ = $tmp$;", "{[i]: 0<=i<$N$}", "{[i]->[1,i,1]}", {{"$tmp$", "{[i]->[0]}"}}, {{"$_iegen_1someInteger$", "{[i]->[0]}"}});
+    Stmt* e2s4 = new Stmt("$_iegen_1A$[k] += $_iegen_1A$[k+1];",
                          "{[i,k]: 0<=i<$N$ && 0<=k<5}", "{[i,k]->[1,i,2,k,0]}",
-                         {{"_iegen_1$A$", "{[i,k]->[k]}"},
-                          {"_iegen_1$A$", "{[i,k]->[r]: r=k+1}"}},
-                         {{"_iegen_1$A$", "{[i,k]->[k]}"}});
-    Stmt* e2s5 = new Stmt("_iegen_1$tmp$ = _iegen_1$A$[2] + _iegen_1$someInteger$;", "{[i]: 0<=i<$N$}",
-                         "{[i]->[1,i,3]}", {{"_iegen_1$A$", "{[i]->[2]}"}, {"_iegen_1$someInteger$", "{[i]->[0]}"}},
-                         {{"_iegen_1$tmp$", "{[i]->[0]}"}});
-    Stmt* e2s6 = new Stmt("_iegen_1_iegen_0$asdf$ = 2;", "{[i]: 0<=i<$N$}", "{[i]->[1,i,4]}", {}, {{"_iegen_1_iegen_0$asdf$", "{[i]->[0]}"}});
+                         {{"$_iegen_1A$", "{[i,k]->[k]}"},
+                          {"$_iegen_1A$", "{[i,k]->[r]: r=k+1}"}},
+                         {{"$_iegen_1A$", "{[i,k]->[k]}"}});
+    Stmt* e2s5 = new Stmt("$_iegen_1tmp$ = $_iegen_1A$[2] + $_iegen_1someInteger$;", "{[i]: 0<=i<$N$}",
+                         "{[i]->[1,i,3]}", {{"$_iegen_1A$", "{[i]->[2]}"}, {"$_iegen_1someInteger$", "{[i]->[0]}"}},
+                         {{"$_iegen_1tmp$", "{[i]->[0]}"}});
+    Stmt* e2s6 = new Stmt("$_iegen_1_iegen_0asdf$ = 2;", "{[i]: 0<=i<$N$}", "{[i]->[1,i,4]}", {}, {{"$_iegen_1_iegen_0asdf$", "{[i]->[0]}"}});
     ecomp1->addStmt(e2s1);
     ecomp1->addStmt(e2s2);
     ecomp1->addStmt(e2s3);
@@ -572,15 +572,18 @@ TEST_F(ComputationTest, AppendComputationComplex) {
 
     // append comp2 (which already has comp3 appended on) onto comp1
     checkAppendComputation(comp1, comp2, "{[i]: 0 <= i < $N$}",
-                           "{[i]->[1,i,1]}", {"$tmp$"}, 4, {"_iegen_1$tmp$"}, ecomp1);
+                           "{[i]->[1,i,1]}", {"$tmp$"}, 4, {"$_iegen_1tmp$"}, ecomp1);
 
     delete comp1, comp2, comp3, ecomp2, ecomp1;
 }
 
 #pragma mark ComputationNamePrefixing
 // Check creating a copy of a Computation with prefixed names works properly
-TEST_F(ComputationTest, DISABLED_ComputationNamePrefixing) {
+TEST_F(ComputationTest, ComputationNamePrefixing) {
     Computation* comp1 = new Computation();
+    comp1->addDataSpace("$product$");
+    comp1->addDataSpace("$x$");
+    comp1->addDataSpace("$y$");
     Stmt* s0 = new Stmt("$product$[i] += $x$[i][j] * $y$[j];",
                         "{[i,j]: i >= 0 && i < a && j >= 0 && j < b}",
                         "{[i,j]->[2,i,1,j,0]}",
@@ -597,7 +600,9 @@ TEST_F(ComputationTest, DISABLED_ComputationNamePrefixing) {
     delete execSchedule;
 
     Computation* prefixedComp1 = comp1->getUniquelyNamedClone();
-    EXPECT_EQ("_iegen_0$product$[i] += _iegen_0$x$[i][j] * _iegen_0$y$[j];",
+    EXPECT_EQ(std::unordered_set<std::string>({"$_iegen_0product$", "$_iegen_0x$", "$_iegen_0y$"}),
+              prefixedComp1->getDataSpaces());
+    EXPECT_EQ("$_iegen_0product$[i] += $_iegen_0x$[i][j] * $_iegen_0y$[j];",
               prefixedComp1->getStmt(0)->getStmtSourceCode());
     EXPECT_EQ(
         iterSpaceStr,
@@ -605,15 +610,17 @@ TEST_F(ComputationTest, DISABLED_ComputationNamePrefixing) {
     EXPECT_EQ(
         execScheduleStr,
         prefixedComp1->getStmt(0)->getExecutionSchedule()->prettyPrintString());
-    EXPECT_EQ("_iegen_0$product$",
+    EXPECT_EQ("$_iegen_0product$",
               prefixedComp1->getStmt(0)->getReadDataSpace(0));
-    EXPECT_EQ("_iegen_0$x$", prefixedComp1->getStmt(0)->getReadDataSpace(1));
-    EXPECT_EQ("_iegen_0$y$", prefixedComp1->getStmt(0)->getReadDataSpace(2));
-    EXPECT_EQ("_iegen_0$product$",
+    EXPECT_EQ("$_iegen_0x$", prefixedComp1->getStmt(0)->getReadDataSpace(1));
+    EXPECT_EQ("$_iegen_0y$", prefixedComp1->getStmt(0)->getReadDataSpace(2));
+    EXPECT_EQ("$_iegen_0product$",
               prefixedComp1->getStmt(0)->getWriteDataSpace(0));
 
     Computation* prefixedComp2 = comp1->getUniquelyNamedClone();
-    EXPECT_EQ("_iegen_1$product$[i] += _iegen_1$x$[i][j] * _iegen_1$y$[j];",
+    EXPECT_EQ(std::unordered_set<std::string>({"$_iegen_1product$", "$_iegen_1x$", "$_iegen_1y$"}),
+              prefixedComp2->getDataSpaces());
+    EXPECT_EQ("$_iegen_1product$[i] += $_iegen_1x$[i][j] * $_iegen_1y$[j];",
               prefixedComp2->getStmt(0)->getStmtSourceCode());
     EXPECT_EQ(
         iterSpaceStr,
@@ -621,28 +628,18 @@ TEST_F(ComputationTest, DISABLED_ComputationNamePrefixing) {
     EXPECT_EQ(
         execScheduleStr,
         prefixedComp2->getStmt(0)->getExecutionSchedule()->prettyPrintString());
-    EXPECT_EQ("_iegen_1$product$",
+    EXPECT_EQ("$_iegen_1product$",
               prefixedComp2->getStmt(0)->getReadDataSpace(0));
-    EXPECT_EQ("_iegen_1$x$", prefixedComp2->getStmt(0)->getReadDataSpace(1));
-    EXPECT_EQ("_iegen_1$y$", prefixedComp2->getStmt(0)->getReadDataSpace(2));
-    EXPECT_EQ("_iegen_1$product$",
+    EXPECT_EQ("$_iegen_1x$", prefixedComp2->getStmt(0)->getReadDataSpace(1));
+    EXPECT_EQ("$_iegen_1y$", prefixedComp2->getStmt(0)->getReadDataSpace(2));
+    EXPECT_EQ("$_iegen_1product$",
               prefixedComp2->getStmt(0)->getWriteDataSpace(0));
 
-    delete comp1, prefixedComp1, prefixedComp2;
-
-    // separate Computation
-    Computation* comp2 = new Computation();
-    Stmt* s2 = new Stmt("$product$[i] += $x$[i][j] * $y$[j];",
-                        "{[i,j]: i >= 0 && i < a && j >= 0 && j < b}",
-                        "{[i,j]->[2,i,1,j,0]}",
-                        {{"$product$", "{[i,j]->[i]}"},
-                         {"$x$", "{[i,j]->[i,j]}"},
-                         {"$y$", "{[i,j]->[j]}"}},
-                        {{"$product$", "{[i,j]->[i]}"}});
-    comp1->addStmt(s0);
-
-    Computation* prefixedComp3 = comp2->getUniquelyNamedClone();
-    EXPECT_EQ("_iegen_2$product$[i] += _iegen_2$x$[i][j] * _iegen_2$y$[j];",
+    // prefix an already-prefixed Computation
+    Computation* prefixedComp3 = prefixedComp1->getUniquelyNamedClone();
+    EXPECT_EQ(std::unordered_set<std::string>({"$_iegen_2_iegen_0product$", "$_iegen_2_iegen_0x$", "$_iegen_2_iegen_0y$"}),
+              prefixedComp3->getDataSpaces());
+    EXPECT_EQ("$_iegen_2_iegen_0product$[i] += $_iegen_2_iegen_0x$[i][j] * $_iegen_2_iegen_0y$[j];",
               prefixedComp3->getStmt(0)->getStmtSourceCode());
     EXPECT_EQ(
         iterSpaceStr,
@@ -650,14 +647,14 @@ TEST_F(ComputationTest, DISABLED_ComputationNamePrefixing) {
     EXPECT_EQ(
         execScheduleStr,
         prefixedComp3->getStmt(0)->getExecutionSchedule()->prettyPrintString());
-    EXPECT_EQ("_iegen_2$product$",
+    EXPECT_EQ("$_iegen_2_iegen_0product$",
               prefixedComp3->getStmt(0)->getReadDataSpace(0));
-    EXPECT_EQ("_iegen_2$x$", prefixedComp3->getStmt(0)->getReadDataSpace(1));
-    EXPECT_EQ("_iegen_2$y$", prefixedComp3->getStmt(0)->getReadDataSpace(2));
-    EXPECT_EQ("_iegen_2$product$",
+    EXPECT_EQ("$_iegen_2_iegen_0x$", prefixedComp3->getStmt(0)->getReadDataSpace(1));
+    EXPECT_EQ("$_iegen_2_iegen_0y$", prefixedComp3->getStmt(0)->getReadDataSpace(2));
+    EXPECT_EQ("$_iegen_2_iegen_0product$",
               prefixedComp3->getStmt(0)->getWriteDataSpace(0));
 
-    delete comp2, prefixedComp3;
+    delete comp1, prefixedComp1, prefixedComp2, prefixedComp3;
 }
 
 

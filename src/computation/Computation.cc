@@ -40,6 +40,9 @@
 //! Base string for use in name prefixing
 #define NAME_PREFIX_BASE "_iegen_"
 
+//! String delimiter expected on either side of data space names
+#define DATA_SPACE_DELIMITER "$"
+
 namespace iegenlib {
 
 /* Computation */
@@ -81,16 +84,16 @@ Computation* Computation::getUniquelyNamedClone() const {
         prefixedCopy->addStmt(stmt->getUniquelyNamedClone(namePrefix, this->getDataSpaces()));
     }
     for (auto& space : this->dataSpaces) {
-        prefixedCopy->addDataSpace(namePrefix + space);
+        prefixedCopy->addDataSpace(getPrefixedDataSpaceName(space, namePrefix));
     }
     for (auto& param : this->parameters) {
-        prefixedCopy->addParameter(namePrefix + param.first, param.second);
+        prefixedCopy->addParameter(getPrefixedDataSpaceName(param.first, namePrefix), param.second);
     }
     for (auto& retVal : this->returnValues) {
         // only prefix values that are data space names, avoid trying to prefix
         // literals
         prefixedCopy->addReturnValue(
-            (retVal.second ? namePrefix : "") + retVal.first, retVal.second);
+            (retVal.second ? getPrefixedDataSpaceName(retVal.first, namePrefix) : retVal.first), retVal.second);
     }
 
     return prefixedCopy;
@@ -98,6 +101,10 @@ Computation* Computation::getUniquelyNamedClone() const {
 
 void Computation::resetNumRenames() {
     Computation::numRenames = 0;
+}
+
+std::string Computation::getPrefixedDataSpaceName(const std::string& originalName, const std::string& prefix) {
+    return DATA_SPACE_DELIMITER + prefix + originalName.substr(1);
 }
 
 void Computation::addStmt(Stmt* stmt) {
@@ -110,6 +117,7 @@ Stmt* Computation::getStmt(unsigned int index) const { return stmts.at(index); }
 unsigned int Computation::getNumStmts() const { return stmts.size(); }
 
 void Computation::addDataSpace(std::string dataSpaceName) {
+    assertValidDataSpaceName(dataSpaceName);
     dataSpaces.emplace(dataSpaceName);
 }
 
@@ -122,6 +130,7 @@ bool Computation::isDataSpace(std::string name) const {
 }
 
 void Computation::addParameter(std::string paramName, std::string paramType) {
+    assertValidDataSpaceName(paramName);
     parameters.push_back({paramName, paramType});
     // parameters are automatically available as data spaces to the Computation
     addDataSpace(paramName);
@@ -1260,7 +1269,7 @@ std::string Computation::codeGen(Set* knownConstraints) {
         stmtMacroUndefs << "#undef s" << stmtCount << "\n";
         stmtMacroDefs << "#define s" << stmtCount << "(" << tupleString
                       << ")   "
-                      << iegenlib::replaceInString(stmt->getStmtSourceCode(), "$",
+                      << iegenlib::replaceInString(stmt->getStmtSourceCode(), DATA_SPACE_DELIMITER,
                                                "")
                       << " \n";
         stmtCount++;
@@ -1268,7 +1277,7 @@ std::string Computation::codeGen(Set* knownConstraints) {
         std::string omegaIterString =
             iterSpace->toOmegaString(vOmegaReplacer->getUFCallDecls());
         omega::Relation* omegaIterSpace =
-            omega::parser::ParseRelation(iegenlib::replaceInString(omegaIterString, "$", ""));
+            omega::parser::ParseRelation(iegenlib::replaceInString(omegaIterString, DATA_SPACE_DELIMITER, ""));
 
         iterSpaces.push_back(omega::copy(*omegaIterSpace));
 	// Use identity transformation instead.
@@ -1366,6 +1375,12 @@ std::string Computation::toOmegaString() {
     return omegaString.str();
 }
 
+bool Computation::assertValidDataSpaceName(const std::string& name) {
+    if (!(name.length() >= 3 && std::string(1, name.front()) == DATA_SPACE_DELIMITER
+            && std::string(1, name.back()) == DATA_SPACE_DELIMITER)) {
+        throw assert_exception("Data space names must be nonempty and surrounded in " DATA_SPACE_DELIMITER);
+    }
+}
 
 /* Stmt */
 
@@ -1450,15 +1465,15 @@ bool Stmt::operator==(const Stmt& other) const {
     return true;
 }
 
-Stmt* Stmt::getUniquelyNamedClone(std::string prefix, std::unordered_set<std::string> dataSpaceNames) const {
+Stmt* Stmt::getUniquelyNamedClone(const std::string& prefix, const std::unordered_set<std::string>& dataSpaceNames) const {
     Stmt* prefixedCopy = new Stmt(*this);
 
     // modify reads and writes
     for (auto& read : prefixedCopy->dataReads) {
-        read.first = prefix + read.first;
+        read.first = Computation::getPrefixedDataSpaceName(read.first, prefix);
     }
     for (auto& write : prefixedCopy->dataWrites) {
-        write.first = prefix + write.first;
+        write.first = Computation::getPrefixedDataSpaceName(write.first, prefix);
     }
 
     // replace data space names in statement source code, iteration space, execution schedule
@@ -1466,9 +1481,12 @@ Stmt* Stmt::getUniquelyNamedClone(std::string prefix, std::unordered_set<std::st
     std::string iterSpaceStr = prefixedCopy->iterationSpace->prettyPrintString();
     std::string execScheduleStr = prefixedCopy->executionSchedule->prettyPrintString();
     for (const string& originalName : dataSpaceNames) {
-        srcCode = replaceInString(srcCode, originalName, prefix + originalName);
-        iterSpaceStr = replaceInString(iterSpaceStr, originalName, prefix + originalName);
-        execScheduleStr = replaceInString(execScheduleStr, originalName, prefix + originalName);
+        srcCode = replaceInString(srcCode, originalName,
+                                  Computation::getPrefixedDataSpaceName(originalName, prefix));
+        iterSpaceStr = replaceInString(iterSpaceStr, originalName,
+                                       Computation::getPrefixedDataSpaceName(originalName, prefix));
+        execScheduleStr = replaceInString(execScheduleStr, originalName,
+                                          Computation::getPrefixedDataSpaceName(originalName, prefix));
     }
     // use modified strings to construct new values
     prefixedCopy->setStmtSourceCode(srcCode);
