@@ -80,7 +80,8 @@ class ComputationTest : public ::testing::Test {
         for(int i =0 ; i < transforms.size() ; i++){
 	    Set* s = transforms[i];
 	    Set* expected= new Set(expectedSet[i]);
-	    SCOPED_TRACE(("S"+std::to_string(i)).c_str());
+	    SCOPED_TRACE(("S"+std::to_string(i) +" Actual: "+ s->toString()+
+			" Expected: "+expected->toString() ).c_str());
 	    EXPECT_TRUE(*expected==*s);
 	    delete s;
 	    delete expected;
@@ -832,9 +833,10 @@ TEST_F(ComputationTest, RescheduleUnitTest){
 		    "{[2,t1,0,0,0]:0 <= t1 && t1 < NR}",
 		    "{[0,t1,0,0,0]:0 <= t1 && t1 < NR}"});
     delete comp;
+
+
+
 }
-
-
 
 TEST_F(ComputationTest, FusionUnitTest){
     Computation* comp = new Computation();
@@ -874,7 +876,6 @@ TEST_F(ComputationTest, FusionUnitTest){
 		    "{[1,t1,0,t2,0]:0 <= t1 && t1 < NR && 0 <= t2 && t2 < NP}",
 		    "{[2,t1,0,t2,0]:0 <= t1 && t1 < NR && 0 <= t2 && t2 < NT}"
 		    });
-
     // Fuse statements S2 and S3 at level 4
     comp->fuse(2,3,4);
     checkTransformation(comp, 
@@ -884,14 +885,15 @@ TEST_F(ComputationTest, FusionUnitTest){
 		    "{[1,t1,0,t2,1]:0 <= t1 && t1 < NR && 0 <= t2 && t2 < NT}"
 		    });
     // Fuse statements S3 and S1 at level 4
+    
     comp->fuse(3,1,4);
 
     checkTransformation(comp, 
 		    {"{[0,t1,0,t2,0]:0 <= t1 && t1 < NR && 0 <= t2 && t2 < NC}",
-		    "{[1,t1,1,t2,2]:0 <= t1 && t1 < NR && 0 <= t2 && t2 < NQ}",
+		    "{[1,t1,0,t2,2]:0 <= t1 && t1 < NR && 0 <= t2 && t2 < NQ}",
 		    "{[1,t1,0,t2,0]:0 <= t1 && t1 < NR && 0 <= t2 && t2 < NP}",
 		    "{[1,t1,0,t2,1]:0 <= t1 && t1 < NR && 0 <= t2 && t2 < NT}"
 		    });
-
+      
     delete comp;
 }
