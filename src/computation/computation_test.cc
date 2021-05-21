@@ -776,9 +776,9 @@ TEST_F(ComputationTest, ToDotUnitTest){
 
 
 TEST_F(ComputationTest, RescheduleUnitTest){
-    Computation * comp = new Computation();
+    Computation * comp1 = new Computation();
     //S0
-    comp->addStmt(new Stmt("u[i] =  A[i][i]",
+    comp1->addStmt(new Stmt("u[i] =  A[i][i]",
 		"{[i]: 0 <= i && i < NR}",
 		"{[i] -> [0,i,0,0,0]}",
 		{
@@ -788,7 +788,7 @@ TEST_F(ComputationTest, RescheduleUnitTest){
 		   {"u","{[i]->[i]}"},
 		}));
     //S1
-    comp->addStmt(new Stmt("t[i] =  A[i][i]",
+    comp1->addStmt(new Stmt("t[i] =  A[i][i]",
 		"{[i]: 0 <= i && i < NR}",
 		"{[i] -> [1,i,0,0,0]}",
 		{
@@ -798,7 +798,7 @@ TEST_F(ComputationTest, RescheduleUnitTest){
 		   {"t","{[i]->[i]}"},
 		}));
     //S2
-    comp->addStmt(new Stmt("t[i] =  A[i][i]",
+    comp1->addStmt(new Stmt("t[i] =  A[i][i]",
 		"{[i]: 0 <= i && i < NR}",
 		"{[i] -> [2,i,0,0,0]}",
 		{
@@ -809,34 +809,48 @@ TEST_F(ComputationTest, RescheduleUnitTest){
 		}));
 
     // Test out of bounds.
-    EXPECT_ANY_THROW(comp->reschedule(-5,10));
+    EXPECT_ANY_THROW(comp1->reschedule(-5,10));
+    // Test equal size
+    EXPECT_ANY_THROW(comp1->reschedule(0,0));
     
     // Reschedule statement S0 to come just before S2
-    comp->reschedule(0,2);
-    checkTransformation(comp, 
+    comp1->reschedule(0,2);
+    checkTransformation(comp1, 
 		    {"{[1,t1,0,0,0]:0 <= t1 && t1 < NR}",
 		    "{[0,t1,0,0,0]:0 <= t1 && t1 < NR}",
 		    "{[2,t1,0,0,0]:0 <= t1 && t1 < NR}"});
 
     // Reschedule statement S1 to come just before S2
-    comp->reschedule(1,2);
-    
-    checkTransformation(comp, 
+    comp1->reschedule(1,2);
+    checkTransformation(comp1, 
 		   {"{[0,t1,0,0,0]:0 <= t1 && t1 < NR}",
 		    "{[1,t1,0,0,0]:0 <= t1 && t1 < NR}",
 		    "{[2,t1,0,0,0]:0 <= t1 && t1 < NR}"});
     
+    // Reschedule statement S1 to come just before S0
+    comp1->reschedule(1,0);
+    checkTransformation(comp1, 
+		   {"{[1,t1,0,0,0]:0 <= t1 && t1 < NR}",
+		    "{[0,t1,0,0,0]:0 <= t1 && t1 < NR}",
+		    "{[2,t1,0,0,0]:0 <= t1 && t1 < NR}"});
+
     // Reschdule statement S2 to come just befoer S0
-    comp->reschedule(2,0);
-    checkTransformation(comp,
-                   {"{[1,t1,0,0,0]:0 <= t1 && t1 < NR}",
+    comp1->reschedule(2,0);
+    checkTransformation(comp1,
+           {"{[1,t1,0,0,0]:0 <= t1 && t1 < NR}",
 		    "{[2,t1,0,0,0]:0 <= t1 && t1 < NR}",
 		    "{[0,t1,0,0,0]:0 <= t1 && t1 < NR}"});
-    delete comp;
 
-
-
+    // Reschdule statement S2 to come just befoer S1
+    comp1->reschedule(2,1);
+    checkTransformation(comp1,
+           {"{[2,t1,0,0,0]:0 <= t1 && t1 < NR}",
+		    "{[1,t1,0,0,0]:0 <= t1 && t1 < NR}",
+		    "{[0,t1,0,0,0]:0 <= t1 && t1 < NR}"});
+        
+    delete comp1;
 }
+
 
 TEST_F(ComputationTest, FusionUnitTest){
     Computation* comp = new Computation();
