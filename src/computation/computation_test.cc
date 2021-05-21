@@ -852,9 +852,6 @@ TEST_F(ComputationTest, RescheduleUnitTest){
 }
 
 
-
-}
-
 TEST_F(ComputationTest, FusionUnitTest){
     Computation* comp = new Computation();
     //S0
