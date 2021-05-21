@@ -91,6 +91,19 @@ void Vertex::reset(){
 }
 
 
+//! Copy assignment. Deep Copy
+Vertex& Vertex::operator= (const Vertex &v1){
+    reset();
+    for(auto t : v1.terms){
+        this->terms.push_back(t->clone());
+    }
+}
+
+//! Destructor
+Vertex::~Vertex(){
+  //  reset();
+}
+
 /******************************************************************************/
 
 /******************************************************************************/
@@ -105,9 +118,9 @@ DiGraph::DiGraph()
 
 DiGraph::~DiGraph()
 {
-    for(auto v : vertices){
-        v.reset();
-    }
+   // for(auto v : vertices){
+   //     v.reset();
+   // }
     vertices.clear();
     //TODO: Check this out, might not necessarily be needed.
     for(int i = 0; i < adj.size(); i++){
@@ -123,8 +136,8 @@ EdgeType DiGraph::edgeOp (const EdgeType e1, const EdgeType e2){
     else return e2;
 }
 
-void  DiGraph::addEdge(Vertex u, 
-		Vertex v, EdgeType e){
+void  DiGraph::addEdge(Vertex& u, 
+		Vertex& v, EdgeType e){
     auto itU = std::find(vertices.begin(),vertices.end(),u);
     // Get the Positions to place the edges
     // in the adjacency matrix.
@@ -239,26 +252,39 @@ void DiGraph::simplifyGreaterOrEqual(){
     //content. When this happens such vertexs will
     //be merged in the adjacency matrix.
     std::vector<int> possibleMerge;
-    for(int i = 0 ; i < adj.size(); i++){
-        for(int j = 0; j < adj[i].size(); j++){
+    int size = adj.size();
+    for(int i = 0 ; i < size; i++){
+        for(int j = 0; j < size; j++){
 	    if(adj[i][j] == EdgeType::GREATER_OR_EQUAL_TO ){
 	       Term* t = vertices[j].getConstantNumber();
 	       if(!t) continue;
 	       
-	       // Remove +1 from destination and replace
-	       // constaint with EdgeType::GREATER_THAN
-	       adj[i][j] = EdgeType::GREATER_THAN;
+	       
+	       // Deep copy current vertex. This copy will
+	       // be added to the graph rather than modifying
+	       // j's vertex
+	       Vertex newVertex = vertices[j]; 
+	       t = newVertex.getConstantNumber(); 
                int newCoefficient = t->coefficient() - 1;
 	       // remove the term if the subtraction results
 	       // to a zero. 
 	       if (newCoefficient == 0){
-	           vertices[j].deleteTerm(t);
+	           newVertex.deleteTerm(t);
 	       }
-	       possibleMerge.push_back(j);
+	       // Add a new greater than edge to the graph from vertex at i
+	       // to the newVertex.
+               addEdge(vertices[i],newVertex,EdgeType::GREATER_THAN);
+
+               // Remove the current constraint since 
+	       // another node has been created to 
+	       // specify the constraint.
+	       adj[i][j] = EdgeType::NONE;
+
+	       
 	    }  
        }
     }
-    
+   /* 
     // Apply merging. 
     // Vertices aliasing, this data structure helps
     // to store already merged vertices to where they
@@ -285,7 +311,7 @@ void DiGraph::simplifyGreaterOrEqual(){
 	    }
         } 
     }
-
+*/
 }
 void DiGraph::dumpGraph(std::ostream& os) const{
     os << "\nVertices:\n";

@@ -45,13 +45,17 @@ enum class EdgeType {GREATER_THAN=0 , GREATER_OR_EQUAL_TO, EQUAL,NONE };
 class Vertex{
     std::list<Term*> terms;
 public:
+    ~Vertex();
+    
     //! Function adds term to Vertex.    
     //! \param t (adopted)    
     void addTerm(Term * t);
    
     //! Destructor.
     void reset();
-
+   
+    //! Copy assignment. Deep Copy
+    Vertex& operator= (const Vertex &v1);
 
     std::string toString() const;
     bool operator== (const Vertex &v1);
@@ -116,7 +120,7 @@ public:
 
     /*! Adds an edge to the graph.
      * */
-    void addEdge(Vertex u, Vertex v, EdgeType e); 
+    void addEdge(Vertex& u, Vertex& v, EdgeType e); 
     
     /*! Function runs the transitive closure algorithm on 
      * the graph. The graph changes in place.

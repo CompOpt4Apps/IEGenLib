@@ -885,8 +885,9 @@ TEST_F(ComputationTest, FusionUnitTest){
 		    "{[1,t1,0,t2,1]:0 <= t1 && t1 < NR && 0 <= t2 && t2 < NT}"
 		    });
     // Fuse statements S3 and S1 at level 4
-    
+
     comp->fuse(3,1,4);
+    
 
     checkTransformation(comp, 
 		    {"{[0,t1,0,t2,0]:0 <= t1 && t1 < NR && 0 <= t2 && t2 < NC}",
