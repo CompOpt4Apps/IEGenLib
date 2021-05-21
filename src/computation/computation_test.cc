@@ -837,9 +837,9 @@ TEST_F(ComputationTest, RescheduleUnitTest){
     // Reschdule statement S2 to come just befoer S0
     comp1->reschedule(2,0);
     checkTransformation(comp1,
-           {"{[2,t1,0,0,0]:0 <= t1 && t1 < NR}",
-		    "{[0,t1,0,0,0]:0 <= t1 && t1 < NR}",
-		    "{[1,t1,0,0,0]:0 <= t1 && t1 < NR}"});
+           {"{[1,t1,0,0,0]:0 <= t1 && t1 < NR}",
+		    "{[2,t1,0,0,0]:0 <= t1 && t1 < NR}",
+		    "{[0,t1,0,0,0]:0 <= t1 && t1 < NR}"});
 
     // Reschdule statement S2 to come just befoer S1
     comp1->reschedule(2,1);
