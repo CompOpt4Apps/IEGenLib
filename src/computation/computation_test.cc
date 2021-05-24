@@ -848,8 +848,59 @@ TEST_F(ComputationTest, RescheduleUnitTest){
            {"{[2,t1,0,0,0]:0 <= t1 && t1 < NR}",
 		    "{[1,t1,0,0,0]:0 <= t1 && t1 < NR}",
 		    "{[0,t1,0,0,0]:0 <= t1 && t1 < NR}"});
-        
+    
+    // Second Computation Test
+    Computation * comp2 = new Computation();
+    //S0
+    comp2->addStmt(new Stmt("u[i] = A[i][i]",
+                "{[i]: 0<= i && i < NR}",
+	        "{[i] -> [0,i,0]}",
+	        {
+		   {"A", "{[i] -> [i,i]}"}
+   		},
+		{
+		   {"u","{[i]->[i]}"},
+		}));
+    //S1
+    comp2->addStmt(new Stmt("t[i] = A[i][i]",
+                "{[i]: 0 <= i && i < NR}",
+	        "{[i] -> [1,i,0]}",
+	        {
+		   {"A", "{[i] -> [i,i]}"}
+   		},
+		{
+		   {"t","{[i]->[i]}"},
+		}));
+    //S2
+    comp2->addStmt(new Stmt("t[i] = A[i][i]",
+                "{[i]: 0 <= i && i < NR}",
+	        "{[i] -> [2,i,0]",
+	        {
+		   {"A", "{[i] -> [i,i]}"}
+   		},
+		{
+		   {"t","{[i]->[i]}"},
+		}));
+    //Reschedule statement S0 to come just before S2
+    comp2->reschedule(0,2);
+    checkTransformation(comp2,
+		    {"{[1,t1,0]:0 <= t1 && t1 < NR}",
+		     "{[0,t1,0]:0 <= t1 && t1 < NR}",
+		     "{[2,t1,0]:0 <= t1 && t1 < NR}"});
+    //Reschedule statement S1 to come just before S2
+    comp2->reschedule(1,2);
+    checkTransformation(comp2,
+	    	   {"{[0,t1,0]:0 <= t1 && t1 < NR}",
+		    "{[1,t1,0]:0 <= t1 && t1 < NR}",
+		    "{[2,t1,0]:0 <= t1 && t1 < NR}"});
+    //Reschedule statement S2 to come just before S
+    comp2->reschedule(2,0);
+    checkTransformation(comp2,
+	    	   {"{[1,t1,0]:0 <= t1 && t1 < NR}",
+		    "{[2,t1,0]:0 <= t1 && t1 < NR}",
+		    "{[0,t1,0]:0 <= t1 && t1 < NR}"});
     delete comp1;
+    delete comp2;
 }
 
 

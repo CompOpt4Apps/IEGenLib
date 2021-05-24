@@ -54,7 +54,7 @@ int main(int argc, char **argv){
   
   temp->addStmt(s1);
 
-  
+  temp->addDataSpace("$sources.w$");
   //Creating s2
   //sources.w = w(r,theta,phi); The w function always return 0!
   Stmt*s2 = new Stmt("$sources.w$ = 0;", 
@@ -65,6 +65,7 @@ int main(int argc, char **argv){
       );
   
   temp->addStmt(s2);
+  
   //Add the args of the v function (computation to be appended) as data spaces to temp
   //r, theta and phi have already been added
   temp->addDataSpace("$spl.Windv_Spline$");
@@ -75,8 +76,11 @@ int main(int argc, char **argv){
   vCompArgs.push_back("$phi$");
   vCompArgs.push_back("$spl.Windv_Spline$");
   Computation* vComputation = v_Computation();
+  
   // Return values are stored in a struct of the computation: AppendComputationResult
   AppendComputationResult vCompRes = temp->appendComputation(vComputation, "{[0]}", "{[0]->["+std::to_string(cCompRes.tuplePosition+3)+"]}", vCompArgs);
+  
+  temp->addDataSpace("$sources.v$");
   //Creating s3
   //sources.v = v(r,theta,phi,spl.Temp_Spline);
   Stmt*s3 = new Stmt("$sources.v$ = "+vCompRes.returnValues.back()+";", 
@@ -88,7 +92,7 @@ int main(int argc, char **argv){
   
   temp->addStmt(s3);
 
-  /*
+
   //Add the args of the u function (computation to be appended) as data spaces to temp
   //r, theta and phi have already been added
   temp->addDataSpace("$spl.Windu_Spline$");
@@ -102,8 +106,19 @@ int main(int argc, char **argv){
   
   // Return values are stored in a struct of the computation: AppendComputationResult
   AppendComputationResult uCompRes = temp->appendComputation(uComputation, "{[0]}", "{[0]->["+std::to_string(vCompRes.tuplePosition+2)+"]}", uCompArgs);
-  Computation* EvalSplineF = Eval_Spline_f_Computation();
   
+  temp->addDataSpace("$sources.u$");
+  //Creating s3=4
+  //sources.u = u(r,theta,phi, spl.Windu_Spline);
+  Stmt*s4 = new Stmt("$sources.u$ = "+uCompRes.returnValues.back()+";", 
+      "{[0]}",
+      "{[0]->["+std::to_string(uCompRes.tuplePosition+1)+"]}",
+      {{uCompRes.returnValues.back(), "{[0]->[0]}"}},
+      {{"$sources.u$", "{[0]->[0]}"}}
+      );
+  
+  temp->addStmt(s4);
+  /*
   vector < pair<string, string> > dataReads;
   vector < pair<string, string> > dataWrites;
   Statement 1 = {"C","[k]->[k]"};
@@ -180,11 +195,13 @@ Computation* u_Computation(){
   UComputation->addParameter("$phi$","double");
   UComputation->addParameter("$Windu_Spline$","NaturalCubicSpline_1D &");
 
+  
+  UComputation->addDataSpace("$r_eval$");
   //Creating statement1
   //double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);
   Stmt* s1 = new Stmt("double $r_eval$ = min($r$, r_max); $r_eval$ = max($r_eval$, r_min)",
       "{[0]}",  //Iteration schedule - Only happening one time (not iterating)
-      "{[0]->[0, 0, 0]}", //Execution schedule - scheduling statement to be first (scheduling function)
+      "{[0]->[0]}", //Execution schedule - scheduling statement to be first (scheduling function)
       {{"$r$","{[0]->[0]}"},{"$r_eval$","{[0]->[0]}"}}, //Data reads
       {{"$r_eval$","{[0]->[0]}"}} //Data writes
       );
@@ -227,6 +244,7 @@ Computation* v_Computation(){
   VComputation->addParameter("$phi$","double");
   VComputation->addParameter("$Windv_Spline$","NaturalCubicSpline_1D &");
 
+  VComputation->addDataSpace("$r_eval$");
   //Creating statement1
   //double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);
   Stmt* s1 = new Stmt("double $r_eval$ = min($r$, r_max); $r_eval$ = max($r_eval$, r_min)",
