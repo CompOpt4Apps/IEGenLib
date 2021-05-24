@@ -395,7 +395,9 @@ TEST_F(ComputationTest, AppendComputationBasic) {
     checkAppendComputation(comp1, comp2, "{[i]: 0 <= i < N}", "{[i]->[2,i,2]}", {}, 2,
                            {}, ecomp);
 
-    delete comp1, comp2, ecomp;
+    delete comp1;
+    delete comp2;
+    delete ecomp;
 }
 
 #pragma mark AppendComputationArgumentPassing
@@ -429,7 +431,9 @@ TEST_F(ComputationTest, AppendComputationArgumentPassing) {
     checkAppendComputation(comp1, comp2, "{[i]}", "{[i]->[2,i,2]}", {"$myInt$", "$myDouble$", "0"}, 5, {},
                            ecomp);
 
-    delete comp1, comp2, ecomp;
+    delete comp1;
+    delete comp2;
+    delete ecomp;
 }
 
 #pragma mark AppendComputationEmpty
@@ -443,7 +447,9 @@ TEST_F(ComputationTest, AppendComputationEmpty) {
 
     checkAppendComputation(comp1, comp2, "{[0]}", "{[0]->[0]}", {}, 0, {}, ecomp);
 
-    delete comp1, comp2, ecomp;
+    delete comp1;
+    delete comp2;
+    delete ecomp;
 
     // with params
     comp1 = new Computation();
@@ -464,7 +470,9 @@ TEST_F(ComputationTest, AppendComputationEmpty) {
 
     checkAppendComputation(comp1, comp2, "{[i]}", "{[i]->[2,i,2]}", {"$myInt$", "3.14159"}, 3, {}, ecomp);
 
-    delete comp1, comp2, ecomp;
+    delete comp1;
+    delete comp2;
+    delete ecomp;
 }
 
 
@@ -486,7 +494,9 @@ TEST_F(ComputationTest, AppendComputationReturnValues) {
 
     checkAppendComputation(comp1, comp2, "{[i]}", "{[i]->[2,i,2]}", {}, 2, {"$_iegen_0res$", "0"}, ecomp);
 
-    delete comp1, comp2, ecomp;
+    delete comp1;
+    delete comp2;
+    delete ecomp;
 }
 
 #pragma mark AppendComputationComplex
@@ -575,7 +585,11 @@ TEST_F(ComputationTest, AppendComputationComplex) {
     checkAppendComputation(comp1, comp2, "{[i]: 0 <= i < $N$}",
                            "{[i]->[1,i,1]}", {"$tmp$"}, 4, {"$_iegen_1tmp$"}, ecomp1);
 
-    delete comp1, comp2, comp3, ecomp2, ecomp1;
+    delete comp1;
+    delete comp2;
+    delete comp3;
+    delete ecomp2;
+    delete ecomp1;
 }
 
 #pragma mark ComputationNamePrefixing
@@ -655,7 +669,10 @@ TEST_F(ComputationTest, ComputationNamePrefixing) {
     EXPECT_EQ("$_iegen_2_iegen_0product$",
               prefixedComp3->getStmt(0)->getWriteDataSpace(0));
 
-    delete comp1, prefixedComp1, prefixedComp2, prefixedComp3;
+    delete comp1;
+    delete prefixedComp1;
+    delete prefixedComp2;
+    delete prefixedComp3;
 }
 
 
