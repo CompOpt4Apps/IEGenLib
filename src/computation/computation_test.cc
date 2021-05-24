@@ -916,8 +916,94 @@ TEST_F(ComputationTest, RescheduleUnitTest){
 	    	   {"{[1,t1,0]:0 <= t1 && t1 < NR}",
 		    "{[2,t1,0]:0 <= t1 && t1 < NR}",
 		    "{[0,t1,0]:0 <= t1 && t1 < NR}"});
+   
+    //Third computation test
+    Computation * comp3 = new Computation();
+    //S0
+    comp3->addStmt(new Stmt("u[i] = A[i][i]",
+                "{[i]: 0<= i && i < NR}",
+	        "{[i] -> [0,0,i,0,0]}",
+	        {
+		   {"A", "{[i] -> [i,i]}"}
+   		},
+		{
+		   {"u","{[i]->[i]}"},
+		}));
+    //S1
+    comp3->addStmt(new Stmt("t[i] = A[i][i]",
+                "{[i]: 0 <= i && i < NR}",
+	        "{[i] -> [1,0,i,0,0]}",
+	        {
+		   {"A", "{[i] -> [i,i]}"}
+   		},
+		{
+		   {"t","{[i]->[i]}"},
+		}));
+    //S2
+    comp3->addStmt(new Stmt("t[i] = A[i][i]",
+                "{[i]: 0 <= i && i < NR}",
+	        "{[i] -> [2,0,i,0,0]}",
+	        {
+		   {"A", "{[i] -> [i,i]}"}
+   		},
+		{
+		   {"t","{[i]->[i]}"},
+		}));
+    //S3
+    comp3->addStmt(new Stmt("t[i] = A[i][i]",
+                "{[i]: 0 <= i && i < NR}",
+	        "{[i] -> [2,0,i,0,1]}",
+	        {
+		   {"A", "{[i] -> [i,i]}"}
+   		},
+		{
+		   {"t","{[i]->[i]}"},
+		}));
+    //Reschedule statement S0 to come just before S2
+    comp3->reschedule(0,2);
+    checkTransformation(comp3,
+                   {"{[1,0,t1,0,0]:0 <= t1 && t1 < NR}",
+		    "{[0,0,t1,0,0]:0 <= t1 && t1 < NR}",
+		    "{[2,0,t1,0,0]:0 <= t1 && t1 < NR}",
+		    "{[2,0,t1,0,1]:0 <= t1 && t1 < NR}"});
+    //Reschedule statement S0 to come just before S1
+    comp3->reschedule(0,1);
+    checkTransformation(comp3,
+                   {"{[0,0,t1,0,0]:0 <= t1 && t1 < NR}",
+		    "{[1,0,t1,0,0]:0 <= t1 && t1 < NR}",
+		    "{[2,0,t1,0,0]:0 <= t1 && t1 < NR}",
+		    "{[2,0,t1,0,1]:0 <= t1 && t1 < NR}"});
+    //Reschedule statement S3 to come just before S2
+    comp3->reschedule(3,2);
+    checkTransformation(comp3,
+                   {"{[0,0,t1,0,0]:0 <= t1 && t1 < NR}",
+		    "{[1,0,t1,0,0]:0 <= t1 && t1 < NR}",
+		    "{[2,0,t1,0,1]:0 <= t1 && t1 < NR}",
+		    "{[2,0,t1,0,0]:0 <= t1 && t1 < NR}"});
+    //Reschedule statement S2 to come just before S3
+    comp3->reschedule(2,3);
+    checkTransformation(comp3,
+                   {"{[0,0,t1,0,0]:0 <= t1 && t1 < NR}",
+		    "{[1,0,t1,0,0]:0 <= t1 && t1 < NR}",
+		    "{[2,0,t1,0,0]:0 <= t1 && t1 < NR}",
+		    "{[2,0,t1,0,1]:0 <= t1 && t1 < NR}"});
+    //Reschedule statement S1 to come just before S3
+    comp3->reschedule(1,3);
+    checkTransformation(comp3,
+                   {"{[0,0,t1,0,0]:0 <= t1 && t1 < NR}",
+		    "{[2,0,t1,0,0]:0 <= t1 && t1 < NR}",
+		    "{[1,0,t1,0,0]:0 <= t1 && t1 < NR}",
+		    "{[2,0,t1,0,1]:0 <= t1 && t1 < NR}"});
+    //Reschedule statement S1 to come just before S2
+    comp3->reschedule(1,2);
+    checkTransformation(comp3,
+                   {"{[0,0,t1,0,0]:0 <= t1 && t1 < NR}",
+		    "{[1,0,t1,0,0]:0 <= t1 && t1 < NR}",
+		    "{[2,0,t1,0,0]:0 <= t1 && t1 < NR}",
+		    "{[2,0,t1,0,1]:0 <= t1 && t1 < NR}"});
     delete comp1;
     delete comp2;
+    delete comp3;
 }
 
 
