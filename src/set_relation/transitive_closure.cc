@@ -69,7 +69,7 @@ void Vertex::deleteTerm(Term *t){
     auto it = std::find(terms.begin(),terms.end(),t);
     if(it!=terms.end()){
         terms.erase(it);
-    }    
+    }   
 }
 
 //! Function adds term to Vertex.
@@ -136,8 +136,8 @@ EdgeType DiGraph::edgeOp (const EdgeType e1, const EdgeType e2){
     else return e2;
 }
 
-void  DiGraph::addEdge(Vertex& u, 
-		Vertex& v, EdgeType e){
+void  DiGraph::addEdge(Vertex u, 
+		Vertex v, EdgeType e){
     auto itU = std::find(vertices.begin(),vertices.end(),u);
     // Get the Positions to place the edges
     // in the adjacency matrix.
@@ -247,11 +247,6 @@ void DiGraph::mergeVertices(std::vector<int>& aliasMap, int u, int v) {
 }
 
 void DiGraph::simplifyGreaterOrEqual(){
-    //There is a chance that simplifying constraint
-    //will lead to vertexs that have the same node
-    //content. When this happens such vertexs will
-    //be merged in the adjacency matrix.
-    std::vector<int> possibleMerge;
     int size = adj.size();
     for(int i = 0 ; i < size; i++){
         for(int j = 0; j < size; j++){
@@ -270,21 +265,26 @@ void DiGraph::simplifyGreaterOrEqual(){
 	       // to a zero. 
 	       if (newCoefficient == 0){
 	           newVertex.deleteTerm(t);
+	       }else{
+	           t->setCoefficient(newCoefficient);
 	       }
-	       // Add a new greater than edge to the graph from vertex at i
-	       // to the newVertex.
-               addEdge(vertices[i],newVertex,EdgeType::GREATER_THAN);
-
                // Remove the current constraint since 
 	       // another node has been created to 
 	       // specify the constraint.
 	       adj[i][j] = EdgeType::NONE;
+	       
+	       // Add a new greater than edge to the graph from vertex at i
+	       // to the newVertex.
+               addEdge(vertices[i],newVertex,EdgeType::GREATER_THAN);
+
 
 	       
 	    }  
        }
     }
-   /* 
+   /*
+    *This code was taken out cos merging vertices is 
+    * no more needed. 
     // Apply merging. 
     // Vertices aliasing, this data structure helps
     // to store already merged vertices to where they

@@ -4638,11 +4638,12 @@ TEST_F(SetRelationTest, TransitiveClosure){
 		     " and 1 <= i1 and 1 <= j1 and 1 <= j2 and i1 <= n"
 		     " and j1 <= n and j2 <= n and i1 <= i2 and i2 <= n}");
     Relation* clo2 = rel2->TransitiveClosure();
-    EXPECT_EQ("{ [i1, i2] -> [j1, j2] : i1 - j1 + 1 = 0 && i1 >= 0 &&"
-       " i2 >= 0 && j2 >= 0 && -i1 + i2 >= 0 && -i1 + n >= 0 &&"
-       " -i2 + n >= 0 && -j1 + n >= 0 && j1 - 1 >= 0 && -j2 + n"
-       " >= 0 && n - 1 >= 0 && -i1 + n - 1 >= 0 && -i2 + j2 - 3"
-       " >= 0 && -i2 + n - 3 >= 0 }",clo2->prettyPrintString());
+    EXPECT_EQ("{ [i1, i2] -> [j1, j2] : i1 - j1 + 1 = 0 && i1 >= 0"
+	      " && -i1 + i2 >= 0 && -i1 + n >= 0 && i1 - 1 >= 0 &&"
+	      " -i2 + n >= 0 && i2 - 1 >= 0 && -j1 + n >= 0 && j1 - 1 >= 0"
+	      " && -j2 + n >= 0 && j2 - 1 >= 0 && n - 1 >= 0 && -i1 + n - 1"
+	      " >= 0 && -i2 + j2 - 2 >= 0 && -i2 + n - 2 >= 0 }",
+	      clo2->prettyPrintString());
 
     Relation* rel3 = new Relation(
 	     "{[n] -> [k] : rowptr <= k and k < rowptr1"
@@ -4674,6 +4675,32 @@ TEST_F(SetRelationTest, TransitiveClosure){
 	     " and row(n) < NR and 0 <= col1(n) and col1(n) < NC}");
 
     Set* clo5 = set->TransitiveClosure();
+    EXPECT_EQ("{ [n, k] : k - col2_inv(row(n), col1(n)) = 0 &&"
+	      " col1(n) - col2(k) = 0 && col1(n) >= 0 && col2(k)"
+	      " >= 0 && row(n) >= 0 && k - rowptr(row(n)) >= 0 &&"
+	      " NC - 1 >= 0 && NR - 1 >= 0 && A(row(n), col1(n))"
+	      " - 1 >= 0 && col2_inv(row(n), col1(n)) - rowptr(row(n))"
+	      " >= 0 && -k + rowptr(row(n) + 1) - 1 >= 0 && NC - col1(n)"
+	      " - 1 >= 0 && NC - col2(k) - 1 >= 0 && NR - row(n) - 1 >= 0"
+	      " && -col2_inv(row(n), col1(n)) + rowptr(row(n) + 1) - 1"
+	      " >= 0 && -rowptr(row(n)) + rowptr(row(n) + 1) - 1 >= 0 }"
+	      ,clo5->prettyPrintString());
+    
+    delete clo5;
+    delete set;
+    
+    set = new Set(
+	   "{ [i, jp] : i = col(jp)+1 && jp >= 0 && jp +1 >= T && col(jp) >="
+	   " 0 && idx(i) >= 0 && jp < n && col(jp) < n-2 &&"
+	   " idx(i+1) < n && idx(i) < idx(i+1)}");
+    clo5 = set->TransitiveClosure();
+    EXPECT_EQ("{ [i, jp] : i - col(jp) - 1 = 0 && jp >= 0 &&"
+	      " col(jp) >= 0 && idx(i) >= 0 && n - 1 >= 0 &&"
+	      " idx(i + 1) - 1 >= 0 && -jp + n - 1 >= 0 &&"
+	      " jp - T + 1 >= 0 && n - col(jp) - 3 >= 0 &&"
+	      " n - idx(i) - 1 >= 0 && n - idx(i + 1) - 1"
+	      " >= 0 && -idx(i) + idx(i + 1) - 1 >= 0 }"
+	      ,clo5->prettyPrintString());
 
     delete set;
     delete clo5;

@@ -1592,6 +1592,7 @@ Conjunction*  Conjunction::TransitiveClosure(){
     }
     g->simplifyGreaterOrEqual();
     g->transitiveClosure();
+
     // Delete all expressions in the retVal conjunction.
     retVal->reset();
 

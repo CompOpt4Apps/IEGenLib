@@ -119,8 +119,9 @@ public:
     void findAddMonotonicity () ;
 
     /*! Adds an edge to the graph.
+     * pointers in u and v gets adopted.
      * */
-    void addEdge(Vertex& u, Vertex& v, EdgeType e); 
+    void addEdge(Vertex u, Vertex v, EdgeType e); 
     
     /*! Function runs the transitive closure algorithm on 
      * the graph. The graph changes in place.

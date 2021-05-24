@@ -717,12 +717,12 @@ TEST_F(ComputationTest, PolyhedralSplit){
 
 TEST_F(ComputationTest, ToDotUnitTest){
     Computation* comp  = new Computation();
-    comp->addStmt(new Stmt("tmp(i) = f(i)", "{[i]: 0 <= i and i < N}",
+    comp->addStmt(new Stmt("S0: tmp(i) = f(i)", "{[i]: 0 <= i and i < N}",
                   "{[i] -> [0,i,0,0,0]}",
                   { {"f","{[i]->[i]}"}},
                   { {"tmp","{[i]->[i]}"}}));
     
-    comp->addStmt(new Stmt("tmp(i) -= A(i,j) * u(j)", 
+    comp->addStmt(new Stmt("S1: tmp(i) -= A(i,j) * u(j)", 
                   "{[i,j]: 0 <= i and i < N and 0 <= j and  j < i }",
                   "{[i,j] -> [0,i,1,j,0]}",
                   { 
@@ -732,7 +732,7 @@ TEST_F(ComputationTest, ToDotUnitTest){
                   },
                  { {"tmp","{[i,j]->[i]}"}}));
     
-    comp->addStmt(new Stmt("u(i) = tmp(i)/A(i,i)", 
+    comp->addStmt(new Stmt("S2: u(i) = tmp(i)/A(i,i)", 
                   "{[i]: 0 <= i and i < N }",
                   "{[i] -> [0,i,2,0,0]}",
                   { 
@@ -741,6 +741,7 @@ TEST_F(ComputationTest, ToDotUnitTest){
 		     {"u"  ,"{[i]->[i]}"},
                   },
                   { {"u"  ,"{[i]->[i]}"}}));
+    
     EXPECT_EQ(comp->toDotString(),
               "digraph dataFlowGraph_1{"
               " \nsubgraph cluster2"
@@ -749,14 +750,14 @@ TEST_F(ComputationTest, ToDotUnitTest){
 	      "label = \"Domain :\\{ [0, i] : i \\>\\= 0"
 	      " && N - 1 \\>\\= 0 && -i + N - 1 \\>\\= 0 \\} \""
 	      " \nS0[label=\"\\{ [0, i, 0, 0, 0] : i \\>\\= 0 && -i"
-	      " + N - 1 \\>\\= 0 \\}\\n tmp(i) = f(i)\"][shape=Mrecord]"
+	      " + N - 1 \\>\\= 0 \\}\\n S0: tmp(i) = f(i)\"][shape=Mrecord]"
 	      "[style=bold]  [color=grey];\nS1[label=\"\\{ [0, i, 1, j, 0]"
 	      " : i \\>\\= 0 && j \\>\\= 0 && -i + N - 1 \\>\\= 0 &&"
 	      " i - j - 1 \\>\\= 0 \\}\\n"
-	      " tmp(i) -= A(i,j) * u(j)\"][shape=Mrecord][style=bold]"
+	      " S1: tmp(i) -= A(i,j) * u(j)\"][shape=Mrecord][style=bold]"
 	      "  [color=grey];"
 	      "\nS2[label=\"\\{ [0, i, 2, 0, 0] : i \\>\\= 0 &&"
-	      " -i + N - 1 \\>\\= 0 \\}\\n u(i) = tmp(i)/A(i,i)\"]"
+	      " -i + N - 1 \\>\\= 0 \\}\\n S2: u(i) = tmp(i)/A(i,i)\"]"
 	      "[shape=Mrecord][style=bold]  [color=grey];"
 	      "\n}\n"
 	      "f[label=\"f[] \"] [shape=box][style=bold][color=grey];\n"
