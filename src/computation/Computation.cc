@@ -1085,7 +1085,7 @@ std::string Computation::toDotString(){
     //      Easier way. :) 
     for(int i = 0; i < stmts.size(); i++){
         if (maxLevel > 0)
-            projectedIS[maxLevel-1][i] = newIS[i].second;
+            projectedIS[maxLevel-1][i] =new Set(*newIS[i].second);
 	//Perform projections for each column
 	for (int j = maxLevel -1; j >= 1 ; j --){
 	    projectedIS[j -1][i] = projectedIS[j][i]->projectOut(j);   
@@ -1184,6 +1184,13 @@ std::string Computation::toDotString(){
     }
 
     ss << "}"; 
+    // Clean up memory.
+    for(int j = 0 ; j < maxLevel ; j++)
+	for (int k = 0 ; k <  stmts.size(); k++)
+	    delete projectedIS[j][k];
+    for(Set* set : transformedSpaces){
+        delete set;
+    }
     return ss.str();
 }
 
@@ -1772,7 +1779,24 @@ void VisitorChangeUFsForOmega::postVisitUFCallTerm(UFCallTerm* callTerm) {
         throw assert_exception(
             "Cannot make UF calls with only constant arguments");
     }
-
+    // Create a ufMacro uf Array access          
+    std::string ufMacro = callTerm->name();
+    std::string ufArrayAccess = callTerm->name(); 
+    ufMacro+= "(";
+    bool isFirst = true;
+    for (int i = 0; i < callTerm->numArgs(); i++){
+           
+	if(isFirst){
+            ufMacro+= "t"+ std::to_string(i);
+            isFirst = false;
+	}else{
+	    ufMacro += ",t"+std::to_string(i);
+	}
+        ufArrayAccess+="[t"+std::to_string(i)+"]";
+    }
+    ufMacro+=")";
+    // Map ufs as macros to actual array aaccess.
+    macros[ufMacro] = ufArrayAccess;
     // save original coefficient, then temporarily modify for printing
     int originalCoefficient = callTerm->coefficient();
     callTerm->setCoefficient(1);
