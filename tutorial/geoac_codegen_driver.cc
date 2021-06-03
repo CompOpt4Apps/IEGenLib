@@ -43,7 +43,7 @@ int main(int argc, char **argv){
   //sources.c = c(r,theta,phi,spl.Temp_Spline);
   Stmt*s1 = new Stmt("$sources.c$ = "+cCompRes.returnValues.back()+";", 
       "{[0]}",
-      "{[0]->["+std::to_string(cCompRes.tuplePosition+1)+", 0, 0]}",
+      "{[0]->["+std::to_string(cCompRes.tuplePosition+1)+"]}",
       {{cCompRes.returnValues.back(), "{[0]->[0]}"}},
       {{"$sources.c$", "{[0]->[0]}"}}
       );
@@ -59,7 +59,7 @@ int main(int argc, char **argv){
   //sources.w = w(r,theta,phi); The w function always return 0!
   Stmt*s2 = new Stmt("$sources.w$ = 0;", 
       "{[0]}",  //Iteration schedule
-      "{[0]->["+std::to_string(cCompRes.tuplePosition+2)+", 0, 0]}",  //Execution schedule
+      "{[0]->["+std::to_string(cCompRes.tuplePosition+2)+"]}",  //Execution schedule
       {}, //Data reads
       {{"$sources.w$", "{[0]->[0]}"}} //Data writes
       );
@@ -118,14 +118,7 @@ int main(int argc, char **argv){
       );
   
   temp->addStmt(s4);
-  /*
-  vector < pair<string, string> > dataReads;
-  vector < pair<string, string> > dataWrites;
-  Statement 1 = {"C","[k]->[k]"};
-  dataReads.push_back(make_pair(" "," "));
-  dataWrites.push_back(make_pair("C","{[k]->[k]}"));
-  cout << FindSegment.codeGen() <<endl;
-  */
+
   
   /*
   //Calling toDot() on the Computation structure
@@ -136,7 +129,7 @@ int main(int argc, char **argv){
 
   //Write codegen to a file
   ofstream outStream;
-  outStream.open("c_codegen.cpp");
+  outStream.open("codegen.c");
   outStream << temp->codeGen();
   outStream.close();
 
@@ -160,6 +153,7 @@ Computation* c_diff_Computation(){
   cDiffComputation->addParameter("$n$","int");
   cDiffComputation->addParameter("$Temp_Spline$","NaturalCubicSpline_1D &");
 
+  cDiffComputation->addDataSpace("$r_eval$");
   //Creating statement1
   //double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);
   Stmt* s1 = new Stmt("double $r_eval$ = min($r$, r_max); $r_eval$ = max($r_eval$, r_min)",
@@ -492,7 +486,7 @@ Computation* Find_Segment_Computation(){
   //Creating s0
   //if(x >= x_vals[i] && x <= x_vals[i+1]) prev = i;
   Stmt*  s0 = new Stmt("if($x$ >= $x_vals$[i] && $x$ <= $x_vals$[i+1]) $prev$ = i;",
-      "{[i]: i>=0 && i<$length$}",  //Iteration schedule - Only happening one time (not iterating)
+      "{[i]: i>=0 && i<$length$}",  //Iteration schedule 
       "{[i]->[0, i, 0]}", //Execution schedule - scheduling statement to be first (scheduling function)
       {{"$x$","{[0]->[0]}"}, {"$x_vals$","{[i]->[i]}"}, {"$x_vals$","{[i]->[ip1]: ip1 = i+1}"}}, //Reads
       {{"$prev$","{[0]->[0]}"}}   //writes
