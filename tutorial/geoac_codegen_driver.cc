@@ -19,14 +19,47 @@ Computation* u_Computation();
  */
 int main(int argc, char **argv){
 
-  Computation* temp = new Computation();
+  Computation* updateSources = new Computation(); //renamed from temp to updateSource
+
+  updateSources->addDataSpace("$ray_length$");
+  updateSources->addDataSpace("$current_values$");
+  updateSources->addDataSpace("$spl$");
+  updateSources->addDataSpace("$sources$");
+
+  updateSources->addDataSpace("$r$");
+  updateSources->addDataSpace("$theta$");
+  updateSources->addDataSpace("$phi$");
+/* 
+  // double r = current_values[0],             theta = current_values[1],      phi = current_values[2];
+  Stmt * s01 = new Stmt("double $r$ = $current_values$[0], $theta$=$current_values$[1], $phi$=$current_values$[2];",
+       "{[0]}",
+       "{[0]->[0]}",
+       {{"$current_values$[0]","{[0]->[0]}"},
+        {"$current_values$[1]","{[0]->[1]}"},
+        {"$current_values$[2]","{[0]->[2]}"}},
+       {{"$r$", "{[0]->[0]}"},
+        {"$theta$", "{[0]->[0]}"},
+        {"$phi$", "{[0]->[0]}"}}
+       );
+  updateSources->addStmt(s01);
+
+  //double nu[3] = {current_values[3],        current_values[4],              current_values[5]};
+  updateSources->addDataSpace("$nu$");
+  Stmt * s02 = new Stmt("double $nu$[3] = {$current_values$[3], $current_values$[4], $current_values$[5]};",
+       "{[0]}",
+       "{[0]->[1]",
+       {{"$current_values$[3]","{[0]->[3]}"},
+        {"$current_values$[4]","{[0]->[4]}"},
+        {"$current_values$[5]","{[0]->[5]}"}},
+       {{"$nu$", "{[0]->[3]}"}}
+       );
+  updateSources->addStmt(s02);
+*/
+
   Computation* cComputation = c_Computation();
 
   //Add the args of the c function (computation to be appended) as data spaces to temp
-  temp->addDataSpace("$r$");
-  temp->addDataSpace("$theta$");
-  temp->addDataSpace("$phi$");
-  temp->addDataSpace("$spl.Temp_Spline$");
+  updateSources->addDataSpace("$spl.Temp_Spline$");
 
   //Args to the c_Computation
   vector<std::string> cCompArgs;
@@ -36,9 +69,9 @@ int main(int argc, char **argv){
   cCompArgs.push_back("$spl.Temp_Spline$");
 
   // Return values are stored in a struct of the computation: AppendComputationResult
-  AppendComputationResult cCompRes = temp->appendComputation(cComputation, "{[0]}", "{[0]->[0]}", cCompArgs);
+  AppendComputationResult cCompRes = updateSources->appendComputation(cComputation, "{[0]}", "{[0]->[2]}", cCompArgs); // set to 2
 
-  temp->addDataSpace("$sources.c$");
+  updateSources->addDataSpace("$sources.c$");
   //Creating s1
   //sources.c = c(r,theta,phi,spl.Temp_Spline);
   Stmt*s1 = new Stmt("$sources.c$ = "+cCompRes.returnValues.back()+";", 
@@ -52,9 +85,9 @@ int main(int argc, char **argv){
     << "- Execution Schedule : "<< s1->getExecutionSchedule()->prettyPrintString() << "\n\t" ;
 
   
-  temp->addStmt(s1);
+  updateSources->addStmt(s1);
 
-  temp->addDataSpace("$sources.w$");
+  updateSources->addDataSpace("$sources.w$");
   //Creating s2
   //sources.w = w(r,theta,phi); The w function always return 0!
   Stmt*s2 = new Stmt("$sources.w$ = 0;", 
@@ -64,11 +97,11 @@ int main(int argc, char **argv){
       {{"$sources.w$", "{[0]->[0]}"}} //Data writes
       );
   
-  temp->addStmt(s2);
+  updateSources->addStmt(s2);
   
   //Add the args of the v function (computation to be appended) as data spaces to temp
   //r, theta and phi have already been added
-  temp->addDataSpace("$spl.Windv_Spline$");
+  updateSources->addDataSpace("$spl.Windv_Spline$");
   //Args to the v_Computation
   vector<std::string> vCompArgs;
   vCompArgs.push_back("$r$");
@@ -78,9 +111,9 @@ int main(int argc, char **argv){
   Computation* vComputation = v_Computation();
   
   // Return values are stored in a struct of the computation: AppendComputationResult
-  AppendComputationResult vCompRes = temp->appendComputation(vComputation, "{[0]}", "{[0]->["+std::to_string(cCompRes.tuplePosition+3)+"]}", vCompArgs);
+  AppendComputationResult vCompRes = updateSources->appendComputation(vComputation, "{[0]}", "{[0]->["+std::to_string(cCompRes.tuplePosition+3)+"]}", vCompArgs);
   
-  temp->addDataSpace("$sources.v$");
+  updateSources->addDataSpace("$sources.v$");
   //Creating s3
   //sources.v = v(r,theta,phi,spl.Temp_Spline);
   Stmt*s3 = new Stmt("$sources.v$ = "+vCompRes.returnValues.back()+";", 
@@ -90,12 +123,12 @@ int main(int argc, char **argv){
       {{"$sources.v$", "{[0]->[0]}"}}
       );
   
-  temp->addStmt(s3);
+  updateSources->addStmt(s3);
 
 
   //Add the args of the u function (computation to be appended) as data spaces to temp
   //r, theta and phi have already been added
-  temp->addDataSpace("$spl.Windu_Spline$");
+  updateSources->addDataSpace("$spl.Windu_Spline$");
   //Args to the u_Computation
   vector<std::string> uCompArgs;
   uCompArgs.push_back("$r$");
@@ -105,9 +138,9 @@ int main(int argc, char **argv){
   Computation* uComputation = u_Computation();
   
   // Return values are stored in a struct of the computation: AppendComputationResult
-  AppendComputationResult uCompRes = temp->appendComputation(uComputation, "{[0]}", "{[0]->["+std::to_string(vCompRes.tuplePosition+2)+"]}", uCompArgs);
+  AppendComputationResult uCompRes = updateSources->appendComputation(uComputation, "{[0]}", "{[0]->["+std::to_string(vCompRes.tuplePosition+2)+"]}", uCompArgs);
   
-  temp->addDataSpace("$sources.u$");
+  updateSources->addDataSpace("$sources.u$");
   //Creating s3=4
   //sources.u = u(r,theta,phi, spl.Windu_Spline);
   Stmt*s4 = new Stmt("$sources.u$ = "+uCompRes.returnValues.back()+";", 
@@ -117,7 +150,7 @@ int main(int argc, char **argv){
       {{"$sources.u$", "{[0]->[0]}"}}
       );
   
-  temp->addStmt(s4);
+  updateSources->addStmt(s4);
 
   
   /*
@@ -130,7 +163,7 @@ int main(int argc, char **argv){
   //Write codegen to a file
   ofstream outStream;
   outStream.open("codegen.c");
-  outStream << temp->codeGen();
+  outStream << updateSources->codeGen();
   outStream.close();
 
   return 0;
@@ -448,7 +481,7 @@ Computation* Eval_Spline_f_Computation(){
       "{[0]->["+std::to_string(fSegCompRes.tuplePosition+3)+"]}", //Execution schedule - scheduling statement to be first (scheduling function)
       {{"$k$","{[0]->[0]}"}, {"$x$","{[0]->[0]}"}, {"Spline.x_vals","{[0]->[k1]: k1 = $k$}"}, {"$Spline.x_vals$","{[0]->[kp1]: kp1 = $k$+1}"}, 
        {"$Spline.slopes$","{[0]->[x1]: x1 = $k$}"}, {"$Spline.f_vals$","{[0]->[k1]: k1 = $k$}"}, {"$Spline.f_vals$","{[0]->[kp1]: kp1 = $k$+1}"}, 
-       {"$Spline.slopes$","{[0]->[kp1]: kp1 = k+1}"}, 
+       {"$Spline.slopes$","{[0]->[kp1]: kp1 = $k$+1}"}, 
        {"$X$","{[0]->[0]}"}, {"$A$","{[0]->[0]}"}, {"$B$","{[0]->[0]}"}},//Data reads
       {{"$X$", "{[0]->[0]}"}, {"$A$", "{[0]->[0]}"}, {"$B$", "{[0]->[0]}"}, {"$result$", "{[0]->[0]}"}, } //Data writes
       );
