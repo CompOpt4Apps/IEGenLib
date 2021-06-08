@@ -10,6 +10,7 @@ using namespace std;
 Computation* Find_Segment_Computation();
 Computation* Eval_Spline_f_Computation();
 Computation* Eval_Spline_df_Computation(); 
+Computation* Eval_Spline_ddf_Computation();
 
 Computation* c_Computation();
 Computation* v_Computation();
@@ -19,7 +20,7 @@ Computation* u_Computation();
  * Main function
  */
 int main(int argc, char **argv){
-
+   
   Computation* updateSources = new Computation(); //renamed from temp to updateSource
 
   updateSources->addDataSpace("$ray_length$");
@@ -168,6 +169,103 @@ int main(int argc, char **argv){
   outStream.close();
 
   return 0;
+}
+
+
+/*
+double Eval_Spline_ddf(double x, struct NaturalCubicSpline_1D & Spline){
+    int k = Find_Segment(x, Spline.x_vals, Spline.length, Spline.accel);
+    double result = 0.0;    
+    if(k < Spline.length){
+        double X = (x - Spline.x_vals[k])/(Spline.x_vals[k+1] - Spline.x_vals[k]);
+        double A = Spline.slopes[k] * (Spline.x_vals[k+1] - Spline.x_vals[k]) - (Spline.f_vals[k+1] - Spline.f_vals[k]);
+        double B = -Spline.slopes[k+1] * (Spline.x_vals[k+1] - Spline.x_vals[k]) + (Spline.f_vals[k+1] - Spline.f_vals[k]);
+        
+        result =  2.0 * (B - 2.0 * A + (A - B) * 3.0 * X)/pow(Spline.x_vals[k+1] - Spline.x_vals[k],2);
+    } 
+}
+*/
+Computation* Eval_Spline_ddf_Computation(){
+  Computation* evalSplineDDFComputation = new Computation();
+  evalSplineDDFComputation->addParameter("$x$", "double");
+  evalSplineDDFComputation->addParameter("$Spline$", "struct NaturalCubicSpline_1D &");
+  
+  evalSplineDDFComputation->addDataSpace("$Spline.x_vals$");
+  evalSplineDDFComputation->addDataSpace("$Spline.length$");
+  evalSplineDDFComputation->addDataSpace("$Spline.accel$");
+
+  Computation* findSegmentComputation= Find_Segment_Computation();
+  //Args to the Find_Segment_Computation
+  vector<std::string> findSegArgs;
+  findSegArgs.push_back("$x$");
+  findSegArgs.push_back("$Spline.x_vals$");
+  findSegArgs.push_back("$Spline.length$");
+  findSegArgs.push_back("$Spline.accel$"); 
+  
+  //Return values are stored in a struct of the AppendComputationResult data structure
+  AppendComputationResult fSegCompRes = evalSplineDDFComputation->appendComputation(findSegmentComputation, "{[0]}", "{[0]->[0]}", findSegArgs);
+  unsigned int newTuplePos = fSegCompRes.tuplePosition + 1;
+
+  evalSplineDDFComputation->addDataSpace("$k$");
+  //Creating s1
+  //int k = Find_Segment(x, Spline.x_vals, Spline.length, Spline.accel);
+  Stmt* s1 = new Stmt("int $k$ = "+fSegCompRes.returnValues.back()+";",
+           "{[0]}",  //Iteration schedule - Only happening one time (not iterating)
+           "{[0]->["+std::to_string(newTuplePos)+"]}", //Execution schedule - scheduling statement to be first (scheduling function)
+           {{fSegCompRes.returnValues.back(), "{[0]->[0]}"}}, 
+           {{"$k$", "{[0]->[0]}"}}  
+  );   
+  //Adding s1
+  evalSplineDDFComputation->addStmt(s1);
+
+  evalSplineDDFComputation->addDataSpace("$eval_Spline_ddf_return$");
+  //Creating s2
+  Stmt* s2 = new Stmt(
+          "double $eval_Spline_ddf_return$ = 0.0;",
+          "{[0]}",  //Iteration schedule
+          "{[0]->["+std::to_string(newTuplePos+1)+"]}", //Execution schedule
+          {}, 
+         {{"$eval_Spline_ddf_return$", "{[0]->[0]}"}}  
+  );
+  //Adding s2
+  evalSplineDDFComputation->addStmt(s2);
+  
+
+  evalSplineDDFComputation->addDataSpace("$X$");
+  evalSplineDDFComputation->addDataSpace("$A$");
+  evalSplineDDFComputation->addDataSpace("$B$");
+  evalSplineDDFComputation->addDataSpace("$Spline.slopes$");
+  evalSplineDDFComputation->addDataSpace("$Spline.f_vals$");
+  //Creating s3 --> the entire if block, slightly modified
+  Stmt* s3 = new Stmt(
+ 	"if($k$ < $Spline.length$){ double $X$ = ($x$ - $Spline.x_vals$[$k$])/($Spline.x_vals$[$k$+1] - $Spline.x_vals$[$k$]);double $A$ = $Spline.slopes$[$k$] * ($Spline.x_vals$[$k$+1] - $Spline.x_vals$[$k$]) - ($Spline.f_vals$[$k$+1] - $Spline.f_vals$[$k$]);double $B$ = -$Spline.slopes$[$k$+1] * ($Spline.x_vals$[$k$+1] - $Spline.x_vals$[$k$]) + ($Spline.f_vals$[$k$+1] - $Spline.f_vals$[$k$]); $eval_Spline_ddf_return$ = 2.0 * ($B$ - 2.0 * $A$ + ($A$ - $B$) * 3.0 * $X$) / pow($Spline.x_vals$[$k$+1] - $Spline.x_vals$[$k$, 2);}", 
+          "{[0]}",  //Iteration schedu
+          "{[0]->["+std::to_string(newTuplePos+2)+"]}", //Execution schedule
+           {
+		{"$k$","{[0]->[0]}"},
+		{"$x$","{[0]->[0]}"}, 
+                {"$Spline.x_vals$","{[0]->[k1]: k1 = $k$}"}, 
+                {"$Spline.x_vals$","{[0]->[kp1]: kp1 = $k$+1}"}, 
+                {"$Spline.slopes$","{[0]->[x1]: x1 = $k$}"},
+                {"$Spline.f_vals$","{[0]->[kp1]: kp1 = $k$+1}"}, 
+                {"$Spline.f_vals$","{[0]->[k1]: k1 = $k$}"}, 
+                {"$Spline.slopes$","{[0]->[kp1]: kp1 = $k$+1}"}, 
+                {"$B$","{[0]->[0]}"},
+                {"$A$","{[0]->[0]}"},
+                {"$X$","{[0]->[0]}"}
+           },//Data reads
+           {
+		{"$X$", "{[0]->[0]}"},
+	        {"$A$", "{[0]->[0]}"},
+                {"$B$", "{[0]->[0]}"},
+                {"$eval_Spline_ddf_return$", "{[0]->[0]}"}
+           } //Data writes
+  );
+  //Adding s3
+  evalSplineDDFComputation->addStmt(s3);
+  
+  evalSplineDDFComputation->addReturnValue("$eval_Spline_ddf_return$", true);
+  return evalSplineDDFComputation;
 }
 
 
