@@ -60,7 +60,6 @@ int main(int argc, char **argv){
 
     Computation* cComputation = c_Computation();
   
-<<<<<<< Updated upstream
     //Add the args of the c function (computation to be appended) as data spaces to temp
     updateSources->addDataSpace("$spl.Temp_Spline$");
   
@@ -158,12 +157,12 @@ int main(int argc, char **argv){
     updateSources->addStmt(s4);
   
     
+    /*
     //Calling toDot() on the Computation structure
-    ofstream dotFileStream("codegen_dot.txt");
+    fstream dotFileStream;
     cout << "Entering toDot()" << "\n";
-    string dotString = updateSources->toDotString();
-    dotFileStream << dotString;
-    dotFileStream.close();
+    temp->toDot(dotFileStream,"c_dot.txt");
+    */
   
     //Write codegen to a file
     ofstream outStream;
