@@ -1112,7 +1112,8 @@ std::string Computation::toDotString(){
         for (int data_read_index = 0;
              data_read_index < getStmt(i)->getNumReads(); data_read_index++) {
             string readDataSpace =
-                getStmt(i)->getReadDataSpace(data_read_index);
+                iegenlib::replaceInString(getStmt(i)->getReadDataSpace(data_read_index),"$","");
+            readDataSpace = iegenlib::replaceInString(readDataSpace,".","_");
             // Check to make sure the data space is not created if it already
             // exists
             if (!(std::count(data_spaces.begin(), data_spaces.end(),
@@ -1137,10 +1138,10 @@ std::string Computation::toDotString(){
 
             ss << "\t\t" << readDataSpace << "->"
                     << "S" << i << "[label=\"["
-                    << getStmt(i)
+                    << iegenlib::replaceInString(getStmt(i)
                            ->getReadRelation(data_read_index)
                            ->getString()
-                           .substr(start_pos + 1, end_pos - start_pos - 1)
+                           .substr(start_pos + 1, end_pos - start_pos - 1),"$","")
                     << "]\"]"
                     << "\n";
         }
@@ -1150,7 +1151,8 @@ std::string Computation::toDotString(){
              data_write_index < getStmt(i)->getNumWrites();
              data_write_index++) {
             string writeDataSpace =
-                getStmt(i)->getWriteDataSpace(data_write_index);
+                iegenlib::replaceInString(getStmt(i)->getWriteDataSpace(data_write_index),"$","");
+            writeDataSpace = iegenlib::replaceInString(writeDataSpace,".","_");
             // Check to make sure the data space is not created if it already
             // exists
             if (!(std::count(data_spaces.begin(), data_spaces.end(),
@@ -1174,10 +1176,10 @@ std::string Computation::toDotString(){
 
             ss << "\t\t"
                     << "S" << i << "->" << writeDataSpace << "[label=\"["
-                    << getStmt(i)
+                    << iegenlib::replaceInString(getStmt(i)
                            ->getWriteRelation(data_write_index)
                            ->getString()
-                           .substr(start_pos + 1, end_pos - start_pos - 1)
+                           .substr(start_pos + 1, end_pos - start_pos - 1),"$","")
                     << "]\"]"
                     << "\n";
         }
@@ -1255,7 +1257,7 @@ void Computation::toDotScan(std::vector<std::pair<int,Set*>> &activeStmts, int l
 		<<"[label=\""
 		<< stmIter
 	        << "\\n "
-	        << getStmt(activeStmts[0].first)->getStmtSourceCode()	
+	        << replaceInString(getStmt(activeStmts[0].first)->getStmtSourceCode(),"$","")
 		<< "\"][shape=Mrecord][style=bold]  [color=grey];\n";
         return;
     }
