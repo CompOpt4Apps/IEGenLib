@@ -15,6 +15,7 @@ Computation* Eval_Spline_ddf_Computation();
 Computation* c_Computation();
 Computation* v_Computation();
 Computation* u_Computation();
+Computation* c_diff_Computation();
 
 /**
  * Main function
@@ -58,7 +59,6 @@ int main(int argc, char **argv){
     updateSources->addStmt(s02);
     */
 
-    Computation* cComputation = c_Computation();
   
     //Add the args of the c function (computation to be appended) as data spaces to temp
     updateSources->addDataSpace("$spl.Temp_Spline$");
@@ -70,6 +70,8 @@ int main(int argc, char **argv){
     cCompArgs.push_back("$phi$");
     cCompArgs.push_back("$spl.Temp_Spline$");
 
+    Computation* cComputation = c_Computation();
+
     // Return values are stored in a struct of the computation: AppendComputationResult
     AppendComputationResult cCompRes = updateSources->appendComputation(cComputation, "{[0]}", "{[0]->[2]}", cCompArgs); // set to 2
  
@@ -77,7 +79,7 @@ int main(int argc, char **argv){
     updateSources->addDataSpace("$sources.c$");
     //Creating s1
     //sources.c = c(r,theta,phi,spl.Temp_Spline);
-    Stmt*s1 = new Stmt("$sources.c$ = "+cCompRes.returnValues.back()+";", 
+    Stmt* s1 = new Stmt("$sources.c$ = "+cCompRes.returnValues.back()+";", 
         "{[0]}",
         "{[0]->["+std::to_string(newTuplePos)+"]}",
         {{cCompRes.returnValues.back(), "{[0]->[0]}"}},
@@ -93,7 +95,7 @@ int main(int argc, char **argv){
     updateSources->addDataSpace("$sources.w$");
     //Creating s2
     //sources.w = w(r,theta,phi); The w function always return 0!
-    Stmt*s2 = new Stmt("$sources.w$ = 0;", 
+    Stmt* s2 = new Stmt("$sources.w$ = 0;", 
         "{[0]}",  //Iteration schedule
         "{[0]->["+std::to_string(newTuplePos+1)+"]}",  //Execution schedule
         {}, //Data reads
@@ -111,17 +113,19 @@ int main(int argc, char **argv){
     vCompArgs.push_back("$theta$");
     vCompArgs.push_back("$phi$");
     vCompArgs.push_back("$spl.Windv_Spline$");
+    
     Computation* vComputation = v_Computation();
     
     // Return values are stored in a struct of the computation: AppendComputationResult
-    AppendComputationResult vCompRes = updateSources->appendComputation(vComputation, "{[0]}", "{[0]->["+std::to_string(cCompRes.tuplePosition+3)+"]}", vCompArgs);
+    AppendComputationResult vCompRes = updateSources->appendComputation(vComputation, "{[0]}", "{[0]->["+std::to_string(newTuplePos+2)+"]}", vCompArgs);
+    newTuplePos = vCompRes.tuplePosition+1;
     
     updateSources->addDataSpace("$sources.v$");
     //Creating s3
     //sources.v = v(r,theta,phi,spl.Temp_Spline);
-    Stmt*s3 = new Stmt("$sources.v$ = "+vCompRes.returnValues.back()+";", 
+    Stmt* s3 = new Stmt("$sources.v$ = "+vCompRes.returnValues.back()+";", 
         "{[0]}",
-        "{[0]->["+std::to_string(newTuplePos+2)+"]}",
+        "{[0]->["+std::to_string(newTuplePos)+"]}",
         {{vCompRes.returnValues.back(), "{[0]->[0]}"}},
         {{"$sources.v$", "{[0]->[0]}"}}
         );
@@ -138,16 +142,17 @@ int main(int argc, char **argv){
     uCompArgs.push_back("$theta$");
     uCompArgs.push_back("$phi$");
     uCompArgs.push_back("$spl.Windu_Spline$");
+    
     Computation* uComputation = u_Computation();
     
     // Return values are stored in a struct of the computation: AppendComputationResult
-    AppendComputationResult uCompRes = updateSources->appendComputation(uComputation, "{[0]}", "{[0]->["+std::to_string(vCompRes.tuplePosition+2)+"]}", uCompArgs);
+    AppendComputationResult uCompRes = updateSources->appendComputation(uComputation, "{[0]}", "{[0]->["+std::to_string(newTuplePos+1)+"]}", uCompArgs);
     
     newTuplePos = uCompRes.tuplePosition+1;
     updateSources->addDataSpace("$sources.u$");
-    //Creating s3=4
+    //Creating s4
     //sources.u = u(r,theta,phi, spl.Windu_Spline);
-    Stmt*s4 = new Stmt("$sources.u$ = "+uCompRes.returnValues.back()+";", 
+    Stmt* s4 = new Stmt("$sources.u$ = "+uCompRes.returnValues.back()+";", 
         "{[0]}",
         "{[0]->["+std::to_string(newTuplePos)+"]}",
         {{uCompRes.returnValues.back(), "{[0]->[0]}"}},
@@ -155,13 +160,44 @@ int main(int argc, char **argv){
         );
     
     updateSources->addStmt(s4);
+
+    //Add the args of the c_diff function (computation to be appended) as data spaces to updateSources
+    //r, theta and phi have already been added
+    updateSources->addDataSpace("$spl.Windu_Spline$");
+    //Args to the c_diff
+    vector<std::string> cDiffCompArgs;
+    cDiffCompArgs.push_back("$r$");
+    cDiffCompArgs.push_back("$theta$");
+    cDiffCompArgs.push_back("$phi$");
+    cDiffCompArgs.push_back("0");
+    cDiffCompArgs.push_back("$spl.Temp_Spline$");
+    
+    Computation* cDiffComputation = c_diff_Computation();
+    
+    // Return values are stored in a struct of the computation: AppendComputationResult
+    AppendComputationResult cDiffCompRes = updateSources->appendComputation(cDiffComputation, "{[0]}", "{[0]->["+std::to_string(newTuplePos+1)+"]}", cDiffCompArgs);
+    
+    newTuplePos = cDiffCompRes.tuplePosition+1;
+    updateSources->addDataSpace("$sources.dc$");
+    //Creating s5
+    //sources.dc[0] = c_diff(r,theta,phi,0,spl.Temp_Spline);
+    Stmt* s5 = new Stmt("$sources.dc$[0] = "+cDiffCompRes.returnValues.back()+";", 
+        "{[0]}",
+        "{[0]->["+std::to_string(newTuplePos)+"]}",
+        {{cDiffCompRes.returnValues.back(), "{[0]->[0]}"}},
+        {{"$sources.dc$", "{[0]->[0]}"}}
+        );
+    
+    updateSources->addStmt(s5);
   
     
-    /*
     //Calling toDot() on the Computation structure
-    fstream dotFileStream;
+    /*
+    ofstream dotFileStream("codegen_dot.txt");
     cout << "Entering toDot()" << "\n";
-    temp->toDot(dotFileStream,"c_dot.txt");
+    string dotString = updateSources->toDotString();
+    dotFileStream << dotString;
+    dotFileStream.close();
     */
   
     //Write codegen to a file
@@ -174,110 +210,15 @@ int main(int argc, char **argv){
 }
 
 
-/*
-double Eval_Spline_ddf(double x, struct NaturalCubicSpline_1D & Spline){
-    int k = Find_Segment(x, Spline.x_vals, Spline.length, Spline.accel);
-    double result = 0.0;    
-    if(k < Spline.length){
-        double X = (x - Spline.x_vals[k])/(Spline.x_vals[k+1] - Spline.x_vals[k]);
-        double A = Spline.slopes[k] * (Spline.x_vals[k+1] - Spline.x_vals[k]) - (Spline.f_vals[k+1] - Spline.f_vals[k]);
-        double B = -Spline.slopes[k+1] * (Spline.x_vals[k+1] - Spline.x_vals[k]) + (Spline.f_vals[k+1] - Spline.f_vals[k]);
-        
-        result =  2.0 * (B - 2.0 * A + (A - B) * 3.0 * X)/pow(Spline.x_vals[k+1] - Spline.x_vals[k],2);
-    } 
-}
-*/
-Computation* Eval_Spline_ddf_Computation(){
-    Computation* evalSplineDdfComputation = new Computation();
-    evalSplineDdfComputation->addParameter("$x$", "double");
-    evalSplineDdfComputation->addParameter("$Spline$", "struct NaturalCubicSpline_1D &");
-    
-    evalSplineDdfComputation->addDataSpace("$Spline.x_vals$");
-    evalSplineDdfComputation->addDataSpace("$Spline.length$");
-    evalSplineDdfComputation->addDataSpace("$Spline.accel$");
-  
-    Computation* findSegmentComputation= Find_Segment_Computation();
-    //Args to the Find_Segment_Computation
-    vector<std::string> findSegArgs;
-    findSegArgs.push_back("$x$");
-    findSegArgs.push_back("$Spline.x_vals$");
-    findSegArgs.push_back("$Spline.length$");
-    findSegArgs.push_back("$Spline.accel$"); 
-    
-    //Return values are stored in a struct of the AppendComputationResult data structure
-    AppendComputationResult fSegCompRes = evalSplineDdfComputation->appendComputation(findSegmentComputation, "{[0]}", "{[0]->[0]}", findSegArgs);
-   
-    unsigned int newTuplePos = fSegCompRes.tuplePosition + 1;
-    evalSplineDdfComputation->addDataSpace("$k$");
-    //Creating s1
-    //int k = Find_Segment(x, Spline.x_vals, Spline.length, Spline.accel);
-    Stmt* s1 = new Stmt("int $k$ = "+fSegCompRes.returnValues.back()+";",
-        "{[0]}",  //Iteration schedule - Only happening one time (not iterating)
-        "{[0]->["+std::to_string(newTuplePos)+"]}", //Execution schedule - scheduling statement to be first (scheduling function)
-        {{fSegCompRes.returnValues.back(), "{[0]->[0]}"}}, 
-        {{"$k$", "{[0]->[0]}"}}  
-    );   
-    //Adding s1
-    evalSplineDdfComputation->addStmt(s1);
-  
-    evalSplineDdfComputation->addDataSpace("$eval_Spline_ddf_return$");
-    //Creating s2
-    Stmt* s2 = new Stmt(
-        "double $eval_Spline_ddf_return$ = 0.0;",
-        "{[0]}",  //Iteration schedule
-        "{[0]->["+std::to_string(newTuplePos+1)+"]}", //Execution schedule
-        {}, 
-        {{"$eval_Spline_ddf_return$", "{[0]->[0]}"}}  
-    );
-    //Adding s2
-    evalSplineDdfComputation->addStmt(s2);
-    
-  
-    evalSplineDdfComputation->addDataSpace("$X$");
-    evalSplineDdfComputation->addDataSpace("$A$");
-    evalSplineDdfComputation->addDataSpace("$B$");
-    evalSplineDdfComputation->addDataSpace("$Spline.slopes$");
-    evalSplineDdfComputation->addDataSpace("$Spline.f_vals$");
-    //Creating s3 --> the entire if block, slightly modified
-    Stmt* s3 = new Stmt(
-   	"if($k$ < $Spline.length$){ double $X$ = ($x$ - $Spline.x_vals$[$k$])/($Spline.x_vals$[$k$+1] - $Spline.x_vals$[$k$]);double $A$ = $Spline.slopes$[$k$] * ($Spline.x_vals$[$k$+1] - $Spline.x_vals$[$k$]) - ($Spline.f_vals$[$k$+1] - $Spline.f_vals$[$k$]);double $B$ = -$Spline.slopes$[$k$+1] * ($Spline.x_vals$[$k$+1] - $Spline.x_vals$[$k$]) + ($Spline.f_vals$[$k$+1] - $Spline.f_vals$[$k$]); $eval_Spline_ddf_return$ = 2.0 * ($B$ - 2.0 * $A$ + ($A$ - $B$) * 3.0 * $X$) / pow($Spline.x_vals$[$k$+1] - $Spline.x_vals$[$k$, 2);}", 
-        "{[0]}",  //Iteration schedule
-        "{[0]->["+std::to_string(newTuplePos+2)+"]}", //Execution schedule
-        {
-      		{"$k$","{[0]->[0]}"},
-      		{"$x$","{[0]->[0]}"}, 
-            {"$Spline.length$", "{[0]->[0]}"},
-            {"$Spline.x_vals$","{[0]->[k1]: k1 = $k$}"}, 
-            {"$Spline.x_vals$","{[0]->[kp1]: kp1 = $k$+1}"}, 
-            {"$Spline.slopes$","{[0]->[x1]: x1 = $k$}"},
-            {"$Spline.f_vals$","{[0]->[kp1]: kp1 = $k$+1}"}, 
-            {"$Spline.f_vals$","{[0]->[k1]: k1 = $k$}"}, 
-            {"$Spline.slopes$","{[0]->[kp1]: kp1 = $k$+1}"}, 
-            {"$B$","{[0]->[0]}"},
-            {"$A$","{[0]->[0]}"},
-            {"$X$","{[0]->[0]}"}
-        },//Data reads
-        {
-     		{"$X$", "{[0]->[0]}"},
-     	    {"$A$", "{[0]->[0]}"},
-            {"$B$", "{[0]->[0]}"},
-            {"$eval_Spline_ddf_return$", "{[0]->[0]}"}
-        } //Data writes
-    );
-    //Adding s3
-    evalSplineDdfComputation->addStmt(s3);
-    
-    evalSplineDdfComputation->addReturnValue("$eval_Spline_ddf_return$", true);
-    return evalSplineDdfComputation;
-}
-
 
 /*
 double c_diff(double r, double theta, double phi, int n, NaturalCubicSpline_1D &Temp_Spline){
     double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);    // Check that r_min <= r_eval <= r_max
+    double c_diff_return = 0.0;
+    double c_return = c(r,theta,phi, Temp_Spline);
+    double eval_Spline_df_return = Eval_Spline_df(r_eval,Temp_Spline);
     
-    if(n==0){   return gamR / (2.0 * c(r,theta,phi, Temp_Spline)) * Eval_Spline_df(r_eval,Temp_Spline);}
-    else {      return 0.0;}
+    if(n==0){c_diff_return = gamR / (2.0 * c_return) * eval_Spline_df_return;}
 }
 */
 Computation* c_diff_Computation(){
@@ -287,26 +228,106 @@ Computation* c_diff_Computation(){
     cDiffComputation->addParameter("$phi$","double");
     cDiffComputation->addParameter("$n$","int");
     cDiffComputation->addParameter("$Temp_Spline$","NaturalCubicSpline_1D &");
-  
+
     cDiffComputation->addDataSpace("$r_eval$");
     //Creating statement1
     //double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);
-    Stmt* s1 = new Stmt("double $r_eval$ = min($r$, r_max); $r_eval$ = max($r_eval$, r_min)",
-        "{[0]}",  //Iteration schedule - Only happening one time (not iterating)
-        "{[0]->[0, 0, 0]}", //Execution schedule - scheduling statement to be first (scheduling function)
-        {{"$r$","{[0]->[0]}"},{"$r_eval$","{[0]->[0]}"}}, //Data reads
-        {{"$r_eval$","{[0]->[0]}"}} //Data writes
-        );
-    cout << "Source statement : " << s1->getStmtSourceCode() << "\n\t"
-      <<"- Iteration Space : "<< s1->getIterationSpace()->prettyPrintString() << "\n\t"
-      << "- Execution Schedule : "<< s1->getExecutionSchedule()->prettyPrintString() << "\n\t" ;
-  
-    //Adding statement1
+    Stmt* s0 = new Stmt("double $r_eval$ = min($r$, r_max); $r_eval$ = max($r_eval$, r_min);",
+      "{[0]}",  //Iteration schedule - Only happening one time (not iterating)
+      "{[0]->[0]}", //Execution schedule - scheduling statement to be first (scheduling function)
+      {{"$r$","{[0]->[0]}"},{"$r_eval$","{[0]->[0]}"}}, //Data reads
+      {{"$r_eval$","{[0]->[0]}"}} //Data writes
+      );
+    cout << "Source statement : " << s0->getStmtSourceCode() << "\n\t"
+    <<"- Iteration Space : "<< s0->getIterationSpace()->prettyPrintString() << "\n\t"
+    << "- Execution Schedule : "<< s0->getExecutionSchedule()->prettyPrintString() << "\n\t" ;
+
+    //Adding s0 to the computation
+    cDiffComputation->addStmt(s0);
+
+    cDiffComputation->addDataSpace("$c_diff_return$");
+    //double c_diff_return = 0.0;
+    Stmt* s1 = new Stmt("double $c_diff_return$ = 0.0",
+      "{[0]}",
+      "{[0]->[1]}",
+      {},
+      {{"$c_diff_return$","{[0]->[0]}"}}
+      );
+
     cDiffComputation->addStmt(s1);
+
+    //Add the args of the c function (computation to be appended) as data spaces to cDiffComputation
+    Computation* cComputation = c_Computation();
+
+    //Args to the c_Computation
+    vector<std::string> cCompArgs;
+    cCompArgs.push_back("$r$");
+    cCompArgs.push_back("$theta$");
+    cCompArgs.push_back("$phi$");
+    cCompArgs.push_back("$Temp_Spline$");
+
+    // Return values are stored in a struct of the computation: AppendComputationResult
+    AppendComputationResult cCompRes = cDiffComputation->appendComputation(cComputation, "{[0]}", "{[0]->[2]}", cCompArgs);
+    unsigned int newTuplePos = cCompRes.tuplePosition+1;
+
+    cDiffComputation->addDataSpace("$c_return$");
     
+    //double c_return = c(r,theta,phi, Temp_Spline);
+    Stmt* s2 = new Stmt("double $c_return$ = "+cCompRes.returnValues.back()+";", 
+      "{[0]}",
+      "{[0]->["+std::to_string(newTuplePos)+"]}",
+      {{cCompRes.returnValues.back(), "{[0]->[0]}"}},
+      {{"$c_return$", "{[0]->[0]}"}}
+      );
+    cout << "Source statement : " << s1->getStmtSourceCode() << "\n\t"
+    <<"- Iteration Space : "<< s1->getIterationSpace()->prettyPrintString() << "\n\t"
+    << "- Execution Schedule : "<< s1->getExecutionSchedule()->prettyPrintString() << "\n\t" ;
+
+    cDiffComputation->addStmt(s2);
+
+    Computation* evalSplineDfComputation = Eval_Spline_df_Computation();
+
+    //Args to the c_Computation
+    vector<std::string> evalSplineDfCompArgs;
+    evalSplineDfCompArgs.push_back("$r_eval$");
+    evalSplineDfCompArgs.push_back("$Temp_Spline$");
+
+    AppendComputationResult evalSplineDfCompRes = cDiffComputation->appendComputation(evalSplineDfComputation, "{[0]}", "{[0]->[3]}", evalSplineDfCompArgs);
+    newTuplePos = evalSplineDfCompRes.tuplePosition+1;
+
+    cDiffComputation->addDataSpace("$eval_Spline_df_return$");
+
+    //double eval_Spline_df_return = Eval_Spline_df(r_eval,Temp_Spline);
+    Stmt* s3 = new Stmt("double $eval_Spline_df_return$ = "+evalSplineDfCompRes.returnValues.back()+";",
+      "{[0]}",
+      "{[0]->["+std::to_string(newTuplePos)+"]}",
+      {{evalSplineDfCompRes.returnValues.back(), "{[0]->[0]}"}},
+      {{"$eval_Spline_df_return$", "{[0]->[0]}"}}
+      );
+
+    cDiffComputation->addStmt(s3);
+
+    //if(n==0){c_diff_return = gamR / (2.0 * c_return) * eval_Spline_df_return;}
+    Stmt* s4 = new Stmt("if($n$==0){$c_diff_return$ = gamR / (2.0 * $c_return$) * $eval_Spline_df_return$;}",
+      "{[0]}",
+      "{[0]->["+std::to_string(newTuplePos+1)+"]}",
+      {
+          {"$n$", "{[0]->[0]}"},
+          {"$c_diff_return$", "{[0]->[0]}"},
+          {"$c_return$", "{[0]->[0]}"},
+          {"$eval_Spline_df_return$", "{[0]->[0]}"}
+      },
+      {
+          {"$c_diff_return$", "{[0]->[0]}"}
+      }
+      );
+
+    cDiffComputation->addStmt(s4);
+
+    cDiffComputation->addReturnValue("$c_diff_return$", true);
+
     return cDiffComputation;
 }
-
 
 
 /*
@@ -346,7 +367,7 @@ Computation* u_Computation(){
     eSpFArgs.push_back("$r_eval$");
     eSpFArgs.push_back("$Windu_Spline$");
   
-    //Call Eval_Spline_f_Computation() returen values is stored in result
+    //Call Eval_Spline_f_Computation() return values is stored in result
     Computation* EvalSplineFComputation = Eval_Spline_f_Computation();
     // Return values are stored in a struct of the computation: AppendComputationResult
     AppendComputationResult eSpFCompRes = uComputation->appendComputation(EvalSplineFComputation, "{[0]}","{[0]->[1]}",eSpFArgs);
@@ -404,8 +425,6 @@ Computation* v_Computation(){
   
     return vComputation;
 }
-
-
 
 
 /*
@@ -491,7 +510,6 @@ Computation* c_Computation(){
     
     return cComputation;
 }
-
 
 
 /*
@@ -616,6 +634,7 @@ Computation* Eval_Spline_f_Computation(){
     return evalSplineFComputation;
 }
 
+
 /*
    double Eval_Spline_df(double x, struct NaturalCubicSpline_1D & Spline){
        int k = Find_Segment(x, Spline.x_vals, Spline.length, Spline.accel);
@@ -723,6 +742,106 @@ Computation* Eval_Spline_df_Computation(){
   
    return evalSplineDfComputation;
 }
+
+
+/*
+double Eval_Spline_ddf(double x, struct NaturalCubicSpline_1D & Spline){
+    int k = Find_Segment(x, Spline.x_vals, Spline.length, Spline.accel);
+    double result = 0.0;    
+    if(k < Spline.length){
+        double X = (x - Spline.x_vals[k])/(Spline.x_vals[k+1] - Spline.x_vals[k]);
+        double A = Spline.slopes[k] * (Spline.x_vals[k+1] - Spline.x_vals[k]) - (Spline.f_vals[k+1] - Spline.f_vals[k]);
+        double B = -Spline.slopes[k+1] * (Spline.x_vals[k+1] - Spline.x_vals[k]) + (Spline.f_vals[k+1] - Spline.f_vals[k]);
+        
+        result =  2.0 * (B - 2.0 * A + (A - B) * 3.0 * X)/pow(Spline.x_vals[k+1] - Spline.x_vals[k],2);
+    } 
+}
+*/
+Computation* Eval_Spline_ddf_Computation(){
+    Computation* evalSplineDdfComputation = new Computation();
+    evalSplineDdfComputation->addParameter("$x$", "double");
+    evalSplineDdfComputation->addParameter("$Spline$", "struct NaturalCubicSpline_1D &");
+    
+    evalSplineDdfComputation->addDataSpace("$Spline.x_vals$");
+    evalSplineDdfComputation->addDataSpace("$Spline.length$");
+    evalSplineDdfComputation->addDataSpace("$Spline.accel$");
+  
+    Computation* findSegmentComputation= Find_Segment_Computation();
+    //Args to the Find_Segment_Computation
+    vector<std::string> findSegArgs;
+    findSegArgs.push_back("$x$");
+    findSegArgs.push_back("$Spline.x_vals$");
+    findSegArgs.push_back("$Spline.length$");
+    findSegArgs.push_back("$Spline.accel$"); 
+    
+    //Return values are stored in a struct of the AppendComputationResult data structure
+    AppendComputationResult fSegCompRes = evalSplineDdfComputation->appendComputation(findSegmentComputation, "{[0]}", "{[0]->[0]}", findSegArgs);
+   
+    unsigned int newTuplePos = fSegCompRes.tuplePosition + 1;
+    evalSplineDdfComputation->addDataSpace("$k$");
+    //Creating s1
+    //int k = Find_Segment(x, Spline.x_vals, Spline.length, Spline.accel);
+    Stmt* s1 = new Stmt("int $k$ = "+fSegCompRes.returnValues.back()+";",
+        "{[0]}",  //Iteration schedule - Only happening one time (not iterating)
+        "{[0]->["+std::to_string(newTuplePos)+"]}", //Execution schedule - scheduling statement to be first (scheduling function)
+        {{fSegCompRes.returnValues.back(), "{[0]->[0]}"}}, 
+        {{"$k$", "{[0]->[0]}"}}  
+    );   
+    //Adding s1
+    evalSplineDdfComputation->addStmt(s1);
+  
+    evalSplineDdfComputation->addDataSpace("$eval_Spline_ddf_return$");
+    //Creating s2
+    Stmt* s2 = new Stmt(
+        "double $eval_Spline_ddf_return$ = 0.0;",
+        "{[0]}",  //Iteration schedule
+        "{[0]->["+std::to_string(newTuplePos+1)+"]}", //Execution schedule
+        {}, 
+        {{"$eval_Spline_ddf_return$", "{[0]->[0]}"}}  
+    );
+    //Adding s2
+    evalSplineDdfComputation->addStmt(s2);
+    
+  
+    evalSplineDdfComputation->addDataSpace("$X$");
+    evalSplineDdfComputation->addDataSpace("$A$");
+    evalSplineDdfComputation->addDataSpace("$B$");
+    evalSplineDdfComputation->addDataSpace("$Spline.slopes$");
+    evalSplineDdfComputation->addDataSpace("$Spline.f_vals$");
+    //Creating s3 --> the entire if block, slightly modified
+    Stmt* s3 = new Stmt(
+    "if($k$ < $Spline.length$){ double $X$ = ($x$ - $Spline.x_vals$[$k$])/($Spline.x_vals$[$k$+1] - $Spline.x_vals$[$k$]);double $A$ = $Spline.slopes$[$k$] * ($Spline.x_vals$[$k$+1] - $Spline.x_vals$[$k$]) - ($Spline.f_vals$[$k$+1] - $Spline.f_vals$[$k$]);double $B$ = -$Spline.slopes$[$k$+1] * ($Spline.x_vals$[$k$+1] - $Spline.x_vals$[$k$]) + ($Spline.f_vals$[$k$+1] - $Spline.f_vals$[$k$]); $eval_Spline_ddf_return$ = 2.0 * ($B$ - 2.0 * $A$ + ($A$ - $B$) * 3.0 * $X$) / pow($Spline.x_vals$[$k$+1] - $Spline.x_vals$[$k$, 2);}", 
+        "{[0]}",  //Iteration schedule
+        "{[0]->["+std::to_string(newTuplePos+2)+"]}", //Execution schedule
+        {
+            {"$k$","{[0]->[0]}"},
+            {"$x$","{[0]->[0]}"}, 
+            {"$Spline.length$", "{[0]->[0]}"},
+            {"$Spline.x_vals$","{[0]->[k1]: k1 = $k$}"}, 
+            {"$Spline.x_vals$","{[0]->[kp1]: kp1 = $k$+1}"}, 
+            {"$Spline.slopes$","{[0]->[x1]: x1 = $k$}"},
+            {"$Spline.f_vals$","{[0]->[kp1]: kp1 = $k$+1}"}, 
+            {"$Spline.f_vals$","{[0]->[k1]: k1 = $k$}"}, 
+            {"$Spline.slopes$","{[0]->[kp1]: kp1 = $k$+1}"}, 
+            {"$B$","{[0]->[0]}"},
+            {"$A$","{[0]->[0]}"},
+            {"$X$","{[0]->[0]}"}
+        },//Data reads
+        {
+            {"$X$", "{[0]->[0]}"},
+            {"$A$", "{[0]->[0]}"},
+            {"$B$", "{[0]->[0]}"},
+            {"$eval_Spline_ddf_return$", "{[0]->[0]}"}
+        } //Data writes
+    );
+    //Adding s3
+    evalSplineDdfComputation->addStmt(s3);
+    
+    evalSplineDdfComputation->addReturnValue("$eval_Spline_ddf_return$", true);
+    return evalSplineDdfComputation;
+}
+
+
 /*
   int Find_Segment(double x, double* x_vals, int length, int & prev){
       for(int i = 0; i < length; i++){
