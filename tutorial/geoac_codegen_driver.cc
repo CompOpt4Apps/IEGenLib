@@ -16,6 +16,7 @@ Computation* c_Computation();
 Computation* v_Computation();
 Computation* u_Computation();
 Computation* c_diff_Computation();
+Computation* v_diff_Computation();
 
 /**
  * Main function
@@ -207,6 +208,87 @@ int main(int argc, char **argv){
     outStream.close();
   
     return 0;
+}
+
+
+/*
+ * double v_diff(double r, double theta, double phi, int n, NaturalCubicSpline_1D &Temp_Spline){
+ *     double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);    // Check that r_min <= r_eval <= r_max
+ *     double v_diff_return = 0.0;
+ *     double eval_spline_df_return = Eval_Spline_df(r_eval,Windv_Spline);
+ *     if(n==0) { v_diff_return =  eval_spline_df_return; } 
+ */
+Computation* v_diff_Computation(){
+    Computation* vDiffComputation = new Computation();
+    vDiffComputation->addParameter("$r$","double");
+    vDiffComputation->addParameter("$theta$","double");
+    vDiffComputation->addParameter("$phi$","double");
+    vDiffComputation->addParameter("$n$","int");
+    vDiffComputation->addParameter("$Temp_Spline$","NaturalCubicSpline_1D &");
+
+    vDiffComputation->addDataSpace("$r_eval$");
+    //Creating statement0
+    //double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);
+    Stmt* s0 = new Stmt("double $r_eval$ = min($r$, r_max); $r_eval$ = max($r_eval$, r_min);",
+	"{[0]}",  //Iteration schedule - Only happening one time (not iterating)
+	"{[0]->[0]}", //Execution schedule - scheduling statement to be first (scheduling function)
+	{{"$r$","{[0]->[0]}"},{"$r_eval$","{[0]->[0]}"}}, //Data reads
+	{{"$r_eval$","{[0]->[0]}"}} //Data writes
+    );
+    //Adding s0 to the computation
+    vDiffComputation->addStmt(s0);
+
+    //Creating statement1
+    //double v_diff_return = 0.0;
+    Stmt* s1 = new Stmt("double $v_diff_return$ = 0.0",
+	"{[0]}",
+      	"{[0]->[1]}",
+      	{},
+      	{{"$v_diff_return$","{[0]->[0]}"}}
+    );
+    //Adding s1 to the computation
+    vDiffComputation->addStmt(s1);
+
+    //Add the args of the Eval_spline_df function (computation to be appended) as data spaces to dDiffComputation
+    Computation* evalSplineDfComputation = Eval_Spline_df_Computation();
+    //Args to the Eval_Spline_df_Computation
+    vector<std::string> evalSplineDfCompArgs;
+    evalSplineDfCompArgs.push_back("$r_eval$");
+    evalSplineDfCompArgs.push_back("$Windv_Spline$");
+    // Return values are stored in a struct of the computation: AppendComputationResult
+    AppendComputationResult evalSplineDfCompRes = vDiffComputation->appendComputation(evalSplineDfComputation, "{[0]}", "{[0]->[2]}", evalSplineDfCompArgs);
+    unsigned int newTuplePos = evalSplineDfCompRes.tuplePosition+1;
+    vDiffComputation->addDataSpace("$eval_Spline_df_return$");
+
+    //Creating statement2
+    //double eval_Spline_df_return = Eval_Spline_df(r_eval,Windv_Spline);
+    Stmt* s2 = new Stmt("double $eval_Spline_df_return$ = "+evalSplineDfCompRes.returnValues.back()+";",
+	"{[0]}",
+        "{[0]->["+std::to_string(newTuplePos)+"]}",
+        {{evalSplineDfCompRes.returnValues.back(), "{[0]->[0]}"}},
+        {{"$eval_Spline_df_return$", "{[0]->[0]}"}}
+    );
+    //Adding s2 to the computation
+    vDiffComputation->addStmt(s2);
+
+    //Creating statement3
+    //if(n==0) { v_diff_return =  eval_Spline_df_return; }
+    Stmt* s3 = new Stmt("if($n$==0){$v_diff_return$ = $eval_Spline_df_return$;}",
+	"{[0]}",
+        "{[0]->["+std::to_string(newTuplePos+1)+"]}",
+        {
+           {"$n$", "{[0]->[0]}"},
+           {"$eval_Spline_df_return$", "{[0]->[0]}"}
+        },
+        {
+            {"$v_diff_return$", "{[0]->[0]}"}
+        }
+    );
+   //Adding s3 to the computation
+   vDiffComputation->addStmt(s3);
+  
+   vDiffComputation->addReturnValue("$v_diff_return$", true);
+   return vDiffComputation;
 }
 
 
