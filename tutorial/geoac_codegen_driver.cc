@@ -226,7 +226,32 @@ int main(int argc, char **argv){
         );
     updateSources->addStmt(s7);
     
-      
+     //Args to the u_diff
+    vector<std::string> uDiffCompArgs;
+    uDiffCompArgs.push_back("$r$");
+    uDiffCompArgs.push_back("$theta$");
+    uDiffCompArgs.push_back("$phi$");
+    uDiffCompArgs.push_back("0");
+    uDiffCompArgs.push_back("$spl.Windu_Spline$");
+ 
+    Computation* uDiffComputation = u_diff_Computation();
+ 
+    // Return values are stored in a struct of the computation: AppendComputationResult
+    AppendComputationResult uDiffCompRes = updateSources->appendComputation(uDiffComputation, "{[0]}", "{[0]->["+std::to_string(newTuplePos+1)+"]}", uDiffCompArgs);//1 here?
+
+    newTuplePos = uDiffCompRes.tuplePosition+1;
+    updateSources->addDataSpace("$sources.du$");
+    //Creating s8
+    //sources.du[0] = u_diff(r,theta,phi,0,spl.Windu_Spline);
+    Stmt* s8 = new Stmt("$sources.du$[0] = "+uDiffCompRes.returnValues.back()+";",
+        "{[0]}",
+        "{[0]->["+std::to_string(newTuplePos)+"]}",
+        {{uDiffCompRes.returnValues.back(), "{[0]->[0]}"}},
+        {{"$sources.du$", "{[0]->[0]}"}}
+        );
+ 
+    updateSources->addStmt(s8);
+    
     //Calling toDot() on the Computation structure
     /*
     ofstream dotFileStream("codegen_dot.txt");
