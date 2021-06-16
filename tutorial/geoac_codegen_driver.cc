@@ -237,7 +237,7 @@ int main(int argc, char **argv){
     Computation* uDiffComputation = u_diff_Computation();
  
     // Return values are stored in a struct of the computation: AppendComputationResult
-    AppendComputationResult uDiffCompRes = updateSources->appendComputation(uDiffComputation, "{[0]}", "{[0]->["+std::to_string(newTuplePos+1)+"]}", uDiffCompArgs);//1 here?
+    AppendComputationResult uDiffCompRes = updateSources->appendComputation(uDiffComputation, "{[0]}", "{[0]->["+std::to_string(newTuplePos+1)+"]}", uDiffCompArgs);
 
     newTuplePos = uDiffCompRes.tuplePosition+1;
     updateSources->addDataSpace("$sources.du$");
@@ -251,6 +251,84 @@ int main(int argc, char **argv){
         );
  
     updateSources->addStmt(s8);
+  
+    //Clearing arguments and adding new ones
+    cDiffCompArgs.clear();
+    cDiffCompArgs.push_back("$r$");
+    cDiffCompArgs.push_back("$theta$");
+    cDiffCompArgs.push_back("$phi$");
+    cDiffCompArgs.push_back("1");
+    cDiffCompArgs.push_back("$spl.Temp_Spline$");
+    
+    // Return values are stored in a struct of the computation: AppendComputationResult
+    AppendComputationResult cDiff1CompRes = updateSources->appendComputation(cDiffComputation, "{[0]}", "{[0]->["+std::to_string(newTuplePos+1)+"]}", cDiffCompArgs);
+    
+    newTuplePos = cDiff1CompRes.tuplePosition+1;
+    //Creating s9
+    //sources.dc[1] = c_diff(r,theta,phi,1,spl.Temp_Spline);
+    Stmt* s9 = new Stmt("$sources.dc$[1] = "+cDiff1CompRes.returnValues.back()+";", 
+        "{[0]}",
+        "{[0]->["+std::to_string(newTuplePos)+"]}",
+        {{cDiff1CompRes.returnValues.back(), "{[0]->[0]}"}},
+        {{"$sources.dc$", "{[0]->[1]}"}}
+        );
+    
+    updateSources->addStmt(s9);
+   
+    //Creating s10
+    //sources.dw[0] = w_diff(r,theta,phi,0); The w_diff function always returns 0!
+    Stmt* s10 = new Stmt("$sources.dw$[1] = 0;", 
+        "{[0]}",
+        "{[0]->["+std::to_string(newTuplePos+1)+"]}",
+        {},
+        {{"$sources.dw$", "{[0]->[1]}"}}
+        );
+    
+    updateSources->addStmt(s10);
+   
+    //Clearing arguments and adding new ones
+    vDiffCompArgs.clear();
+    vDiffCompArgs.push_back("$r$");
+    vDiffCompArgs.push_back("$theta$");
+    vDiffCompArgs.push_back("$phi$");
+    vDiffCompArgs.push_back("1");
+    vDiffCompArgs.push_back("$spl.Windv_Spline$");
+    
+    AppendComputationResult vDiff1CompRes = updateSources->appendComputation(vDiffComputation, "{[0]}", "{[0]->["+std::to_string(newTuplePos+2)+"]}", vDiffCompArgs);   
+    newTuplePos = vDiff1CompRes.tuplePosition+1;
+  
+    //Creating s11
+    //sources.dv[1] = v_diff(r,theta,phi,1,spl.Windv_Spline);
+    Stmt* s11 = new Stmt("$sources.dv$[1] = "+vDiff1CompRes.returnValues.back()+";", 
+        "{[0]}",
+        "{[0]->["+std::to_string(newTuplePos)+"]}",
+        {{vDiff1CompRes.returnValues.back(), "{[0]->[0]}"}},
+        {{"$sources.dv$", "{[0]->[1]}"}}
+        );
+    updateSources->addStmt(s11);
+    
+    //Clearing arguments and adding new ones
+    uDiffCompArgs.clear();
+    uDiffCompArgs.push_back("$r$");
+    uDiffCompArgs.push_back("$theta$");
+    uDiffCompArgs.push_back("$phi$");
+    uDiffCompArgs.push_back("1");
+    uDiffCompArgs.push_back("$spl.Windu_Spline$");
+ 
+    AppendComputationResult uDiff1CompRes = updateSources->appendComputation(uDiffComputation, "{[0]}", "{[0]->["+std::to_string(newTuplePos+1)+"]}", uDiffCompArgs);
+    newTuplePos = uDiff1CompRes.tuplePosition+1;
+
+    //Creating s12
+    //sources.du[1] = u_diff(r,theta,phi,1,spl.Windu_Spline);
+    Stmt* s12 = new Stmt("$sources.du$[1] = "+uDiff1CompRes.returnValues.back()+";",
+        "{[0]}",
+        "{[0]->["+std::to_string(newTuplePos)+"]}",
+        {{uDiff1CompRes.returnValues.back(), "{[0]->[0]}"}},
+        {{"$sources.du$", "{[0]->[1]}"}}
+        );
+ 
+    updateSources->addStmt(s12);
+
     
     //Calling toDot() on the Computation structure
     /*
