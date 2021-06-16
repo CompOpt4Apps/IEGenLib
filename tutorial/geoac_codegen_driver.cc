@@ -191,6 +191,17 @@ int main(int argc, char **argv){
         );
     
     updateSources->addStmt(s5);
+
+    //Creating s6
+    //sources.dw[0] = w_diff(r,theta,phi,0); The w_diff function always returns 0!
+    Stmt* s6 = new Stmt("$sources.dw$[0] = 0;", 
+        "{[0]}",
+        "{[0]->["+std::to_string(newTuplePos+1)+"]}",
+        {},
+        {{"$sources.dw$", "{[0]->[0]}"}}
+        );
+    
+    updateSources->addStmt(s6);
   
     
     //Calling toDot() on the Computation structure
@@ -329,10 +340,10 @@ Computation* v_diff_Computation(){
     //Creating statement0
     //double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);
     Stmt* s0 = new Stmt("double $r_eval$ = min($r$, r_max); $r_eval$ = max($r_eval$, r_min);",
-	"{[0]}",  //Iteration schedule - Only happening one time (not iterating)
-	"{[0]->[0]}", //Execution schedule - scheduling statement to be first (scheduling function)
-	{{"$r$","{[0]->[0]}"},{"$r_eval$","{[0]->[0]}"}}, //Data reads
-	{{"$r_eval$","{[0]->[0]}"}} //Data writes
+  "{[0]}",  //Iteration schedule - Only happening one time (not iterating)
+  "{[0]->[0]}", //Execution schedule - scheduling statement to be first (scheduling function)
+  {{"$r$","{[0]->[0]}"},{"$r_eval$","{[0]->[0]}"}}, //Data reads
+  {{"$r_eval$","{[0]->[0]}"}} //Data writes
     );
     //Adding s0 to the computation
     vDiffComputation->addStmt(s0);
@@ -340,10 +351,10 @@ Computation* v_diff_Computation(){
     //Creating statement1
     //double v_diff_return = 0.0;
     Stmt* s1 = new Stmt("double $v_diff_return$ = 0.0",
-	"{[0]}",
-      	"{[0]->[1]}",
-      	{},
-      	{{"$v_diff_return$","{[0]->[0]}"}}
+  "{[0]}",
+        "{[0]->[1]}",
+        {},
+        {{"$v_diff_return$","{[0]->[0]}"}}
     );
     //Adding s1 to the computation
     vDiffComputation->addStmt(s1);
@@ -362,7 +373,7 @@ Computation* v_diff_Computation(){
     //Creating statement2
     //double eval_Spline_df_return = Eval_Spline_df(r_eval,Windv_Spline);
     Stmt* s2 = new Stmt("double $eval_Spline_df_return$ = "+evalSplineDfCompRes.returnValues.back()+";",
-	"{[0]}",
+  "{[0]}",
         "{[0]->["+std::to_string(newTuplePos)+"]}",
         {{evalSplineDfCompRes.returnValues.back(), "{[0]->[0]}"}},
         {{"$eval_Spline_df_return$", "{[0]->[0]}"}}
@@ -373,7 +384,7 @@ Computation* v_diff_Computation(){
     //Creating statement3
     //if(n==0) { v_diff_return =  eval_Spline_df_return; }
     Stmt* s3 = new Stmt("if($n$==0){$v_diff_return$ = $eval_Spline_df_return$;}",
-	"{[0]}",
+  "{[0]}",
         "{[0]->["+std::to_string(newTuplePos+1)+"]}",
         {
            {"$n$", "{[0]->[0]}"},
