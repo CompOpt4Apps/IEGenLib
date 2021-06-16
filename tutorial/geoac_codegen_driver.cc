@@ -165,7 +165,7 @@ int main(int argc, char **argv){
 
     //Add the args of the c_diff function (computation to be appended) as data spaces to updateSources
     //r, theta and phi have already been added
-    updateSources->addDataSpace("$spl.Windu_Spline$");
+    updateSources->addDataSpace("$spl.Temp_Spline$");
     //Args to the c_diff
     vector<std::string> cDiffCompArgs;
     cDiffCompArgs.push_back("$r$");
@@ -203,8 +203,37 @@ int main(int argc, char **argv){
         );
     
     updateSources->addStmt(s6);
-  
     
+   
+    //Add the args of the v_diff function (computation to be appended) as data spaces to updateSources
+    //r, theta and phi have already been added
+    updateSources->addDataSpace("$spl.Windv_Spline$");
+    //Args to the v_diff
+    vector<std::string> vDiffCompArgs;
+    vDiffCompArgs.push_back("$r$");
+    vDiffCompArgs.push_back("$theta$");
+    vDiffCompArgs.push_back("$phi$");
+    vDiffCompArgs.push_back("0");
+    vDiffCompArgs.push_back("$spl.Windv_Spline$");
+    
+    Computation* vDiffComputation = v_diff_Computation();
+    
+    // Return values are stored in a struct of the computation: AppendComputationResult
+    AppendComputationResult vDiffCompRes = updateSources->appendComputation(vDiffComputation, "{[0]}", "{[0]->["+std::to_string(newTuplePos+1)+"]}", vDiffCompArgs);   
+    newTuplePos = vDiffCompRes.tuplePosition+1;
+	
+    updateSources->addDataSpace("$sources.dc$");
+    //Creating s7
+    //sources.dv[1] = v_diff(r,theta,phi,1,spl.Windv_Spline);
+    Stmt* s7 = new Stmt("$sources.dc$[0] = "+vDiffCompRes.returnValues.back()+";", 
+        "{[0]}",
+        "{[0]->["+std::to_string(newTuplePos)+"]}",
+        {{vDiffCompRes.returnValues.back(), "{[0]->[0]}"}},
+        {{"$sources.dc$", "{[0]->[0]}"}}
+        );
+    updateSources->addStmt(s7);
+    
+      
     //Calling toDot() on the Computation structure
     /*
     ofstream dotFileStream("codegen_dot.txt");
@@ -323,7 +352,7 @@ Computation* u_diff_Computation(){
 
 
 /*
- * double v_diff(double r, double theta, double phi, int n, NaturalCubicSpline_1D &Temp_Spline){
+ * double v_diff(double r, double theta, double phi, int n, NaturalCubicSpline_1D & Windv_Spline){
  *     double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);    // Check that r_min <= r_eval <= r_max
  *     double v_diff_return = 0.0;
  *     double eval_spline_df_return = Eval_Spline_df(r_eval,Windv_Spline);
@@ -335,9 +364,9 @@ Computation* v_diff_Computation(){
     vDiffComputation->addParameter("$theta$","double");
     vDiffComputation->addParameter("$phi$","double");
     vDiffComputation->addParameter("$n$","int");
-    vDiffComputation->addParameter("$Temp_Spline$","NaturalCubicSpline_1D &");
-
-    vDiffComputation->addDataSpace("$r_eval$");
+    vDiffComputation->addParameter("$Windv_Spline$", "NaturalCubicSpline_1D &");
+    
+     vDiffComputation->addDataSpace("$r_eval$");
     //Creating statement0
     //double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);
     Stmt* s0 = new Stmt("double $r_eval$ = min($r$, r_max); $r_eval$ = max($r_eval$, r_min);",
