@@ -163,9 +163,6 @@ int main(int argc, char **argv){
     
     updateSources->addStmt(s4);
 
-    //Add the args of the c_diff function (computation to be appended) as data spaces to updateSources
-    //r, theta and phi have already been added
-    updateSources->addDataSpace("$spl.Temp_Spline$");
     //Args to the c_diff
     vector<std::string> cDiffCompArgs;
     cDiffCompArgs.push_back("$r$");
@@ -204,10 +201,6 @@ int main(int argc, char **argv){
     
     updateSources->addStmt(s6);
     
-   
-    //Add the args of the v_diff function (computation to be appended) as data spaces to updateSources
-    //r, theta and phi have already been added
-    updateSources->addDataSpace("$spl.Windv_Spline$");
     //Args to the v_diff
     vector<std::string> vDiffCompArgs;
     vDiffCompArgs.push_back("$r$");
@@ -219,17 +212,17 @@ int main(int argc, char **argv){
     Computation* vDiffComputation = v_diff_Computation();
     
     // Return values are stored in a struct of the computation: AppendComputationResult
-    AppendComputationResult vDiffCompRes = updateSources->appendComputation(vDiffComputation, "{[0]}", "{[0]->["+std::to_string(newTuplePos+1)+"]}", vDiffCompArgs);   
+    AppendComputationResult vDiffCompRes = updateSources->appendComputation(vDiffComputation, "{[0]}", "{[0]->["+std::to_string(newTuplePos+2)+"]}", vDiffCompArgs);   
     newTuplePos = vDiffCompRes.tuplePosition+1;
-	
-    updateSources->addDataSpace("$sources.dc$");
+  
+    updateSources->addDataSpace("$sources.dv$");
     //Creating s7
-    //sources.dv[1] = v_diff(r,theta,phi,1,spl.Windv_Spline);
-    Stmt* s7 = new Stmt("$sources.dc$[0] = "+vDiffCompRes.returnValues.back()+";", 
+    //sources.dv[0] = v_diff(r,theta,phi,0,spl.Windv_Spline);
+    Stmt* s7 = new Stmt("$sources.dv$[0] = "+vDiffCompRes.returnValues.back()+";", 
         "{[0]}",
         "{[0]->["+std::to_string(newTuplePos)+"]}",
         {{vDiffCompRes.returnValues.back(), "{[0]->[0]}"}},
-        {{"$sources.dc$", "{[0]->[0]}"}}
+        {{"$sources.dv$", "{[0]->[0]}"}}
         );
     updateSources->addStmt(s7);
     
@@ -273,11 +266,11 @@ Computation* u_diff_Computation(){
     //Creating statement1
     //double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);
     Stmt* s0 = new Stmt("double $r_eval$ = min($r$, r_max); $r_eval$ = max($r_eval$, r_min);",
-      "{[0]}",  //Iteration schedule - Only happening one time (not iterating)
-      "{[0]->[0]}", //Execution schedule - scheduling statement to be first (scheduling function)
-      {{"$r$","{[0]->[0]}"},{"$r_eval$","{[0]->[0]}"}}, //Data reads
-      {{"$r_eval$","{[0]->[0]}"}} //Data writes
-      );
+        "{[0]}",  //Iteration schedule - Only happening one time (not iterating)
+        "{[0]->[0]}", //Execution schedule - scheduling statement to be first (scheduling function)
+        {{"$r$","{[0]->[0]}"},{"$r_eval$","{[0]->[0]}"}}, //Data reads
+        {{"$r_eval$","{[0]->[0]}"}} //Data writes
+        );
     cout << "Source statement : " << s0->getStmtSourceCode() << "\n\t"
     <<"- Iteration Space : "<< s0->getIterationSpace()->prettyPrintString() << "\n\t"
     << "- Execution Schedule : "<< s0->getExecutionSchedule()->prettyPrintString() << "\n\t" ;
@@ -286,13 +279,13 @@ Computation* u_diff_Computation(){
     uDiffComputation->addStmt(s0);
    
      uDiffComputation->addDataSpace("$u_diff_return$");
-    //double c_diff_return = 0.0;
+    //double u_diff_return = 0.0;
     Stmt* s1 = new Stmt("double $u_diff_return$ = 0.0",
-      "{[0]}",
-      "{[0]->[1]}",
-      {},
-      {{"$u_diff_return$","{[0]->[0]}"}}
-      );
+        "{[0]}",
+        "{[0]->[1]}",
+        {},
+        {{"$u_diff_return$","{[0]->[0]}"}}
+        );
     cout << "Source statement : " << s1->getStmtSourceCode() << "\n\t"
     <<"- Iteration Space : "<< s1->getIterationSpace()->prettyPrintString() << "\n\t"
     << "- Execution Schedule : "<< s1->getExecutionSchedule()->prettyPrintString() << "\n\t" ;
@@ -315,11 +308,11 @@ Computation* u_diff_Computation(){
     //Creating statement s3
     //double eval_Spline_df_return = Eval_Spline_df(r_eval,Windu_Spline);
     Stmt* s2 = new Stmt("double $eval_Spline_df_return$ = "+evalSplineDfCompRes.returnValues.back()+";",
-      "{[0]}",
-      "{[0]->["+std::to_string(newTuplePos)+"]}",
-      {{evalSplineDfCompRes.returnValues.back(), "{[0]->[0]}"}},
-      {{"$eval_Spline_df_return$", "{[0]->[0]}"}}
-      );
+        "{[0]}",
+        "{[0]->["+std::to_string(newTuplePos)+"]}",
+        {{evalSplineDfCompRes.returnValues.back(), "{[0]->[0]}"}},
+        {{"$eval_Spline_df_return$", "{[0]->[0]}"}}
+        );
     cout << "Source statement : " << s2->getStmtSourceCode() << "\n\t"
     <<"- Iteration Space : "<< s2->getIterationSpace()->prettyPrintString() << "\n\t"
     << "- Execution Schedule : "<< s2->getExecutionSchedule()->prettyPrintString() << "\n\t" ;
@@ -330,16 +323,16 @@ Computation* u_diff_Computation(){
     //Creating statement s3
     // if(n==0){u_diff_return = eval_Spline_df_return;}
     Stmt* s3 = new Stmt("if($n$==0){$u_diff_return$ = $eval_Spline_df_return$;}",
-      "{[0]}",
-      "{[0]->["+std::to_string(newTuplePos+1)+"]}",
-      {
-          {"$n$", "{[0]->[0]}"},
-          {"$eval_Spline_df_return$", "{[0]->[0]}"}
-      },
-      {
-          {"$u_diff_return$", "{[0]->[0]}"}
-      }
-      );
+        "{[0]}",
+        "{[0]->["+std::to_string(newTuplePos+1)+"]}",
+        {
+            {"$n$", "{[0]->[0]}"},
+            {"$eval_Spline_df_return$", "{[0]->[0]}"}
+        },
+        {
+            {"$u_diff_return$", "{[0]->[0]}"}
+        }
+        );
     cout << "Source statement : " << s3->getStmtSourceCode() << "\n\t"
     <<"- Iteration Space : "<< s3->getIterationSpace()->prettyPrintString() << "\n\t"
     << "- Execution Schedule : "<< s3->getExecutionSchedule()->prettyPrintString() << "\n\t";
@@ -370,18 +363,23 @@ Computation* v_diff_Computation(){
     //Creating statement0
     //double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);
     Stmt* s0 = new Stmt("double $r_eval$ = min($r$, r_max); $r_eval$ = max($r_eval$, r_min);",
-  "{[0]}",  //Iteration schedule - Only happening one time (not iterating)
-  "{[0]->[0]}", //Execution schedule - scheduling statement to be first (scheduling function)
-  {{"$r$","{[0]->[0]}"},{"$r_eval$","{[0]->[0]}"}}, //Data reads
-  {{"$r_eval$","{[0]->[0]}"}} //Data writes
+        "{[0]}",  //Iteration schedule - Only happening one time (not iterating)
+        "{[0]->[0]}", //Execution schedule - scheduling statement to be first (scheduling function)
+        {
+            {"$r$","{[0]->[0]}"},
+            {"$r_eval$","{[0]->[0]}"}
+        }, //Data reads
+        {{"$r_eval$","{[0]->[0]}"}} //Data writes
     );
     //Adding s0 to the computation
     vDiffComputation->addStmt(s0);
 
+    vDiffComputation->addDataSpace("$v_diff_return$");
+
     //Creating statement1
     //double v_diff_return = 0.0;
     Stmt* s1 = new Stmt("double $v_diff_return$ = 0.0",
-  "{[0]}",
+        "{[0]}",
         "{[0]->[1]}",
         {},
         {{"$v_diff_return$","{[0]->[0]}"}}
@@ -395,26 +393,27 @@ Computation* v_diff_Computation(){
     vector<std::string> evalSplineDfCompArgs;
     evalSplineDfCompArgs.push_back("$r_eval$");
     evalSplineDfCompArgs.push_back("$Windv_Spline$");
+    
     // Return values are stored in a struct of the computation: AppendComputationResult
     AppendComputationResult evalSplineDfCompRes = vDiffComputation->appendComputation(evalSplineDfComputation, "{[0]}", "{[0]->[2]}", evalSplineDfCompArgs);
     unsigned int newTuplePos = evalSplineDfCompRes.tuplePosition+1;
+    
     vDiffComputation->addDataSpace("$eval_Spline_df_return$");
 
     //Creating statement2
     //double eval_Spline_df_return = Eval_Spline_df(r_eval,Windv_Spline);
     Stmt* s2 = new Stmt("double $eval_Spline_df_return$ = "+evalSplineDfCompRes.returnValues.back()+";",
-  "{[0]}",
+        "{[0]}",
         "{[0]->["+std::to_string(newTuplePos)+"]}",
         {{evalSplineDfCompRes.returnValues.back(), "{[0]->[0]}"}},
         {{"$eval_Spline_df_return$", "{[0]->[0]}"}}
     );
-    //Adding s2 to the computation
     vDiffComputation->addStmt(s2);
 
     //Creating statement3
     //if(n==0) { v_diff_return =  eval_Spline_df_return; }
     Stmt* s3 = new Stmt("if($n$==0){$v_diff_return$ = $eval_Spline_df_return$;}",
-  "{[0]}",
+        "{[0]}",
         "{[0]->["+std::to_string(newTuplePos+1)+"]}",
         {
            {"$n$", "{[0]->[0]}"},
@@ -424,11 +423,11 @@ Computation* v_diff_Computation(){
             {"$v_diff_return$", "{[0]->[0]}"}
         }
     );
-   //Adding s3 to the computation
-   vDiffComputation->addStmt(s3);
+    vDiffComputation->addStmt(s3);
   
-   vDiffComputation->addReturnValue("$v_diff_return$", true);
-   return vDiffComputation;
+    vDiffComputation->addReturnValue("$v_diff_return$", true);
+   
+    return vDiffComputation;
 }
 
 
@@ -455,11 +454,11 @@ Computation* c_diff_Computation(){
     //Creating statement1
     //double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);
     Stmt* s0 = new Stmt("double $r_eval$ = min($r$, r_max); $r_eval$ = max($r_eval$, r_min);",
-      "{[0]}",  //Iteration schedule - Only happening one time (not iterating)
-      "{[0]->[0]}", //Execution schedule - scheduling statement to be first (scheduling function)
-      {{"$r$","{[0]->[0]}"},{"$r_eval$","{[0]->[0]}"}}, //Data reads
-      {{"$r_eval$","{[0]->[0]}"}} //Data writes
-      );
+        "{[0]}",  //Iteration schedule - Only happening one time (not iterating)
+        "{[0]->[0]}", //Execution schedule - scheduling statement to be first (scheduling function)
+        {{"$r$","{[0]->[0]}"},{"$r_eval$","{[0]->[0]}"}}, //Data reads
+        {{"$r_eval$","{[0]->[0]}"}} //Data writes
+        );
     cout << "Source statement : " << s0->getStmtSourceCode() << "\n\t"
     <<"- Iteration Space : "<< s0->getIterationSpace()->prettyPrintString() << "\n\t"
     << "- Execution Schedule : "<< s0->getExecutionSchedule()->prettyPrintString() << "\n\t" ;
@@ -470,11 +469,11 @@ Computation* c_diff_Computation(){
     cDiffComputation->addDataSpace("$c_diff_return$");
     //double c_diff_return = 0.0;
     Stmt* s1 = new Stmt("double $c_diff_return$ = 0.0",
-      "{[0]}",
-      "{[0]->[1]}",
-      {},
-      {{"$c_diff_return$","{[0]->[0]}"}}
-      );
+        "{[0]}",
+        "{[0]->[1]}",
+        {},
+        {{"$c_diff_return$","{[0]->[0]}"}}
+        );
 
     cDiffComputation->addStmt(s1);
 
@@ -496,11 +495,11 @@ Computation* c_diff_Computation(){
     
     //double c_return = c(r,theta,phi, Temp_Spline);
     Stmt* s2 = new Stmt("double $c_return$ = "+cCompRes.returnValues.back()+";", 
-      "{[0]}",
-      "{[0]->["+std::to_string(newTuplePos)+"]}",
-      {{cCompRes.returnValues.back(), "{[0]->[0]}"}},
-      {{"$c_return$", "{[0]->[0]}"}}
-      );
+        "{[0]}",
+        "{[0]->["+std::to_string(newTuplePos)+"]}",
+        {{cCompRes.returnValues.back(), "{[0]->[0]}"}},
+        {{"$c_return$", "{[0]->[0]}"}}
+        );
     cout << "Source statement : " << s2->getStmtSourceCode() << "\n\t"
     <<"- Iteration Space : "<< s2->getIterationSpace()->prettyPrintString() << "\n\t"
     << "- Execution Schedule : "<< s2->getExecutionSchedule()->prettyPrintString() << "\n\t" ;
@@ -521,27 +520,27 @@ Computation* c_diff_Computation(){
 
     //double eval_spline_df_return = Eval_Spline_df(r_eval,Temp_Spline);
     Stmt* s3 = new Stmt("double $eval_spline_df_return$ = "+evalSplineDfCompRes.returnValues.back()+";",
-      "{[0]}",
-      "{[0]->["+std::to_string(newTuplePos)+"]}",
-      {{evalSplineDfCompRes.returnValues.back(), "{[0]->[0]}"}},
-      {{"$eval_spline_df_return$", "{[0]->[0]}"}}
-      );
+        "{[0]}",
+        "{[0]->["+std::to_string(newTuplePos)+"]}",
+        {{evalSplineDfCompRes.returnValues.back(), "{[0]->[0]}"}},
+        {{"$eval_spline_df_return$", "{[0]->[0]}"}}
+        );
 
     cDiffComputation->addStmt(s3);
 
     //if(n==0){c_diff_return = gamR / (2.0 * c_return) * eval_spline_df_return;}
     Stmt* s4 = new Stmt("if($n$==0){$c_diff_return$ = gamR / (2.0 * $c_return$) * $eval_spline_df_return$;}",
-      "{[0]}",
-      "{[0]->["+std::to_string(newTuplePos+1)+"]}",
-      {
-          {"$n$", "{[0]->[0]}"},
-          {"$c_return$", "{[0]->[0]}"},
-          {"$eval_spline_df_return$", "{[0]->[0]}"}
-      },
-      {
-          {"$c_diff_return$", "{[0]->[0]}"}
-      }
-      );
+        "{[0]}",
+        "{[0]->["+std::to_string(newTuplePos+1)+"]}",
+        {
+            {"$n$", "{[0]->[0]}"},
+            {"$c_return$", "{[0]->[0]}"},
+            {"$eval_spline_df_return$", "{[0]->[0]}"}
+        },
+        {
+            {"$c_diff_return$", "{[0]->[0]}"}
+        }
+        );
 
     cDiffComputation->addStmt(s4);
 
@@ -648,11 +647,11 @@ Computation* v_Computation(){
 
     //double v_return = Eval_Spline_f(r_eval, Windv_Spline);
     Stmt* s2 = new Stmt("double $v_return$ ="+eSpFCompRes.returnValues.back()+";",
-      "{[0]}",
-      "{[0]->["+std::to_string(newTuplePos)+"]}",
-      {{eSpFCompRes.returnValues.back(), "{[0]->[0]}"}},
-      {{"$v_return$", "{[0]->[0]}"}}
-      );
+        "{[0]}",
+        "{[0]->["+std::to_string(newTuplePos)+"]}",
+        {{eSpFCompRes.returnValues.back(), "{[0]->[0]}"}},
+        {{"$v_return$", "{[0]->[0]}"}}
+        );
 
     vComputation->addStmt(s2);
   
@@ -921,22 +920,22 @@ Computation* Eval_Spline_df_Computation(){
       <<"- Iteration Space : "<< s0->getIterationSpace()->prettyPrintString() << "\n\t"
       << "- Execution Schedule : "<< s0->getExecutionSchedule()->prettyPrintString() << "\n\t" ;
   
-   //Adding statement S0 
-   evalSplineDfComputation->addStmt(s0);  
+    //Adding statement S0 
+    evalSplineDfComputation->addStmt(s0);  
   
-   evalSplineDfComputation->addDataSpace("$eval_spline_df_return$");
-   //Creating s1
-   Stmt* s1 = new Stmt("double $eval_spline_df_return$ = 0.0;",
-       "{[0]}",  
-       "{[0]->["+std::to_string(newTuplePos+1)+"]}",
-       {}, 
-       {{"$eval_spline_df_return$", "{[0]->[0]}"}}  
-   );  
+    evalSplineDfComputation->addDataSpace("$eval_spline_df_return$");
+    //Creating s1
+    Stmt* s1 = new Stmt("double $eval_spline_df_return$ = 0.0;",
+        "{[0]}",  
+        "{[0]->["+std::to_string(newTuplePos+1)+"]}",
+        {}, 
+        {{"$eval_spline_df_return$", "{[0]->[0]}"}}  
+    );  
     cout << "Source statement : " << s1->getStmtSourceCode() << "\n\t"
       <<"- Iteration Space : "<< s1->getIterationSpace()->prettyPrintString() << "\n\t"
       << "- Execution Schedule : "<< s1->getExecutionSchedule()->prettyPrintString() << "\n\t" ;
     
-   //Adding statement s1      
+    //Adding statement s1      
     evalSplineDfComputation->addStmt(s1);                                     
    
     evalSplineDfComputation->addDataSpace("$X$");
@@ -945,39 +944,38 @@ Computation* Eval_Spline_df_Computation(){
     evalSplineDfComputation->addDataSpace("$Spline.slopes$");
     evalSplineDfComputation->addDataSpace("$Spline.f_vals$");
    
-   Stmt* s2 = new Stmt("if($k$ < $Spline.length$){double $X$ = ($x$ - $Spline.x_vals$[$k$])/($Spline.x_vals$[$k$+1] - $Spline.x_vals$[$k$]); double $A$ = $Spline.slopes$[$k$] * ($Spline.x_vals$[$k$+1] -$Spline.x_vals$[$k$]) - ($Spline.f_vals$[$k$+1] - $Spline.f_vals$[$k$]); double $B$ = -$Spline.slopes$[$k$+1] * ($Spline.x_vals$[$k$+1] - $Spline.x_vals$[$k$]) + ($Spline.f_vals$[$k$+1] - $Spline.f_vals$[$k$]); $eval_spline_df_return$ = ($Spline.f_vals$[$k$+1] - $Spline.f_vals$[$k$])/($Spline.x_vals$[$k$+1] - $Spline.x_vals$[$k$]) + (1.0 - 2.0 * $X$) * ($A$ * (1.0 - $X$) + $B$ * $X$)/($Spline.x_vals$[$k$+1] - $Spline.x_vals$[$k$])+ $X$ * (1.0 - $X$) * ($B$ - $A$)/($Spline.x_vals$[$k$+1] - $Spline.x_vals$[$k$]);}",
-       "{[0]}", //Iteration Schedule
-       "{[0]->["+std::to_string(newTuplePos+2)+"]}", //Execution schedule
-       {
-           {"$k$","{[0]->[0]}"},
-           {"$Spline.length$", "{[0]->[0]}"},
-           {"$x$","{[0]->[0]}"},
-           {"$Spline.x_vals$","{[0]->[k1]: k1 = $k$}"},
-           {"$Spline.x_vals$","{[0]->[kp1]: kp1 = $k$+1}"}, 
-           {"$Spline.slopes$","{[0]->[k1]: k1 = $k$}"},
-           {"$Spline.f_vals$","{[0]->[k1]: k1 = $k$}"},
-           {"$Spline.slopes$","{[0]->[kp1]: kp1 = $k$+1}"}, 
-           {"$Spline.f_vals$","{[0]->[kp1]: kp1 = $k$+1}"}, 
-           {"$X$","{[0]->[0]}"},
-           {"$A$","{[0]->[0]}"},
-           {"$B$","{[0]->[0]}"}
+    Stmt* s2 = new Stmt("if($k$ < $Spline.length$){double $X$ = ($x$ - $Spline.x_vals$[$k$])/($Spline.x_vals$[$k$+1] - $Spline.x_vals$[$k$]); double $A$ = $Spline.slopes$[$k$] * ($Spline.x_vals$[$k$+1] -$Spline.x_vals$[$k$]) - ($Spline.f_vals$[$k$+1] - $Spline.f_vals$[$k$]); double $B$ = -$Spline.slopes$[$k$+1] * ($Spline.x_vals$[$k$+1] - $Spline.x_vals$[$k$]) + ($Spline.f_vals$[$k$+1] - $Spline.f_vals$[$k$]); $eval_spline_df_return$ = ($Spline.f_vals$[$k$+1] - $Spline.f_vals$[$k$])/($Spline.x_vals$[$k$+1] - $Spline.x_vals$[$k$]) + (1.0 - 2.0 * $X$) * ($A$ * (1.0 - $X$) + $B$ * $X$)/($Spline.x_vals$[$k$+1] - $Spline.x_vals$[$k$])+ $X$ * (1.0 - $X$) * ($B$ - $A$)/($Spline.x_vals$[$k$+1] - $Spline.x_vals$[$k$]);}",
+        "{[0]}", //Iteration Schedule
+        "{[0]->["+std::to_string(newTuplePos+2)+"]}", //Execution schedule
+        {
+            {"$k$","{[0]->[0]}"},
+            {"$Spline.length$", "{[0]->[0]}"},
+            {"$x$","{[0]->[0]}"},
+            {"$Spline.x_vals$","{[0]->[k1]: k1 = $k$}"},
+            {"$Spline.x_vals$","{[0]->[kp1]: kp1 = $k$+1}"}, 
+            {"$Spline.slopes$","{[0]->[k1]: k1 = $k$}"},
+            {"$Spline.f_vals$","{[0]->[k1]: k1 = $k$}"},
+            {"$Spline.slopes$","{[0]->[kp1]: kp1 = $k$+1}"}, 
+            {"$Spline.f_vals$","{[0]->[kp1]: kp1 = $k$+1}"}, 
+            {"$X$","{[0]->[0]}"},
+            {"$A$","{[0]->[0]}"},
+            {"$B$","{[0]->[0]}"}
         },//Data reads
         {
-           {"$X$", "{[0]->[0]}"},
-           {"$A$", "{[0]->[0]}"},
-           {"$B$", "{[0]->[0]}"},
-           {"$eval_spline_df_return$", "{[0]->[0]}"
+            {"$X$", "{[0]->[0]}"},
+            {"$A$", "{[0]->[0]}"},
+            {"$B$", "{[0]->[0]}"},
+            {"$eval_spline_df_return$", "{[0]->[0]}"
         }} //Data writes
     );
     cout << "Source statement : " << s2->getStmtSourceCode() << "\n\t"
       <<"- Iteration Space : "<< s2->getIterationSpace()->prettyPrintString() << "\n\t"
       << "- Execution Schedule : "<< s2->getExecutionSchedule()->prettyPrintString() << "\n\t" ;
-   //Adding statement S2
-   evalSplineDfComputation->addStmt(s2);
-   evalSplineDfComputation->addReturnValue("$eval_spline_df_return$",true);
+    //Adding statement S2
+    evalSplineDfComputation->addStmt(s2);
+    evalSplineDfComputation->addReturnValue("$eval_spline_df_return$",true);
   
-  
-   return evalSplineDfComputation;
+    return evalSplineDfComputation;
 }
 
 
