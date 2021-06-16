@@ -192,6 +192,7 @@ int main(int argc, char **argv){
     
     updateSources->addStmt(s5);
 
+    updateSources->addDataSpace("$sources.dw$");
     //Creating s6
     //sources.dw[0] = w_diff(r,theta,phi,0); The w_diff function always returns 0!
     Stmt* s6 = new Stmt("$sources.dw$[0] = 0;", 
