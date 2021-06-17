@@ -408,7 +408,7 @@ int main(int argc, char **argv){
     
     //Data Spaces
     updateSources->addDataSpace("$sources.nu_mag$");
-    updateSources->addDataSpace("$nu$");
+    updateSources->addDataSpace("$nu$"); //Once first two lines are uncommented this will be a duplicate
     //Creating s17
     //sources.nu_mag =   sqrt( nu[0]*nu[0] + nu[1]*nu[1] + nu[2]*nu[2]);
     Stmt* s17 = new Stmt("$sources.nu_mag$ = sqrt( $nu$[0]*$nu$[0] + $nu$[1]*$nu$[1] + $nu$[2]*$nu$[2]);",
@@ -477,7 +477,7 @@ int main(int argc, char **argv){
     //Data Space
     updateSources->addDataSpace("$sources.c_gr_mag$");
    
-    //Creating s17
+    //Creating s21
     //sources.c_gr_mag = sqrt(pow(sources.c_gr[0],2) + pow(sources.c_gr[1],2) + pow(sources.c_gr[2],2));
     Stmt* s21 = new Stmt("$sources.c_gr_mag$ = sqrt(pow($sources.c_gr$[0],2) + pow($sources.c_gr$[1],2) + pow($sources.c_gr$[2],2));",
         "{[0]}",
@@ -501,114 +501,129 @@ int main(int argc, char **argv){
         "{[0]}",
         "{[0]->["+std::to_string(newTuplePos+6)+"]}",
         {},
-        {{"$sources.GeoCoeff$", "{[0]->[0]}"}}
+        {{"$sources.GeoCoeff$[0]", "{[0]->[0]}"}}
         );
     
     updateSources->addStmt(s22);
    
     //Creating s23
     //sources.GeoCoeff[1] = 1.0/r;
-    Stmt* s23 = new Stmt("$sources.GeoCoeff$[1] = 1.0/$r$", 
+    Stmt* s23 = new Stmt("$sources.GeoCoeff$[1] = 1.0/$r$;", 
         "{[0]}",
         "{[0]->["+std::to_string(newTuplePos+7)+"]}",
-        {{"$r", "{[0]->[0]}"}},
-        {{"$sources.GeoCoeff$", "{[0]->[1]}"}}
+        {{"$r$", "{[0]->[0]}"}},
+        {{"$sources.GeoCoeff$[1]", "{[0]->[1]}"}}
         );
     
     updateSources->addStmt(s23);
      
     //Creating S24
     //sources.GeoCoeff[2] = 1.0/(r*cos(theta));
-   Stmt* s24 = new Stmt("$sources.GeoCoeff$[2] = 1.0/($r$*cos($theta$));", 
-	"{[0]}",
-	"{[0]->["+std::to_string(newTuplePos+8)+"]}",
-	{
-	 {"$r$", "{[0]->[0]}"},
-	 {"$theta$", "{[0]->[0]}"}
-	},
-	{{"$sources.GeoCoeff$", "{[0]->[2]}"}}
-   );
-   updateSources->addStmt(s24);
+    Stmt* s24 = new Stmt("$sources.GeoCoeff$[2] = 1.0/($r$*cos($theta$));", 
+	    "{[0]}",
+	    "{[0]->["+std::to_string(newTuplePos+8)+"]}",
+	    {
+	        {"$r$", "{[0]->[0]}"},
+	        {"$theta$", "{[0]->[0]}"}
+	    },
+	    {{"$sources.GeoCoeff$[2]", "{[0]->[2]}"}}
+        );
+    updateSources->addStmt(s24);
 
-   //Data Space
-   updateSources->addDataSpace("$sources.GeoTerms$");
+    //Data Space
+    updateSources->addDataSpace("$sources.GeoTerms$");
 
-   //Creating S25
-   //sources.GeoTerms[0] = 0.0;
-   Stmt* s25 = new Stmt("$sources.GeoTerms$[0] = 0.0;", 
-	"{[0]}",
-	"{[0]->["+std::to_string(newTuplePos+9)+"]}",
-	{},
-	{{"$sources.GeoTerms$[0]", "{[0]->[0]}"}}
-   );
-   updateSources->addStmt(s25);
+    //Creating S25
+    //sources.GeoTerms[0] = 0.0;
+    Stmt* s25 = new Stmt("$sources.GeoTerms$[0] = 0.0;", 
+	    "{[0]}",
+	    "{[0]->["+std::to_string(newTuplePos+9)+"]}",
+	    {},
+	    {{"$sources.GeoTerms$[0]", "{[0]->[0]}"}}
+        );
+    updateSources->addStmt(s25);
 
-   //Creating S26
-   //sources.GeoTerms[1] = (nu[0]*sources.v - nu[1]*sources.w);
-   Stmt* s26 = new Stmt("$sources.GeoTerms$[1] = ($nu$[0]*$sources.v$ - $nu$[1]*$sources.w$);", 
-	"{[0]}",
-	"{[0]->["+std::to_string(newTuplePos+10)+"]}",
-	{
-	 {"$nu$[0]","{[0]->[0]}"},
-	 {"$sources.v$", "{[0]->[0]}"},
-	 {"$nu$[1]","{[0]->[1]}"},
-	 {"$sources.w$", "{[0]->[0]}"}
-	},
-	{{"$sources.GeoTerms$[1]", "{[0]->[1]}"}}
-   );
-   updateSources->addStmt(s26);
+    //Creating S26
+    //sources.GeoTerms[1] = (nu[0]*sources.v - nu[1]*sources.w);
+    Stmt* s26 = new Stmt("$sources.GeoTerms$[1] = ($nu$[0]*$sources.v$ - $nu$[1]*$sources.w$);", 
+	    "{[0]}",
+	    "{[0]->["+std::to_string(newTuplePos+10)+"]}",
+	    {
+	        {"$nu$[0]","{[0]->[0]}"},
+	        {"$sources.v$", "{[0]->[0]}"},
+	        {"$nu$[1]","{[0]->[1]}"},
+	        {"$sources.w$", "{[0]->[0]}"}
+	    },
+	    {{"$sources.GeoTerms$[1]", "{[0]->[1]}"}}
+        );
+    updateSources->addStmt(s26);
 
-   //Creating S27
-   //sources.GeoTerms[2] = (nu[0]*sources.u - nu[2]*sources.w)*cos(theta) + (nu[1]*sources.u - nu[2]*sources.v)*sin(theta);
-   Stmt* s27 = new Stmt("$sources.GeoTerms$[2] = ($nu$[0]*$sources.u$ - $nu$[2]*$sources.w$)*cos($theta$) + ($nu$[1]*$sources.u$ - $nu$[2]*$sources.v$)*sin($theta$);", 
-	"{[0]}",
-	"{[0]->["+std::to_string(newTuplePos+11)+"]}",
-	{
-	 {"$nu$[0]","{[0]->[0]}"},
-	 {"$sources.u$", "{[0]->[0]}"},
-	 {"$nu$[2]","{[0]->[2]}"},
-	 {"$sources.w$", "{[0]->[0]}"},
-	 {"$theta$", "{[0]->[0]}"},
-	 {"$nu$[1]","{[0]->[1]}"},
-	 {"$sources.v$", "{[0]->[0]}"}
-	},
-	{{"$sources.GeoTerms$[2]", "{[0]->[2]}"}}
-   );
-   updateSources->addStmt(s27);
+    //Creating S27
+    //sources.GeoTerms[2] = (nu[0]*sources.u - nu[2]*sources.w)*cos(theta) + (nu[1]*sources.u - nu[2]*sources.v)*sin(theta);
+    Stmt* s27 = new Stmt("$sources.GeoTerms$[2] = ($nu$[0]*$sources.u$ - $nu$[2]*$sources.w$)*cos($theta$) + ($nu$[1]*$sources.u$ - $nu$[2]*$sources.v$)*sin($theta$);", 
+	    "{[0]}",
+	    "{[0]->["+std::to_string(newTuplePos+11)+"]}",
+	    {
+	        {"$nu$[0]","{[0]->[0]}"},
+	        {"$sources.u$", "{[0]->[0]}"},
+	        {"$nu$[2]","{[0]->[2]}"},
+	        {"$sources.w$", "{[0]->[0]}"},
+	        {"$theta$", "{[0]->[0]}"},
+	        {"$nu$[1]","{[0]->[1]}"},
+	        {"$sources.v$", "{[0]->[0]}"}
+	    },
+	    {{"$sources.GeoTerms$[2]", "{[0]->[2]}"}}
+        );
+    updateSources->addStmt(s27);
 
-   //Creating S28
-   //sources.GeoTerms[0] += 1.0/r * (nu[1]*sources.c_gr[1] + nu[2]*sources.c_gr[2]);
-   Stmt* s28 = new Stmt("$sources.GeoTerms$[0] += 1.0/$r$ * ($nu$[1]*$sources.c_gr$[1] + $nu$[2]*$sources.c_gr$[2]);", 
-	"{[0]}",
-	"{[0]->["+std::to_string(newTuplePos+12)+"]}",
-	{
-	 {"$sources.GeoTerms$[0]", "{[0]->[0]}"},  
-	 {"$r$", "{[0]->[0]}"},
-	 {"$nu$[1]","{[0]->[1]}"},
-	 {"$sources.c_gr$[1]", "{[0]->[1]}"},
-	 {"$nu$[2]","{[0]->[2]}"},
-	 {"$sources.c_gr$[2]", "{[0]->[1]}"}
-	},
-	{{"$sources.GeoTerms$[0]", "{[0]->[0]}"}}
-   );
-   updateSources->addStmt(s28);
+    //Creating S28
+    //sources.GeoTerms[0] += 1.0/r * (nu[1]*sources.c_gr[1] + nu[2]*sources.c_gr[2]);
+    Stmt* s28 = new Stmt("$sources.GeoTerms$[0] += 1.0/$r$ * ($nu$[1]*$sources.c_gr$[1] + $nu$[2]*$sources.c_gr$[2]);", 
+	    "{[0]}",
+	    "{[0]->["+std::to_string(newTuplePos+12)+"]}",
+	    {
+	        {"$sources.GeoTerms$[0]", "{[0]->[0]}"},  
+	        {"$r$", "{[0]->[0]}"},
+	        {"$nu$[1]","{[0]->[1]}"},
+	        {"$sources.c_gr$[1]", "{[0]->[1]}"},
+	        {"$nu$[2]","{[0]->[2]}"},
+	        {"$sources.c_gr$[2]", "{[0]->[2]}"}
+	    },
+	    {{"$sources.GeoTerms$[0]", "{[0]->[0]}"}}
+        );
+    updateSources->addStmt(s28);
 
-   //Creating S29
-   //sources.GeoTerms[1] += -nu[0]*sources.c_gr[1] + nu[2]*sources.c_gr[2]*tan(theta);
-   Stmt* s29 = new Stmt("$sources.GeoTerms$[1] += -$nu$[0]*$sources.c_gr$[1] + $nu$[2]*$sources.c_gr$[2]*tan($theta$);", 
-	"{[0]}",
-	"{[0]->["+std::to_string(newTuplePos+13)+"]}",
-	{
-	 {"$sources.GeoTerms$[1]", "{[0]->[1]}"},  
-	 {"$nu$[0]","{[0]->[0]}"},
-	 {"$sources.c_gr$[1]", "{[0]->[1]}"},
-	 {"$nu$[2]","{[0]->[2]}"},
-	 {"$sources.c_gr$[2]", "{[0]->[1]}"},
-	 {"$theta$", "{[0]->[0]}"}
-	},
-	{{"$sources.GeoTerms$[1]", "{[0]->[1]}"}}
-   );
-   updateSources->addStmt(s29);
+    //Creating s29
+    //sources.GeoTerms[1] += -nu[0]*sources.c_gr[1] + nu[2]*sources.c_gr[2]*tan(theta);
+    Stmt* s29 = new Stmt("$sources.GeoTerms$[1] += -$nu$[0]*$sources.c_gr$[1] + $nu$[2]*$sources.c_gr$[2]*tan($theta$);", 
+	    "{[0]}",
+	    "{[0]->["+std::to_string(newTuplePos+13)+"]}",
+	    {
+	        {"$sources.GeoTerms$[1]", "{[0]->[1]}"},  
+	        {"$nu$[0]","{[0]->[0]}"},
+	        {"$sources.c_gr$[1]", "{[0]->[1]}"},
+	        {"$nu$[2]","{[0]->[2]}"},
+	        {"$sources.c_gr$[2]", "{[0]->[1]}"},
+	        {"$theta$", "{[0]->[0]}"}
+	    },
+	    {{"$sources.GeoTerms$[1]", "{[0]->[1]}"}}
+        );
+    updateSources->addStmt(s29);
+
+    //Creating s30
+    //sources.GeoTerms[2] += -sources.c_gr[2]*(nu[0]*cos(theta) + nu[1]*sin(theta));
+    Stmt* s30 = new Stmt("$sources.GeoTerms$[2] += -$sources.c_gr$[2]*($nu$[0]*cos($theta$) + $nu$[1]*sin($theta$));",
+        "{[0]}",
+        "{[0]->["+std::to_string(newTuplePos+14)+"]}",
+        {
+            {"$sources.c_gr$[2]", "{[0]->[2]}"},
+            {"$nu$[0]", "{[0]->[0]}"},
+            {"$theta$", "{[0]->[0]}"},
+            {"$nu$[1]", "{[0]->[1]}"}
+        },
+        {{"$sources.GeoTerms$[2]", "{[0]->[2]}"}}
+        );
+    updateSources->addStmt(s30);
     
     //Calling toDot() on the Computation structure
     /*
