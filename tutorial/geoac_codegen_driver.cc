@@ -329,12 +329,89 @@ int main(int argc, char **argv){
  
     updateSources->addStmt(s12);
 
+   //Clearing arguments and adding new ones
+    cDiffCompArgs.clear();
+    cDiffCompArgs.push_back("$r$");
+    cDiffCompArgs.push_back("$theta$");
+    cDiffCompArgs.push_back("$phi$");
+    cDiffCompArgs.push_back("2");
+    cDiffCompArgs.push_back("$spl.Temp_Spline$");
+    
+    // Return values are stored in a struct of the computation: AppendComputationResult
+    AppendComputationResult cDiff2CompRes = updateSources->appendComputation(cDiffComputation, "{[0]}", "{[0]->["+std::to_string(newTuplePos+1)+"]}", cDiffCompArgs);
+    
+    newTuplePos = cDiff2CompRes.tuplePosition+1;
+    //Creating s13
+    //sources.dc[2] = c_diff(r,theta,phi,2,spl.Temp_Spline);
+    Stmt* s13 = new Stmt("$sources.dc$[2] = "+cDiff2CompRes.returnValues.back()+";", 
+        "{[0]}",
+        "{[0]->["+std::to_string(newTuplePos)+"]}",
+        {{cDiff2CompRes.returnValues.back(), "{[0]->[0]}"}},
+        {{"$sources.dc$", "{[0]->[2]}"}}
+        );
+    
+    updateSources->addStmt(s13);
+   
+    //Creating s14
+    //sources.dw[2] = w_diff(r,theta,phi,0); The w_diff function always returns 0!
+    Stmt* s14 = new Stmt("$sources.dw$[2] = 0;", 
+        "{[0]}",
+        "{[0]->["+std::to_string(newTuplePos+1)+"]}",
+        {},
+        {{"$sources.dw$", "{[0]->[2]}"}}
+        );
+    
+    updateSources->addStmt(s14);
+   
+    //Clearing arguments and adding new ones
+    vDiffCompArgs.clear();
+    vDiffCompArgs.push_back("$r$");
+    vDiffCompArgs.push_back("$theta$");
+    vDiffCompArgs.push_back("$phi$");
+    vDiffCompArgs.push_back("2");
+    vDiffCompArgs.push_back("$spl.Windv_Spline$");
+    
+    AppendComputationResult vDiff2CompRes = updateSources->appendComputation(vDiffComputation, "{[0]}", "{[0]->["+std::to_string(newTuplePos+2)+"]}", vDiffCompArgs);   
+    newTuplePos = vDiff2CompRes.tuplePosition+1;
+  
+    //Creating s15
+    //sources.dv[2] = v_diff(r,theta,phi,2,spl.Windv_Spline);
+    Stmt* s15 = new Stmt("$sources.dv$[2] = "+vDiff2CompRes.returnValues.back()+";", 
+        "{[0]}",
+        "{[0]->["+std::to_string(newTuplePos)+"]}",
+        {{vDiff2CompRes.returnValues.back(), "{[0]->[0]}"}},
+        {{"$sources.dv$", "{[0]->[2]}"}}
+        );
+    updateSources->addStmt(s15);
+    
+    //Clearing arguments and adding new ones
+    uDiffCompArgs.clear();
+    uDiffCompArgs.push_back("$r$");
+    uDiffCompArgs.push_back("$theta$");
+    uDiffCompArgs.push_back("$phi$");
+    uDiffCompArgs.push_back("2");
+    uDiffCompArgs.push_back("$spl.Windu_Spline$");
+ 
+    AppendComputationResult uDiff2CompRes = updateSources->appendComputation(uDiffComputation, "{[0]}", "{[0]->["+std::to_string(newTuplePos+1)+"]}", uDiffCompArgs);
+    newTuplePos = uDiff2CompRes.tuplePosition+1;
+
+    //Creating s16
+    //sources.du[2] = u_diff(r,theta,phi,2,spl.Windu_Spline);
+    Stmt* s16 = new Stmt("$sources.du$[2] = "+uDiff2CompRes.returnValues.back()+";",
+        "{[0]}",
+        "{[0]->["+std::to_string(newTuplePos)+"]}",
+        {{uDiff2CompRes.returnValues.back(), "{[0]->[0]}"}},
+        {{"$sources.du$", "{[0]->[2]}"}}
+        );
+ 
+    updateSources->addStmt(s16); 
+    
     //Data Spaces
     updateSources->addDataSpace("$sources.nu_mag$");
     updateSources->addDataSpace("$nu$");
-    //Creating s13
+    //Creating s17
     //sources.nu_mag =   sqrt( nu[0]*nu[0] + nu[1]*nu[1] + nu[2]*nu[2]);
-    Stmt* s13 = new Stmt("$sources.nu_mag$ = sqrt( $nu$[0]*$nu$[0] + $nu$[1]*$nu$[1] + $nu$[2]*$nu$[2]);",
+    Stmt* s17 = new Stmt("$sources.nu_mag$ = sqrt( $nu$[0]*$nu$[0] + $nu$[1]*$nu$[1] + $nu$[2]*$nu$[2]);",
         "{[0]}",
         "{[0]->["+std::to_string(newTuplePos+1)+"]}",
         {
@@ -345,13 +422,13 @@ int main(int argc, char **argv){
         {{"$sources.nu_mag$", "{[0]->[0]}"}}
         );
 
-    updateSources->addStmt(s13);
-    
+    updateSources->addStmt(s17);
+
     //Data Spaces    
     updateSources->addDataSpace("$sources.c_gr$");
-    //Creating S14
+    //Creating S18
     //sources.c_gr[0] =  sources.c*nu[0]/sources.nu_mag + sources.w;
-    Stmt* s14 = new Stmt("$sources.c_gr$[0] =  $sources.c$*$nu$[0]/$sources.nu_mag$ + $sources.w$;",
+    Stmt* s18 = new Stmt("$sources.c_gr$[0] =  $sources.c$*$nu$[0]/$sources.nu_mag$ + $sources.w$;",
         "{[0]}",
         "{[0]->["+std::to_string(newTuplePos+2)+"]}",
         {
@@ -363,11 +440,11 @@ int main(int argc, char **argv){
         {{"$sources.c_gr$[0]", "{[0]->[0]}"}}
         );
 
-    updateSources->addStmt(s14);
+    updateSources->addStmt(s18);
    
-    //Creating S15
+    //Creating S19
     //sources.c_gr[1] =  sources.c*nu[1]/sources.nu_mag + sources.v;
-    Stmt* s15 = new Stmt("$sources.c_gr$[1] =  $sources.c$*$nu$[1]/$sources.nu_mag$ + $sources.v$;",
+    Stmt* s19 = new Stmt("$sources.c_gr$[1] =  $sources.c$*$nu$[1]/$sources.nu_mag$ + $sources.v$;",
         "{[0]}",
         "{[0]->["+std::to_string(newTuplePos+3)+"]}",
         {
@@ -379,11 +456,11 @@ int main(int argc, char **argv){
         {{"$sources.c_gr$[1]", "{[0]->[1]}"}}
         );
 
-    updateSources->addStmt(s15);
+    updateSources->addStmt(s19);
    
-    //Creating s16
+    //Creating s20
     //sources.c_gr[2] =  sources.c*nu[2]/sources.nu_mag + sources.u;
-    Stmt* s16 = new Stmt("$sources.c_gr$[2] =  $sources.c$*$nu$[2]/$sources.nu_mag$ + $sources.u$;",
+    Stmt* s20 = new Stmt("$sources.c_gr$[2] =  $sources.c$*$nu$[2]/$sources.nu_mag$ + $sources.u$;",
         "{[0]}",
         "{[0]->["+std::to_string(newTuplePos+4)+"]}",
         {
@@ -395,14 +472,14 @@ int main(int argc, char **argv){
         {{"$sources.c_gr$[2]", "{[0]->[2]}"}}
         );
 
-    updateSources->addStmt(s16);
+    updateSources->addStmt(s20);
     
     //Data Space
     updateSources->addDataSpace("$sources.c_gr_mag$");
    
     //Creating s17
     //sources.c_gr_mag = sqrt(pow(sources.c_gr[0],2) + pow(sources.c_gr[1],2) + pow(sources.c_gr[2],2));
-    Stmt* s17 = new Stmt("$sources.c_gr_mag$ = sqrt(pow($sources.c_gr$[0],2) + pow($sources.c_gr$[1],2) + pow($sources.c_gr$[2],2));",
+    Stmt* s21 = new Stmt("$sources.c_gr_mag$ = sqrt(pow($sources.c_gr$[0],2) + pow($sources.c_gr$[1],2) + pow($sources.c_gr$[2],2));",
         "{[0]}",
         "{[0]->["+std::to_string(newTuplePos+5)+"]}",
         {
@@ -413,32 +490,32 @@ int main(int argc, char **argv){
         {{"$sources.c_gr_mag$", "{[0]->[0]}"}}
         );
 
-    updateSources->addStmt(s17);
+    updateSources->addStmt(s21);
     
     //Data Space
     updateSources->addDataSpace("$sources.GeoCoeff$");
  
-    //Creating s18
+    //Creating s22
     //sources.GeoCoeff[0] = 1.0;
-    Stmt* s18 = new Stmt("$sources.GeoCoeff$[0] = 1.0;", 
+    Stmt* s22 = new Stmt("$sources.GeoCoeff$[0] = 1.0;", 
         "{[0]}",
         "{[0]->["+std::to_string(newTuplePos+6)+"]}",
         {},
         {{"$sources.GeoCoeff$", "{[0]->[0]}"}}
         );
     
-    updateSources->addStmt(s18);
+    updateSources->addStmt(s22);
    
-    //Creating s19
+    //Creating s23
     //sources.GeoCoeff[1] = 1.0/r;
-    Stmt* s19 = new Stmt("$sources.GeoCoeff$[1] = 1.0/$r$", 
+    Stmt* s23 = new Stmt("$sources.GeoCoeff$[1] = 1.0/$r$", 
         "{[0]}",
         "{[0]->["+std::to_string(newTuplePos+7)+"]}",
         {{"$r", "{[0]->[0]}"}},
         {{"$sources.GeoCoeff$", "{[0]->[1]}"}}
         );
     
-    updateSources->addStmt(s19);
+    updateSources->addStmt(s23);
 
     //Calling toDot() on the Computation structure
     /*
