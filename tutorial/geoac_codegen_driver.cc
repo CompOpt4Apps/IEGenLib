@@ -329,7 +329,117 @@ int main(int argc, char **argv){
  
     updateSources->addStmt(s12);
 
+    //Data Spaces
+    updateSources->addDataSpace("$sources.nu_mag$");
+    updateSources->addDataSpace("$nu$");
+    //Creating s13
+    //sources.nu_mag =   sqrt( nu[0]*nu[0] + nu[1]*nu[1] + nu[2]*nu[2]);
+    Stmt* s13 = new Stmt("$sources.nu_mag$ = sqrt( $nu$[0]*$nu$[0] + $nu$[1]*$nu$[1] + $nu$[2]*$nu$[2]);",
+        "{[0]}",
+        "{[0]->["+std::to_string(newTuplePos+1)+"]}",
+        {
+            {"$nu$[0]","{[0]->[0]}"},
+            {"$nu$[1]","{[0]->[1]}"},
+            {"$nu$[2]","{[0]->[2]}"}
+        }, 
+        {{"$sources.nu_mag$", "{[0]->[0]}"}}
+        );
+
+    updateSources->addStmt(s13);
     
+    //Data Spaces    
+    updateSources->addDataSpace("$sources.c_gr$");
+    //Creating S14
+    //sources.c_gr[0] =  sources.c*nu[0]/sources.nu_mag + sources.w;
+    Stmt* s14 = new Stmt("$sources.c_gr$[0] =  $sources.c$*$nu$[0]/$sources.nu_mag$ + $sources.w$;",
+        "{[0]}",
+        "{[0]->["+std::to_string(newTuplePos+2)+"]}",
+        {
+            {"$sources.c$", "{[0]->[0]}"},
+            {"$nu$[0]","{[0]->[0]}"},
+            {"$sources.nu_mag$", "{[0]->[0]}"},
+            {"$sources.w$", "{[0]->[0]}"}
+        },
+        {{"$sources.c_gr$[0]", "{[0]->[0]}"}}
+        );
+
+    updateSources->addStmt(s14);
+   
+    //Creating S15
+    //sources.c_gr[1] =  sources.c*nu[1]/sources.nu_mag + sources.v;
+    Stmt* s15 = new Stmt("$sources.c_gr$[1] =  $sources.c$*$nu$[1]/$sources.nu_mag$ + $sources.v$;",
+        "{[0]}",
+        "{[0]->["+std::to_string(newTuplePos+3)+"]}",
+        {
+            {"$sources.c$", "{[0]->[0]}"},
+            {"$nu$[1]","{[0]->[1]}"},
+            {"$sources.nu_mag$", "{[0]->[0]}"},
+            {"$sources.v$", "{[0]->[0]}"}
+        },
+        {{"$sources.c_gr$[1]", "{[0]->[1]}"}}
+        );
+
+    updateSources->addStmt(s15);
+   
+    //Creating s16
+    //sources.c_gr[2] =  sources.c*nu[2]/sources.nu_mag + sources.u;
+    Stmt* s16 = new Stmt("$sources.c_gr$[2] =  $sources.c$*$nu$[2]/$sources.nu_mag$ + $sources.u$;",
+        "{[0]}",
+        "{[0]->["+std::to_string(newTuplePos+4)+"]}",
+        {
+            {"$sources.c$", "{[0]->[0]}"},
+            {"$nu$[2]","{[0]->[2]}"},
+            {"$sources.nu_mag$", "{[0]->[0]}"},
+            {"$sources.v$", "{[0]->[0]}"}
+        },
+        {{"$sources.c_gr$[2]", "{[0]->[2]}"}}
+        );
+
+    updateSources->addStmt(s16);
+    
+    //Data Space
+    updateSources->addDataSpace("$sources.c_gr_mag$");
+   
+    //Creating s17
+    //sources.c_gr_mag = sqrt(pow(sources.c_gr[0],2) + pow(sources.c_gr[1],2) + pow(sources.c_gr[2],2));
+    Stmt* s17 = new Stmt("$sources.c_gr_mag$ = sqrt(pow($sources.c_gr$[0],2) + pow($sources.c_gr$[1],2) + pow($sources.c_gr$[2],2));",
+        "{[0]}",
+        "{[0]->["+std::to_string(newTuplePos+5)+"]}",
+        {
+            {"$sources.c_gr$[0]", "{[0]->[0]}"},
+            {"$sources.c_gr$[1]", "{[0]->[1]}"},
+            {"$sources.c_gr$[2]", "{[0]->[2]}"}
+        },
+        {{"$sources.c_gr_mag$", "{[0]->[0]}"}}
+        );
+
+    updateSources->addStmt(s17);
+    
+    //Data Space
+    updateSources->addDataSpace("$sources.GeoCoeff$");
+ 
+    //Creating s18
+    //sources.GeoCoeff[0] = 1.0;
+    Stmt* s18 = new Stmt("$sources.GeoCoeff$[0] = 1.0;", 
+        "{[0]}",
+        "{[0]->["+std::to_string(newTuplePos+6)+"]}",
+        {},
+        {{"$sources.GeoCoeff$", "{[0]->[0]}"}}
+        );
+    
+    updateSources->addStmt(s18);
+   
+    //Creating s19
+    //sources.GeoCoeff[1] = 1.0/r;
+    Stmt* s19 = new Stmt("$sources.GeoCoeff$[1] = 1.0/$r$", 
+        "{[0]}",
+        "{[0]->["+std::to_string(newTuplePos+7)+"]}",
+        {{"$r", "{[0]->[0]}"}},
+        {{"$sources.GeoCoeff$", "{[0]->[1]}"}}
+        );
+    
+    updateSources->addStmt(s19);
+
     //Calling toDot() on the Computation structure
     /*
     ofstream dotFileStream("codegen_dot.txt");
