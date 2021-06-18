@@ -415,9 +415,9 @@ int main(int argc, char **argv){
         "{[0]}",
         "{[0]->["+std::to_string(newTuplePos+1)+"]}",
         {
-            {"$nu$[0]","{[0]->[0]}"},
-            {"$nu$[1]","{[0]->[1]}"},
-            {"$nu$[2]","{[0]->[2]}"}
+            {"$nu$","{[0]->[0]}"},
+            {"$nu$","{[0]->[1]}"},
+            {"$nu$","{[0]->[2]}"}
         }, 
         {{"$sources.nu_mag$", "{[0]->[0]}"}}
         );
@@ -433,11 +433,11 @@ int main(int argc, char **argv){
         "{[0]->["+std::to_string(newTuplePos+2)+"]}",
         {
             {"$sources.c$", "{[0]->[0]}"},
-            {"$nu$[0]","{[0]->[0]}"},
+            {"$nu$","{[0]->[0]}"},
             {"$sources.nu_mag$", "{[0]->[0]}"},
             {"$sources.w$", "{[0]->[0]}"}
         },
-        {{"$sources.c_gr$[0]", "{[0]->[0]}"}}
+        {{"$sources.c_gr$", "{[0]->[0]}"}}
         );
 
     updateSources->addStmt(s18);
@@ -449,11 +449,11 @@ int main(int argc, char **argv){
         "{[0]->["+std::to_string(newTuplePos+3)+"]}",
         {
             {"$sources.c$", "{[0]->[0]}"},
-            {"$nu$[1]","{[0]->[1]}"},
+            {"$nu$","{[0]->[1]}"},
             {"$sources.nu_mag$", "{[0]->[0]}"},
             {"$sources.v$", "{[0]->[0]}"}
         },
-        {{"$sources.c_gr$[1]", "{[0]->[1]}"}}
+        {{"$sources.c_gr$", "{[0]->[1]}"}}
         );
 
     updateSources->addStmt(s19);
@@ -465,11 +465,11 @@ int main(int argc, char **argv){
         "{[0]->["+std::to_string(newTuplePos+4)+"]}",
         {
             {"$sources.c$", "{[0]->[0]}"},
-            {"$nu$[2]","{[0]->[2]}"},
+            {"$nu$","{[0]->[2]}"},
             {"$sources.nu_mag$", "{[0]->[0]}"},
             {"$sources.v$", "{[0]->[0]}"}
         },
-        {{"$sources.c_gr$[2]", "{[0]->[2]}"}}
+        {{"$sources.c_gr$", "{[0]->[2]}"}}
         );
 
     updateSources->addStmt(s20);
@@ -483,9 +483,9 @@ int main(int argc, char **argv){
         "{[0]}",
         "{[0]->["+std::to_string(newTuplePos+5)+"]}",
         {
-            {"$sources.c_gr$[0]", "{[0]->[0]}"},
-            {"$sources.c_gr$[1]", "{[0]->[1]}"},
-            {"$sources.c_gr$[2]", "{[0]->[2]}"}
+            {"$sources.c_gr$", "{[0]->[0]}"},
+            {"$sources.c_gr$", "{[0]->[1]}"},
+            {"$sources.c_gr$", "{[0]->[2]}"}
         },
         {{"$sources.c_gr_mag$", "{[0]->[0]}"}}
         );
@@ -501,7 +501,7 @@ int main(int argc, char **argv){
         "{[0]}",
         "{[0]->["+std::to_string(newTuplePos+6)+"]}",
         {},
-        {{"$sources.GeoCoeff$[0]", "{[0]->[0]}"}}
+        {{"$sources.GeoCoeff$", "{[0]->[0]}"}}
         );
     
     updateSources->addStmt(s22);
@@ -512,7 +512,7 @@ int main(int argc, char **argv){
         "{[0]}",
         "{[0]->["+std::to_string(newTuplePos+7)+"]}",
         {{"$r$", "{[0]->[0]}"}},
-        {{"$sources.GeoCoeff$[1]", "{[0]->[1]}"}}
+        {{"$sources.GeoCoeff$", "{[0]->[1]}"}}
         );
     
     updateSources->addStmt(s23);
@@ -526,7 +526,7 @@ int main(int argc, char **argv){
 	        {"$r$", "{[0]->[0]}"},
 	        {"$theta$", "{[0]->[0]}"}
 	    },
-	    {{"$sources.GeoCoeff$[2]", "{[0]->[2]}"}}
+	    {{"$sources.GeoCoeff$", "{[0]->[2]}"}}
         );
     updateSources->addStmt(s24);
 
@@ -539,7 +539,7 @@ int main(int argc, char **argv){
 	    "{[0]}",
 	    "{[0]->["+std::to_string(newTuplePos+9)+"]}",
 	    {},
-	    {{"$sources.GeoTerms$[0]", "{[0]->[0]}"}}
+	    {{"$sources.GeoTerms$", "{[0]->[0]}"}}
         );
     updateSources->addStmt(s25);
 
@@ -549,12 +549,12 @@ int main(int argc, char **argv){
 	    "{[0]}",
 	    "{[0]->["+std::to_string(newTuplePos+10)+"]}",
 	    {
-	        {"$nu$[0]","{[0]->[0]}"},
+	        {"$nu$","{[0]->[0]}"},
 	        {"$sources.v$", "{[0]->[0]}"},
-	        {"$nu$[1]","{[0]->[1]}"},
+	        {"$nu$","{[0]->[1]}"},
 	        {"$sources.w$", "{[0]->[0]}"}
 	    },
-	    {{"$sources.GeoTerms$[1]", "{[0]->[1]}"}}
+	    {{"$sources.GeoTerms$", "{[0]->[1]}"}}
         );
     updateSources->addStmt(s26);
 
@@ -564,15 +564,15 @@ int main(int argc, char **argv){
 	    "{[0]}",
 	    "{[0]->["+std::to_string(newTuplePos+11)+"]}",
 	    {
-	        {"$nu$[0]","{[0]->[0]}"},
+	        {"$nu$","{[0]->[0]}"},
 	        {"$sources.u$", "{[0]->[0]}"},
-	        {"$nu$[2]","{[0]->[2]}"},
+	        {"$nu$","{[0]->[2]}"},
 	        {"$sources.w$", "{[0]->[0]}"},
 	        {"$theta$", "{[0]->[0]}"},
-	        {"$nu$[1]","{[0]->[1]}"},
+	        {"$nu$","{[0]->[1]}"},
 	        {"$sources.v$", "{[0]->[0]}"}
 	    },
-	    {{"$sources.GeoTerms$[2]", "{[0]->[2]}"}}
+	    {{"$sources.GeoTerms$", "{[0]->[2]}"}}
         );
     updateSources->addStmt(s27);
 
@@ -582,14 +582,14 @@ int main(int argc, char **argv){
 	    "{[0]}",
 	    "{[0]->["+std::to_string(newTuplePos+12)+"]}",
 	    {
-	        {"$sources.GeoTerms$[0]", "{[0]->[0]}"},  
+	        {"$sources.GeoTerms$", "{[0]->[0]}"},  
 	        {"$r$", "{[0]->[0]}"},
-	        {"$nu$[1]","{[0]->[1]}"},
-	        {"$sources.c_gr$[1]", "{[0]->[1]}"},
-	        {"$nu$[2]","{[0]->[2]}"},
-	        {"$sources.c_gr$[2]", "{[0]->[2]}"}
+	        {"$nu$","{[0]->[1]}"},
+	        {"$sources.c_gr$", "{[0]->[1]}"},
+	        {"$nu$","{[0]->[2]}"},
+	        {"$sources.c_gr$", "{[0]->[2]}"}
 	    },
-	    {{"$sources.GeoTerms$[0]", "{[0]->[0]}"}}
+	    {{"$sources.GeoTerms$", "{[0]->[0]}"}}
         );
     updateSources->addStmt(s28);
 
@@ -599,14 +599,14 @@ int main(int argc, char **argv){
 	    "{[0]}",
 	    "{[0]->["+std::to_string(newTuplePos+13)+"]}",
 	    {
-	        {"$sources.GeoTerms$[1]", "{[0]->[1]}"},  
-	        {"$nu$[0]","{[0]->[0]}"},
-	        {"$sources.c_gr$[1]", "{[0]->[1]}"},
-	        {"$nu$[2]","{[0]->[2]}"},
-	        {"$sources.c_gr$[2]", "{[0]->[1]}"},
+	        {"$sources.GeoTerms$", "{[0]->[1]}"},  
+	        {"$nu$","{[0]->[0]}"},
+	        {"$sources.c_gr$", "{[0]->[1]}"},
+	        {"$nu$","{[0]->[2]}"},
+	        {"$sources.c_gr$", "{[0]->[1]}"},
 	        {"$theta$", "{[0]->[0]}"}
 	    },
-	    {{"$sources.GeoTerms$[1]", "{[0]->[1]}"}}
+	    {{"$sources.GeoTerms$", "{[0]->[1]}"}}
         );
     updateSources->addStmt(s29);
 
@@ -616,12 +616,12 @@ int main(int argc, char **argv){
         "{[0]}",
         "{[0]->["+std::to_string(newTuplePos+14)+"]}",
         {
-            {"$sources.c_gr$[2]", "{[0]->[2]}"},
-            {"$nu$[0]", "{[0]->[0]}"},
+            {"$sources.c_gr$", "{[0]->[2]}"},
+            {"$nu$", "{[0]->[0]}"},
             {"$theta$", "{[0]->[0]}"},
-            {"$nu$[1]", "{[0]->[1]}"}
+            {"$nu$", "{[0]->[1]}"}
         },
-        {{"$sources.GeoTerms$[2]", "{[0]->[2]}"}}
+        {{"$sources.GeoTerms$", "{[0]->[2]}"}}
         );
     updateSources->addStmt(s30);
     
