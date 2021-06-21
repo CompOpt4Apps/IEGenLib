@@ -727,8 +727,54 @@ int main(int argc, char **argv){
         );  
     
     updateSources->addStmt(s35);
-
  
+ //Creating s36
+ //sources.dc[3] = 0.0;  sources.dc[4] = 0.0;
+ Stmt* s36 = new Stmt("$sources.dc$[3] = 0.0;  $sources.dc$[4] = 0.0;",
+          "{[0]: $GeoAc_CalcAmp$ = true}",
+          "{[0]->["+std::to_string(newTuplePos+20)+"]}",
+          {},
+          {{"$sources.dc$", "{[0]->[3]}"},
+           {"$sources.dc$", "{[0]->[4]}"}
+		  }
+ );
+ updateSources->addStmt(s36);
+
+ //Creating s37
+ //sources.dw[3] = 0.0;  sources.dw[4] = 0.0;
+ Stmt* s37 = new Stmt("$sources.dw$[3] = 0.0;  $sources.dw$[4] = 0.0;",
+          "{[0]: $GeoAc_CalcAmp$ = true}",
+          "{[0]->["+std::to_string(newTuplePos+21)+"]}",
+          {},
+          {{"$sources.dw$", "{[0]->[3]}"},
+		   {"$sources.dw$", "{[0]->[4]}"}
+		  }
+ );
+ updateSources->addStmt(s37);
+ 
+ //Creating s38
+ //sources.dv[3] = 0.0;  sources.dv[4] = 0.0;
+ Stmt* s38 = new Stmt("$sources.dv$[3] = 0.0;  $sources.dv$[4] = 0.0;",
+          "{[0]: $GeoAc_CalcAmp$ = true}",
+          "{[0]->["+std::to_string(newTuplePos+22)+"]}",
+          {},
+          {{"$sources.dv$", "{[0]->[3]}"},
+		   {"$sources.dv$", "{[0]->[4]}"}
+		  }
+ );
+ updateSources->addStmt(s38);
+ 
+ //Creating s39
+ //sources.du[3] = 0.0;  sources.du[4] = 0.0;
+ Stmt* s39 = new Stmt("$sources.du$[3] = 0.0;  $sources.du$[4] = 0.0;",
+          "{[0]: $GeoAc_CalcAmp$ = true}",
+          "{[0]->["+std::to_string(newTuplePos+23)+"]}",
+          {},
+          {{"$sources.du$", "{[0]->[3]}"},
+		   {"$sources.du$", "{[0]->[4]}"}
+		  }
+ );
+ updateSources->addStmt(s39); 
     //Calling toDot() on the Computation structure
     /*
     ofstream dotFileStream("codegen_dot.txt");
