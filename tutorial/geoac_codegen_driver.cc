@@ -34,32 +34,38 @@ int main(int argc, char **argv){
     updateSources->addDataSpace("$r$");
     updateSources->addDataSpace("$theta$");
     updateSources->addDataSpace("$phi$");
-    /* 
+     
     // double r = current_values[0],             theta = current_values[1],      phi = current_values[2];
-    Stmt * s01 = new Stmt("double $r$ = $current_values$[0], $theta$=$current_values$[1], $phi$=$current_values$[2];",
+    Stmt* s01 = new Stmt("double $r$ = $current_values$[0], $theta$=$current_values$[1], $phi$=$current_values$[2];",
          "{[0]}",
          "{[0]->[0]}",
-         {{"$current_values$[0]","{[0]->[0]}"},
-          {"$current_values$[1]","{[0]->[1]}"},
-          {"$current_values$[2]","{[0]->[2]}"}},
-         {{"$r$", "{[0]->[0]}"},
-          {"$theta$", "{[0]->[0]}"},
-          {"$phi$", "{[0]->[0]}"}}
+         {
+            {"$current_values$","{[0]->[0]}"},
+            {"$current_values$","{[0]->[1]}"},
+            {"$current_values$","{[0]->[2]}"}
+         },
+         {
+            {"$r$", "{[0]->[0]}"},
+            {"$theta$", "{[0]->[0]}"},
+            {"$phi$", "{[0]->[0]}"}
+         }
          );
     updateSources->addStmt(s01);
   
     //double nu[3] = {current_values[3],        current_values[4],              current_values[5]};
     updateSources->addDataSpace("$nu$");
-    Stmt * s02 = new Stmt("double $nu$[3] = {$current_values$[3], $current_values$[4], $current_values$[5]};",
+    Stmt* s02 = new Stmt("double $nu$[3] = {$current_values$[3], $current_values$[4], $current_values$[5]};",
          "{[0]}",
-         "{[0]->[1]",
-         {{"$current_values$[3]","{[0]->[3]}"},
-          {"$current_values$[4]","{[0]->[4]}"},
-          {"$current_values$[5]","{[0]->[5]}"}},
+         "{[0]->[1]}",
+         {
+            {"$current_values$","{[0]->[3]}"},
+            {"$current_values$","{[0]->[4]}"},
+            {"$current_values$","{[0]->[5]}"}
+         },
          {{"$nu$", "{[0]->[3]}"}}
          );
     updateSources->addStmt(s02);
-    */
+    
 
   
     //Add the args of the c function (computation to be appended) as data spaces to temp
@@ -75,7 +81,7 @@ int main(int argc, char **argv){
     Computation* cComputation = c_Computation();
 
     // Return values are stored in a struct of the computation: AppendComputationResult
-    AppendComputationResult cCompRes = updateSources->appendComputation(cComputation, "{[0]}", "{[0]->[1]}", cCompArgs); // set to 2
+    AppendComputationResult cCompRes = updateSources->appendComputation(cComputation, "{[0]}", "{[0]->[2]}", cCompArgs);
  
     unsigned int newTuplePos = cCompRes.tuplePosition+1;
     updateSources->addDataSpace("$sources.c$");
@@ -408,7 +414,7 @@ int main(int argc, char **argv){
     
     //Data Spaces
     updateSources->addDataSpace("$sources.nu_mag$");
-    updateSources->addDataSpace("$nu$"); //Once first two lines are uncommented this will be a duplicate
+    //updateSources->addDataSpace("$nu$"); //Once first two lines are uncommented this will be a duplicate
     //Creating s17
     //sources.nu_mag =   sqrt( nu[0]*nu[0] + nu[1]*nu[1] + nu[2]*nu[2]);
     Stmt* s17 = new Stmt("$sources.nu_mag$ = sqrt( $nu$[0]*$nu$[0] + $nu$[1]*$nu$[1] + $nu$[2]*$nu$[2]);",
@@ -624,7 +630,105 @@ int main(int argc, char **argv){
         {{"$sources.GeoTerms$", "{[0]->[2]}"}}
         );
     updateSources->addStmt(s30);
+   
+    //Data spaces
+    updateSources->addDataSpace("$R_lt$");
+    updateSources->addDataSpace("$R_lp$");
+    updateSources->addDataSpace("$mu_lt$");
+    updateSources->addDataSpace("$mu_lp$");
+
+    //Creating s31
+    //double R_lt[3], R_lp[3], mu_lt[3], mu_lp[3];
+    Stmt* s31 = new Stmt("double $R_lt$[3], $R_lp$[3], $mu_lt$[3], $mu_lp$[3];",
+        "{[0]}",
+        "{[0]->["+std::to_string(newTuplePos+15)+"]}",
+        {},
+        {}
+        );
+    cout << "Source statement : " << s31->getStmtSourceCode() << "\n\t"
+      <<"- Iteration Space : "<< s31->getIterationSpace()->prettyPrintString() << "\n\t"
+      << "- Execution Schedule : "<< s31->getExecutionSchedule()->prettyPrintString() << "\n\t" ;
+
+    updateSources->addStmt(s31);
+
+    //Creating s32
+    //R_lt[0]  = current_values[6];       R_lt[1]  = current_values[7];       R_lt[2]  = current_values[8];
+    Stmt*  s32 = new Stmt("$R_lt$[0]  = $current_values$[6];       $R_lt$[1]  = $current_values$[7];       $R_lt$[2]  = $current_values$[8];",
+        "{[0]: $GeoAc_CalcAmp$ = true}",
+        "{[0]->["+std::to_string(newTuplePos+16)+"]}",
+        {
+            {"$current_values$","{[0]->[6]}"},
+            {"$current_values$","{[0]->[7]}"},
+            {"$current_values$","{[0]->[8]}"}
+        }, 
+        {
+            {"$R_lt$", "{[0]->[0]}"},
+            {"$R_lt$", "{[0]->[1]}"},
+            {"$R_lt$", "{[0]->[2]}"}
+        }
+        );  
     
+    updateSources->addStmt(s32);
+
+    
+    //Creating s33
+    //mu_lt[0] = current_values[9];     mu_lt[1] = current_values[10];      mu_lt[2] = current_values[11];
+    Stmt* s33 = new Stmt("$mu_lt$[0] = $current_values$[9];     $mu_lt$[1] = $current_values$[10];      $mu_lt$[2] = $current_values$[11];",
+        "{[0]: $GeoAc_CalcAmp$ = true}",
+        "{[0]->["+std::to_string(newTuplePos+17)+"]}",
+        {
+            {"$current_values$","{[0]->[9]}"},
+            {"$current_values$","{[0]->[10]}"},
+            {"$current_values$","{[0]->[11]}"}
+        }, 
+        {
+            {"$mu_lt$", "{[0]->[0]}"},
+            {"$mu_lt$", "{[0]->[1]}"},
+            {"$mu_lt$", "{[0]->[2]}"}
+        }
+        );  
+    
+    updateSources->addStmt(s33);
+
+    //Creating s34
+    //R_lp[0]  = current_values[12];      R_lp[1]  = current_values[13];      R_lp[2]  = current_values[14];
+    Stmt* s34 = new Stmt("$R_lp$[0]  = $current_values$[12]; $R_lp$[1] = $current_values$[13]; $R_lp$[2]  = $current_values$[14];",        
+        "{[0]: $GeoAc_CalcAmp$ = true}",
+        "{[0]->["+std::to_string(newTuplePos+18)+"]}",
+        {
+            {"$current_values$","{[0]->[12]}"},
+            {"$current_values$","{[0]->[13]}"},
+            {"$current_values$","{[0]->[14]}"}
+        }, 
+        {
+            {"$R_lp$", "{[0]->[0]}"},
+            {"$R_lp$", "{[0]->[1]}"},
+            {"$R_lp$", "{[0]->[2]}"}
+        }
+        );  
+    
+    updateSources->addStmt(s34);
+
+    //Creating s35
+    //mu_lp[0] = current_values[15];        mu_lp[1] = current_values[16];      mu_lp[2] = current_values[17];
+    Stmt* s35 = new Stmt("$mu_lp$[0] = $current_values$[15]; $mu_lp$[1] = $current_values$[16]; $mu_lp$[2] = $current_values$[17];",
+        "{[0]: $GeoAc_CalcAmp$ = true}",
+        "{[0]->["+std::to_string(newTuplePos+19)+"]}",
+        {
+            {"$current_values$","{[0]->[15]}"},
+            {"$current_values$","{[0]->[16]}"},
+            {"$current_values$","{[0]->[17]}"}
+        }, 
+        {
+            {"$mu_lp$", "{[0]->[0]}"},
+            {"$mu_lp$", "{[0]->[1]}"},
+            {"$mu_lp$", "{[0]->[2]}"}
+        }
+        );  
+    
+    updateSources->addStmt(s35);
+
+ 
     //Calling toDot() on the Computation structure
     /*
     ofstream dotFileStream("codegen_dot.txt");
