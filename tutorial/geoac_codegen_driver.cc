@@ -832,7 +832,55 @@ int main(int argc, char **argv){
         );  
     
     updateSources->addStmt(s43);
-
+    
+    //Creating s44    
+    //sources.ddc[n][1] = 0.0;
+    Stmt* s44 = new Stmt("$sources.ddc$[n][1] = 0.0;",
+          "{[0]: GeoAc_CalcAmp = 1 &&& n>=0 && n<3}",
+          "{[0]->["+std::to_string(newTuplePos+24)+", n, 4]}",
+          {},
+          {
+            {"$sources.ddc$", "{[n]->[n,1]}"},
+          }
+    );
+    updateSources->addStmt(s44);
+	
+    //Creating s45    
+    //sources.ddw[n][1] = 0.0;
+    Stmt* s45 = new Stmt("$sources.ddw$[n][1] = 0.0;",
+          "{[0]: GeoAc_CalcAmp = 1 &&& n>=0 && n<3}",
+          "{[0]->["+std::to_string(newTuplePos+24)+", n, 5]}",
+          {},
+          {
+            {"$sources.ddw$", "{[n]->[n,1]}"},
+          }
+    );
+    updateSources->addStmt(s45);
+ 
+    //Creating s46   
+    //sources.ddv[n][1] = 0.0;
+    Stmt* s46 = new Stmt("$sources.ddv$[n][1] = 0.0;",
+          "{[0]: GeoAc_CalcAmp = 1 &&& n>=0 && n<3}",
+          "{[0]->["+std::to_string(newTuplePos+24)+", n, 6]}",
+          {},
+          {
+	   {"$sources.ddv$", "{[n]->[n,1]}"},
+	  }
+    );
+    updateSources->addStmt(s46);
+ 
+    //Creating s47   
+    //sources.ddu[n][1] = 0.0;
+    Stmt* s47 = new Stmt("$sources.ddu$[n][1] = 0.0;",
+          "{[0]: GeoAc_CalcAmp = 1 &&& n>=0 && n<3}",
+          "{[0]->["+std::to_string(newTuplePos+24)+", n, 7]}",
+          {},
+          {
+	   {"$sources.ddu$", "{[n]->[n,1]}"},
+          }
+    );
+    updateSources->addStmt(s47);
+    
     //Calling toDot() on the Computation structure
     /*
     ofstream dotFileStream("codegen_dot.txt");
