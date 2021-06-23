@@ -654,7 +654,7 @@ int main(int argc, char **argv){
     //Creating s32
     //R_lt[0]  = current_values[6];       R_lt[1]  = current_values[7];       R_lt[2]  = current_values[8];
     Stmt*  s32 = new Stmt("$R_lt$[0]  = $current_values$[6];       $R_lt$[1]  = $current_values$[7];       $R_lt$[2]  = $current_values$[8];",
-        "{[0]: $GeoAc_CalcAmp$ = true}",
+        "{[0]: GeoAc_CalcAmp = 1}",
         "{[0]->["+std::to_string(newTuplePos+16)+"]}",
         {
             {"$current_values$","{[0]->[6]}"},
@@ -674,7 +674,7 @@ int main(int argc, char **argv){
     //Creating s33
     //mu_lt[0] = current_values[9];     mu_lt[1] = current_values[10];      mu_lt[2] = current_values[11];
     Stmt* s33 = new Stmt("$mu_lt$[0] = $current_values$[9];     $mu_lt$[1] = $current_values$[10];      $mu_lt$[2] = $current_values$[11];",
-        "{[0]: $GeoAc_CalcAmp$ = true}",
+        "{[0]: GeoAc_CalcAmp = 1}",
         "{[0]->["+std::to_string(newTuplePos+17)+"]}",
         {
             {"$current_values$","{[0]->[9]}"},
@@ -693,7 +693,7 @@ int main(int argc, char **argv){
     //Creating s34
     //R_lp[0]  = current_values[12];      R_lp[1]  = current_values[13];      R_lp[2]  = current_values[14];
     Stmt* s34 = new Stmt("$R_lp$[0]  = $current_values$[12]; $R_lp$[1] = $current_values$[13]; $R_lp$[2]  = $current_values$[14];",        
-        "{[0]: $GeoAc_CalcAmp$ = true}",
+        "{[0]: GeoAc_CalcAmp = 1}",
         "{[0]->["+std::to_string(newTuplePos+18)+"]}",
         {
             {"$current_values$","{[0]->[12]}"},
@@ -712,7 +712,7 @@ int main(int argc, char **argv){
     //Creating s35
     //mu_lp[0] = current_values[15];        mu_lp[1] = current_values[16];      mu_lp[2] = current_values[17];
     Stmt* s35 = new Stmt("$mu_lp$[0] = $current_values$[15]; $mu_lp$[1] = $current_values$[16]; $mu_lp$[2] = $current_values$[17];",
-        "{[0]: $GeoAc_CalcAmp$ = true}",
+        "{[0]: GeoAc_CalcAmp = 1}",
         "{[0]->["+std::to_string(newTuplePos+19)+"]}",
         {
             {"$current_values$","{[0]->[15]}"},
@@ -731,7 +731,7 @@ int main(int argc, char **argv){
      //Creating s36
      //sources.dc[3] = 0.0;  sources.dc[4] = 0.0;
      Stmt* s36 = new Stmt("$sources.dc$[3] = 0.0;  $sources.dc$[4] = 0.0;",
-          "{[0]: $GeoAc_CalcAmp$ = true}",
+          "{[0]: GeoAc_CalcAmp = 1}",
           "{[0]->["+std::to_string(newTuplePos+20)+"]}",
           {},
           {{"$sources.dc$", "{[0]->[3]}"},
@@ -743,7 +743,7 @@ int main(int argc, char **argv){
      //Creating s37
      //sources.dw[3] = 0.0;  sources.dw[4] = 0.0;
      Stmt* s37 = new Stmt("$sources.dw$[3] = 0.0;  $sources.dw$[4] = 0.0;",
-          "{[0]: $GeoAc_CalcAmp$ = true}",
+          "{[0]: GeoAc_CalcAmp = 1}",
           "{[0]->["+std::to_string(newTuplePos+21)+"]}",
           {},
           {{"$sources.dw$", "{[0]->[3]}"},
@@ -755,7 +755,7 @@ int main(int argc, char **argv){
      //Creating s38
      //sources.dv[3] = 0.0;  sources.dv[4] = 0.0;
      Stmt* s38 = new Stmt("$sources.dv$[3] = 0.0;  $sources.dv$[4] = 0.0;",
-          "{[0]: $GeoAc_CalcAmp$ = true}",
+          "{[0]: GeoAc_CalcAmp = 1}",
           "{[0]->["+std::to_string(newTuplePos+22)+"]}",
           {},
           {{"$sources.dv$", "{[0]->[3]}"},
@@ -767,7 +767,7 @@ int main(int argc, char **argv){
      //Creating s39
      //sources.du[3] = 0.0;  sources.du[4] = 0.0;
      Stmt* s39 = new Stmt("$sources.du$[3] = 0.0;  $sources.du$[4] = 0.0;",
-          "{[0]: $GeoAc_CalcAmp$ = true}",
+          "{[0]: GeoAc_CalcAmp = 1}",
           "{[0]->["+std::to_string(newTuplePos+23)+"]}",
           {},
           {{"$sources.du$", "{[0]->[3]}"},
@@ -775,7 +775,64 @@ int main(int argc, char **argv){
           }
     );
     updateSources->addStmt(s39); 
+   
+    //Adding data space
+    updateSources->addDataSpace("$sources.ddc$");
+
+    //Creating s40 - inside the first for loop in the if condition
+    //for(int n = 0; n < 3; n++){
+    //sources.ddc[n][0] = 0.0;
+    Stmt* s40 = new Stmt("$sources.ddc$[n][0] = 0.0;",
+        "{[n]: GeoAc_CalcAmp = 1 && n>=0 && n<3}",
+        "{[n]->["+std::to_string(newTuplePos+24)+",n,0]}", 
+        {}, 
+        {{"$sources.ddc$", "{[n]->[n,0]}"}}
+        );  
     
+    updateSources->addStmt(s40);
+
+    //Adding data space
+    updateSources->addDataSpace("$sources.ddw$");
+ 
+    //Creating s41 - inside the first for loop in the if condition
+    //sources.ddw[n][0] = 0.0;
+    Stmt* s41 = new Stmt("$sources.ddw$[n][0] = 0.0;",
+        "{[n]: GeoAc_CalcAmp = 1 && n>=0 && n<3}",
+        "{[n]->["+std::to_string(newTuplePos+24)+",n,1]}", 
+        {}, 
+        {{"$sources.ddw$", "{[n]->[n,0]}"}}
+        );  
+    
+    updateSources->addStmt(s41);
+
+ 
+    //Adding data space
+    updateSources->addDataSpace("$sources.ddv$");
+
+    //Creating s42 - inside the first for loop in the if condition
+    //sources.ddv[n][0] = 0.0;
+    Stmt* s42 = new Stmt("$sources.ddv$[n][0] = 0.0;",
+        "{[n]: GeoAc_CalcAmp = 1 && n>=0 && n<3}",
+        "{[n]->["+std::to_string(newTuplePos+24)+",n,2]}", 
+        {}, 
+        {{"$sources.ddv$", "{[n]->[n,0]}"}}
+        );  
+    
+    updateSources->addStmt(s42);
+
+    //Adding data space
+    updateSources->addDataSpace("$sources.ddu$");
+    //Creating s43 - inside the first for loop in the if condition
+    //sources.ddu[n][0] = 0.0;
+    Stmt* s43 = new Stmt("$sources.ddu$[n][0] = 0.0;",
+        "{[n]: GeoAc_CalcAmp = 1 && n>=0 && n<3}",
+        "{[n]->["+std::to_string(newTuplePos+24)+",n,3]}", 
+        {}, 
+        {{"$sources.ddu$", "{[n]->[n,0]}"}}
+        );  
+    
+    updateSources->addStmt(s43);
+
     //Calling toDot() on the Computation structure
     /*
     ofstream dotFileStream("codegen_dot.txt");
