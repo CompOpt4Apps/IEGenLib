@@ -1285,26 +1285,27 @@ void Computation::toDotScan(std::vector<std::pair<int,Set*>> &activeStmts, int l
 
 std::string Computation::codeGen(Set* knownConstraints) {
     std::ostringstream generatedCode;
+    std::vector<std::string> iterSpaces;
+    std::vector<int> arity;
 
     // convert sets/relations to Omega format for use in codegen, and
     // collect statement macro definitions
     VisitorChangeUFsForOmega* vOmegaReplacer = new VisitorChangeUFsForOmega();
-    std::vector<omega::Relation> transforms;
-    std::vector<omega::Relation> iterSpaces;
     std::ostringstream stmtMacroUndefs;
     std::ostringstream stmtMacroDefs;
     int stmtCount = 0;
     std::vector<Set*> newIS = applyTransformations();
+
+    //Create a string for each statements iteration space
     for (const auto& stmt : stmts) {
 
-
-	// new Codegen would require an application
-	// be performed first before the set is sent
-	// to omega. This is a temporary solution to
-	// circumvent Omega's schedulling bug.
+	    // new Codegen would require an application
+	    // be performed first before the set is sent
+	    // to omega. This is a temporary solution to
+	    // circumvent Omega's schedulling bug.
         Set * iterSpace = newIS[stmtCount];
-	iterSpace->acceptVisitor(vOmegaReplacer);
-	std::string tupleString =
+	    iterSpace->acceptVisitor(vOmegaReplacer);
+	    std::string tupleString =
             iterSpace->getTupleDecl().toString();
         // Stmt Macro:
         stmtMacroUndefs << "#undef s" << stmtCount << "\n";
@@ -1317,14 +1318,15 @@ std::string Computation::codeGen(Set* knownConstraints) {
 
         std::string omegaIterString =
             iterSpace->toOmegaString(vOmegaReplacer->getUFCallDecls());
-        omega::Relation* omegaIterSpace =
-            omega::parser::ParseRelation(iegenlib::replaceInString(omegaIterString, DATA_SPACE_DELIMITER, ""));
+        std::cout << "\nOmegaIterString: " << omegaIterString << std::endl;
 
-        iterSpaces.push_back(omega::copy(*omegaIterSpace));
-	// Use identity transformation instead.
-        transforms.push_back(omega::Identity(iterSpace->arity()));
-        delete omegaIterSpace;
-	delete iterSpace;
+        iterSpaces.push_back(omegaIterString);
+        
+        // Use identity transformation instead.
+        //transforms.push_back(omega::Identity(iterSpace->arity()));
+        arity.push_back(iterSpace->arity());
+        
+    	delete iterSpace;
     }
 
     // define necessary macros collected from statements
@@ -1357,10 +1359,36 @@ std::string Computation::codeGen(Set* knownConstraints) {
     std::string omegaKnownString =
         modifiedKnown->toOmegaString(vOmegaReplacer->getUFCallDecls());
     delete modifiedKnown;
-    omega::Relation* omegaKnown =
-        omega::parser::ParseRelation(omegaKnownString);
 
     delete vOmegaReplacer;
+
+    generatedCode << omegaCodeGenFromString(arity, iterSpaces, omegaKnownString);
+
+    // undefine macros, which are now extraneous
+    generatedCode << stmtMacroUndefs.str() << UFMacroUndefs.str();
+
+    return generatedCode.str();
+}
+
+//
+std::string Computation::omegaCodeGenFromString(std::vector<int> relationArity, std::vector<std::string> iterSpacesStr, std::string known){
+    std::ostringstream generatedCode;
+    std::vector<omega::Relation> iterSpaces;
+    std::vector<omega::Relation> transforms;
+    
+    for(int i=0; i<iterSpacesStr.size(); i++){
+        std::string omegaIterString = iterSpacesStr[i];
+        omega::Relation* omegaIterSpace =
+            omega::parser::ParseRelation(iegenlib::replaceInString(omegaIterString, DATA_SPACE_DELIMITER, ""));
+
+        iterSpaces.push_back(omega::copy(*omegaIterSpace));
+        transforms.push_back(omega::Identity(relationArity[i]));
+	    
+        delete omegaIterSpace;
+    } 
+    
+    omega::Relation* omegaKnown = omega::parser::ParseRelation(known);
+    
     // do actual Omega CodeGen
     try {
         omega::CodeGen cg(transforms, iterSpaces, omega::copy(*omegaKnown));
@@ -1375,9 +1403,6 @@ std::string Computation::codeGen(Set* knownConstraints) {
         std::cout << e.what() << std::endl;
     }
     delete omegaKnown;
-
-    // undefine macros, which are now extraneous
-    generatedCode << stmtMacroUndefs.str() << UFMacroUndefs.str();
 
     return generatedCode.str();
 }

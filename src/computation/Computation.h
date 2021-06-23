@@ -29,7 +29,6 @@
 #include <utility>
 #include <vector>
 
-
 #include <basic/boolset.h>
 
 #include "set_relation/Visitor.h"
@@ -175,6 +174,11 @@ class Computation {
     //! enforced/are known to be true without need for checking in generated
     //! code (guards).
     std::string codeGen(Set* knownConstraints = nullptr);
+
+    //!! Generates code from an omega string
+    std::string omegaCodeGenFromString(
+            std::vector<int> relationArity, 
+            std::vector<std::string> iterSpacesStr, std::string known);
 
     //! Method returns omega strings for each statement
     std::string toOmegaString();
