@@ -836,8 +836,8 @@ int main(int argc, char **argv){
     //Creating s44    
     //sources.ddc[n][1] = 0.0;
     Stmt* s44 = new Stmt("$sources.ddc$[n][1] = 0.0;",
-          "{[0]: GeoAc_CalcAmp = 1 &&& n>=0 && n<3}",
-          "{[0]->["+std::to_string(newTuplePos+24)+", n, 4]}",
+          "{[n]: GeoAc_CalcAmp = 1 &&& n>=0 && n<3}",
+          "{[n]->["+std::to_string(newTuplePos+24)+", n, 4]}",
           {},
           {
             {"$sources.ddc$", "{[n]->[n,1]}"},
@@ -848,8 +848,8 @@ int main(int argc, char **argv){
     //Creating s45    
     //sources.ddw[n][1] = 0.0;
     Stmt* s45 = new Stmt("$sources.ddw$[n][1] = 0.0;",
-          "{[0]: GeoAc_CalcAmp = 1 &&& n>=0 && n<3}",
-          "{[0]->["+std::to_string(newTuplePos+24)+", n, 5]}",
+          "{[n]: GeoAc_CalcAmp = 1 &&& n>=0 && n<3}",
+          "{[n]->["+std::to_string(newTuplePos+24)+", n, 5]}",
           {},
           {
             {"$sources.ddw$", "{[n]->[n,1]}"},
@@ -860,8 +860,8 @@ int main(int argc, char **argv){
     //Creating s46   
     //sources.ddv[n][1] = 0.0;
     Stmt* s46 = new Stmt("$sources.ddv$[n][1] = 0.0;",
-          "{[0]: GeoAc_CalcAmp = 1 &&& n>=0 && n<3}",
-          "{[0]->["+std::to_string(newTuplePos+24)+", n, 6]}",
+          "{[n]: GeoAc_CalcAmp = 1 &&& n>=0 && n<3}",
+          "{[n]->["+std::to_string(newTuplePos+24)+", n, 6]}",
           {},
           {
 	   {"$sources.ddv$", "{[n]->[n,1]}"},
@@ -872,8 +872,8 @@ int main(int argc, char **argv){
     //Creating s47   
     //sources.ddu[n][1] = 0.0;
     Stmt* s47 = new Stmt("$sources.ddu$[n][1] = 0.0;",
-          "{[0]: GeoAc_CalcAmp = 1 &&& n>=0 && n<3}",
-          "{[0]->["+std::to_string(newTuplePos+24)+", n, 7]}",
+          "{[n]: GeoAc_CalcAmp = 1 &&& n>=0 && n<3}",
+          "{[n]->["+std::to_string(newTuplePos+24)+", n, 7]}",
           {},
           {
 	   {"$sources.ddu$", "{[n]->[n,1]}"},
