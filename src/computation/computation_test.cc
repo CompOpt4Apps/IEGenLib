@@ -371,10 +371,10 @@ TEST_F(ComputationTest, OmegaCodeGenFromString){
     arity.push_back(3);
     arity.push_back(3);
     omegaIterationSpaces.push_back("symbolic N; { [__x0, i, __x2] : __x0 = 0 && __x2 = 0 && i >= 0 && -i + N - 1 >= 0 };");
-    omegaIterationSpaces.push_back("{ [__x0, i, __x2] : __x0 = 0 && __x2 - 1 = 0 && i >= 0 && -i + N - 1 >= 0 };");
+    omegaIterationSpaces.push_back("symbolic N; { [__x0, i, __x2] : __x0 = 0 && __x2 - 1 = 0 && i >= 0 && -i + N - 1 >= 0 };");
 	
     Computation* myComp =  new Computation();
-    std::string codegen = myComp->omegaCodeGenFromString(arity, omegaIterationSpaces,"");
+    std::string codegen = myComp->omegaCodeGenFromString(arity, omegaIterationSpaces,"{ [] }");
     EXPECT_EQ("",codegen);
  
     delete myComp;
