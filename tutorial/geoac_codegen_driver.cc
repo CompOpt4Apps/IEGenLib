@@ -526,13 +526,13 @@ int main(int argc, char **argv){
     //Creating S24
     //sources.GeoCoeff[2] = 1.0/(r*cos(theta));
     Stmt* s24 = new Stmt("$sources.GeoCoeff$[2] = 1.0/($r$*cos($theta$));", 
-	    "{[0]}",
-	    "{[0]->["+std::to_string(newTuplePos+8)+"]}",
-	    {
-	        {"$r$", "{[0]->[0]}"},
-	        {"$theta$", "{[0]->[0]}"}
-	    },
-	    {{"$sources.GeoCoeff$", "{[0]->[2]}"}}
+      "{[0]}",
+      "{[0]->["+std::to_string(newTuplePos+8)+"]}",
+      {
+          {"$r$", "{[0]->[0]}"},
+          {"$theta$", "{[0]->[0]}"}
+      },
+      {{"$sources.GeoCoeff$", "{[0]->[2]}"}}
         );
     updateSources->addStmt(s24);
 
@@ -542,77 +542,77 @@ int main(int argc, char **argv){
     //Creating S25
     //sources.GeoTerms[0] = 0.0;
     Stmt* s25 = new Stmt("$sources.GeoTerms$[0] = 0.0;", 
-	    "{[0]}",
-	    "{[0]->["+std::to_string(newTuplePos+9)+"]}",
-	    {},
-	    {{"$sources.GeoTerms$", "{[0]->[0]}"}}
+      "{[0]}",
+      "{[0]->["+std::to_string(newTuplePos+9)+"]}",
+      {},
+      {{"$sources.GeoTerms$", "{[0]->[0]}"}}
         );
     updateSources->addStmt(s25);
 
     //Creating S26
     //sources.GeoTerms[1] = (nu[0]*sources.v - nu[1]*sources.w);
     Stmt* s26 = new Stmt("$sources.GeoTerms$[1] = ($nu$[0]*$sources.v$ - $nu$[1]*$sources.w$);", 
-	    "{[0]}",
-	    "{[0]->["+std::to_string(newTuplePos+10)+"]}",
-	    {
-	        {"$nu$","{[0]->[0]}"},
-	        {"$sources.v$", "{[0]->[0]}"},
-	        {"$nu$","{[0]->[1]}"},
-	        {"$sources.w$", "{[0]->[0]}"}
-	    },
-	    {{"$sources.GeoTerms$", "{[0]->[1]}"}}
+      "{[0]}",
+      "{[0]->["+std::to_string(newTuplePos+10)+"]}",
+      {
+          {"$nu$","{[0]->[0]}"},
+          {"$sources.v$", "{[0]->[0]}"},
+          {"$nu$","{[0]->[1]}"},
+          {"$sources.w$", "{[0]->[0]}"}
+      },
+      {{"$sources.GeoTerms$", "{[0]->[1]}"}}
         );
     updateSources->addStmt(s26);
 
     //Creating S27
     //sources.GeoTerms[2] = (nu[0]*sources.u - nu[2]*sources.w)*cos(theta) + (nu[1]*sources.u - nu[2]*sources.v)*sin(theta);
     Stmt* s27 = new Stmt("$sources.GeoTerms$[2] = ($nu$[0]*$sources.u$ - $nu$[2]*$sources.w$)*cos($theta$) + ($nu$[1]*$sources.u$ - $nu$[2]*$sources.v$)*sin($theta$);", 
-	    "{[0]}",
-	    "{[0]->["+std::to_string(newTuplePos+11)+"]}",
-	    {
-	        {"$nu$","{[0]->[0]}"},
-	        {"$sources.u$", "{[0]->[0]}"},
-	        {"$nu$","{[0]->[2]}"},
-	        {"$sources.w$", "{[0]->[0]}"},
-	        {"$theta$", "{[0]->[0]}"},
-	        {"$nu$","{[0]->[1]}"},
-	        {"$sources.v$", "{[0]->[0]}"}
-	    },
-	    {{"$sources.GeoTerms$", "{[0]->[2]}"}}
+      "{[0]}",
+      "{[0]->["+std::to_string(newTuplePos+11)+"]}",
+      {
+          {"$nu$","{[0]->[0]}"},
+          {"$sources.u$", "{[0]->[0]}"},
+          {"$nu$","{[0]->[2]}"},
+          {"$sources.w$", "{[0]->[0]}"},
+          {"$theta$", "{[0]->[0]}"},
+          {"$nu$","{[0]->[1]}"},
+          {"$sources.v$", "{[0]->[0]}"}
+      },
+      {{"$sources.GeoTerms$", "{[0]->[2]}"}}
         );
     updateSources->addStmt(s27);
 
     //Creating S28
     //sources.GeoTerms[0] += 1.0/r * (nu[1]*sources.c_gr[1] + nu[2]*sources.c_gr[2]);
     Stmt* s28 = new Stmt("$sources.GeoTerms$[0] += 1.0/$r$ * ($nu$[1]*$sources.c_gr$[1] + $nu$[2]*$sources.c_gr$[2]);", 
-	    "{[0]}",
-	    "{[0]->["+std::to_string(newTuplePos+12)+"]}",
-	    {
-	        {"$sources.GeoTerms$", "{[0]->[0]}"},  
-	        {"$r$", "{[0]->[0]}"},
-	        {"$nu$","{[0]->[1]}"},
-	        {"$sources.c_gr$", "{[0]->[1]}"},
-	        {"$nu$","{[0]->[2]}"},
-	        {"$sources.c_gr$", "{[0]->[2]}"}
-	    },
-	    {{"$sources.GeoTerms$", "{[0]->[0]}"}}
+      "{[0]}",
+      "{[0]->["+std::to_string(newTuplePos+12)+"]}",
+      {
+          {"$sources.GeoTerms$", "{[0]->[0]}"},  
+          {"$r$", "{[0]->[0]}"},
+          {"$nu$","{[0]->[1]}"},
+          {"$sources.c_gr$", "{[0]->[1]}"},
+          {"$nu$","{[0]->[2]}"},
+          {"$sources.c_gr$", "{[0]->[2]}"}
+      },
+      {{"$sources.GeoTerms$", "{[0]->[0]}"}}
         );
     updateSources->addStmt(s28);
 
     //Creating s29
     //sources.GeoTerms[1] += -nu[0]*sources.c_gr[1] + nu[2]*sources.c_gr[2]*tan(theta);
     Stmt* s29 = new Stmt("$sources.GeoTerms$[1] += -$nu$[0]*$sources.c_gr$[1] + $nu$[2]*$sources.c_gr$[2]*tan($theta$);", 
-	    "{[0]}",
-	    "{[0]->["+std::to_string(newTuplePos+13)+"]}",
-	    {
-	        {"$sources.GeoTerms$", "{[0]->[1]}"},  
-	        {"$nu$","{[0]->[0]}"},
-	        {"$sources.c_gr$", "{[0]->[1]}"},
-	        {"$nu$","{[0]->[2]}"},
-	        {"$sources.c_gr$", "{[0]->[1]}"},
-	        {"$theta$", "{[0]->[0]}"}
-	    },
-	    {{"$sources.GeoTerms$", "{[0]->[1]}"}}
+      "{[0]}",
+      "{[0]->["+std::to_string(newTuplePos+13)+"]}",
+      {
+          {"$sources.GeoTerms$", "{[0]->[1]}"},  
+          {"$nu$","{[0]->[0]}"},
+          {"$sources.c_gr$", "{[0]->[1]}"},
+          {"$nu$","{[0]->[2]}"},
+          {"$sources.c_gr$", "{[0]->[1]}"},
+          {"$theta$", "{[0]->[0]}"}
+      },
+      {{"$sources.GeoTerms$", "{[0]->[1]}"}}
         );
     updateSources->addStmt(s29);
 
@@ -736,7 +736,7 @@ int main(int argc, char **argv){
           {},
           {{"$sources.dc$", "{[0]->[3]}"},
            {"$sources.dc$", "{[0]->[4]}"}
-	  }
+    }
      );
      updateSources->addStmt(s36);
 
@@ -746,8 +746,9 @@ int main(int argc, char **argv){
           "{[0]: GeoAc_CalcAmp = 1}",
           "{[0]->["+std::to_string(newTuplePos+21)+"]}",
           {},
-          {{"$sources.dw$", "{[0]->[3]}"},
-           {"$sources.dw$", "{[0]->[4]}"}
+          {
+              {"$sources.dw$", "{[0]->[3]}"},
+              {"$sources.dw$", "{[0]->[4]}"}
           }
     );
     updateSources->addStmt(s37);
@@ -758,8 +759,9 @@ int main(int argc, char **argv){
           "{[0]: GeoAc_CalcAmp = 1}",
           "{[0]->["+std::to_string(newTuplePos+22)+"]}",
           {},
-          {{"$sources.dv$", "{[0]->[3]}"},
-           {"$sources.dv$", "{[0]->[4]}"}
+          {
+              {"$sources.dv$", "{[0]->[3]}"},
+              {"$sources.dv$", "{[0]->[4]}"}
           }
      );
      updateSources->addStmt(s38);
@@ -770,8 +772,9 @@ int main(int argc, char **argv){
           "{[0]: GeoAc_CalcAmp = 1}",
           "{[0]->["+std::to_string(newTuplePos+23)+"]}",
           {},
-          {{"$sources.du$", "{[0]->[3]}"},
-           {"$sources.du$", "{[0]->[4]}"}
+          {
+              {"$sources.du$", "{[0]->[3]}"},
+              {"$sources.du$", "{[0]->[4]}"}
           }
     );
     updateSources->addStmt(s39); 
@@ -836,23 +839,23 @@ int main(int argc, char **argv){
     //Creating s44    
     //sources.ddc[n][1] = 0.0;
     Stmt* s44 = new Stmt("$sources.ddc$[n][1] = 0.0;",
-          "{[n]: GeoAc_CalcAmp = 1 &&& n>=0 && n<3}",
+          "{[n]: GeoAc_CalcAmp = 1 && n>=0 && n<3}",
           "{[n]->["+std::to_string(newTuplePos+24)+", n, 4]}",
           {},
           {
-            {"$sources.ddc$", "{[n]->[n,1]}"},
+              {"$sources.ddc$", "{[n]->[n,1]}"},
           }
     );
     updateSources->addStmt(s44);
-	
+  
     //Creating s45    
     //sources.ddw[n][1] = 0.0;
     Stmt* s45 = new Stmt("$sources.ddw$[n][1] = 0.0;",
-          "{[n]: GeoAc_CalcAmp = 1 &&& n>=0 && n<3}",
+          "{[n]: GeoAc_CalcAmp = 1 && n>=0 && n<3}",
           "{[n]->["+std::to_string(newTuplePos+24)+", n, 5]}",
           {},
           {
-            {"$sources.ddw$", "{[n]->[n,1]}"},
+              {"$sources.ddw$", "{[n]->[n,1]}"},
           }
     );
     updateSources->addStmt(s45);
@@ -860,27 +863,131 @@ int main(int argc, char **argv){
     //Creating s46   
     //sources.ddv[n][1] = 0.0;
     Stmt* s46 = new Stmt("$sources.ddv$[n][1] = 0.0;",
-          "{[n]: GeoAc_CalcAmp = 1 &&& n>=0 && n<3}",
+          "{[n]: GeoAc_CalcAmp = 1 && n>=0 && n<3}",
           "{[n]->["+std::to_string(newTuplePos+24)+", n, 6]}",
           {},
           {
-	   {"$sources.ddv$", "{[n]->[n,1]}"},
-	  }
+              {"$sources.ddv$", "{[n]->[n,1]}"},
+          }
     );
     updateSources->addStmt(s46);
  
     //Creating s47   
     //sources.ddu[n][1] = 0.0;
     Stmt* s47 = new Stmt("$sources.ddu$[n][1] = 0.0;",
-          "{[n]: GeoAc_CalcAmp = 1 &&& n>=0 && n<3}",
+          "{[n]: GeoAc_CalcAmp = 1 && n>=0 && n<3}",
           "{[n]->["+std::to_string(newTuplePos+24)+", n, 7]}",
           {},
           {
-	   {"$sources.ddu$", "{[n]->[n,1]}"},
+              {"$sources.ddu$", "{[n]->[n,1]}"},
           }
     );
     updateSources->addStmt(s47);
+
+    //Adding Data Space
+    updateSources->addDataSpace("$loopN$");
+
+    //Creating s47a
+    //for(int n = 0; n < 3; n++){
+    //    int loopN = n; 
+    Stmt* s47a = new Stmt("int $loopN$ = n;",
+          "{[n]: GeoAc_CalcAmp = 1 && n>=0 && n<3}",
+          "{[n]->["+std::to_string(newTuplePos+25)+", n, 0]}",
+          {},
+          {
+              {"$loopN$", "{[n]->[0]}"},
+          }
+    );
+    updateSources->addStmt(s47a);
+
+    //Clearing arguments and adding new ones
+    cDiffCompArgs.clear();
+    cDiffCompArgs.push_back("$r$");
+    cDiffCompArgs.push_back("$theta$");
+    cDiffCompArgs.push_back("$phi$");
+    cDiffCompArgs.push_back("$loopN$");
+    cDiffCompArgs.push_back("$spl.Temp_Spline$");
     
+    // Return values are stored in a struct of the computation: AppendComputationResult
+    AppendComputationResult cDiff3CompRes = updateSources->appendComputation(cDiffComputation, "{[n]: GeoAc_CalcAmp = 1 && n>=0 && n<3}", "{[n]->["+std::to_string(newTuplePos+25)+",n,1]}", cDiffCompArgs);
+    unsigned int nTuplePos = cDiff3CompRes.tuplePosition+1;
+    
+    //Creating s48
+    //sources.dc[3] += R_lt[n]*c_diff(r,theta,phi,loopN,spl.Temp_Spline);
+    Stmt* s48 = new Stmt("$sources.dc$[3] += $R_lt$[n]*"+cDiff3CompRes.returnValues.back()+";", 
+        "{[n]: GeoAc_CalcAmp = 1 && n>=0 && n<3}",
+        "{[n]->["+std::to_string(newTuplePos+25)+",n,"+std::to_string(nTuplePos)+"]}",
+        {
+            {"$sources.dc$", "{[n]->[3]}"},
+            {"$R_lt$","{[n]->[n]}"},
+            {cDiff3CompRes.returnValues.back(), "{[n]->[0]}"}
+        },
+        {{"$sources.dc$", "{[n]->[3]}"}}
+        );
+    updateSources->addStmt(s48);
+
+    //Creating s49
+    //sources.dw[3] += 0.0; //The w_diff function always returns 0
+    Stmt* s49 = new Stmt("$sources.dw$[3] += 0;",
+        "{[n]: GeoAc_CalcAmp = 1 && n>=0 && n<3}",
+        "{[n]->["+std::to_string(newTuplePos+25)+",n,"+std::to_string(nTuplePos+1)+"]}",
+        {{"$sources.dw$", "{[n]->[3]}"}},
+        {{"$sources.dw$", "{[n]->[3]}"}}
+        );
+    updateSources->addStmt(s49);
+
+    //Clearing agruments and adding new ones
+    vDiffCompArgs.clear();
+    vDiffCompArgs.push_back("$r$");
+    vDiffCompArgs.push_back("$theta$");
+    vDiffCompArgs.push_back("$phi$");
+    vDiffCompArgs.push_back("$loopN$");
+    vDiffCompArgs.push_back("$spl.Windv_Spline$");
+    
+    // Return values are stored in a struct of the computation: AppendComputationResult
+    AppendComputationResult vDiff3CompRes = updateSources->appendComputation(vDiffComputation, "{[n]: GeoAc_CalcAmp = 1 && n>=0 && n<3}", "{[n]->["+std::to_string(newTuplePos+25)+",n,"+std::to_string(nTuplePos+2)+"]}", vDiffCompArgs);
+    nTuplePos = vDiff3CompRes.tuplePosition+1; 
+    
+    //Creating s50
+    //sources.dv[3] += R_lt[n]*v_diff(r,theta,phi,loopN,spl.Windv_Spline);
+    Stmt* s50 = new Stmt("$sources.dv$[3] += $R_lt$[n]*"+vDiff3CompRes.returnValues.back()+";", 
+        "{[n]: GeoAc_CalcAmp = 1 && n>=0 && n<3}",
+        "{[n]->["+std::to_string(newTuplePos+25)+",n,"+std::to_string(nTuplePos)+"]}",
+        {
+            {"$sources.dv$", "{[n]->[3]}"},
+            {"$R_lt$","{[n]->[n]}"},
+            {vDiff3CompRes.returnValues.back(), "{[n]->[0]}"}
+        },
+        {{"$sources.dv$", "{[n]->[3]}"}}
+        );
+    updateSources->addStmt(s50);
+    
+    //Clearing arguments and adding new ones
+    uDiffCompArgs.clear();
+    uDiffCompArgs.push_back("$r$");
+    uDiffCompArgs.push_back("$theta$");
+    uDiffCompArgs.push_back("$phi$");
+    uDiffCompArgs.push_back("$loopN$");
+    uDiffCompArgs.push_back("$spl.Windu_Spline$");
+    
+    // Return values are stored in a struct of the computation: AppendComputationResult
+    AppendComputationResult uDiff3CompRes = updateSources->appendComputation(uDiffComputation, "{[n]: GeoAc_CalcAmp = 1 && n>=0 && n<3}", "{[n]->["+std::to_string(newTuplePos+25)+",n,"+std::to_string(nTuplePos+1)+"]}", uDiffCompArgs);
+    nTuplePos = uDiff3CompRes.tuplePosition+1;
+    
+    //Creating s51
+    //sources.du[3] += R_lt[n]*u_diff(r,theta,phi,n,spl.Windu_Spline);
+    Stmt* s51 = new Stmt("$sources.du$[3] += $R_lt$[n]*"+uDiff3CompRes.returnValues.back()+";", 
+        "{[n]: GeoAc_CalcAmp = 1 && n>=0 && n<3}",
+        "{[n]->["+std::to_string(newTuplePos+25)+",n,"+std::to_string(nTuplePos)+"]}",
+        {
+            {"$sources.du$", "{[n]->[3]}"},
+            {"$R_lt$","{[n]->[n]}"},
+            {uDiff3CompRes.returnValues.back(), "{[n]->[0]}"}
+        },
+        {{"$sources.du$", "{[n]->[3]}"}}
+        );
+    updateSources->addStmt(s51);
+
     //Calling toDot() on the Computation structure
     /*
     ofstream dotFileStream("codegen_dot.txt");
