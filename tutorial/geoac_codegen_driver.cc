@@ -988,6 +988,95 @@ int main(int argc, char **argv){
         );
     updateSources->addStmt(s51);
 
+
+   //Clearing arguments and adding new ones
+    cDiffCompArgs.clear();
+    cDiffCompArgs.push_back("$r$");
+    cDiffCompArgs.push_back("$theta$");
+    cDiffCompArgs.push_back("$phi$");
+    cDiffCompArgs.push_back("$loopN$");
+    cDiffCompArgs.push_back("$spl.Temp_Spline$");
+    
+    // Return values are stored in a struct of the computation: AppendComputationResult
+    AppendComputationResult cDiff4CompRes = updateSources->appendComputation(cDiffComputation, "{[n]: GeoAc_CalcAmp = 1 && n>=0 && n<3}", "{[n]->["+std::to_string(newTuplePos+25)+",n,"+std::to_string(nTuplePos+1)+"]}", cDiffCompArgs);
+    nTuplePos = cDiff4CompRes.tuplePosition+1;
+ 
+    //Creating s52
+    //sources.dc[4] += R_lp[n]*c_diff(r,theta,phi,n,spl.Temp_Spline);
+    Stmt* s52 = new Stmt("$sources.dc$[4] += $R_lp$[n]*"+cDiff4CompRes.returnValues.back()+";", 
+        "{[n]: GeoAc_CalcAmp = 1 && n>=0 && n<3}",
+        "{[n]->["+std::to_string(newTuplePos+25)+",n,"+std::to_string(nTuplePos)+"]}",
+        {
+            {"$sources.dc$", "{[n]->[4]}"},
+            {"$R_lp$","{[n]->[n]}"},
+            {cDiff4CompRes.returnValues.back(), "{[n]->[0]}"}
+        },
+        {{"$sources.dc$", "{[n]->[4]}"}}
+        );
+    updateSources->addStmt(s52);
+
+    //Creating s53
+    //sources.dw[4] += 0.0; //The w_diff function always returns 0
+    Stmt* s53 = new Stmt("$sources.dw$[4] += 0;",
+        "{[n]: GeoAc_CalcAmp = 1 && n>=0 && n<3}",
+        "{[n]->["+std::to_string(newTuplePos+25)+",n,"+std::to_string(nTuplePos+1)+"]}",
+        {{"$sources.dw$", "{[n]->[4]}"}},
+        {{"$sources.dw$", "{[n]->[4]}"}}
+        );
+    updateSources->addStmt(s53);
+
+    //Clearing agruments and adding new ones
+    vDiffCompArgs.clear();
+    vDiffCompArgs.push_back("$r$");
+    vDiffCompArgs.push_back("$theta$");
+    vDiffCompArgs.push_back("$phi$");
+    vDiffCompArgs.push_back("$loopN$");
+    vDiffCompArgs.push_back("$spl.Windv_Spline$");
+    
+    // Return values are stored in a struct of the computation: AppendComputationResult
+    AppendComputationResult vDiff4CompRes = updateSources->appendComputation(vDiffComputation, "{[n]: GeoAc_CalcAmp = 1 && n>=0 && n<3}", "{[n]->["+std::to_string(newTuplePos+25)+",n,"+std::to_string(nTuplePos+2)+"]}", vDiffCompArgs);
+    nTuplePos = vDiff4CompRes.tuplePosition+1; 
+    
+    //Creating s54
+    //sources.dv[4] += R_lp[n]*v_diff(r,theta,phi,loopN,spl.Windv_Spline);
+    Stmt* s54 = new Stmt("$sources.dv$[4] += $R_lp$[n]*"+vDiff4CompRes.returnValues.back()+";", 
+        "{[n]: GeoAc_CalcAmp = 1 && n>=0 && n<3}",
+        "{[n]->["+std::to_string(newTuplePos+25)+",n,"+std::to_string(nTuplePos)+"]}",
+        {
+            {"$sources.dv$", "{[n]->[4]}"},
+            {"$R_lp$","{[n]->[n]}"},
+            {vDiff4CompRes.returnValues.back(), "{[n]->[0]}"}
+        },
+        {{"$sources.dv$", "{[n]->[4]}"}}
+        );
+    updateSources->addStmt(s54);
+    
+    //Clearing arguments and adding new ones
+    uDiffCompArgs.clear();
+    uDiffCompArgs.push_back("$r$");
+    uDiffCompArgs.push_back("$theta$");
+    uDiffCompArgs.push_back("$phi$");
+    uDiffCompArgs.push_back("$loopN$");
+    uDiffCompArgs.push_back("$spl.Windu_Spline$");
+    
+    // Return values are stored in a struct of the computation: AppendComputationResult
+    AppendComputationResult uDiff4CompRes = updateSources->appendComputation(uDiffComputation, "{[n]: GeoAc_CalcAmp = 1 && n>=0 && n<3}", "{[n]->["+std::to_string(newTuplePos+25)+",n,"+std::to_string(nTuplePos+1)+"]}", uDiffCompArgs);
+    nTuplePos = uDiff4CompRes.tuplePosition+1;
+    
+    //Creating s55
+    //sources.du[4] += R_lp[n]*u_diff(r,theta,phi,n,spl.Windu_Spline);
+    Stmt* s55 = new Stmt("$sources.du$[4] += $R_lp$[n]*"+uDiff4CompRes.returnValues.back()+";", 
+        "{[n]: GeoAc_CalcAmp = 1 && n>=0 && n<3}",
+        "{[n]->["+std::to_string(newTuplePos+25)+",n,"+std::to_string(nTuplePos)+"]}",
+        {
+            {"$sources.du$", "{[n]->[4]}"},
+            {"$R_lp$","{[n]->[n]}"},
+            {uDiff4CompRes.returnValues.back(), "{[n]->[0]}"}
+        },
+        {{"$sources.du$", "{[n]->[4]}"}}
+        );
+    updateSources->addStmt(s55);
+    
     //Calling toDot() on the Computation structure
     /*
     ofstream dotFileStream("codegen_dot.txt");
