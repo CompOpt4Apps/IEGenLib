@@ -1598,7 +1598,194 @@ int main(int argc, char **argv){
         {{"$sources.d_GeoTerms$", "{[0]->[2,0]}"}}
     );
     updateSources->addStmt(s82);
+
+    //Creating s83
+    //sources.d_GeoTerms[0][0] += -R_lt[0]/pow(r,2)*(nu[1]*sources.c_gr[1] + nu[2]*sources.c_gr[2])
+    //                                        + 1.0/r*(mu_lt[1]*sources.c_gr[1] + nu[1]*sources.dc_gr[1][0] + mu_lt[2]*sources.c_gr[2] + nu[2]*sources.dc_gr[2][0]);
+    Stmt* s83 = new Stmt("$sources.d_GeoTerms$[0][0] += -$R_lt$[0]/pow($r$,2)*($nu$[1]*$sources.c_gr$[1] + $nu$[2]*$sources.c_gr$[2])+ 1.0/$r$*($mu_lt$[1]*$sources.c_gr$[1] + $nu$[1]*$sources.dc_gr$[1][0] + $mu_lt$[2]*$sources.c_gr$[2] + $nu$[2]*$sources.dc_gr$[2][0]);", 
+        "{[0]: GeoAc_CalcAmp = 1}",
+        "{[0]->["+std::to_string(newTuplePos+45)+"]}",
+        {
+		 {"$sources.d_GeoTerms$", "{[0]->[0, 0]}"},
+		 {"$R_lt$", "{[0]->[0]}"},
+		 {"$r$", "{[0]->[0]}"},
+		 {"$nu$", "{[0]->[1]}"},
+		 {"$sources.c_gr$", "{[0]->[1]}"},
+		 {"$nu$", "{[0]->[2]}"},
+		 {"$sources.c_gr$", "{[0]->[2]}"},
+		 {"$mu_lt$", "{[0]->[1]}"},
+		 {"$sources.dc_gr$", "{[0]->[1, 0]}"},
+		 {"$mu_lt$", "{[0]->[2]}"},
+		 {"$sources.c_gr$", "{[0]->[2]}"},
+		 {"$sources.dc_gr$", "{[0]->[2, 0]}"}
+	},
+        {{"$sources.d_GeoTerms$", "{[0]->[0,0]}"}}
+    );
+    updateSources->addStmt(s83);
     
+    //Creating s84
+    //sources.d_GeoTerms[1][0] += -mu_lt[0]*sources.c_gr[1] - nu[0]*sources.dc_gr[1][0] + mu_lt[2]*sources.c_gr[2]*tan(theta) + nu[2]*sources.dc_gr[2][0]*tan(theta) + nu[2]*sources.c_gr[2]*R_lt[1]/pow(cos(theta),2);
+    Stmt* s84 = new Stmt("$sources.d_GeoTerms$[1][0] += -$mu_lt$[0]*$sources.c_gr$[1] - $nu$[0]*$sources.dc_gr$[1][0] + $mu_lt$[2]*$sources.c_gr$[2]*tan($theta$) + $nu$[2]*$sources.dc_gr$[2][0]*tan($theta$) + $nu$[2]*$sources.c_gr$[2]*$R_lt$[1]/pow(cos($theta$),2);", 
+        "{[0]: GeoAc_CalcAmp = 1}",
+        "{[0]->["+std::to_string(newTuplePos+46)+"]}",
+        {
+		 {"$sources.d_GeoTerms$", "{[0]->[1, 0]}"},
+		 {"$mu_lt$", "{[0]->[0]}"},
+		 {"$sources.c_gr$", "{[0]->[1]}"},
+		 {"$nu$", "{[0]->[0]}"},
+		 {"$sources.dc_gr$", "{[0]->[1, 0]}"},
+		 {"$mu_lt$", "{[0]->[2]}"},
+		 {"$sources.c_gr$", "{[0]->[2]}"},
+		 {"$theta$", "{[0]->[0]}"},
+		 {"$nu$", "{[0]->[2]}"},
+		 {"$sources.dc_gr$", "{[0]->[2, 0]}"},
+		 {"$R_lt$", "{[0]->[1]}"}
+	},
+        {{"$sources.d_GeoTerms$", "{[0]->[1,0]}"}}
+    );
+    updateSources->addStmt(s84);
+
+    //Creating s85
+    //sources.d_GeoTerms[2][0] += -sources.dc_gr[2][0]*(nu[0]*cos(theta) + nu[1]*sin(theta)) - sources.c_gr[2]*(mu_lt[0]*cos(theta) - nu[0]*R_lt[1]*sin(theta) + mu_lt[1]*sin(theta) + nu[1]*R_lt[1]*cos(theta));
+    Stmt* s85 = new Stmt("$sources.d_GeoTerms$[2][0] += -$sources.dc_gr$[2][0]*($nu$[0]*cos($theta$) + $nu$[1]*sin($theta$)) - $sources.c_gr$[2]*($mu_lt$[0]*cos($theta$) - $nu$[0]*$R_lt$[1]*sin($theta$) + $mu_lt$[1]*sin($theta$) + $nu$[1]*$R_lt$[1]*cos($theta$));", 
+        "{[0]: GeoAc_CalcAmp = 1}",
+        "{[0]->["+std::to_string(newTuplePos+47)+"]}",
+        {
+		 {"$sources.d_GeoTerms$", "{[0]->[2, 0]}"},
+		 {"$sources.dc_gr$", "{[0]->[2, 0]}"},
+		 {"$nu$", "{[0]->[0]}"},
+		 {"$theta$", "{[0]->[0]}"},
+		 {"$nu$", "{[0]->[1]}"},
+		 {"$sources.c_gr$", "{[0]->[2]}"},
+		 {"$mu_lt$", "{[0]->[0]}"},
+		 {"$R_lt$", "{[0]->[1]}"},
+		 {"$mu_lt$", "{[0]->[1]}"}
+	},
+        {{"$sources.d_GeoTerms$", "{[0]->[2,0]}"}}
+    );
+    updateSources->addStmt(s85); 
+   
+    //Creating s86
+    //sources.d_GeoTerms[0][1] = 0.0;
+    Stmt* s86 = new Stmt("$sources.d_GeoTerms$[0][1] = 0.0;", 
+        "{[0]: GeoAc_CalcAmp = 1}",
+        "{[0]->["+std::to_string(newTuplePos+48)+"]}",
+        {},
+        {{"$sources.d_GeoTerms$", "{[0]->[0,1]}"}}
+    );
+    updateSources->addStmt(s86);    
+   
+    //Creating s87
+    //sources.d_GeoTerms[1][1] = (mu_lp[0]*sources.v + nu[0]*sources.dv[4] - mu_lp[1]*sources.w - nu[1] * sources.dw[4]);
+    Stmt* s87 = new Stmt("$sources.d_GeoTerms$[1][1] = ($mu_lp$[0]*$sources.v$ + $nu$[0]*$sources.dv$[4] - $mu_lp$[1]*$sources.w$ - $nu$[1] * $sources.dw$[4]);", 
+        "{[0]: GeoAc_CalcAmp = 1}",
+        "{[0]->["+std::to_string(newTuplePos+49)+"]}",
+        {
+		 {"$mu_lp$", "{[0]->[0]}"},
+		 {"$sources.v$", "{[0]->[0]}"},
+		 {"$nu$", "{[0]->[0]}"},
+		 {"$sources.dv$", "{[0]->[4]}"},
+		 {"$mu_lp$", "{[0]->[1]}"},
+		 {"$sources.w$", "{[0]->[0]}"},
+		 {"$nu$", "{[0]->[1]}"},
+		 {"$sources.dw$", "{[0]->[4]}"}
+	},
+        {{"$sources.d_GeoTerms$", "{[0]->[1,1]}"}}
+    );
+    updateSources->addStmt(s87);
+	
+    //Creating s88
+    //sources.d_GeoTerms[2][1] = (mu_lp[0]*sources.u + nu[0]*sources.du[4] - mu_lp[2]*sources.w - nu[2] * sources.dw[4])*cos(theta) - (nu[0]*sources.u - nu[2]*sources.w)*R_lp[1]*sin(theta)
+    //                                       + (mu_lp[1]*sources.u + nu[1]*sources.du[4] - mu_lp[2]*sources.v - nu[2] * sources.dv[4])*sin(theta) + (nu[1]*sources.u - nu[2]*sources.v)*R_lp[1]*cos(theta);
+    Stmt* s88 = new Stmt("$sources.d_GeoTerms$[2][1] = ($mu_lp$[0]*$sources.u$ + $nu$[0]*$sources.du$[4] - $mu_lp$[2]*$sources.w$ - $nu$[2] * $sources.dw$[4])*cos($theta$) - ($nu$[0]*$sources.u$ - $nu$[2]*$sources.w$)*$R_lp$[1]*sin($theta$)+ ($mu_lp$[1]*$sources.u$ + $nu$[1]*$sources.du$[4] - $mu_lp$[2]*$sources.v$ - $nu$[2] * $sources.dv$[4])*sin($theta$) + ($nu$[1]*$sources.u$ - $nu$[2]*$sources.v$)*$R_lp$[1]*cos($theta$);", 
+        "{[0]: GeoAc_CalcAmp = 1}",
+        "{[0]->["+std::to_string(newTuplePos+50)+"]}",
+        {
+		 {"$mu_lp$", "{[0]->[0]}"},
+		 {"$sources.u$", "{[0]->[0]}"},
+		 {"$nu$", "{[0]->[0]}"},
+		 {"$sources.du$", "{[0]->[4]}"},
+		 {"$mu_lp$", "{[0]->[2]}"},
+		 {"$sources.w$", "{[0]->[0]}"},
+		 {"$nu$", "{[0]->[2]}"},
+		 {"$sources.dw$", "{[0]->[4]}"},
+		 {"$theta$", "{[0]->[0]}"},
+		 {"$R_lp$", "{[0]->[1]}"},
+		 {"$mu_lp$", "{[0]->[1]}"},
+		 {"$nu$", "{[0]->[1]}"},
+		 {"$sources.v$", "{[0]->[0]}"},
+		 {"$sources.dv$", "{[0]->[4]}"}
+	},
+        {{"$sources.d_GeoTerms$", "{[0]->[2,1]}"}}
+    );
+    updateSources->addStmt(s88);
+ 
+    //Creating s89
+    //sources.d_GeoTerms[0][1] += -R_lp[0]/pow(r,2)*(nu[1]*sources.c_gr[1] + nu[2]*sources.c_gr[2])
+    //                                        + 1.0/r*(mu_lp[1]*sources.c_gr[1] + nu[1]*sources.dc_gr[1][1] + mu_lp[2]*sources.c_gr[2] + nu[2]*sources.dc_gr[2][1]);
+    Stmt* s89 = new Stmt("$sources.d_GeoTerms$[0][1] += -$R_lp$[0]/pow($r$,2)*($nu$[1]*$sources.c_gr$[1] + $nu$[2]*$sources.c_gr$[2])+ 1.0/$r$*($mu_lp$[1]*$sources.c_gr$[1] + $nu$[1]*$sources.dc_gr$[1][1] + $mu_lp$[2]*$sources.c_gr$[2] + $nu$[2]*$sources.dc_gr$[2][1]);", 
+        "{[0]: GeoAc_CalcAmp = 1}",
+        "{[0]->["+std::to_string(newTuplePos+51)+"]}",
+        {
+		 {"$sources.d_GeoTerms$", "{[0]->[0, 1]}"},
+		 {"$R_lp$", "{[0]->[0]}"},
+		 {"$r$", "{[0]->[0]}"},
+		 {"$nu$", "{[0]->[1]}"},
+		 {"$sources.c_gr$", "{[0]->[1]}"},
+		 {"$nu$", "{[0]->[2]}"},
+		 {"$sources.c_gr$", "{[0]->[2]}"},
+		 {"$mu_lp$", "{[0]->[1]}"},
+		 {"$sources.dc_gr$", "{[0]->[1, 1]}"},
+		 {"$mu_lp$", "{[0]->[2]}"},
+		 {"$sources.c_gr$", "{[0]->[2]}"},
+		 {"$sources.dc_gr$", "{[0]->[2, 1]}"}
+	},
+        {{"$sources.d_GeoTerms$", "{[0]->[0,1]}"}}
+    );
+    updateSources->addStmt(s89);
+	
+    //Creating s90
+    //sources.d_GeoTerms[1][1] += -mu_lp[0]*sources.c_gr[1] - nu[0]*sources.dc_gr[1][1] + mu_lp[2]*sources.c_gr[2]*tan(theta) + nu[2]*sources.dc_gr[2][1]*tan(theta) + nu[2]*sources.c_gr[2]*R_lp[1]/pow(cos(theta),2);
+    Stmt* s90 = new Stmt("$sources.d_GeoTerms$[1][1] += -$mu_lp$[0]*$sources.c_gr$[1] - $nu$[0]*$sources.dc_gr$[1][1] + $mu_lp$[2]*$sources.c_gr$[2]*tan($theta$) + $nu$[2]*$sources.dc_gr$[2][1]*tan($theta$) + $nu$[2]*$sources.c_gr$[2]*$R_lp$[1]/pow(cos($theta$),2);", 
+        "{[0]: GeoAc_CalcAmp = 1}",
+        "{[0]->["+std::to_string(newTuplePos+52)+"]}",
+        {
+		 {"$sources.d_GeoTerms$", "{[0]->[1, 1]}"},
+		 {"$mu_lp$", "{[0]->[0]}"},
+		 {"$sources.c_gr$", "{[0]->[1]}"},
+		 {"$nu$", "{[0]->[0]}"},
+		 {"$sources.dc_gr$", "{[0]->[1, 1]}"},
+		 {"$mu_lp$", "{[0]->[2]}"},
+		 {"$sources.c_gr$", "{[0]->[2]}"},
+		 {"$theta$", "{[0]->[0]}"},
+		 {"$nu$", "{[0]->[2]}"},
+		 {"$sources.dc_gr$", "{[0]->[2, 1]}"},
+		 {"$R_lp$", "{[0]->[1]}"}
+	},
+        {{"$sources.d_GeoTerms$", "{[0]->[1,1]}"}}
+    );
+    updateSources->addStmt(s90);
+
+    //Creating s91
+    //sources.d_GeoTerms[2][1] += -sources.dc_gr[2][1]*(nu[0]*cos(theta) + nu[1]*sin(theta)) - sources.c_gr[2]*(mu_lp[0]*cos(theta) - nu[0]*R_lp[1]*sin(theta) + mu_lp[1]*sin(theta) + nu[1]*R_lp[1]*cos(theta));
+    Stmt* s91 = new Stmt("$sources.d_GeoTerms$[2][1] += -$sources.dc_gr$[2][1]*($nu$[0]*cos($theta$) + $nu$[1]*sin($theta$)) - $sources.c_gr$[2]*($mu_lp$[0]*cos($theta$) - $nu$[0]*$R_lp$[1]*sin($theta$) + $mu_lp$[1]*sin($theta$) + $nu$[1]*$R_lp$[1]*cos($theta$));", 
+        "{[0]: GeoAc_CalcAmp = 1}",
+        "{[0]->["+std::to_string(newTuplePos+53)+"]}",
+        {
+		 {"$sources.d_GeoTerms$", "{[0]->[2, 1]}"},
+		 {"$sources.dc_gr$", "{[0]->[2, 1]}"},
+		 {"$nu$", "{[0]->[0]}"},
+		 {"$theta$", "{[0]->[0]}"},
+		 {"$nu$", "{[0]->[1]}"},
+		 {"$sources.c_gr$", "{[0]->[2]}"},
+		 {"$mu_lp$", "{[0]->[0]}"},
+		 {"$R_lp$", "{[0]->[1]}"},
+		 {"$mu_lp$", "{[0]->[1]}"}
+	},
+        {{"$sources.d_GeoTerms$", "{[0]->[2,1]}"}}
+    );
+    updateSources->addStmt(s91);
+  
     //Calling toDot() on the Computation structure
     /*
     ofstream dotFileStream("codegen_dot.txt");
