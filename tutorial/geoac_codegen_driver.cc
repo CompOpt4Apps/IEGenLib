@@ -1081,7 +1081,7 @@ int main(int argc, char **argv){
         );
     updateSources->addStmt(s55);
 
-    //Creating s47a
+    //Creating s56a
     //for(int m = 0; m < 3; m++){
     //    int loopM = m; 
     updateSources->addDataSpace("$loopM$");    
@@ -1183,7 +1183,7 @@ int main(int argc, char **argv){
     mTuplePos = uDdiffCompRes.tuplePosition+1;
 
     //Creating s59
-    //sources.ddv[m][0] += R_lt[n]*v_ddiff(r, theta, phi, m, n, spl.Windv_Spline);
+    //sources.ddu[m][0] += R_lt[n]*v_ddiff(r, theta, phi, m, n, spl.Windv_Spline);
     Stmt* s59 = new Stmt("$sources.ddu$[m][0] += $R_lt$[n]*"+uDdiffCompRes.returnValues.back()+";", 
         "{[n,m]: GeoAc_CalcAmp = 1 && n>=0 && n<3 && m>=0 && m<3}",
         "{[n,m]->["+std::to_string(newTuplePos+25)+",n,"+std::to_string(nTuplePos)+",m,"+std::to_string(mTuplePos)+"]}",
@@ -1195,6 +1195,98 @@ int main(int argc, char **argv){
         {{"$sources.ddu$", "{[n,m]->[m,0]}"}}
         );
     updateSources->addStmt(s59);
+
+        cDdiffCompArgs.clear();
+    cDdiffCompArgs.push_back("$r$");
+    cDdiffCompArgs.push_back("$theta$");
+    cDdiffCompArgs.push_back("$phi$");
+    cDdiffCompArgs.push_back("$loopM$");
+    cDdiffCompArgs.push_back("$loopN$");
+    cDdiffCompArgs.push_back("$spl.Temp_Spline$");
+
+    // Return values are stored in a struct of the computation: AppendComputationResult
+    AppendComputationResult cDdiff1CompRes = updateSources->appendComputation(cDdiffComputation, "{[n,m]: GeoAc_CalcAmp = 1 && n>=0 && n<3 && m>=0 && m<3}", "{[n,m]->["+std::to_string(newTuplePos+25)+", n, "+std::to_string(nTuplePos)+",m,"+std::to_string(mTuplePos+1)+"]}", cDdiffCompArgs);
+    mTuplePos = cDdiff1CompRes.tuplePosition+1;
+ 
+    //Creating s60
+    //sources.ddc[m][1] += R_lp[n]*c_ddiff(r, theta, phi, m, n, spl.Temp_Spline);
+    Stmt* s60 = new Stmt("$sources.ddc$[m][1] += $R_lp$[n]*"+cDdiff1CompRes.returnValues.back()+";", 
+        "{[n,m]: GeoAc_CalcAmp = 1 && n>=0 && n<3 && m>=0 && m<3}",
+        "{[n,m]->["+std::to_string(newTuplePos+25)+",n,"+std::to_string(nTuplePos)+",m,"+std::to_string(mTuplePos)+"]}",
+        {
+            {"$sources.ddc$", "{[n,m]->[m,1]}"},
+            {"$R_lp$","{[n,m]->[n]}"},
+            {cDdiff1CompRes.returnValues.back(), "{[n,m]->[0]}"}
+        },
+        {{"$sources.ddc$", "{[n,m]->[m,1]}"}}
+        );
+    updateSources->addStmt(s60);
+
+    //Creating s61
+    //sources.ddw[m][1] += R_lp[n]*w_ddiff(r, theta, phi, m, n); //The w_ddiff function always returns 0
+    Stmt* s61 = new Stmt("$sources.ddw$[m][1] += 0;", 
+        "{[n,m]: GeoAc_CalcAmp = 1 && n>=0 && n<3 && m>=0 && m<3}",
+        "{[n,m]->["+std::to_string(newTuplePos+25)+",n,"+std::to_string(nTuplePos)+",m,"+std::to_string(mTuplePos+1)+"]}",
+        {
+            {"$sources.ddw$", "{[n,m]->[m,1]}"},
+            {"$R_lp$","{[n,m]->[n]}"},
+            {cDdiff1CompRes.returnValues.back(), "{[n,m]->[0]}"}
+        },
+        {{"$sources.ddw$", "{[n,m]->[m,1]}"}}
+        );
+    updateSources->addStmt(s61);
+
+    vDdiffCompArgs.clear();
+    vDdiffCompArgs.push_back("$r$");
+    vDdiffCompArgs.push_back("$theta$");
+    vDdiffCompArgs.push_back("$phi$");
+    vDdiffCompArgs.push_back("$loopM$");
+    vDdiffCompArgs.push_back("$loopN$");
+    vDdiffCompArgs.push_back("$spl.Windv_Spline$");
+        
+    // Return values are stored in a struct of the computation: AppendComputationResult
+    AppendComputationResult vDdiff1CompRes = updateSources->appendComputation(vDdiffComputation, "{[n,m]: GeoAc_CalcAmp = 1 && n>=0 && n<3 && m>=0 && m<3}", "{[n,m]->["+std::to_string(newTuplePos+25)+", n, "+std::to_string(nTuplePos)+",m,"+std::to_string(mTuplePos+2)+"]}", vDdiffCompArgs);
+    mTuplePos = vDdiff1CompRes.tuplePosition+1;
+    
+    //Creating s62
+    //sources.ddv[m][1] += R_lp[n]*v_ddiff(r, theta, phi, m, n, spl.Windv_Spline);
+    Stmt* s62 = new Stmt("$sources.ddv$[m][1] += $R_lp$[n]*"+vDdiff1CompRes.returnValues.back()+";", 
+        "{[n,m]: GeoAc_CalcAmp = 1 && n>=0 && n<3 && m>=0 && m<3}",
+        "{[n,m]->["+std::to_string(newTuplePos+25)+",n,"+std::to_string(nTuplePos)+",m,"+std::to_string(mTuplePos)+"]}",
+        {
+            {"$sources.ddv$", "{[n,m]->[m,1]}"},
+            {"$R_lp$","{[n,m]->[n]}"},
+            {vDdiff1CompRes.returnValues.back(), "{[n,m]->[0]}"}
+        },
+        {{"$sources.ddv$", "{[n,m]->[m,1]}"}}
+        );
+    updateSources->addStmt(s62);
+
+    uDdiffCompArgs.clear();
+    uDdiffCompArgs.push_back("$r$");
+    uDdiffCompArgs.push_back("$theta$");
+    uDdiffCompArgs.push_back("$phi$");
+    uDdiffCompArgs.push_back("$loopM$");
+    uDdiffCompArgs.push_back("$loopN$");
+    uDdiffCompArgs.push_back("$spl.Windu_Spline$");
+    
+    // Return values are stored in a struct of the computation: AppendComputationResult
+    AppendComputationResult uDdiff1CompRes = updateSources->appendComputation(uDdiffComputation, "{[n,m]: GeoAc_CalcAmp = 1 && n>=0 && n<3 && m>=0 && m<3}", "{[n,m]->["+std::to_string(newTuplePos+25)+", n, "+std::to_string(nTuplePos)+",m,"+std::to_string(mTuplePos+1)+"]}", vDdiffCompArgs);
+    mTuplePos = uDdiff1CompRes.tuplePosition+1;
+
+    //Creating s63
+    //sources.ddu[m][1] += R_lp[n]*u_ddiff(r, theta, phi, m, n, spl.Windu_Spline);
+    Stmt* s63 = new Stmt("$sources.ddu$[m][1] += $R_lp$[n]*"+uDdiff1CompRes.returnValues.back()+";", 
+        "{[n,m]: GeoAc_CalcAmp = 1 && n>=0 && n<3 && m>=0 && m<3}",
+        "{[n,m]->["+std::to_string(newTuplePos+25)+",n,"+std::to_string(nTuplePos)+",m,"+std::to_string(mTuplePos)+"]}",
+        {
+            {"$sources.ddu$", "{[n,m]->[m,1]}"},
+            {"$R_lp$","{[n,m]->[n]}"},
+            {uDdiff1CompRes.returnValues.back(), "{[n,m]->[0]}"}
+        },
+        {{"$sources.ddu$", "{[n,m]->[m,1]}"}}
+        );
+    updateSources->addStmt(s63);
     
     //Calling toDot() on the Computation structure
     /*
