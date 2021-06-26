@@ -1291,7 +1291,7 @@ int main(int argc, char **argv){
     //Creating s64 
     //sources.dnu_mag[0] = (nu[0]*mu_lt[0] + nu[1]*mu_lt[1] + nu[2]*mu_lt[2])/sources.nu_mag;
     updateSources->addDataSpace("$sources.dnu_mag$");
-    Stmt* s64 = new Stmt("$sources.dnu_mag$[0] = ($nu$[0]*$mu_lt$[0] + $nu$[1]*$mu_lt$[1] + $nu$[2]*$mu_lt[2$])/$sources.nu_mag$;",
+    Stmt* s64 = new Stmt("$sources.dnu_mag$[0] = ($nu$[0]*$mu_lt$[0] + $nu$[1]*$mu_lt$[1] + $nu$[2]*$mu_lt$[2])/$sources.nu_mag$;",
         "{[0]: GeoAc_CalcAmp = 1}",
         "{[0]->["+std::to_string(newTuplePos+26)+"]}",
         {
@@ -1309,7 +1309,7 @@ int main(int argc, char **argv){
 
     //Creating s65
     //sources.dnu_mag[1] = (nu[0]*mu_lp[0] + nu[1]*mu_lp[1] + nu[2]*mu_lp[2])/sources.nu_mag;
-    Stmt* s65 = new Stmt("$sources.dnu_mag$[1] = ($nu$[0]*$mu_lp$[0] + $nu$[1]*$mu_lp$[1] + $nu$[2]*$mu_lp[2$])/$sources.nu_mag$;",
+    Stmt* s65 = new Stmt("$sources.dnu_mag$[1] = ($nu$[0]*$mu_lp$[0] + $nu$[1]*$mu_lp$[1] + $nu$[2]*$mu_lp$[2])/$sources.nu_mag$;",
         "{[0]: GeoAc_CalcAmp = 1}",
         "{[0]->["+std::to_string(newTuplePos+27)+"]}",
         {
@@ -1465,7 +1465,7 @@ int main(int argc, char **argv){
             {"$sources.dc_gr$", "{[0]->[1,1]}"},
             {"$sources.c_gr$","{[0]->[2]}"},
             {"$sources.dc_gr$", "{[0]->[2,1]}"}, 
-            {"$sources.c_gr_mag$", "{[0]->[0]}"}
+            {"$sources.c_gr_mag$", "{[0]->[1]}"}
         },
         {{"$sources.dc_gr_mag$", "{[0]->[0]}"}}
         );
