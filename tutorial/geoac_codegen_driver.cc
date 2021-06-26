@@ -1095,7 +1095,7 @@ int main(int argc, char **argv){
     );
     updateSources->addStmt(s56a);
 
-    //Args to the c_ddiff_Computation
+    //Args to c_ddiff_Computation
     vector<std::string> cDdiffCompArgs;
     cDdiffCompArgs.push_back("$r$");
     cDdiffCompArgs.push_back("$theta$");
@@ -1123,6 +1123,49 @@ int main(int argc, char **argv){
         {{"$sources.ddc$", "{[n,m]->[m,0]}"}}
         );
     updateSources->addStmt(s56);
+
+    //Creating s57
+    //sources.ddw[m][0] += R_lt[n]*w_ddiff(r, theta, phi, m, n); //The w_ddiff function always returns 0
+    Stmt* s57 = new Stmt("$sources.ddw$[m][0] += 0;", 
+        "{[n,m]: GeoAc_CalcAmp = 1 && n>=0 && n<3 && m>=0 && m<3}",
+        "{[n,m]->["+std::to_string(newTuplePos+25)+",n,"+std::to_string(nTuplePos)+",m,"+std::to_string(mTuplePos+1)+"]}",
+        {
+            {"$sources.ddw$", "{[n,m]->[m,0]}"},
+            {"$R_lt$","{[n,m]->[n]}"},
+            {cDdiffCompRes.returnValues.back(), "{[n,m]->[0]}"}
+        },
+        {{"$sources.ddw$", "{[n,m]->[m,0]}"}}
+        );
+    updateSources->addStmt(s57);
+
+    //Args to v_ddiff_Computation
+    vector<std::string> vDdiffCompArgs;
+    vDdiffCompArgs.push_back("$r$");
+    vDdiffCompArgs.push_back("$theta$");
+    vDdiffCompArgs.push_back("$phi$");
+    vDdiffCompArgs.push_back("$loopM$");
+    vDdiffCompArgs.push_back("$loopN$");
+    vDdiffCompArgs.push_back("$spl.Windv_Spline$");
+    
+    Computation* vDdiffComputation = v_ddiff_Computation();
+    
+    // Return values are stored in a struct of the computation: AppendComputationResult
+    AppendComputationResult vDdiffCompRes = updateSources->appendComputation(vDdiffComputation, "{[n,m]: GeoAc_CalcAmp = 1 && n>=0 && n<3 && m>=0 && m<3}", "{[n,m]->["+std::to_string(newTuplePos+25)+", n, "+std::to_string(nTuplePos)+",m,"+std::to_string(mTuplePos+2)+"]}", vDdiffCompArgs);
+    mTuplePos = vDdiffCompRes.tuplePosition+1;
+    
+    //Creating s58
+    //sources.ddv[m][0] += R_lt[n]*v_ddiff(r, theta, phi, m, n, spl.Windv_Spline);
+    Stmt* s58 = new Stmt("$sources.ddv$[m][0] += $R_lt$[n]*"+vDdiffCompRes.returnValues.back()+";", 
+        "{[n,m]: GeoAc_CalcAmp = 1 && n>=0 && n<3 && m>=0 && m<3}",
+        "{[n,m]->["+std::to_string(newTuplePos+25)+",n,"+std::to_string(nTuplePos)+",m,"+std::to_string(mTuplePos)+"]}",
+        {
+            {"$sources.ddv$", "{[n,m]->[m,0]}"},
+            {"$R_lt$","{[n,m]->[n]}"},
+            {vDdiffCompRes.returnValues.back(), "{[n,m]->[0]}"}
+        },
+        {{"$sources.ddv$", "{[n,m]->[m,0]}"}}
+        );
+    updateSources->addStmt(s58);
     
     //Calling toDot() on the Computation structure
     /*
@@ -1150,8 +1193,89 @@ Computation* u_ddiff_Computation(){
 }
 
 
+/*
+double v_ddiff(double r, double theta, double phi, int n1, int n2, NaturalCubicSpline_1D &Windv_Spline){
+    double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);    // Check that r_min <= r_eval <= r_max
+    double v_ddiff_return = 0.0;
+    double eval_spline_ddf_return = Eval_Spline_ddf(r_eval,Windv_Spline);    
+    if(n1==0&&n2==0){v_ddiff_return = eval_spline_ddf_return;}
+}
+*/
 Computation* v_ddiff_Computation(){
     Computation* vDdiffComputation = new Computation();
+
+    vDdiffComputation->addParameter("$r$","double");
+    vDdiffComputation->addParameter("$theta$","double");
+    vDdiffComputation->addParameter("$phi$","double");
+    vDdiffComputation->addParameter("$n1$","int");
+    vDdiffComputation->addParameter("$n2$","int");
+    vDdiffComputation->addParameter("$Windv_Spline$", "NaturalCubicSpline_1D &");
+    
+    //Creating statement0
+    //double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);
+    vDdiffComputation->addDataSpace("$r_eval$");
+    Stmt* s0 = new Stmt("double $r_eval$ = min($r$, r_max); $r_eval$ = max($r_eval$, r_min);",
+        "{[0]}",  //Iteration schedule - Only happening one time (not iterating)
+        "{[0]->[0]}", //Execution schedule - scheduling statement to be first (scheduling function)
+        {
+            {"$r$","{[0]->[0]}"},
+            {"$r_eval$","{[0]->[0]}"}
+        }, //Data reads
+        {{"$r_eval$","{[0]->[0]}"}} //Data writes
+    );
+    //Adding s0 to the computation
+    vDdiffComputation->addStmt(s0);
+
+    //Creating statement1
+    //double v_ddiff_return = 0.0;
+    vDdiffComputation->addDataSpace("$v_ddiff_return$");
+    Stmt* s1 = new Stmt("double $v_ddiff_return$ = 0.0",
+        "{[0]}",
+        "{[0]->[1]}",
+        {},
+        {{"$v_ddiff_return$","{[0]->[0]}"}}
+    );
+    vDdiffComputation->addStmt(s1);
+
+    Computation* evalSplineDdfComputation = Eval_Spline_ddf_Computation();
+    
+    //Args to the Eval_Spline_ddf_Computation
+    vector<std::string> evalSplineDdfCompArgs;
+    evalSplineDdfCompArgs.push_back("$r_eval$");
+    evalSplineDdfCompArgs.push_back("$Windv_Spline$");
+    
+    // Return values are stored in a struct of the computation: AppendComputationResult
+    AppendComputationResult evalSplineDdfCompRes = vDdiffComputation->appendComputation(evalSplineDdfComputation, "{[0]}", "{[0]->[2]}", evalSplineDdfCompArgs);
+    unsigned int newTuplePos = evalSplineDdfCompRes.tuplePosition+1;
+
+    //Creating statement2
+    //double eval_spline_ddf_return = Eval_Spline_ddf(r_eval,Windv_Spline);
+    vDdiffComputation->addDataSpace("$eval_Spline_ddf_return$");
+    Stmt* s2 = new Stmt("double $eval_Spline_ddf_return$ = "+evalSplineDdfCompRes.returnValues.back()+";",
+        "{[0]}",
+        "{[0]->["+std::to_string(newTuplePos)+"]}",
+        {{evalSplineDdfCompRes.returnValues.back(), "{[0]->[0]}"}},
+        {{"$eval_Spline_ddf_return$", "{[0]->[0]}"}}
+    );
+    vDdiffComputation->addStmt(s2);
+
+    //Creating statement3
+    //if(n1==0&&n2==0){v_ddiff_return = eval_spline_ddf_return;}
+    Stmt* s3 = new Stmt("if($n1$==0 && $n2$==0){$v_ddiff_return$ = $eval_Spline_ddf_return$;}",
+        "{[0]}",
+        "{[0]->["+std::to_string(newTuplePos+1)+"]}",
+        {
+           {"$n1$", "{[0]->[0]}"},
+           {"$n2$", "{[0]->[0]}"},
+           {"$eval_Spline_ddf_return$", "{[0]->[0]}"}
+        },
+        {
+            {"$v_ddiff_return$", "{[0]->[0]}"}
+        }
+    );
+    vDdiffComputation->addStmt(s3);
+  
+    vDdiffComputation->addReturnValue("$v_ddiff_return$", true);
     return vDdiffComputation; 
 }
 
@@ -1165,13 +1289,12 @@ double c_ddiff(double r, double theta, double phi, int n1, int n2, NaturalCubicS
     double eval_spline_df_return = Eval_Spline_df(r_eval,Temp_Spline);
     
     if(n1==0 && n2==0){
-        return gamR / (2.0 * SndSpd) * eval_spline_ddf_return
+        c_ddiff_return = gamR / (2.0 * SndSpd) * eval_spline_ddf_return
                 - pow(gamR,2)/(4.0 * pow(SndSpd,3)) * pow(eval_spline_df_return,2);
     }
 }
 */
 Computation* c_ddiff_Computation(){
-
     Computation* cDdiffComputation = new Computation();
     cDdiffComputation->addParameter("$r$","double");
     cDdiffComputation->addParameter("$theta$","double");
@@ -1299,15 +1422,17 @@ Computation* c_ddiff_Computation(){
 
 
 /*
-  double u_diff(double r, double theta, double phi int n, NaturalCubicSpline_1D &Windu_Spline){
+double u_diff(double r, double theta, double phi int n, NaturalCubicSpline_1D &Windu_Spline){
     double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);    // Check that r_min <= r_eval <= r_max
     double u_diff_return = 0.0;
     double eval_Spline_df_return = Eval_Spline_df(r_eval, Windu_Spline);
 
     if(n==0){u_diff_return = eval_Spline_df_return;}
+  } 
 */
 Computation* u_diff_Computation(){
     Computation* uDiffComputation = new Computation();
+    
     uDiffComputation->addParameter("$r$", "double");
     uDiffComputation->addParameter("$theta$", "double");
     uDiffComputation->addParameter("$phi$","double");
@@ -1397,11 +1522,12 @@ Computation* u_diff_Computation(){
 
 
 /*
- * double v_diff(double r, double theta, double phi, int n, NaturalCubicSpline_1D & Windv_Spline){
- *     double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);    // Check that r_min <= r_eval <= r_max
- *     double v_diff_return = 0.0;
- *     double eval_spline_df_return = Eval_Spline_df(r_eval,Windv_Spline);
- *     if(n==0) { v_diff_return =  eval_spline_df_return; } 
+double v_diff(double r, double theta, double phi, int n, NaturalCubicSpline_1D & Windv_Spline){
+  double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);    // Check that r_min <= r_eval <= r_max
+  double v_diff_return = 0.0;
+  double eval_spline_df_return = Eval_Spline_df(r_eval,Windv_Spline);
+  if(n==0) { v_diff_return =  eval_spline_df_return;} 
+} 
  */
 Computation* v_diff_Computation(){
     Computation* vDiffComputation = new Computation();
