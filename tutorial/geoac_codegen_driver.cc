@@ -1287,6 +1287,189 @@ int main(int argc, char **argv){
         {{"$sources.ddu$", "{[n,m]->[m,1]}"}}
         );
     updateSources->addStmt(s63);
+
+    //Creating s64 
+    //sources.dnu_mag[0] = (nu[0]*mu_lt[0] + nu[1]*mu_lt[1] + nu[2]*mu_lt[2])/sources.nu_mag;
+    updateSources->addDataSpace("$sources.dnu_mag$");
+    Stmt* s64 = new Stmt("$sources.dnu_mag$[0] = ($nu$[0]*$mu_lt$[0] + $nu$[1]*$mu_lt$[1] + $nu$[2]*$mu_lt[2$])/$sources.nu_mag$;",
+        "{[0]: GeoAc_CalcAmp = 1}",
+        "{[0]->["+std::to_string(newTuplePos+26)+"]}",
+        {
+            {"$nu$", "{[0]->[0]}"},  
+            {"$mu_lt$", "{[0]->[0]}"},
+            {"$nu$","{[0]->[1]}"},
+            {"$mu_lt$", "{[0]->[1]}"},
+            {"$nu$","{[0]->[2]}"},
+            {"$mu_lt$", "{[0]->[2]}"},
+            {"$sources.nu_mag$", "{[0]->[0]}"} 
+        },
+        {{"$sources.dnu_mag$", "{[0]->[0]}"}}
+        );
+    updateSources->addStmt(s64);
+
+    //Creating s65
+    //sources.dnu_mag[1] = (nu[0]*mu_lp[0] + nu[1]*mu_lp[1] + nu[2]*mu_lp[2])/sources.nu_mag;
+    Stmt* s65 = new Stmt("$sources.dnu_mag$[1] = ($nu$[0]*$mu_lp$[0] + $nu$[1]*$mu_lp$[1] + $nu$[2]*$mu_lp[2$])/$sources.nu_mag$;",
+        "{[0]: GeoAc_CalcAmp = 1}",
+        "{[0]->["+std::to_string(newTuplePos+27)+"]}",
+        {
+            {"$nu$", "{[0]->[0]}"},  
+            {"$mu_lp$", "{[0]->[0]}"},
+            {"$nu$","{[0]->[1]}"},
+            {"$mu_lp$", "{[0]->[1]}"},
+            {"$nu$","{[0]->[2]}"},
+            {"$mu_lp$", "{[0]->[2]}"},
+            {"$sources.nu_mag$", "{[0]->[0]}"} 
+        },
+        {{"$sources.dnu_mag$", "{[0]->[1]}"}}
+        );
+    updateSources->addStmt(s65);
+
+    //Creating s66
+    //sources.dc_gr[0][0] = nu[0]/sources.nu_mag*sources.dc[3] + sources.c*mu_lt[0]/sources.nu_mag - sources.c*nu[0]/pow(sources.nu_mag,2) * sources.dnu_mag[0] + sources.dw[3];
+    updateSources->addDataSpace("$sources.dc_gr$");
+    Stmt* s66 = new Stmt("$sources.dc_gr$[0][0] = $nu$[0]/$sources.nu_mag$*$sources.dc$[3] + $sources.c$*$mu_lt$[0]/$sources.nu_mag$ - $sources.c$*$nu$[0]/pow($sources.nu_mag$,2) * $sources.dnu_mag$[0] + $sources.dw$[3];",
+        "{[0]: GeoAc_CalcAmp = 1}",
+        "{[0]->["+std::to_string(newTuplePos+28)+"]}",
+        {
+            {"$nu$", "{[0]->[0]}"},  
+            {"$sources.nu_mag$", "{[0]->[0]}"},
+            {"$sources.dc$","{[0]->[3]}"},
+            {"$sources.c$", "{[0]->[0]}"},
+            {"$mu_lt$","{[0]->[0]}"},
+            {"$sources.dnu_mag$", "{[0]->[0]}"},
+            {"$sources.dw$", "{[0]->[3]}"} 
+        },
+        {{"$sources.dc_gr$", "{[0]->[0,0]}"}}
+        );
+    updateSources->addStmt(s66);
+    
+    //Creating s67
+    //sources.dc_gr[1][0] = nu[1]/sources.nu_mag*sources.dc[3] + sources.c*mu_lt[1]/sources.nu_mag - sources.c*nu[1]/pow(sources.nu_mag,2) * sources.dnu_mag[0] + sources.dw[3];
+    Stmt* s67 = new Stmt("$sources.dc_gr$[1][0] = $nu$[1]/$sources.nu_mag$*$sources.dc$[3] + $sources.c$*$mu_lt$[1]/$sources.nu_mag$ - $sources.c$*$nu$[1]/pow($sources.nu_mag$,2) * $sources.dnu_mag$[0] + $sources.dv$[3];",
+        "{[0]: GeoAc_CalcAmp = 1}",
+        "{[0]->["+std::to_string(newTuplePos+29)+"]}",
+        {
+            {"$nu$", "{[0]->[1]}"},  
+            {"$sources.nu_mag$", "{[0]->[0]}"},
+            {"$sources.dc$","{[0]->[3]}"},
+            {"$sources.c$", "{[0]->[0]}"},
+            {"$mu_lt$","{[0]->[1]}"},
+            {"$sources.dnu_mag$", "{[0]->[0]}"},
+            {"$sources.dv$", "{[0]->[3]}"} 
+        },
+        {{"$sources.dc_gr$", "{[0]->[1,0]}"}}
+        );
+    updateSources->addStmt(s67);
+    
+    //Creating s68
+    //sources.dc_gr[2][0] = nu[2]/sources.nu_mag*sources.dc[3] + sources.c*mu_lt[2]/sources.nu_mag - sources.c*nu[2]/pow(sources.nu_mag,2) * sources.dnu_mag[0] + sources.du[3];
+    Stmt* s68 = new Stmt("$sources.dc_gr$[2][0] = $nu$[2]/$sources.nu_mag$*$sources.dc$[3] + $sources.c$*$mu_lt$[2]/$sources.nu_mag$ - $sources.c$*$nu$[2]/pow($sources.nu_mag$,2) * $sources.dnu_mag$[0] + $sources.du$[3];",
+        "{[0]: GeoAc_CalcAmp = 1}",
+        "{[0]->["+std::to_string(newTuplePos+30)+"]}",
+        {
+            {"$nu$", "{[0]->[2]}"},  
+            {"$sources.nu_mag$", "{[0]->[0]}"},
+            {"$sources.dc$","{[0]->[3]}"},
+            {"$sources.c$", "{[0]->[0]}"},
+            {"$mu_lt$","{[0]->[2]}"},
+            {"$sources.dnu_mag$", "{[0]->[0]}"},
+            {"$sources.du$", "{[0]->[3]}"} 
+        },
+        {{"$sources.dc_gr$", "{[0]->[2,0]}"}}
+        );
+    updateSources->addStmt(s68);
+
+    //Creating s69
+    //sources.dc_gr[0][1] = nu[0]/sources.nu_mag*sources.dc[4] + sources.c*mu_lp[0]/sources.nu_mag - sources.c*nu[0]/pow(sources.nu_mag,2) * sources.dnu_mag[1] + sources.dw[4];
+    Stmt* s69 = new Stmt("$sources.dc_gr$[0][1] = $nu$[0]/$sources.nu_mag$*$sources.dc$[4] + $sources.c$*$mu_lp$[0]/$sources.nu_mag$ - $sources.c$*$nu$[0]/pow($sources.nu_mag$,2) * $sources.dnu_mag$[1] + $sources.dw$[4];",
+        "{[0]: GeoAc_CalcAmp = 1}",
+        "{[0]->["+std::to_string(newTuplePos+31)+"]}",
+        {
+            {"$nu$", "{[0]->[0]}"},  
+            {"$sources.nu_mag$", "{[0]->[0]}"},
+            {"$sources.dc$","{[0]->[4]}"},
+            {"$sources.c$", "{[0]->[0]}"},
+            {"$mu_lp$","{[0]->[0]}"},
+            {"$sources.dnu_mag$", "{[0]->[1]}"},
+            {"$sources.dw$", "{[0]->[4]}"} 
+        },
+        {{"$sources.dc_gr$", "{[0]->[0,1]}"}}
+        );
+    updateSources->addStmt(s69);
+    
+    //Creating s70
+    //sources.dc_gr[1][1] = nu[1]/sources.nu_mag*sources.dc[4] + sources.c*mu_lp[1]/sources.nu_mag - sources.c*nu[1]/pow(sources.nu_mag,2) * sources.dnu_mag[1] + sources.dv[4];
+    Stmt* s70 = new Stmt("$sources.dc_gr$[1][1] = $nu$[1]/$sources.nu_mag$*$sources.dc$[4] + $sources.c$*$mu_lp$[1]/$sources.nu_mag$ - $sources.c$*$nu$[1]/pow($sources.nu_mag$,2) * $sources.dnu_mag$[1] + $sources.dv$[4];",
+        "{[0]: GeoAc_CalcAmp = 1}",
+        "{[0]->["+std::to_string(newTuplePos+32)+"]}",
+        {
+            {"$nu$", "{[0]->[1]}"},  
+            {"$sources.nu_mag$", "{[0]->[0]}"},
+            {"$sources.dc$","{[0]->[4]}"},
+            {"$sources.c$", "{[0]->[0]}"},
+            {"$mu_lp$","{[0]->[1]}"},
+            {"$sources.dnu_mag$", "{[0]->[1]}"},
+            {"$sources.dv$", "{[0]->[4]}"} 
+        },
+        {{"$sources.dc_gr$", "{[0]->[1,1]}"}}
+        );
+    updateSources->addStmt(s70);
+    
+    //Creating s71
+    //sources.dc_gr[2][1] = nu[2]/sources.nu_mag*sources.dc[4] + sources.c*mu_lp[2]/sources.nu_mag - sources.c*nu[2]/pow(sources.nu_mag,2) * sources.dnu_mag[1] + sources.du[4];
+    Stmt* s71 = new Stmt("$sources.dc_gr$[2][1] = $nu$[2]/$sources.nu_mag$*$sources.dc$[4] + $sources.c$*$mu_lp$[2]/$sources.nu_mag$ - $sources.c$*$nu$[2]/pow($sources.nu_mag$,2) * $sources.dnu_mag$[1] + $sources.du$[4];",
+        "{[0]: GeoAc_CalcAmp = 1}",
+        "{[0]->["+std::to_string(newTuplePos+33)+"]}",
+        {
+            {"$nu$", "{[0]->[2]}"},  
+            {"$sources.nu_mag$", "{[0]->[0]}"},
+            {"$sources.dc$","{[0]->[4]}"},
+            {"$sources.c$", "{[0]->[0]}"},
+            {"$mu_lp$","{[0]->[2]}"},
+            {"$sources.dnu_mag$", "{[0]->[1]}"},
+            {"$sources.du$", "{[0]->[4]}"} 
+        },
+        {{"$sources.dc_gr$", "{[0]->[2,1]}"}}
+        );
+    updateSources->addStmt(s71);
+
+    //Creating s72
+    //sources.dc_gr_mag[0] = (sources.c_gr[0]*sources.dc_gr[0][0] + sources.c_gr[1]*sources.dc_gr[1][0] + sources.c_gr[2]*sources.dc_gr[2][0])/sources.c_gr_mag;
+    updateSources->addDataSpace("$sources.dc_gr_mag$");
+    Stmt* s72 = new Stmt("$sources.dc_gr_mag$[0] = ($sources.c_gr$[0]*$sources.dc_gr$[0][0] + $sources.c_gr$[1]*$sources.dc_gr$[1][0] + $sources.c_gr$[2]*$sources.dc_gr$[2][0])/$sources.c_gr_mag$;",
+        "{[0]: GeoAc_CalcAmp = 1}",
+        "{[0]->["+std::to_string(newTuplePos+34)+"]}",
+        {
+            {"$sources.c_gr$", "{[0]->[0]}"},  
+            {"$sources.dc_gr$", "{[0]->[0,0]}"},
+            {"$sources.c_gr$","{[0]->[1]}"},
+            {"$sources.dc_gr$", "{[0]->[1,0]}"},
+            {"$sources.c_gr$","{[0]->[2]}"},
+            {"$sources.dc_gr$", "{[0]->[2,0]}"}, 
+            {"$sources.c_gr_mag$", "{[0]->[0]}"}
+        },
+        {{"$sources.dc_gr_mag$", "{[0]->[0]}"}}
+        );
+    updateSources->addStmt(s72);
+    
+    //Creating s73 - line 347 in Global Equation Sets
+    //sources.dc_gr_mag[1] = (sources.c_gr[0]*sources.dc_gr[0][1] + sources.c_gr[1]*sources.dc_gr[1][1] + sources.c_gr[2]*sources.dc_gr[2][1])/sources.c_gr_mag;
+    Stmt* s73 = new Stmt("$sources.dc_gr_mag$[1] = ($sources.c_gr$[0]*$sources.dc_gr$[0][1] + $sources.c_gr$[1]*$sources.dc_gr$[1][1] + $sources.c_gr$[2]*$sources.dc_gr$[2][1])/$sources.c_gr_mag$;",
+        "{[0]: GeoAc_CalcAmp = 1}",
+        "{[0]->["+std::to_string(newTuplePos+35)+"]}",
+        {
+            {"$sources.c_gr$", "{[0]->[0]}"},  
+            {"$sources.dc_gr$", "{[0]->[0,1]}"},
+            {"$sources.c_gr$","{[0]->[1]}"},
+            {"$sources.dc_gr$", "{[0]->[1,1]}"},
+            {"$sources.c_gr$","{[0]->[2]}"},
+            {"$sources.dc_gr$", "{[0]->[2,1]}"}, 
+            {"$sources.c_gr_mag$", "{[0]->[0]}"}
+        },
+        {{"$sources.dc_gr_mag$", "{[0]->[0]}"}}
+        );
+    updateSources->addStmt(s73);
     
     //Calling toDot() on the Computation structure
     /*
