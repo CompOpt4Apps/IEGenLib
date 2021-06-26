@@ -1471,6 +1471,134 @@ int main(int argc, char **argv){
         );
     updateSources->addStmt(s73);
     
+    //Data Spaces
+    updateSources->addDataSpace("$sources.d_GeoCoeff$");
+    //Creating s74
+    //sources.d_GeoCoeff[0][0] = 0.0;
+    Stmt* s74 = new Stmt("$sources.d_GeoCoeff$[0][0] = 0.0;", 
+        "{[0]}",
+        "{[0]->["+std::to_string(newTuplePos+36)+"]}",
+        {},
+        {{"$sources.d_GeoCoeff$", "{[0]->[0,0]}"}}
+    );
+    updateSources->addStmt(s74);   
+   
+
+    //Creating s75
+    //sources.d_GeoCoeff[1][0] = -R_lt[0]/(pow(r,2));
+    Stmt* s75 = new Stmt("$sources.d_GeoCoeff$[1][0] = -$R_lt$[0]/(pow($r$,2));", 
+        "{[0]}",
+        "{[0]->["+std::to_string(newTuplePos+37)+"]}",
+        {{"$R_lt$", "{[0]->[0]}"}},
+        {{"$sources.d_GeoCoeff$", "{[0]->[1,0]}"}}
+    );
+    updateSources->addStmt(s75);
+	
+    //Creating s76
+    //sources.d_GeoCoeff[2][0] = -R_lt[0]/(pow(r,2)*cos(theta)) + sin(theta)/(r*pow(cos(theta),2))*R_lt[1];
+    Stmt* s76 = new Stmt("$sources.d_GeoCoeff$[2][0] = -$R_lt$[0]/(pow($r$,2)*cos($theta$)) + sin($theta$)/($r$*pow(cos($theta$),2))*$R_lt$[1];", 
+        "{[0]}",
+        "{[0]->["+std::to_string(newTuplePos+38)+"]}",
+        {
+		 {"$R_lt$", "{[0]->[0]}"},
+		 {"$r$", "{[0]->[0]}"},
+		 {"$theta$", "{[0]->[0]}"}
+	},
+        {{"$sources.d_GeoCoeff$", "{[0]->[2,0]}"}}
+    );
+    updateSources->addStmt(s76);
+	  
+    //Creating s77
+    //sources.d_GeoCoeff[0][1] = 0.0;
+    Stmt* s77 = new Stmt("$sources.d_GeoCoeff$[0][1] = 0.0;", 
+        "{[0]}",
+        "{[0]->["+std::to_string(newTuplePos+39)+"]}",
+        {},
+        {{"$sources.d_GeoCoeff$", "{[0]->[0,1]}"}}
+    );
+    updateSources->addStmt(s77);
+	
+    //Creating s78
+    //sources.d_GeoCoeff[1][1] = -R_lp[0]/(pow(r,2));
+    Stmt* s78 = new Stmt("$sources.d_GeoCoeff$[1][1] = -$R_lp$[0]/(pow($r$,2));", 
+        "{[0]}",
+        "{[0]->["+std::to_string(newTuplePos+40)+"]}",
+        {{"$R_lp$", "{[0]->[0]}"}},
+        {{"$sources.d_GeoCoeff$", "{[0]->[1,1]}"}}
+    );
+    updateSources->addStmt(s78);
+	
+    //Creating s79
+    //sources.d_GeoCoeff[2][1] = -R_lp[0]/(pow(r,2)*cos(theta)) + sin(theta)/(r*pow(cos(theta),2))*R_lp[1];
+	Stmt* s79 = new Stmt("$sources.d_GeoCoeff$[2][1] = -$R_lp$[0]/(pow($r$,2)*cos($theta$)) + sin($theta$)/($r$*pow(cos($theta$),2))*$R_lp$[1];", 
+        "{[0]}",
+        "{[0]->["+std::to_string(newTuplePos+41)+"]}",
+        {
+		 {"$R_lp$", "{[0]->[0]}"},
+		 {"$r$", "{[0]->[0]}"},
+		 {"$theta$", "{[0]->[0]}"}
+	},
+        {{"$sources.d_GeoCoeff$", "{[0]->[2,1]}"}}
+    );
+    updateSources->addStmt(s79);
+
+    //Data Spaces
+    updateSources->addDataSpace("$sources.d_GeoTerms$");
+    //Creating s80
+    //sources.d_GeoTerms[0][0] = 0.0;
+    Stmt* s80 = new Stmt("$sources.d_GeoTerms$[0][0] = 0.0;", 
+        "{[0]}",
+        "{[0]->["+std::to_string(newTuplePos+42)+"]}",
+        {},
+        {{"$sources.d_GeoTerms$", "{[0]->[0,0]}"}}
+    );
+    updateSources->addStmt(s80);    
+   
+    //Creating s81
+    //sources.d_GeoTerms[1][0] = (mu_lt[0]*sources.v + nu[0]*sources.dv[3] - mu_lt[1]*sources.w - nu[1] * sources.dw[3]);
+    Stmt* s81 = new Stmt("$sources.d_GeoTerms$[1][0] = ($mu_lt$[0]*$sources.v$ + $nu$[0]*$sources.dv$[3] - $mu_lt$[1]*$sources.w$ - $nu$[1] * $sources.dw$[3]);", 
+        "{[0]}",
+        "{[0]->["+std::to_string(newTuplePos+43)+"]}",
+        {
+		 {"$mu_lt$", "{[0]->[0]}"},
+		 {"$sources.v$", "{[0]->[0]}"},
+		 {"$nu$", "{[0]->[0]}"},
+		 {"$sources.dv$", "{[0]->[3]}"},
+		 {"$mu_lt$", "{[0]->[1]}"},
+		 {"$sources.w$", "{[0]->[0]}"},
+		 {"$nu$", "{[0]->[1]}"},
+		 {"$sources.dw$", "{[0]->[3]}"}
+	},
+        {{"$sources.d_GeoTerms$", "{[0]->[1,0]}"}}
+    );
+    updateSources->addStmt(s81);
+	
+    //Creating s82
+    //sources.d_GeoTerms[2][0] = (mu_lt[0]*sources.u + nu[0]*sources.du[3] - mu_lt[2]*sources.w - nu[2] * sources.dw[3])*cos(theta) - (nu[0]*sources.u - nu[2]*sources.w)*R_lt[1]*sin(theta)
+    //                                       + (mu_lt[1]*sources.u + nu[1]*sources.du[3] - mu_lt[2]*sources.v - nu[2] * sources.dv[3])*sin(theta) + (nu[1]*sources.u - nu[2]*sources.v)*R_lt[1]*cos(theta);
+    Stmt* s82 = new Stmt("$sources.d_GeoTerms$[2][0] = ($mu_lt$[0]*$sources.u$ + $nu$[0]*$sources.du$[3] - $mu_lt$[2]*$sources.w$ - $nu$[2] * $sources.dw$[3])*cos($theta$) - ($nu$[0]*$sources.u$ - $nu$[2]*$sources.w$)*$R_lt$[1]*sin($theta$)+ ($mu_lt$[1]*$sources.u$ + $nu$[1]*$sources.du$[3] - $mu_lt$[2]*$sources.v$ - $nu$[2] * $sources.dv$[3])*sin($theta$) + ($nu$[1]*$sources.u$ - $nu$[2]*$sources.v$)*$R_lt$[1]*cos($theta$);", 
+        "{[0]}",
+        "{[0]->["+std::to_string(newTuplePos+44)+"]}",
+        {
+		 {"$mu_lt$", "{[0]->[0]}"},
+		 {"$sources.u$", "{[0]->[0]}"},
+		 {"$nu$", "{[0]->[0]}"},
+		 {"$sources.du$", "{[0]->[3]}"},
+		 {"$mu_lt$", "{[0]->[2]}"},
+		 {"$sources.w$", "{[0]->[0]}"},
+		 {"$nu$", "{[0]->[2]}"},
+		 {"$sources.dw$", "{[0]->[3]}"},
+		 {"$theta$", "{[0]->[0]}"},
+		 {"$R_lt$", "{[0]->[1]}"},
+		 {"$mu_lt$", "{[0]->[1]}"},
+		 {"$nu$", "{[0]->[1]}"},
+		 {"$sources.v$", "{[0]->[0]}"},
+		 {"$sources.dv$", "{[0]->[3]}"}
+	},
+        {{"$sources.d_GeoTerms$", "{[0]->[2,0]}"}}
+    );
+    updateSources->addStmt(s82);
+    
     //Calling toDot() on the Computation structure
     /*
     ofstream dotFileStream("codegen_dot.txt");
