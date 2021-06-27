@@ -23,6 +23,7 @@
 #include <set>
 #include <sstream>
 #include <list>
+#include <initializer_list>
 
 using std::string;
 using std::logic_error;
@@ -56,6 +57,18 @@ string createUniqueName(string name, set<string>& taken);
 //! \param[in] replaceWith String to use as replacement
 string replaceInString(string input, string toFind, string replaceWith,
                        size_t startPos = 0);
+
+/*! Creates a DOT formatted label from the inputted string
+ *  @param input... String used to create the label
+ *  @return a DOT label in the format: label="input"
+ */
+std::string generateDotLabel(std::string input);
+
+/*! Creates a DOT formatted label from the inputted string(s)
+ *  @param input... String(s) used to create the label
+ *  @return a DOT label in the format: label="input"
+ */
+std::string generateDotLabel(std::initializer_list<std::string> input);
 
 /*!
  * Exception used when we would normally use an assert.  We expect
