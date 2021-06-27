@@ -1051,8 +1051,6 @@ void Computation::fuse (int s1, int s2, int fuseLevel){
 //  subgraphs in the dot file.
 //
 std::string Computation::toDotString(){
-
-    std::ostringstream ss;
     //TODO: Deal with disjunction of cunjunctions later.
     
     // newIS is a list of pairs of statement id
@@ -1091,6 +1089,7 @@ std::string Computation::toDotString(){
 	    projectedIS[j -1][i] = projectedIS[j][i]->projectOut(j);   
 	}
     }
+    std::ostringstream ss;
     ss << "digraph dataFlowGraph_1{ \n";
     toDotScan(newIS,0,ss,projectedIS);
     // Cleanup.
@@ -1119,9 +1118,9 @@ std::string Computation::toDotString(){
                              readDataSpace))) {
                 // Creates data space
                 ss
-                    << readDataSpace << "[label=\""
-                    << readDataSpace
-                    << "[] \"] [shape=box][style=bold][color=grey];\n";
+                    << "\"" << readDataSpace << "\"["
+                    << generateDotLabel({readDataSpace, "[] "})
+                    << "] [shape=box][style=bold][color=grey];\n";
 
                 data_spaces.push_back(readDataSpace);
             }
@@ -1135,13 +1134,15 @@ std::string Computation::toDotString(){
                                  ->getString()
                                  .rfind("]");
 
-            ss << "\t\t" << readDataSpace << "->"
-                    << "S" << i << "[label=\"["
-                    << getStmt(i)
+            ss << "\t\t\"" << readDataSpace << "\"->"
+                    << "S" << i << "["
+                    << generateDotLabel({"[", 
+                           getStmt(i)
                            ->getReadRelation(data_read_index)
                            ->getString()
-                           .substr(start_pos + 1, end_pos - start_pos - 1)
-                    << "]\"]"
+                           .substr(start_pos + 1, end_pos - start_pos - 1),
+                           "]"})
+                    << "]"
                     << "\n";
         }
 
@@ -1156,9 +1157,9 @@ std::string Computation::toDotString(){
             if (!(std::count(data_spaces.begin(), data_spaces.end(),
                              writeDataSpace))) {
                 ss
-                    << writeDataSpace << "[label=\""
-                    << writeDataSpace
-                    << "[] \"] [shape=box][style=bold][color=grey];\n";
+                    << "\"" << writeDataSpace << "\"["
+                    << generateDotLabel({writeDataSpace, "[] "})
+                    << "] [shape=box][style=bold][color=grey];\n";
 
                 data_spaces.push_back(writeDataSpace);
             }
@@ -1173,13 +1174,14 @@ std::string Computation::toDotString(){
                                  .rfind("]");
 
             ss << "\t\t"
-                    << "S" << i << "->" << writeDataSpace << "[label=\"["
-                    << getStmt(i)
+                    << "S" << i << "->\"" << writeDataSpace << "\"["
+                    << generateDotLabel({"[",
+                           getStmt(i)
                            ->getWriteRelation(data_write_index)
                            ->getString()
-                           .substr(start_pos + 1, end_pos - start_pos - 1)
-                    << "]\"]"
-                    << "\n";
+                           .substr(start_pos + 1, end_pos - start_pos - 1),
+                           "]"})
+                    << "]\n";
         }
     }
 
@@ -1245,40 +1247,29 @@ void Computation::toDotScan(std::vector<std::pair<int,Set*>> &activeStmts, int l
 	       std::vector<std::vector<Set*> >&projectedIS){
     if(activeStmts.size() == 1){
 	std::string stmIter = activeStmts[0].second->prettyPrintString();
-	//Format to be toDot compatible
-	stmIter = replaceInString(stmIter,">","\\>",0);
-	stmIter = replaceInString(stmIter,"=","\\=",0);
-	stmIter = replaceInString(stmIter,"{","\\{",0);
-	stmIter = replaceInString(stmIter,"}","\\}",0);
 
-        ss << "S"<< activeStmts[0].first
-		<<"[label=\""
-		<< stmIter
-	        << "\\n "
-	        << getStmt(activeStmts[0].first)->getStmtSourceCode()	
-		<< "\"][shape=Mrecord][style=bold]  [color=grey];\n";
+        ss << "S" << activeStmts[0].first
+                << "[" << generateDotLabel({stmIter, "\\n ",
+                   getStmt(activeStmts[0].first)->getStmtSourceCode()})
+                << "][shape=Mrecord][style=bold]  [color=grey];\n";
         return;
     }
     std::vector<std::vector< std::pair <int, Set*> > > bins=
 	    split(level,activeStmts);
-    if(bins.size() > 1 && level > 0 ){
+    if(bins.size() > 1 && level > 0 && level <= projectedIS.size() ){
 	std::string domainIter = projectedIS[level-1]
 		[activeStmts[0].first]->prettyPrintString();
 
-	domainIter = replaceInString(domainIter,">","\\>",0);
-	domainIter = replaceInString(domainIter,"=","\\=",0);
-	domainIter = replaceInString(domainIter,"{","\\{",0);
-	domainIter = replaceInString(domainIter,"}","\\}",0);
         ss << "subgraph cluster"<< level << " {\n"
            << "style = filled;\n"
            << " color = \"\";\n"
-           << " label = \"Domain :"
-	   <<domainIter<< " \" \n";
+           << generateDotLabel({"Domain :", domainIter})
+           << " \n";
     }
     for(auto active : bins){
         toDotScan(active,level+1,ss,projectedIS);
     }
-    if(bins.size() > 1 && level > 0 ){
+    if(bins.size() > 1 && level > 0 && level <= projectedIS.size() ){
         ss << "}\n"; 
     }
 }

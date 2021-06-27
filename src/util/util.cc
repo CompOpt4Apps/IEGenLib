@@ -84,6 +84,25 @@ namespace iegenlib{
     }
   }
 
+  std::string generateDotLabel(std::string input) {
+    return generateDotLabel({input});
+  }
+
+  std::string generateDotLabel(std::initializer_list<std::string> input) {
+    std::stringstream ss;
+    ss << "label=\"";
+    std::string escapeChars = "><{}";
+    for (std::string label : input) {
+        int n = label.length();
+        for (int i = 0; i < n; i++) {
+            if (escapeChars.find(label[i]) != std::string::npos) { ss << '\\'; }
+            ss << label[i];
+        }
+    }
+    ss << "\"";
+    return ss.str();
+  }
+
   StringIterator::StringIterator(std::list<std::string> aList) : mList(aList) {
     mIter = mList.begin();
   }

@@ -797,6 +797,7 @@ TEST_F(ComputationTest, PolyhedralSplit){
     delete s2;
 }
 
+// TODO: This needs to be updated for the new toDotString() function
 TEST_F(ComputationTest, ToDotUnitTest){
     Computation* comp  = new Computation();
     comp->addStmt(new Stmt("S0: tmp(i) = f(i)", "{[i]: 0 <= i and i < N}",
@@ -829,17 +830,17 @@ TEST_F(ComputationTest, ToDotUnitTest){
               " \nsubgraph cluster2"
 	      " {\nstyle = filled;\n"
 	      " color = \"\";\n "
-	      "label = \"Domain :\\{ [0, i] : i \\>\\= 0"
-	      " && N - 1 \\>\\= 0 && -i + N - 1 \\>\\= 0 \\} \""
-	      " \nS0[label=\"\\{ [0, i, 0, 0, 0] : i \\>\\= 0 && -i"
-	      " + N - 1 \\>\\= 0 \\}\\n S0: tmp(i) = f(i)\"][shape=Mrecord]"
+	      "label = \"Domain :\\{ [0, i] : i \\>= 0"
+	      " && N - 1 \\>= 0 && -i + N - 1 \\>= 0 \\} \""
+	      " \nS0[label=\"\\{ [0, i, 0, 0, 0] : i \\>= 0 && -i"
+	      " + N - 1 \\>= 0 \\}\\n S0: tmp(i) = f(i)\"][shape=Mrecord]"
 	      "[style=bold]  [color=grey];\nS1[label=\"\\{ [0, i, 1, j, 0]"
-	      " : i \\>\\= 0 && j \\>\\= 0 && -i + N - 1 \\>\\= 0 &&"
-	      " i - j - 1 \\>\\= 0 \\}\\n"
+	      " : i \\>= 0 && j \\>= 0 && -i + N - 1 \\>= 0 &&"
+	      " i - j - 1 \\>= 0 \\}\\n"
 	      " S1: tmp(i) -= A(i,j) * u(j)\"][shape=Mrecord][style=bold]"
 	      "  [color=grey];"
-	      "\nS2[label=\"\\{ [0, i, 2, 0, 0] : i \\>\\= 0 &&"
-	      " -i + N - 1 \\>\\= 0 \\}\\n S2: u(i) = tmp(i)/A(i,i)\"]"
+	      "\nS2[label=\"\\{ [0, i, 2, 0, 0] : i \\>= 0 &&"
+	      " -i + N - 1 \\>= 0 \\}\\n S2: u(i) = tmp(i)/A(i,i)\"]"
 	      "[shape=Mrecord][style=bold]  [color=grey];"
 	      "\n}\n"
 	      "f[label=\"f[] \"] [shape=box][style=bold][color=grey];\n"
