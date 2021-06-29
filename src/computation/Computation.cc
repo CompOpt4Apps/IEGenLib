@@ -1439,6 +1439,42 @@ bool Computation::assertValidDataSpaceName(const std::string& name) {
     }
 }
 
+bool Computation::isWrittenTo(std::string dataSpace){
+    for(int i = 0; i < getNumStmts(); i++) {
+        for(int data_write_index = 0; 
+                data_write_index < getStmt(i)->getNumWrites(); 
+                data_write_index++) {
+            
+            string writeDataSpace = getStmt(i)->getWriteDataSpace(data_write_index);
+            if(dataSpace.compare(writeDataSpace) == 0){
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+void Computation::replaceDataSpaceName(std::string original, std::string newString){
+    std::string searchString = "$"+original+"$";
+    std::string replacedString = "$"+newString+"$";
+    std::string newSourceCode;
+    for(int i = 0; i < getNumStmts(); i++) {
+        std::string oldSourceCode = getStmt(i)->getStmtSourceCode();
+        newSourceCode = iegenlib::replaceInString(oldSourceCode, searchString, replacedString);
+        getStmt(i)->setStmtSourceCode(newSourceCode);
+
+        if(oldSourceCode.compare(newSourceCode) == 0){
+            for(auto& write: getStmt(i)->dataWrites){
+               write.first = iegenlib::replaceInString(write.first, searchString, replacedString);
+            }
+            for(auto& read: getStmt(i)->dataReads){
+               read.first = iegenlib::replaceInString(read.first, searchString, replacedString);
+
+            }
+        }
+    }
+}
+
 /* Stmt */
 
 Stmt::~Stmt() {

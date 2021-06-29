@@ -95,6 +95,10 @@ class Computation {
     std::unordered_set<std::string> getDataSpaces() const;
     //! Check if a given string is a name of a data space of this Computation
     bool isDataSpace(std::string name) const;
+    //! Returns true if a data space is ever written to
+    bool isWrittenTo(std::string dataSpace);
+    //! Replace data space name if written to
+    void Computation::replaceDataSpaceName(std::string original, std::string newString)
 
     //! Add a (formal) parameter to this Computation, including adding it as a data space.
     //! @param paramName Name of the parameter
@@ -181,8 +185,7 @@ class Computation {
             std::vector<std::string> iterSpacesStr, std::string known);
 
     //! Method returns omega strings for each statement
-    std::string toOmegaString();
-    
+    std::string toOmegaString(); 
 
     //! Function compares two statement pair 
     //  and returns the true if a is lexicographically 
