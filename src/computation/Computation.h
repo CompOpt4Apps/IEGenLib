@@ -98,7 +98,7 @@ class Computation {
     //! Returns true if a data space is ever written to
     bool isWrittenTo(std::string dataSpace);
     //! Replace data space name if written to
-    void Computation::replaceDataSpaceName(std::string original, std::string newString)
+    void replaceDataSpaceName(std::string original, std::string newString);
 
     //! Add a (formal) parameter to this Computation, including adding it as a data space.
     //! @param paramName Name of the parameter
