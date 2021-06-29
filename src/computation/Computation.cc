@@ -1250,7 +1250,8 @@ void Computation::toDotScan(std::vector<std::pair<int,Set*>> &activeStmts, int l
 
         ss << "S" << activeStmts[0].first
                 << "[" << generateDotLabel({stmIter, "\\n ",
-                   getStmt(activeStmts[0].first)->getStmtSourceCode()})
+                   //getStmt(activeStmts[0].first)->getStmtSourceCode()})
+                   "S", std::to_string(activeStmts[0].first)})
                 << "][shape=Mrecord][style=bold]  [color=grey];\n";
         return;
     }
