@@ -1458,21 +1458,8 @@ bool Computation::isWrittenTo(std::string dataSpace){
 void Computation::replaceDataSpaceName(std::string original, std::string newString){
     std::string searchString = "$"+original+"$";
     std::string replacedString = "$"+newString+"$";
-    std::string newSourceCode;
     for(int i = 0; i < getNumStmts(); i++) {
-        std::string oldSourceCode = getStmt(i)->getStmtSourceCode();
-        newSourceCode = iegenlib::replaceInString(oldSourceCode, searchString, replacedString);
-        getStmt(i)->setStmtSourceCode(newSourceCode);
-
-        if(oldSourceCode.compare(newSourceCode) == 0){
-            for(auto& write: getStmt(i)->dataWrites){
-               write.first = iegenlib::replaceInString(write.first, searchString, replacedString);
-            }
-            for(auto& read: getStmt(i)->dataReads){
-               read.first = iegenlib::replaceInString(read.first, searchString, replacedString);
-
-            }
-        }
+        getStmt(i)->replaceDataSpace(searchString, replacedString);
     }
 }
 
@@ -1489,6 +1476,22 @@ Stmt::~Stmt() {
         write.second.reset();
     }
     dataWrites.clear();
+}
+
+void Stmt::replaceDataSpace(std::string searchString, std::string replacedString){
+    std::string oldSourceCode = getStmtSourceCode();
+    std::string newSourceCode;
+    newSourceCode = iegenlib::replaceInString(oldSourceCode, searchString, replacedString);
+    setStmtSourceCode(newSourceCode);
+
+    if(oldSourceCode.compare(newSourceCode) == 0){
+        for(auto& write: dataWrites){
+           write.first = iegenlib::replaceInString(write.first, searchString, replacedString);
+        }
+        for(auto& read: dataReads){
+           read.first = iegenlib::replaceInString(read.first, searchString, replacedString);
+        }
+    }
 }
 
 Stmt::Stmt(std::string stmtSourceCode, std::string iterationSpaceStr,

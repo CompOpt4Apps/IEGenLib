@@ -294,6 +294,9 @@ class Stmt {
     //! Copy constructor
     Stmt(const Stmt& other);
 
+    //! Replace data space name
+    void replaceDataSpace(std::string searchString, std::string replacedString); 
+
     //! Assignment operator (copy)
     Stmt& operator=(const Stmt& other);
 
