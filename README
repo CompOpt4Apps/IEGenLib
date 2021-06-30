@@ -5,11 +5,10 @@ IEGenLib is a library that represents and manipulates integer sets and
 relations that have affine and uninterpreted function constraints.
 
 Contents of this README:
-
 I.    Getting The Source Code
 II.   Quick Start
-         A. Building IEGenLib
-         B. Replicating relation simplification result from the SC 2016 paper
+       A. Building IEGenLib
+       B. Replicating relation simplification result from the SC 2016 paper
 III.  Distribution Organization
 IV.   Building IEGenLib from Source
 V.    Running Tests
