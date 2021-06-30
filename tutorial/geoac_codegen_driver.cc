@@ -202,7 +202,6 @@ int main(int argc, char **argv){
         );
     updateSources->addStmt(s4);
 
-    /*
     //Args to the c_diff
     vector<std::string> cDiffCompArgs;
     cDiffCompArgs.push_back("$r$");
@@ -273,7 +272,7 @@ int main(int argc, char **argv){
         );
     updateSources->addStmt(s7);
 
-     //Args to the u_diff
+    //Args to the u_diff
     vector<std::string> uDiffCompArgs;
     uDiffCompArgs.push_back("$r$");
     uDiffCompArgs.push_back("$theta$");
@@ -1875,7 +1874,6 @@ int main(int argc, char **argv){
         {{"$sources.d_GeoTerms$", "{[0]->[2,1]}"}}
     );
     updateSources->addStmt(s91);
-    */
   
     //Calling toDot() on the Computation structure
     ofstream dotFileStream("codegen_dot.txt");
@@ -2548,8 +2546,8 @@ Computation* c_diff_Computation(){
     vector<std::string> evalSplineDfCompArgs;
     evalSplineDfCompArgs.push_back("$r_eval$");
     //evalSplineDfCompArgs.push_back("$Temp_Spline$");
-    evalSplineDfCompArgs.push_back("$Temp_Spline_accel$");
     evalSplineDfCompArgs.push_back("$Temp_Spline_length$");
+    evalSplineDfCompArgs.push_back("$Temp_Spline_accel$");
     evalSplineDfCompArgs.push_back("$Temp_Spline_x_vals$");
     evalSplineDfCompArgs.push_back("$Temp_Spline_f_vals$");
     evalSplineDfCompArgs.push_back("$Temp_Spline_slopes$");
@@ -3161,7 +3159,7 @@ Computation* Find_Segment_Computation(){
     //Creating s0
     //if(x >= x_vals[i] && x <= x_vals[i+1]) prev = i;
     Stmt*  s0 = new Stmt("if($x$ >= $x_vals$[i] && $x$ <= $x_vals$[i+1]) $prev$ = i;",
-        "{[i]: i>=0 && i<$length$}",  //Iteration schedule
+        "{[i]: i>=0 && i<$length$-1}",  //Iteration schedule
         "{[i]->[0, i, 0]}", //Execution schedule - scheduling statement to be first (scheduling function)
         {{"$x$","{[0]->[0]}"}, {"$x_vals$","{[i]->[i]}"}, {"$x_vals$","{[i]->[ip1]: ip1 = i+1}"}}, //Reads
         {{"$prev$","{[0]->[0]}"}}   //writes
