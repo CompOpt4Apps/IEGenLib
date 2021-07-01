@@ -274,9 +274,10 @@ void Computation::clear() {
 }
 
 AppendComputationResult Computation::appendComputation(
-    const Computation* other, std::string surroundingIterDomainStr,
-    std::string surroundingExecScheduleStr,
-    const std::vector<std::string>& arguments) {
+  const Computation* other, std::string surroundingIterDomainStr,
+  std::string surroundingExecScheduleStr,
+  const std::vector<std::string>& arguments){
+
     Set* surroundingIterDomain = new Set(surroundingIterDomainStr);
     Relation* surroundingExecSchedule = new Relation(surroundingExecScheduleStr);
 
@@ -321,24 +322,34 @@ AppendComputationResult Computation::appendComputation(
     // [type of i] [name of i] = [name of argument i from passed-in list];
     // Insertion is done by prepending statements one at a time in reverse
     // order.
-    for (int i = ((signed int)numArgs) - 1; i >= 0; --i) {
-        Stmt* paramDeclStmt = new Stmt();
 
-        paramDeclStmt->setStmtSourceCode(toAppend->getParameterType(i) + " " +
+    // Keep track of the number of writes. 
+    // Need this for the correct execution order
+    int idx =0;
+    for (int i = ((signed int)numArgs) - 1; i >= 0; --i) {
+        if(toAppend->isWrittenTo(toAppend->getParameterName(i)) && !(toAppend->getParameterType(i).find("&"))){
+
+            Stmt* paramDeclStmt = new Stmt();
+
+            paramDeclStmt->setStmtSourceCode(toAppend->getParameterType(i) + " " +
                                          toAppend->getParameterName(i) + " = " +
                                          arguments[i] + ";");
-        paramDeclStmt->setIterationSpace("{[0]}");
-        paramDeclStmt->setExecutionSchedule("{[0]->[" + std::to_string(i) +
+            paramDeclStmt->setIterationSpace("{[0]}");
+            paramDeclStmt->setExecutionSchedule("{[0]->[" + std::to_string(idx) +
                                             "]}");
+           idx++;
+           // If passed-in argument is a data space, mark it as being read
+           // (otherwise it is a literal)
+           if (this->isDataSpace(arguments[i])) {
+               paramDeclStmt->addRead(arguments[i], "{[0]->[0]}");
+           }
+           paramDeclStmt->addWrite(toAppend->getParameterName(i), "{[0]->[0]}");
 
-        // If passed-in argument is a data space, mark it as being read
-        // (otherwise it is a literal)
-        if (this->isDataSpace(arguments[i])) {
-            paramDeclStmt->addRead(arguments[i], "{[0]->[0]}");
+           toAppend->stmts.insert(toAppend->stmts.begin(), paramDeclStmt);
         }
-        paramDeclStmt->addWrite(toAppend->getParameterName(i), "{[0]->[0]}");
-
-        toAppend->stmts.insert(toAppend->stmts.begin(), paramDeclStmt);
+        else{
+            toAppend->replaceDataSpaceName(toAppend->getParameterName(i),arguments[i]);
+        }
     }
 
     // calculate indexes/offsets for execution tuple modifications
@@ -350,7 +361,7 @@ AppendComputationResult Computation::appendComputation(
 
     // construct and insert an adjusted version of each statement of appendee,
     // including parameter declaration statements
-    unsigned int remainingParamDeclStmts = numArgs;
+    unsigned int remainingParamDeclStmts = idx;
     bool processingOriginalStmts = false;
     for (unsigned int stmtNum = 0; stmtNum < toAppend->getNumStmts();
          ++stmtNum) {
@@ -359,7 +370,7 @@ AppendComputationResult Computation::appendComputation(
         // by the number of prepended statements
         if (!processingOriginalStmts) {
             if (remainingParamDeclStmts == 0) {
-                offsetValue += numArgs;
+                offsetValue += idx;
                 processingOriginalStmts = true;
             } else {
                 remainingParamDeclStmts--;
@@ -1440,7 +1451,7 @@ bool Computation::assertValidDataSpaceName(const std::string& name) {
     }
 }
 
-bool Computation::isWrittenTo(std::string dataSpace){
+bool Computation::isWrittenTo(std::string dataSpace){ 
     for(int i = 0; i < getNumStmts(); i++) {
         for(int data_write_index = 0; 
                 data_write_index < getStmt(i)->getNumWrites(); 
@@ -1456,10 +1467,27 @@ bool Computation::isWrittenTo(std::string dataSpace){
 }
 
 void Computation::replaceDataSpaceName(std::string original, std::string newString){
-    std::string searchString = "$"+original+"$";
-    std::string replacedString = "$"+newString+"$";
+    std::string searchString;
+    std::string replacedString; 
+    if(original.at(0) == '$'){
+        searchString = original;
+        replacedString = newString;
+    }
+    else{
+        searchString = "$"+original+"$";
+        replacedString = "$"+newString+"$";
+    }
     for(int i = 0; i < getNumStmts(); i++) {
         getStmt(i)->replaceDataSpace(searchString, replacedString);
+    }
+    //This is being used with appendComputation so we don't need
+    //to save a copy     
+    dataSpaces.erase(searchString);
+    
+    //Rename return values as well
+    for(auto it = returnValues.begin(); it != returnValues.end(); it++){
+        std::string origReturnValue = (*it).first; 
+        (*it).first = iegenlib::replaceInString(origReturnValue, original, newString);
     }
 }
 
@@ -1484,14 +1512,22 @@ void Stmt::replaceDataSpace(std::string searchString, std::string replacedString
     newSourceCode = iegenlib::replaceInString(oldSourceCode, searchString, replacedString);
     setStmtSourceCode(newSourceCode);
 
-    if(oldSourceCode.compare(newSourceCode) == 0){
-        for(auto& write: dataWrites){
-           write.first = iegenlib::replaceInString(write.first, searchString, replacedString);
-        }
-        for(auto& read: dataReads){
-           read.first = iegenlib::replaceInString(read.first, searchString, replacedString);
-        }
+    for(auto& write: dataWrites){
+       write.first = iegenlib::replaceInString(write.first, searchString, replacedString);
     }
+    for(auto& read: dataReads){
+       read.first = iegenlib::replaceInString(read.first, searchString, replacedString);
+    }
+
+    std::string iterSpaceStr = iterationSpace->prettyPrintString();
+    std::string execScheduleStr = executionSchedule->prettyPrintString();
+    
+    iterSpaceStr = replaceInString(iterSpaceStr, searchString, replacedString);
+    execScheduleStr = replaceInString(execScheduleStr, searchString, replacedString);
+    
+    // use modified strings to construct new values
+    setIterationSpace(iterSpaceStr);
+    setExecutionSchedule(execScheduleStr);
 }
 
 Stmt::Stmt(std::string stmtSourceCode, std::string iterationSpaceStr,

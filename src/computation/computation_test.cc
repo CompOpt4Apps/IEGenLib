@@ -470,6 +470,10 @@ TEST_F(ComputationTest, ReplaceDataSpaceName) {
 
     EXPECT_EQ(s0->getStmtSourceCode(), "$notTmp$ = $f$[i];");
     EXPECT_EQ(s1->getStmtSourceCode(), "$tmp1$ = $g1$[i];");
+    EXPECT_FALSE(forLoopComp->isDataSpace("$notTmp$"));
+    EXPECT_FALSE(forLoopComp->isDataSpace("$here$"));
+    EXPECT_FALSE(forLoopComp->isDataSpace("tmp"));
+    EXPECT_FALSE(forLoopComp->isDataSpace("notHere"));
 
     delete forLoopComp;
 }
