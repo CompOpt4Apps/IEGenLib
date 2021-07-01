@@ -40,10 +40,87 @@ int main(int argc, char **argv){
     updateSources->addDataSpace("$r$");
     updateSources->addDataSpace("$theta$");
     updateSources->addDataSpace("$phi$");
+
+    //Temp var assignment because IEGenLib can't handle periods
+    // int spl_Temp_Spline_length = spl.Temp_Spline.length;
+    // int spl_Temp_Spline_accel = spl.Temp_Spline.accel;
+    // double* spl_Temp_Spline_x_vals = spl.Temp_Spline.x_vals;
+    // double* spl_Temp_Spline_f_vals = spl.Temp_Spline.f_vals;
+    // double* spl_Temp_Spline_slopes = spl.Temp_Spline.slopes;
+    updateSources->addDataSpace("$spl.Temp_Spline.length$");
+    updateSources->addDataSpace("$spl.Temp_Spline.accel$");
+    updateSources->addDataSpace("$spl.Temp_Spline.x_vals$");
+    updateSources->addDataSpace("$spl.Temp_Spline.f_vals$");
+    updateSources->addDataSpace("$spl.Temp_Spline.slopes$");
+
+    updateSources->addDataSpace("$spl_Temp_Spline_length$");
+    updateSources->addDataSpace("$spl_Temp_Spline_accel$");
+    updateSources->addDataSpace("$spl_Temp_Spline_x_vals$");
+    updateSources->addDataSpace("$spl_Temp_Spline_f_vals$");
+    updateSources->addDataSpace("$spl_Temp_Spline_slopes$");    
+    Stmt* s0a = new Stmt("int $spl_Temp_Spline_length$ = $spl.Temp_Spline.length$;",
+         "{[0]}",
+         "{[0]->[0]}",
+         {
+            {"$spl.Temp_Spline.length$","{[0]->[0]}"}
+         },
+         {
+            {"$spl_Temp_Spline_length$", "{[0]->[0]}"}
+         }
+         );
+    updateSources->addStmt(s0a);
+
+    Stmt* s0b = new Stmt("int $spl_Temp_Spline_accel$ = $spl.Temp_Spline.accel$;",
+     "{[0]}",
+     "{[0]->[1]}",
+     {
+        {"$spl.Temp_Spline.accel$","{[0]->[0]}"}
+     },
+     {
+        {"$spl_Temp_Spline_accel$", "{[0]->[0]}"}
+     }
+     );
+    updateSources->addStmt(s0b);
+
+    Stmt* s0c = new Stmt("double* $spl_Temp_Spline_x_vals$ = $spl.Temp_Spline.x_vals$;",
+     "{[0]}",
+     "{[0]->[2]}",
+     {
+        {"$spl.Temp_Spline.x_vals$","{[0]->[0]}"}
+     },
+     {
+        {"$spl_Temp_Spline_x_vals$", "{[0]->[0]}"}
+     }
+     );
+    updateSources->addStmt(s0c);
+
+    Stmt* s0d = new Stmt("double* $spl_Temp_Spline_f_vals$ = $spl.Temp_Spline.f_vals$;",
+     "{[0]}",
+     "{[0]->[3]}",
+     {
+        {"$spl.Temp_Spline.f_vals$","{[0]->[0]}"}
+     },
+     {
+        {"$spl_Temp_Spline_f_vals$", "{[0]->[0]}"}
+     }
+     );
+    updateSources->addStmt(s0d);
+
+    Stmt* s0e = new Stmt("double* spl_Temp_Spline_slopes$ = $spl.Temp_Spline.slopes$;",
+     "{[0]}",
+     "{[0]->[4]}",
+     {
+        {"$spl.Temp_Spline.slopes$","{[0]->[0]}"}
+     },
+     {
+        {"$spl_Temp_Spline_slopes$", "{[0]->[0]}"}
+     }
+     );
+    updateSources->addStmt(s0e);
     
     Stmt* s01 = new Stmt("double $r$ = $current_values$[0], $theta$=$current_values$[1], $phi$=$current_values$[2];",
          "{[0]}",
-         "{[0]->[0]}",
+         "{[0]->[5]}",
          {
             {"$current_values$","{[0]->[0]}"},
             {"$current_values$","{[0]->[1]}"},
@@ -61,7 +138,7 @@ int main(int argc, char **argv){
     updateSources->addDataSpace("$nu$");
     Stmt* s02 = new Stmt("double $nu$[3] = {$current_values$[3], $current_values$[4], $current_values$[5]};",
          "{[0]}",
-         "{[0]->[1]}",
+         "{[0]->[6]}",
          {
             {"$current_values$","{[0]->[3]}"},
             {"$current_values$","{[0]->[4]}"},
@@ -71,30 +148,22 @@ int main(int argc, char **argv){
          );
     updateSources->addStmt(s02);
 
-    //Add the args of the c function (computation to be appended) as data spaces to temp
-    //updateSources->addDataSpace("$spl.Temp_Spline$");
-    updateSources->addDataSpace("$spl.Temp_Spline.length$");
-    updateSources->addDataSpace("$spl.Temp_Spline.accel$");
-    updateSources->addDataSpace("$spl.Temp_Spline.x_vals$");
-    updateSources->addDataSpace("$spl.Temp_Spline.f_vals$");
-    updateSources->addDataSpace("$spl.Temp_Spline.slopes$");
-
     //Args to the c_Computation
     vector<std::string> cCompArgs;
     cCompArgs.push_back("$r$");
     cCompArgs.push_back("$theta$");
     cCompArgs.push_back("$phi$");
     //cCompArgs.push_back("$spl.Temp_Spline$");
-    cCompArgs.push_back("$spl.Temp_Spline.length$");
-    cCompArgs.push_back("$spl.Temp_Spline.accel$");
-    cCompArgs.push_back("$spl.Temp_Spline.x_vals$");
-    cCompArgs.push_back("$spl.Temp_Spline.f_vals$");
-    cCompArgs.push_back("$spl.Temp_Spline.slopes$");
+    cCompArgs.push_back("$spl_Temp_Spline_length$");
+    cCompArgs.push_back("$spl_Temp_Spline_accel$");
+    cCompArgs.push_back("$spl_Temp_Spline_x_vals$");
+    cCompArgs.push_back("$spl_Temp_Spline_f_vals$");
+    cCompArgs.push_back("$spl_Temp_Spline_slopes$");
 
     Computation* cComputation = c_Computation();
 
     // Return values are stored in a struct of the computation: AppendComputationResult
-    AppendComputationResult cCompRes = updateSources->appendComputation(cComputation, "{[0]}", "{[0]->[2]}", cCompArgs);
+    AppendComputationResult cCompRes = updateSources->appendComputation(cComputation, "{[0]}", "{[0]->[7]}", cCompArgs);
     unsigned int newTuplePos = cCompRes.tuplePosition+1;
     
     //Creating s1
@@ -126,12 +195,45 @@ int main(int argc, char **argv){
 
     //Add the args of the v function (computation to be appended) as data spaces to temp
     //r, theta and phi have already been added
-    //updateSources->addDataSpace("$spl.Windv_Spline$");
+    //updateSources->addDataSpace("$spl.Windv_Spline");
+    
+    //Temp var assignment because IEGenLib can't handle periods
+    // int spl_Windv_Spline_length = spl.Windv_Spline.length;
+    // int spl_Windv_Spline_accel = spl.Windv_Spline.accel;
+    // double* spl_Windv_Spline_x_vals = spl.Windv_Spline.x_vals;
+    // double* spl_Windv_Spline_f_vals = spl.Windv_Spline.f_vals;
+    // double* spl_Windv_Spline_slopes = spl.Windv_Spline.slopes;
     updateSources->addDataSpace("$spl.Windv_Spline.length$");
     updateSources->addDataSpace("$spl.Windv_Spline.accel$");
     updateSources->addDataSpace("$spl.Windv_Spline.x_vals$");
     updateSources->addDataSpace("$spl.Windv_Spline.f_vals$");
     updateSources->addDataSpace("$spl.Windv_Spline.slopes$");
+
+    updateSources->addDataSpace("$spl_Windv_Spline_length$");
+    updateSources->addDataSpace("$spl_Windv_Spline_accel$");
+    updateSources->addDataSpace("$spl_Windv_Spline_x_vals$");
+    updateSources->addDataSpace("$spl_Windv_Spline_f_vals$");
+    updateSources->addDataSpace("$spl_Windv_Spline_slopes$"); 
+    Stmt* s3a = new Stmt("int $spl_Windv_Spline_length$ = $spl.Windv_Spline.length$; int $spl_Windv_Spline_accel$ = $spl.Windv_Spline.accel$; double* $spl_Windv_Spline_x_vals$ = $spl.Windv_Spline.x_vals$; double* $spl_Windv_Spline_f_vals$ = $spl.Windv_Spline.f_vals$; double* spl_Windv_Spline_slopes$ = $spl.Windv_Spline.slopes$;",
+         "{[0]}",
+         "{[0]->["+std::to_string(newTuplePos+2)+"]}",
+         {
+            {"$spl.Windv_Spline.length$","{[0]->[0]}"},
+            {"$spl.Windv_Spline.accel$","{[0]->[0]}"},
+            {"$spl.Windv_Spline.x_vals$","{[0]->[0]}"},
+            {"$spl.Windv_Spline.f_vals$","{[0]->[0]}"},
+            {"$spl.Windv_Spline.slopes$","{[0]->[0]}"}
+         },
+         {
+            {"$spl_Windv_Spline_length$", "{[0]->[0]}"},
+            {"$spl_Windv_Spline_accel$", "{[0]->[0]}"},
+            {"$spl_Windv_Spline_x_vals$", "{[0]->[0]}"},
+            {"$spl_Windv_Spline_f_vals$", "{[0]->[0]}"},
+            {"$spl_Windv_Spline_slopes$", "{[0]->[0]}"}
+         }
+         );
+    updateSources->addStmt(s3a);
+
 
     //Args to the v_Computation
     vector<std::string> vCompArgs;
@@ -139,38 +241,71 @@ int main(int argc, char **argv){
     vCompArgs.push_back("$theta$");
     vCompArgs.push_back("$phi$");
     //vCompArgs.push_back("$spl.Windv_Spline$");
-    vCompArgs.push_back("$spl.Windv_Spline.length$");
-    vCompArgs.push_back("$spl.Windv_Spline.accel$");
-    vCompArgs.push_back("$spl.Windv_Spline.x_vals$");
-    vCompArgs.push_back("$spl.Windv_Spline.f_vals$");
-    vCompArgs.push_back("$spl.Windv_Spline.slopes$");
+    vCompArgs.push_back("$spl_Windv_Spline_length$");
+    vCompArgs.push_back("$spl_Windv_Spline_accel$");
+    vCompArgs.push_back("$spl_Windv_Spline_x_vals$");
+    vCompArgs.push_back("$spl_Windv_Spline_f_vals$");
+    vCompArgs.push_back("$spl_Windv_Spline_slopes$");
 
     Computation* vComputation = v_Computation();
 
     // Return values are stored in a struct of the computation: AppendComputationResult
-    AppendComputationResult vCompRes = updateSources->appendComputation(vComputation, "{[0]}", "{[0]->["+std::to_string(newTuplePos+2)+"]}", vCompArgs);
+    AppendComputationResult vCompRes = updateSources->appendComputation(vComputation, "{[0]}", "{[0]->["+std::to_string(newTuplePos+3)+"]}", vCompArgs);
     newTuplePos = vCompRes.tuplePosition+1;
 
-    //Creating s3
+    //Creating s3b
     //sources.v = v(r,theta,phi,spl.Temp_Spline);
     updateSources->addDataSpace("$sources.v$");
-    Stmt* s3 = new Stmt("$sources.v$ = "+vCompRes.returnValues.back()+";",
+    Stmt* s3b = new Stmt("$sources.v$ = "+vCompRes.returnValues.back()+";",
         "{[0]}",
         "{[0]->["+std::to_string(newTuplePos)+"]}",
         {{vCompRes.returnValues.back(), "{[0]->[0]}"}},
         {{"$sources.v$", "{[0]->[0]}"}}
         );
 
-    updateSources->addStmt(s3);
+    updateSources->addStmt(s3b);
 
     //Add the args of the u function (computation to be appended) as data spaces to temp
     //r, theta and phi have already been added
     //updateSources->addDataSpace("$spl.Windu_Spline$");
+
+    //Temp var assignment because IEGenLib can't handle periods
+    // int spl_Windu_Spline_length = spl.Windu_Spline.length;
+    // int spl_Windu_Spline_accel = spl.Windu_Spline.accel;
+    // double* spl_Windu_Spline_x_vals = spl.Windu_Spline.x_vals;
+    // double* spl_Windu_Spline_f_vals = spl.Windu_Spline.f_vals;
+    // double* spl_Windu_Spline_slopes = spl.Windu_Spline.slopes;
     updateSources->addDataSpace("$spl.Windu_Spline.length$");
     updateSources->addDataSpace("$spl.Windu_Spline.accel$");
     updateSources->addDataSpace("$spl.Windu_Spline.x_vals$");
     updateSources->addDataSpace("$spl.Windu_Spline.f_vals$");
     updateSources->addDataSpace("$spl.Windu_Spline.slopes$");
+
+    updateSources->addDataSpace("$spl_Windu_Spline_length$");
+    updateSources->addDataSpace("$spl_Windu_Spline_accel$");
+    updateSources->addDataSpace("$spl_Windu_Spline_x_vals$");
+    updateSources->addDataSpace("$spl_Windu_Spline_f_vals$");
+    updateSources->addDataSpace("$spl_Windu_Spline_slopes$"); 
+    Stmt* s3c = new Stmt("int $spl_Windu_Spline_length$ = $spl.Windu_Spline.length$; int $spl_Windu_Spline_accel$ = $spl.Windu_Spline.accel$; double* $spl_Windu_Spline_x_vals$ = $spl.Windu_Spline.x_vals$; double* $spl_Windu_Spline_f_vals$ = $spl.Windu_Spline.f_vals$; double* spl_Windu_Spline_slopes$ = $spl.Windu_Spline.slopes$;",
+         "{[0]}",
+         "{[0]->["+std::to_string(newTuplePos+1)+"]}",
+         {
+            {"$spl.Windv_Spline.length$","{[0]->[0]}"},
+            {"$spl.Windv_Spline.accel$","{[0]->[0]}"},
+            {"$spl.Windv_Spline.x_vals$","{[0]->[0]}"},
+            {"$spl.Windv_Spline.f_vals$","{[0]->[0]}"},
+            {"$spl.Windv_Spline.slopes$","{[0]->[0]}"}
+         },
+         {
+            {"$spl_Windv_Spline_length$", "{[0]->[0]}"},
+            {"$spl_Windv_Spline_accel$", "{[0]->[0]}"},
+            {"$spl_Windv_Spline_x_vals$", "{[0]->[0]}"},
+            {"$spl_Windv_Spline_f_vals$", "{[0]->[0]}"},
+            {"$spl_Windv_Spline_slopes$", "{[0]->[0]}"}
+         }
+         );
+    updateSources->addStmt(s3c);
+
     
     //Args to the u_Computation
     vector<std::string> uCompArgs;
@@ -178,21 +313,21 @@ int main(int argc, char **argv){
     uCompArgs.push_back("$theta$");
     uCompArgs.push_back("$phi$");
     //uCompArgs.push_back("$spl.Windu_Spline$");
-    uCompArgs.push_back("$spl.Windu_Spline.length$");
-    uCompArgs.push_back("$spl.Windu_Spline.accel$");
-    uCompArgs.push_back("$spl.Windu_Spline.x_vals$");
-    uCompArgs.push_back("$spl.Windu_Spline.f_vals$");
-    uCompArgs.push_back("$spl.Windu_Spline.slopes$");
+    uCompArgs.push_back("$spl_Windu_Spline_length$");
+    uCompArgs.push_back("$spl_Windu_Spline_accel$");
+    uCompArgs.push_back("$spl_Windu_Spline_x_vals$");
+    uCompArgs.push_back("$spl_Windu_Spline_f_vals$");
+    uCompArgs.push_back("$spl_Windu_Spline_slopes$");
 
     Computation* uComputation = u_Computation();
 
     // Return values are stored in a struct of the computation: AppendComputationResult
-    AppendComputationResult uCompRes = updateSources->appendComputation(uComputation, "{[0]}", "{[0]->["+std::to_string(newTuplePos+1)+"]}", uCompArgs);
+    AppendComputationResult uCompRes = updateSources->appendComputation(uComputation, "{[0]}", "{[0]->["+std::to_string(newTuplePos+2)+"]}", uCompArgs);
 
     newTuplePos = uCompRes.tuplePosition+1;
     
     //Creating s4
-    //sources.u = u(r,theta,phi, spl.Windu_Spline);
+    //sources.u = u(r,theta,phi, spl_Windu_Spline_;
     updateSources->addDataSpace("$sources.u$");
     Stmt* s4 = new Stmt("$sources.u$ = "+uCompRes.returnValues.back()+";",
         "{[0]}",
@@ -209,11 +344,11 @@ int main(int argc, char **argv){
     cDiffCompArgs.push_back("$phi$");
     cDiffCompArgs.push_back("0");
     //cDiffCompArgs.push_back("$spl.Temp_Spline$");
-    cDiffCompArgs.push_back("$spl.Temp_Spline.length$");
-    cDiffCompArgs.push_back("$spl.Temp_Spline.accel$");
-    cDiffCompArgs.push_back("$spl.Temp_Spline.x_vals$");
-    cDiffCompArgs.push_back("$spl.Temp_Spline.f_vals$");
-    cDiffCompArgs.push_back("$spl.Temp_Spline.slopes$");
+    cDiffCompArgs.push_back("$spl_Temp_Spline_length$");
+    cDiffCompArgs.push_back("$spl_Temp_Spline_accel$");
+    cDiffCompArgs.push_back("$spl_Temp_Spline_x_vals$");
+    cDiffCompArgs.push_back("$spl_Temp_Spline_f_vals$");
+    cDiffCompArgs.push_back("$spl_Temp_Spline_slopes$");
 
     Computation* cDiffComputation = c_diff_Computation();
 
@@ -249,12 +384,12 @@ int main(int argc, char **argv){
     vDiffCompArgs.push_back("$theta$");
     vDiffCompArgs.push_back("$phi$");
     vDiffCompArgs.push_back("0");
-    //vDiffCompArgs.push_back("$spl.Windv_Spline$");
-    vDiffCompArgs.push_back("$spl.Windv_Spline.length$");
-    vDiffCompArgs.push_back("$spl.Windv_Spline.accel$");
-    vDiffCompArgs.push_back("$spl.Windv_Spline.x_vals$");
-    vDiffCompArgs.push_back("$spl.Windv_Spline.f_vals$");
-    vDiffCompArgs.push_back("$spl.Windv_Spline.slopes$");
+    //vDiffCompArgs.push_back("$spl_Windv_Spline_");
+    vDiffCompArgs.push_back("$spl_Windv_Spline_length$");
+    vDiffCompArgs.push_back("$spl_Windv_Spline_accel$");
+    vDiffCompArgs.push_back("$spl_Windv_Spline_x_vals$");
+    vDiffCompArgs.push_back("$spl_Windv_Spline_f_vals$");
+    vDiffCompArgs.push_back("$spl_Windv_Spline_slopes$");
     Computation* vDiffComputation = v_diff_Computation();
 
     // Return values are stored in a struct of the computation: AppendComputationResult
@@ -262,7 +397,7 @@ int main(int argc, char **argv){
     newTuplePos = vDiffCompRes.tuplePosition+1;
 
     //Creating s7
-    //sources.dv[0] = v_diff(r,theta,phi,0,spl.Windv_Spline);
+    //sources.dv[0] = v_diff(r,theta,phi,0,spl_Windv_Spline_;
     updateSources->addDataSpace("$sources.dv$");
     Stmt* s7 = new Stmt("$sources.dv$[0] = "+vDiffCompRes.returnValues.back()+";",
         "{[0]}",
@@ -278,12 +413,12 @@ int main(int argc, char **argv){
     uDiffCompArgs.push_back("$theta$");
     uDiffCompArgs.push_back("$phi$");
     uDiffCompArgs.push_back("0");
-    ///uDiffCompArgs.push_back("$spl.Windu_Spline$");
-    uDiffCompArgs.push_back("$spl.Windu_Spline.length$");
-    uDiffCompArgs.push_back("$spl.Windu_Spline.accel$");
-    uDiffCompArgs.push_back("$spl.Windu_Spline.x_vals$");
-    uDiffCompArgs.push_back("$spl.Windu_Spline.f_vals$");
-    uDiffCompArgs.push_back("$spl.Windu_Spline.slopes$");
+    ///uDiffCompArgs.push_back("$spl_Windu_Spline_");
+    uDiffCompArgs.push_back("$spl_Windu_Spline_length$");
+    uDiffCompArgs.push_back("$spl_Windu_Spline_accel$");
+    uDiffCompArgs.push_back("$spl_Windu_Spline_x_vals$");
+    uDiffCompArgs.push_back("$spl_Windu_Spline_f_vals$");
+    uDiffCompArgs.push_back("$spl_Windu_Spline_slopes$");
 
     Computation* uDiffComputation = u_diff_Computation();
 
@@ -293,7 +428,7 @@ int main(int argc, char **argv){
     newTuplePos = uDiffCompRes.tuplePosition+1;
     
     //Creating s8
-    //sources.du[0] = u_diff(r,theta,phi,0,spl.Windu_Spline);
+    //sources.du[0] = u_diff(r,theta,phi,0,spl_Windu_Spline_;
     updateSources->addDataSpace("$sources.du$");
     Stmt* s8 = new Stmt("$sources.du$[0] = "+uDiffCompRes.returnValues.back()+";",
         "{[0]}",
@@ -310,11 +445,11 @@ int main(int argc, char **argv){
     cDiffCompArgs.push_back("$phi$");
     cDiffCompArgs.push_back("1");
     //cDiffCompArgs.push_back("$spl.Temp_Spline$");
-    cDiffCompArgs.push_back("$spl.Temp_Spline.length$");
-    cDiffCompArgs.push_back("$spl.Temp_Spline.accel$");
-    cDiffCompArgs.push_back("$spl.Temp_Spline.x_vals$");
-    cDiffCompArgs.push_back("$spl.Temp_Spline.f_vals$");
-    cDiffCompArgs.push_back("$spl.Temp_Spline.slopes$");
+    cDiffCompArgs.push_back("$spl_Temp_Spline_length$");
+    cDiffCompArgs.push_back("$spl_Temp_Spline_accel$");
+    cDiffCompArgs.push_back("$spl_Temp_Spline_x_vals$");
+    cDiffCompArgs.push_back("$spl_Temp_Spline_f_vals$");
+    cDiffCompArgs.push_back("$spl_Temp_Spline_slopes$");
 
     // Return values are stored in a struct of the computation: AppendComputationResult
     AppendComputationResult cDiff1CompRes = updateSources->appendComputation(cDiffComputation, "{[0]}", "{[0]->["+std::to_string(newTuplePos+1)+"]}", cDiffCompArgs);
@@ -346,18 +481,18 @@ int main(int argc, char **argv){
     vDiffCompArgs.push_back("$theta$");
     vDiffCompArgs.push_back("$phi$");
     vDiffCompArgs.push_back("1");
-    //vDiffCompArgs.push_back("$spl.Windv_Spline$");
-    vDiffCompArgs.push_back("$spl.Windv_Spline.length$");
-    vDiffCompArgs.push_back("$spl.Windv_Spline.accel$");
-    vDiffCompArgs.push_back("$spl.Windv_Spline.x_vals$");
-    vDiffCompArgs.push_back("$spl.Windv_Spline.f_vals$");
-    vDiffCompArgs.push_back("$spl.Windv_Spline.slopes$");
+    //vDiffCompArgs.push_back("$spl_Windv_Spline_");
+    vDiffCompArgs.push_back("$spl_Windv_Spline_length$");
+    vDiffCompArgs.push_back("$spl_Windv_Spline_accel$");
+    vDiffCompArgs.push_back("$spl_Windv_Spline_x_vals$");
+    vDiffCompArgs.push_back("$spl_Windv_Spline_f_vals$");
+    vDiffCompArgs.push_back("$spl_Windv_Spline_slopes$");
 
     AppendComputationResult vDiff1CompRes = updateSources->appendComputation(vDiffComputation, "{[0]}", "{[0]->["+std::to_string(newTuplePos+2)+"]}", vDiffCompArgs);
     newTuplePos = vDiff1CompRes.tuplePosition+1;
 
     //Creating s11
-    //sources.dv[1] = v_diff(r,theta,phi,1,spl.Windv_Spline);
+    //sources.dv[1] = v_diff(r,theta,phi,1,spl_Windv_Spline_;
     Stmt* s11 = new Stmt("$sources.dv$[1] = "+vDiff1CompRes.returnValues.back()+";",
         "{[0]}",
         "{[0]->["+std::to_string(newTuplePos)+"]}",
@@ -372,18 +507,18 @@ int main(int argc, char **argv){
     uDiffCompArgs.push_back("$theta$");
     uDiffCompArgs.push_back("$phi$");
     uDiffCompArgs.push_back("1");
-    //uDiffCompArgs.push_back("$spl.Windu_Spline$");
-    uDiffCompArgs.push_back("$spl.Windu_Spline.length$");
-    uDiffCompArgs.push_back("$spl.Windu_Spline.accel$");
-    uDiffCompArgs.push_back("$spl.Windu_Spline.x_vals$");
-    uDiffCompArgs.push_back("$spl.Windu_Spline.f_vals$");
-    uDiffCompArgs.push_back("$spl.Windu_Spline.slopes$");
+    //uDiffCompArgs.push_back("$spl_Windu_Spline_");
+    uDiffCompArgs.push_back("$spl_Windu_Spline_length$");
+    uDiffCompArgs.push_back("$spl_Windu_Spline_accel$");
+    uDiffCompArgs.push_back("$spl_Windu_Spline_x_vals$");
+    uDiffCompArgs.push_back("$spl_Windu_Spline_f_vals$");
+    uDiffCompArgs.push_back("$spl_Windu_Spline_slopes$");
 
     AppendComputationResult uDiff1CompRes = updateSources->appendComputation(uDiffComputation, "{[0]}", "{[0]->["+std::to_string(newTuplePos+1)+"]}", uDiffCompArgs);
     newTuplePos = uDiff1CompRes.tuplePosition+1;
 
     //Creating s12
-    //sources.du[1] = u_diff(r,theta,phi,1,spl.Windu_Spline);
+    //sources.du[1] = u_diff(r,theta,phi,1,spl_Windu_Spline_;
     Stmt* s12 = new Stmt("$sources.du$[1] = "+uDiff1CompRes.returnValues.back()+";",
         "{[0]}",
         "{[0]->["+std::to_string(newTuplePos)+"]}",
@@ -399,11 +534,11 @@ int main(int argc, char **argv){
     cDiffCompArgs.push_back("$phi$");
     cDiffCompArgs.push_back("2");
     //cDiffCompArgs.push_back("$spl.Temp_Spline$");
-    cDiffCompArgs.push_back("$spl.Temp_Spline.length$");
-    cDiffCompArgs.push_back("$spl.Temp_Spline.accel$");
-    cDiffCompArgs.push_back("$spl.Temp_Spline.x_vals$");
-    cDiffCompArgs.push_back("$spl.Temp_Spline.f_vals$");
-    cDiffCompArgs.push_back("$spl.Temp_Spline.slopes$");
+    cDiffCompArgs.push_back("$spl_Temp_Spline_length$");
+    cDiffCompArgs.push_back("$spl_Temp_Spline_accel$");
+    cDiffCompArgs.push_back("$spl_Temp_Spline_x_vals$");
+    cDiffCompArgs.push_back("$spl_Temp_Spline_f_vals$");
+    cDiffCompArgs.push_back("$spl_Temp_Spline_slopes$");
 
     // Return values are stored in a struct of the computation: AppendComputationResult
     AppendComputationResult cDiff2CompRes = updateSources->appendComputation(cDiffComputation, "{[0]}", "{[0]->["+std::to_string(newTuplePos+1)+"]}", cDiffCompArgs);
@@ -435,18 +570,18 @@ int main(int argc, char **argv){
     vDiffCompArgs.push_back("$theta$");
     vDiffCompArgs.push_back("$phi$");
     vDiffCompArgs.push_back("2");
-    //vDiffCompArgs.push_back("$spl.Windv_Spline$");
-    vDiffCompArgs.push_back("$spl.Windv_Spline.length$");
-    vDiffCompArgs.push_back("$spl.Windv_Spline.accel$");
-    vDiffCompArgs.push_back("$spl.Windv_Spline.x_vals$");
-    vDiffCompArgs.push_back("$spl.Windv_Spline.f_vals$");
-    vDiffCompArgs.push_back("$spl.Windv_Spline.slopes$");
+    //vDiffCompArgs.push_back("$spl_Windv_Spline_");
+    vDiffCompArgs.push_back("$spl_Windv_Spline_length$");
+    vDiffCompArgs.push_back("$spl_Windv_Spline_accel$");
+    vDiffCompArgs.push_back("$spl_Windv_Spline_x_vals$");
+    vDiffCompArgs.push_back("$spl_Windv_Spline_f_vals$");
+    vDiffCompArgs.push_back("$spl_Windv_Spline_slopes$");
 
     AppendComputationResult vDiff2CompRes = updateSources->appendComputation(vDiffComputation, "{[0]}", "{[0]->["+std::to_string(newTuplePos+2)+"]}", vDiffCompArgs);
     newTuplePos = vDiff2CompRes.tuplePosition+1;
 
     //Creating s15
-    //sources.dv[2] = v_diff(r,theta,phi,2,spl.Windv_Spline);
+    //sources.dv[2] = v_diff(r,theta,phi,2,spl_Windv_Spline_;
     Stmt* s15 = new Stmt("$sources.dv$[2] = "+vDiff2CompRes.returnValues.back()+";",
         "{[0]}",
         "{[0]->["+std::to_string(newTuplePos)+"]}",
@@ -461,18 +596,18 @@ int main(int argc, char **argv){
     uDiffCompArgs.push_back("$theta$");
     uDiffCompArgs.push_back("$phi$");
     uDiffCompArgs.push_back("2");
-    //uDiffCompArgs.push_back("$spl.Windu_Spline$");
-    uDiffCompArgs.push_back("$spl.Windu_Spline.length$");
-    uDiffCompArgs.push_back("$spl.Windu_Spline.accel$");
-    uDiffCompArgs.push_back("$spl.Windu_Spline.x_vals$");
-    uDiffCompArgs.push_back("$spl.Windu_Spline.f_vals$");
-    uDiffCompArgs.push_back("$spl.Windu_Spline.slopes$");
+    //uDiffCompArgs.push_back("$spl_Windu_Spline_");
+    uDiffCompArgs.push_back("$spl_Windu_Spline_length$");
+    uDiffCompArgs.push_back("$spl_Windu_Spline_accel$");
+    uDiffCompArgs.push_back("$spl_Windu_Spline_x_vals$");
+    uDiffCompArgs.push_back("$spl_Windu_Spline_f_vals$");
+    uDiffCompArgs.push_back("$spl_Windu_Spline_slopes$");
 
     AppendComputationResult uDiff2CompRes = updateSources->appendComputation(uDiffComputation, "{[0]}", "{[0]->["+std::to_string(newTuplePos+1)+"]}", uDiffCompArgs);
     newTuplePos = uDiff2CompRes.tuplePosition+1;
 
     //Creating s16
-    //sources.du[2] = u_diff(r,theta,phi,2,spl.Windu_Spline);
+    //sources.du[2] = u_diff(r,theta,phi,2,spl_Windu_Spline_;
     Stmt* s16 = new Stmt("$sources.du$[2] = "+uDiff2CompRes.returnValues.back()+";",
         "{[0]}",
         "{[0]->["+std::to_string(newTuplePos)+"]}",
@@ -944,11 +1079,11 @@ int main(int argc, char **argv){
     cDiffCompArgs.push_back("$phi$");
     cDiffCompArgs.push_back("$loopN$");
     //cDiffCompArgs.push_back("$spl.Temp_Spline$");
-    cDiffCompArgs.push_back("$spl.Temp_Spline.length$");
-    cDiffCompArgs.push_back("$spl.Temp_Spline.accel$");
-    cDiffCompArgs.push_back("$spl.Temp_Spline.x_vals$");
-    cDiffCompArgs.push_back("$spl.Temp_Spline.f_vals$");
-    cDiffCompArgs.push_back("$spl.Temp_Spline.slopes$");
+    cDiffCompArgs.push_back("$spl_Temp_Spline_length$");
+    cDiffCompArgs.push_back("$spl_Temp_Spline_accel$");
+    cDiffCompArgs.push_back("$spl_Temp_Spline_x_vals$");
+    cDiffCompArgs.push_back("$spl_Temp_Spline_f_vals$");
+    cDiffCompArgs.push_back("$spl_Temp_Spline_slopes$");
 
     // Return values are stored in a struct of the computation: AppendComputationResult
     AppendComputationResult cDiff3CompRes = updateSources->appendComputation(cDiffComputation, "{[n]: GeoAc_CalcAmp = 1 && n>=0 && n<3}", "{[n]->["+std::to_string(newTuplePos+25)+",n,1]}", cDiffCompArgs);
@@ -984,19 +1119,19 @@ int main(int argc, char **argv){
     vDiffCompArgs.push_back("$theta$");
     vDiffCompArgs.push_back("$phi$");
     vDiffCompArgs.push_back("$loopN$");
-    //vDiffCompArgs.push_back("$spl.Windv_Spline$");
-    vDiffCompArgs.push_back("$spl.Windv_Spline.length$");
-    vDiffCompArgs.push_back("$spl.Windv_Spline.accel$");
-    vDiffCompArgs.push_back("$spl.Windv_Spline.x_vals$");
-    vDiffCompArgs.push_back("$spl.Windv_Spline.f_vals$");
-    vDiffCompArgs.push_back("$spl.Windv_Spline.slopes$");
+    //vDiffCompArgs.push_back("$spl_Windv_Spline_");
+    vDiffCompArgs.push_back("$spl_Windv_Spline_length$");
+    vDiffCompArgs.push_back("$spl_Windv_Spline_accel$");
+    vDiffCompArgs.push_back("$spl_Windv_Spline_x_vals$");
+    vDiffCompArgs.push_back("$spl_Windv_Spline_f_vals$");
+    vDiffCompArgs.push_back("$spl_Windv_Spline_slopes$");
 
     // Return values are stored in a struct of the computation: AppendComputationResult
     AppendComputationResult vDiff3CompRes = updateSources->appendComputation(vDiffComputation, "{[n]: GeoAc_CalcAmp = 1 && n>=0 && n<3}", "{[n]->["+std::to_string(newTuplePos+25)+",n,"+std::to_string(nTuplePos+2)+"]}", vDiffCompArgs);
     nTuplePos = vDiff3CompRes.tuplePosition+1;
 
     //Creating s50
-    //sources.dv[3] += R_lt[n]*v_diff(r,theta,phi,loopN,spl.Windv_Spline);
+    //sources.dv[3] += R_lt[n]*v_diff(r,theta,phi,loopN,spl_Windv_Spline_;
     Stmt* s50 = new Stmt("$sources.dv$[3] += $R_lt$[n]*"+vDiff3CompRes.returnValues.back()+";",
         "{[n]: GeoAc_CalcAmp = 1 && n>=0 && n<3}",
         "{[n]->["+std::to_string(newTuplePos+25)+",n,"+std::to_string(nTuplePos)+"]}",
@@ -1015,19 +1150,19 @@ int main(int argc, char **argv){
     uDiffCompArgs.push_back("$theta$");
     uDiffCompArgs.push_back("$phi$");
     uDiffCompArgs.push_back("$loopN$");
-    //uDiffCompArgs.push_back("$spl.Windu_Spline$");
-    uDiffCompArgs.push_back("$spl.Windu_Spline.length$");
-    uDiffCompArgs.push_back("$spl.Windu_Spline.accel$");
-    uDiffCompArgs.push_back("$spl.Windu_Spline.x_vals$");
-    uDiffCompArgs.push_back("$spl.Windu_Spline.f_vals$");
-    uDiffCompArgs.push_back("$spl.Windu_Spline.slopes$");
+    //uDiffCompArgs.push_back("$spl_Windu_Spline_");
+    uDiffCompArgs.push_back("$spl_Windu_Spline_length$");
+    uDiffCompArgs.push_back("$spl_Windu_Spline_accel$");
+    uDiffCompArgs.push_back("$spl_Windu_Spline_x_vals$");
+    uDiffCompArgs.push_back("$spl_Windu_Spline_f_vals$");
+    uDiffCompArgs.push_back("$spl_Windu_Spline_slopes$");
 
     // Return values are stored in a struct of the computation: AppendComputationResult
     AppendComputationResult uDiff3CompRes = updateSources->appendComputation(uDiffComputation, "{[n]: GeoAc_CalcAmp = 1 && n>=0 && n<3}", "{[n]->["+std::to_string(newTuplePos+25)+",n,"+std::to_string(nTuplePos+1)+"]}", uDiffCompArgs);
     nTuplePos = uDiff3CompRes.tuplePosition+1;
 
     //Creating s51
-    //sources.du[3] += R_lt[n]*u_diff(r,theta,phi,n,spl.Windu_Spline);
+    //sources.du[3] += R_lt[n]*u_diff(r,theta,phi,n,spl_Windu_Spline_;
     Stmt* s51 = new Stmt("$sources.du$[3] += $R_lt$[n]*"+uDiff3CompRes.returnValues.back()+";",
         "{[n]: GeoAc_CalcAmp = 1 && n>=0 && n<3}",
         "{[n]->["+std::to_string(newTuplePos+25)+",n,"+std::to_string(nTuplePos)+"]}",
@@ -1047,11 +1182,11 @@ int main(int argc, char **argv){
     cDiffCompArgs.push_back("$phi$");
     cDiffCompArgs.push_back("$loopN$");
     //cDiffCompArgs.push_back("$spl.Temp_Spline$");
-    cDiffCompArgs.push_back("$spl.Temp_Spline.length$");
-    cDiffCompArgs.push_back("$spl.Temp_Spline.accel$");
-    cDiffCompArgs.push_back("$spl.Temp_Spline.x_vals$");
-    cDiffCompArgs.push_back("$spl.Temp_Spline.f_vals$");
-    cDiffCompArgs.push_back("$spl.Temp_Spline.slopes$");
+    cDiffCompArgs.push_back("$spl_Temp_Spline_length$");
+    cDiffCompArgs.push_back("$spl_Temp_Spline_accel$");
+    cDiffCompArgs.push_back("$spl_Temp_Spline_x_vals$");
+    cDiffCompArgs.push_back("$spl_Temp_Spline_f_vals$");
+    cDiffCompArgs.push_back("$spl_Temp_Spline_slopes$");
 
     // Return values are stored in a struct of the computation: AppendComputationResult
     AppendComputationResult cDiff4CompRes = updateSources->appendComputation(cDiffComputation, "{[n]: GeoAc_CalcAmp = 1 && n>=0 && n<3}", "{[n]->["+std::to_string(newTuplePos+25)+",n,"+std::to_string(nTuplePos+1)+"]}", cDiffCompArgs);
@@ -1087,19 +1222,19 @@ int main(int argc, char **argv){
     vDiffCompArgs.push_back("$theta$");
     vDiffCompArgs.push_back("$phi$");
     vDiffCompArgs.push_back("$loopN$");
-    //vDiffCompArgs.push_back("$spl.Windv_Spline$");
-    vDiffCompArgs.push_back("$spl.Windv_Spline.length$");
-    vDiffCompArgs.push_back("$spl.Windv_Spline.accel$");
-    vDiffCompArgs.push_back("$spl.Windv_Spline.x_vals$");
-    vDiffCompArgs.push_back("$spl.Windv_Spline.f_vals$");
-    vDiffCompArgs.push_back("$spl.Windv_Spline.slopes$");
+    //vDiffCompArgs.push_back("$spl_Windv_Spline_");
+    vDiffCompArgs.push_back("$spl_Windv_Spline_length$");
+    vDiffCompArgs.push_back("$spl_Windv_Spline_accel$");
+    vDiffCompArgs.push_back("$spl_Windv_Spline_x_vals$");
+    vDiffCompArgs.push_back("$spl_Windv_Spline_f_vals$");
+    vDiffCompArgs.push_back("$spl_Windv_Spline_slopes$");
 
     // Return values are stored in a struct of the computation: AppendComputationResult
     AppendComputationResult vDiff4CompRes = updateSources->appendComputation(vDiffComputation, "{[n]: GeoAc_CalcAmp = 1 && n>=0 && n<3}", "{[n]->["+std::to_string(newTuplePos+25)+",n,"+std::to_string(nTuplePos+2)+"]}", vDiffCompArgs);
     nTuplePos = vDiff4CompRes.tuplePosition+1;
 
     //Creating s54
-    //sources.dv[4] += R_lp[n]*v_diff(r,theta,phi,loopN,spl.Windv_Spline);
+    //sources.dv[4] += R_lp[n]*v_diff(r,theta,phi,loopN,spl_Windv_Spline_;
     Stmt* s54 = new Stmt("$sources.dv$[4] += $R_lp$[n]*"+vDiff4CompRes.returnValues.back()+";",
         "{[n]: GeoAc_CalcAmp = 1 && n>=0 && n<3}",
         "{[n]->["+std::to_string(newTuplePos+25)+",n,"+std::to_string(nTuplePos)+"]}",
@@ -1118,19 +1253,19 @@ int main(int argc, char **argv){
     uDiffCompArgs.push_back("$theta$");
     uDiffCompArgs.push_back("$phi$");
     uDiffCompArgs.push_back("$loopN$");
-    //uDiffCompArgs.push_back("$spl.Windu_Spline$");
-    uDiffCompArgs.push_back("$spl.Windu_Spline.length$");
-    uDiffCompArgs.push_back("$spl.Windu_Spline.accel$");
-    uDiffCompArgs.push_back("$spl.Windu_Spline.x_vals$");
-    uDiffCompArgs.push_back("$spl.Windu_Spline.f_vals$");
-    uDiffCompArgs.push_back("$spl.Windu_Spline.slopes$");
+    //uDiffCompArgs.push_back("$spl_Windu_Spline_");
+    uDiffCompArgs.push_back("$spl_Windu_Spline_length$");
+    uDiffCompArgs.push_back("$spl_Windu_Spline_accel$");
+    uDiffCompArgs.push_back("$spl_Windu_Spline_x_vals$");
+    uDiffCompArgs.push_back("$spl_Windu_Spline_f_vals$");
+    uDiffCompArgs.push_back("$spl_Windu_Spline_slopes$");
 
     // Return values are stored in a struct of the computation: AppendComputationResult
     AppendComputationResult uDiff4CompRes = updateSources->appendComputation(uDiffComputation, "{[n]: GeoAc_CalcAmp = 1 && n>=0 && n<3}", "{[n]->["+std::to_string(newTuplePos+25)+",n,"+std::to_string(nTuplePos+1)+"]}", uDiffCompArgs);
     nTuplePos = uDiff4CompRes.tuplePosition+1;
 
     //Creating s55
-    //sources.du[4] += R_lp[n]*u_diff(r,theta,phi,n,spl.Windu_Spline);
+    //sources.du[4] += R_lp[n]*u_diff(r,theta,phi,n,spl_Windu_Spline_;
     Stmt* s55 = new Stmt("$sources.du$[4] += $R_lp$[n]*"+uDiff4CompRes.returnValues.back()+";",
         "{[n]: GeoAc_CalcAmp = 1 && n>=0 && n<3}",
         "{[n]->["+std::to_string(newTuplePos+25)+",n,"+std::to_string(nTuplePos)+"]}",
@@ -1165,11 +1300,11 @@ int main(int argc, char **argv){
     cDdiffCompArgs.push_back("$loopM$");
     cDdiffCompArgs.push_back("$loopN$");
     //cDdiffCompArgs.push_back("$spl.Temp_Spline$");
-    cDdiffCompArgs.push_back("$spl.Temp_Spline.length$");
-    cDdiffCompArgs.push_back("$spl.Temp_Spline.accel$");
-    cDdiffCompArgs.push_back("$spl.Temp_Spline.x_vals$");
-    cDdiffCompArgs.push_back("$spl.Temp_Spline.f_vals$");
-    cDdiffCompArgs.push_back("$spl.Temp_Spline.slopes$");
+    cDdiffCompArgs.push_back("$spl_Temp_Spline_length$");
+    cDdiffCompArgs.push_back("$spl_Temp_Spline_accel$");
+    cDdiffCompArgs.push_back("$spl_Temp_Spline_x_vals$");
+    cDdiffCompArgs.push_back("$spl_Temp_Spline_f_vals$");
+    cDdiffCompArgs.push_back("$spl_Temp_Spline_slopes$");
 
     Computation* cDdiffComputation = c_ddiff_Computation();
 
@@ -1212,12 +1347,12 @@ int main(int argc, char **argv){
     vDdiffCompArgs.push_back("$phi$");
     vDdiffCompArgs.push_back("$loopM$");
     vDdiffCompArgs.push_back("$loopN$");
-    //vDdiffCompArgs.push_back("$spl.Windv_Spline$");
-    vDdiffCompArgs.push_back("$spl.Windv_Spline.length$");
-    vDdiffCompArgs.push_back("$spl.Windv_Spline.accel$");
-    vDdiffCompArgs.push_back("$spl.Windv_Spline.x_vals$");
-    vDdiffCompArgs.push_back("$spl.Windv_Spline.f_vals$");
-    vDdiffCompArgs.push_back("$spl.Windv_Spline.slopes$");
+    //vDdiffCompArgs.push_back("$spl_Windv_Spline_");
+    vDdiffCompArgs.push_back("$spl_Windv_Spline_length$");
+    vDdiffCompArgs.push_back("$spl_Windv_Spline_accel$");
+    vDdiffCompArgs.push_back("$spl_Windv_Spline_x_vals$");
+    vDdiffCompArgs.push_back("$spl_Windv_Spline_f_vals$");
+    vDdiffCompArgs.push_back("$spl_Windv_Spline_slopes$");
 
     Computation* vDdiffComputation = v_ddiff_Computation();
 
@@ -1226,7 +1361,7 @@ int main(int argc, char **argv){
     mTuplePos = vDdiffCompRes.tuplePosition+1;
 
     //Creating s58
-    //sources.ddv[m][0] += R_lt[n]*v_ddiff(r, theta, phi, m, n, spl.Windv_Spline);
+    //sources.ddv[m][0] += R_lt[n]*v_ddiff(r, theta, phi, m, n, spl_Windv_Spline_;
     Stmt* s58 = new Stmt("$sources.ddv$[m][0] += $R_lt$[n]*"+vDdiffCompRes.returnValues.back()+";",
         "{[n,m]: GeoAc_CalcAmp = 1 && n>=0 && n<3 && m>=0 && m<3}",
         "{[n,m]->["+std::to_string(newTuplePos+25)+",n,"+std::to_string(nTuplePos)+",m,"+std::to_string(mTuplePos)+"]}",
@@ -1246,12 +1381,12 @@ int main(int argc, char **argv){
     uDdiffCompArgs.push_back("$phi$");
     uDdiffCompArgs.push_back("$loopM$");
     uDdiffCompArgs.push_back("$loopN$");
-    //uDdiffCompArgs.push_back("$spl.Windu_Spline$");
-    uDdiffCompArgs.push_back("$spl.Windu_Spline.length$");
-    uDdiffCompArgs.push_back("$spl.Windu_Spline.accel$");
-    uDdiffCompArgs.push_back("$spl.Windu_Spline.x_vals$");
-    uDdiffCompArgs.push_back("$spl.Windu_Spline.f_vals$");
-    uDdiffCompArgs.push_back("$spl.Windu_Spline.slopes$");
+    //uDdiffCompArgs.push_back("$spl_Windu_Spline_");
+    uDdiffCompArgs.push_back("$spl_Windu_Spline_length$");
+    uDdiffCompArgs.push_back("$spl_Windu_Spline_accel$");
+    uDdiffCompArgs.push_back("$spl_Windu_Spline_x_vals$");
+    uDdiffCompArgs.push_back("$spl_Windu_Spline_f_vals$");
+    uDdiffCompArgs.push_back("$spl_Windu_Spline_slopes$");
 
     Computation* uDdiffComputation = u_ddiff_Computation();
 
@@ -1260,7 +1395,7 @@ int main(int argc, char **argv){
     mTuplePos = uDdiffCompRes.tuplePosition+1;
 
     //Creating s59
-    //sources.ddu[m][0] += R_lt[n]*v_ddiff(r, theta, phi, m, n, spl.Windv_Spline);
+    //sources.ddu[m][0] += R_lt[n]*v_ddiff(r, theta, phi, m, n, spl_Windv_Spline_;
     Stmt* s59 = new Stmt("$sources.ddu$[m][0] += $R_lt$[n]*"+uDdiffCompRes.returnValues.back()+";",
         "{[n,m]: GeoAc_CalcAmp = 1 && n>=0 && n<3 && m>=0 && m<3}",
         "{[n,m]->["+std::to_string(newTuplePos+25)+",n,"+std::to_string(nTuplePos)+",m,"+std::to_string(mTuplePos)+"]}",
@@ -1280,11 +1415,11 @@ int main(int argc, char **argv){
     cDdiffCompArgs.push_back("$loopM$");
     cDdiffCompArgs.push_back("$loopN$");
     //cDdiffCompArgs.push_back("$spl.Temp_Spline$");
-    cDdiffCompArgs.push_back("$spl.Temp_Spline.length$");
-    cDdiffCompArgs.push_back("$spl.Temp_Spline.accel$");
-    cDdiffCompArgs.push_back("$spl.Temp_Spline.x_vals$");
-    cDdiffCompArgs.push_back("$spl.Temp_Spline.f_vals$");
-    cDdiffCompArgs.push_back("$spl.Temp_Spline.slopes$");
+    cDdiffCompArgs.push_back("$spl_Temp_Spline_length$");
+    cDdiffCompArgs.push_back("$spl_Temp_Spline_accel$");
+    cDdiffCompArgs.push_back("$spl_Temp_Spline_x_vals$");
+    cDdiffCompArgs.push_back("$spl_Temp_Spline_f_vals$");
+    cDdiffCompArgs.push_back("$spl_Temp_Spline_slopes$");
 
     // Return values are stored in a struct of the computation: AppendComputationResult
     AppendComputationResult cDdiff1CompRes = updateSources->appendComputation(cDdiffComputation, "{[n,m]: GeoAc_CalcAmp = 1 && n>=0 && n<3 && m>=0 && m<3}", "{[n,m]->["+std::to_string(newTuplePos+25)+", n, "+std::to_string(nTuplePos)+",m,"+std::to_string(mTuplePos+1)+"]}", cDdiffCompArgs);
@@ -1324,19 +1459,19 @@ int main(int argc, char **argv){
     vDdiffCompArgs.push_back("$phi$");
     vDdiffCompArgs.push_back("$loopM$");
     vDdiffCompArgs.push_back("$loopN$");
-    //vDdiffCompArgs.push_back("$spl.Windv_Spline$");
-    vDdiffCompArgs.push_back("$spl.Windv_Spline.length$");
-    vDdiffCompArgs.push_back("$spl.Windv_Spline.accel$");
-    vDdiffCompArgs.push_back("$spl.Windv_Spline.x_vals$");
-    vDdiffCompArgs.push_back("$spl.Windv_Spline.f_vals$");
-    vDdiffCompArgs.push_back("$spl.Windv_Spline.slopes$");
+    //vDdiffCompArgs.push_back("$spl_Windv_Spline_");
+    vDdiffCompArgs.push_back("$spl_Windv_Spline_length$");
+    vDdiffCompArgs.push_back("$spl_Windv_Spline_accel$");
+    vDdiffCompArgs.push_back("$spl_Windv_Spline_x_vals$");
+    vDdiffCompArgs.push_back("$spl_Windv_Spline_f_vals$");
+    vDdiffCompArgs.push_back("$spl_Windv_Spline_slopes$");
 
     // Return values are stored in a struct of the computation: AppendComputationResult
     AppendComputationResult vDdiff1CompRes = updateSources->appendComputation(vDdiffComputation, "{[n,m]: GeoAc_CalcAmp = 1 && n>=0 && n<3 && m>=0 && m<3}", "{[n,m]->["+std::to_string(newTuplePos+25)+", n, "+std::to_string(nTuplePos)+",m,"+std::to_string(mTuplePos+2)+"]}", vDdiffCompArgs);
     mTuplePos = vDdiff1CompRes.tuplePosition+1;
 
     //Creating s62
-    //sources.ddv[m][1] += R_lp[n]*v_ddiff(r, theta, phi, m, n, spl.Windv_Spline);
+    //sources.ddv[m][1] += R_lp[n]*v_ddiff(r, theta, phi, m, n, spl_Windv_Spline_;
     Stmt* s62 = new Stmt("$sources.ddv$[m][1] += $R_lp$[n]*"+vDdiff1CompRes.returnValues.back()+";",
         "{[n,m]: GeoAc_CalcAmp = 1 && n>=0 && n<3 && m>=0 && m<3}",
         "{[n,m]->["+std::to_string(newTuplePos+25)+",n,"+std::to_string(nTuplePos)+",m,"+std::to_string(mTuplePos)+"]}",
@@ -1355,19 +1490,19 @@ int main(int argc, char **argv){
     uDdiffCompArgs.push_back("$phi$");
     uDdiffCompArgs.push_back("$loopM$");
     uDdiffCompArgs.push_back("$loopN$");
-    //uDdiffCompArgs.push_back("$spl.Windu_Spline$");
-    uDdiffCompArgs.push_back("$spl.Windu_Spline.length$");
-    uDdiffCompArgs.push_back("$spl.Windu_Spline.accel$");
-    uDdiffCompArgs.push_back("$spl.Windu_Spline.x_vals$");
-    uDdiffCompArgs.push_back("$spl.Windu_Spline.f_vals$");
-    uDdiffCompArgs.push_back("$spl.Windu_Spline.slopes$");
+    //uDdiffCompArgs.push_back("$spl_Windu_Spline_");
+    uDdiffCompArgs.push_back("$spl_Windu_Spline_length$");
+    uDdiffCompArgs.push_back("$spl_Windu_Spline_accel$");
+    uDdiffCompArgs.push_back("$spl_Windu_Spline_x_vals$");
+    uDdiffCompArgs.push_back("$spl_Windu_Spline_f_vals$");
+    uDdiffCompArgs.push_back("$spl_Windu_Spline_slopes$");
 
     // Return values are stored in a struct of the computation: AppendComputationResult
     AppendComputationResult uDdiff1CompRes = updateSources->appendComputation(uDdiffComputation, "{[n,m]: GeoAc_CalcAmp = 1 && n>=0 && n<3 && m>=0 && m<3}", "{[n,m]->["+std::to_string(newTuplePos+25)+", n, "+std::to_string(nTuplePos)+",m,"+std::to_string(mTuplePos+1)+"]}", vDdiffCompArgs);
     mTuplePos = uDdiff1CompRes.tuplePosition+1;
 
     //Creating s63
-    //sources.ddu[m][1] += R_lp[n]*u_ddiff(r, theta, phi, m, n, spl.Windu_Spline);
+    //sources.ddu[m][1] += R_lp[n]*u_ddiff(r, theta, phi, m, n, spl_Windu_Spline_;
     Stmt* s63 = new Stmt("$sources.ddu$[m][1] += $R_lp$[n]*"+uDdiff1CompRes.returnValues.back()+";",
         "{[n,m]: GeoAc_CalcAmp = 1 && n>=0 && n<3 && m>=0 && m<3}",
         "{[n,m]->["+std::to_string(newTuplePos+25)+",n,"+std::to_string(nTuplePos)+",m,"+std::to_string(mTuplePos)+"]}",
