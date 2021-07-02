@@ -14,7 +14,7 @@ int main(int argc, char** argv) {
     //     s0:tmp = f[i];
     //     s1:tmp1 = f1[i];
     //}
-
+    /*
     std::vector<std::pair<std::string, std::string> > dataReads;
     std::vector<std::pair<std::string, std::string> > dataWrites;
     
@@ -56,13 +56,41 @@ int main(int argc, char** argv) {
     outStream.open("for_loop_comp.c");
     outStream << forLoopComp->codeGen();
     outStream.close();
-
+    */
     //for (i = 0; i < N; i++) {
     //  for (j=0; j<M; j++) {
     //      y[i] += A[i][j] * x[j];
     //  }
     //}
     
-
-    return 0;
+   Computation* dsComp = new Computation();
+   dsComp->addDataSpace("$y$");
+   dsComp->addDataSpace("$A$");
+   dsComp->addDataSpace("$x$");
+   
+   Stmt* ds0 = new Stmt("$y$[i] += $A$[i][j]*$x$[j];",
+     "{[i,j]: 0 <= i < N && 0 <= j < M}",
+     "{[i,j] -> [0,i,0,j,0]}",
+     {
+        {"$y$","{[i,j]->[i]}"},
+        {"$A$","{[i,j]->[i,j]}"},
+        {"$x$","{[i,j]->[j]}"}
+     },
+     {
+        {"$y$","{[i,j]->[i]}"}
+     }
+   );
+   dsComp->addStmt(ds0); 
+ 
+    //Making toDot, took example from geoac_codegen_driver
+    ofstream dotFileStream("dense_matrix_multiply_dot.txt");
+    cout << "Entering toDot()" << "\n";
+    string dotString = dsComp->toDotString(); //name of computation
+    dotFileStream << dotString;
+    dotFileStream.close();
+    //Write codegen to a file
+    ofstream outStream;
+    outStream.open("dense_matrix_multipy_dot.c");
+    outStream << dsComp->codeGen();
+    outStream.close();
 }
