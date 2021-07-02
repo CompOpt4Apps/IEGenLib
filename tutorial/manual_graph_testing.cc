@@ -3,7 +3,16 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
-
+/*
+ * Instructions to view the dot file.
+ * From root make tutorial. 
+ * Run the executable from root to generate dot graphs:
+ * ./build/bin/tutorial/manual_graph_testing
+ * Copy dot file to r2, then run this command:
+ * dot -Tpng filename_dot.txt -o filename.png
+ * Copy that generated png back to Onyx and download to
+ * local machine to view.
+*/
 using iegenlib::Computation;
 using namespace std;
 
@@ -14,7 +23,7 @@ int main(int argc, char** argv) {
     //     s0:tmp = f[i];
     //     s1:tmp1 = f1[i];
     //}
-    /*
+  
     std::vector<std::pair<std::string, std::string> > dataReads;
     std::vector<std::pair<std::string, std::string> > dataWrites;
     
@@ -56,13 +65,13 @@ int main(int argc, char** argv) {
     outStream.open("for_loop_comp.c");
     outStream << forLoopComp->codeGen();
     outStream.close();
-    */
+    
     //for (i = 0; i < N; i++) {
     //  for (j=0; j<M; j++) {
     //      y[i] += A[i][j] * x[j];
     //  }
     //}
-    
+  
    Computation* dsComp = new Computation();
    dsComp->addDataSpace("$y$");
    dsComp->addDataSpace("$A$");
@@ -83,14 +92,54 @@ int main(int argc, char** argv) {
    dsComp->addStmt(ds0); 
  
     //Making toDot, took example from geoac_codegen_driver
-    ofstream dotFileStream("dense_matrix_multiply_dot.txt");
+    ofstream dotFileStream1("dense_matrix_multiply_dot.txt"); 
     cout << "Entering toDot()" << "\n";
-    string dotString = dsComp->toDotString(); //name of computation
-    dotFileStream << dotString;
-    dotFileStream.close();
+    string dotString1 = dsComp->toDotString(); //name of computation
+    dotFileStream1 << dotString;
+    dotFileStream1.close();
     //Write codegen to a file
-    ofstream outStream;
-    outStream.open("dense_matrix_multipy_dot.c");
-    outStream << dsComp->codeGen();
-    outStream.close();
+    ofstream outStream1;
+    outStream1.open("dense_matrix_multipy.c");
+    outStream1 << dsComp->codeGen();
+    outStream1.close();
+  
+    //for (i = 0; i < N; i++) {
+    //  for (k=rowptr[i]; k<rowptr[i+1]; k++) {
+    //      j = col[k];
+    //      y[i] += A[k] * x[j];
+    //  }
+    //} 
+    Computation* spsComp = new Computation();
+
+    spsComp->addDataSpace("$y$");
+    spsComp->addDataSpace("$A$");
+    spsComp->addDataSpace("$x$");
+
+    Stmt* sps0 = new Stmt(
+      "$y$[i] += $A$[k] * $x$[j]",
+      "{[i,k,j]: 0 <= i < N && rowptr(i) <= k < rowptr(i+1) && j = col(k)}",
+      "{[i,k,j]->[0,i,0,k,0,j,0]}",
+        {
+          {"$y$", "{[i,k,j]->[i]}"},
+          {"$A$", "{[i,k,j]->[k]}"},
+          {"$x$", "{[i,k,j]->[j]}"}
+        },
+        {
+          {"$y$", "{[i,k,j]->[i]}"}
+        }
+    );
+    spsComp->addStmt(sps0);
+    
+    //Making toDot, took example from geoac_codegen_driver
+    ofstream dotFileStream2("sparse_matrix_multiply_dot.txt");
+    cout << "Entering toDot()" << "\n";
+    string dotString2 = spsComp->toDotString(); //name of computation
+    dotFileStream2 << dotString2;
+    dotFileStream2.close();
+    //Write codegen to a file
+    ofstream outStream2;
+    outStream2.open("sparse_matrix_multipy.c");
+    outStream2 << spsComp->codeGen();
+    outStream2.close();
+
 }
