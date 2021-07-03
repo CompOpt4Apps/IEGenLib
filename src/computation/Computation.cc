@@ -144,6 +144,14 @@ std::string Computation::getParameterType(unsigned int index) const {
     return parameters.at(index).second;
 }
 
+bool Computation::isParameter(std::string dataSpaceName) const {
+    auto pos = std::find_if(parameters.begin(), parameters.end(),
+                            [&dataSpaceName](const std::pair<std::string, std::string>& param) {
+                                return dataSpaceName.compare(param.first) == 0;
+                            });
+    return pos != parameters.end();
+}
+
 unsigned int Computation::getNumParams() const {
     return parameters.size();
 }
@@ -162,6 +170,14 @@ std::vector<std::string> Computation::getReturnValues() const {
         names.push_back(retVal.first);
     }
     return names;
+}
+
+bool Computation::isReturnValue(std::string dataSpaceName) const {
+    auto pos = std::find_if(returnValues.begin(), returnValues.end(),
+                            [&dataSpaceName](const std::pair<std::string, bool>& retVal) {
+                                return dataSpaceName.compare(retVal.first) == 0;
+                            });
+    return pos != returnValues.end();
 }
 
 unsigned int Computation::getNumReturnValues() const {
@@ -608,7 +624,9 @@ AppendComputationResult Computation::appendComputation(
 
     // add (already name prefixed) data spaces from appendee to appender
     for (const auto& dataSpace : toAppend->getDataSpaces()) {
-        this->addDataSpace(dataSpace);
+        if (toAppend->isParameter(dataSpace)) {addParameter(dataSpace, "int"); }
+        else if (toAppend->isReturnValue(dataSpace)) {addReturnValue(dataSpace, true); }
+        else {this->addDataSpace(dataSpace); }
     }
 
     // collect append result information to return
@@ -1123,6 +1141,10 @@ std::string Computation::toDotString(){
              data_read_index < getStmt(i)->getNumReads(); data_read_index++) {
             string readDataSpace =
                 getStmt(i)->getReadDataSpace(data_read_index);
+            // Set node color from data space type
+            std::string color = isParameter(readDataSpace) ? "purple" :
+                                isReturnValue(readDataSpace) ? "red" :
+                                "grey";
             // Check to make sure the data space is not created if it already
             // exists
             if (!(std::count(data_spaces.begin(), data_spaces.end(),
@@ -1131,7 +1153,7 @@ std::string Computation::toDotString(){
                 ss
                     << "\"" << readDataSpace << "\"["
                     << generateDotLabel({readDataSpace, "[] "})
-                    << "] [shape=box][style=bold][color=grey];\n";
+                    << "] [shape=box][style=bold][color=" << color << "];\n";
 
                 data_spaces.push_back(readDataSpace);
             }
@@ -1153,16 +1175,20 @@ std::string Computation::toDotString(){
                            ->getString()
                            .substr(start_pos + 1, end_pos - start_pos - 1),
                            "]"})
-                    << "]"
+                    << "][color=" << color << "]"
                     << "\n";
         }
 
-        // Iterates over the read-DataSpaces
+        // Iterates over the write-DataSpaces
         for (int data_write_index = 0;
              data_write_index < getStmt(i)->getNumWrites();
              data_write_index++) {
             string writeDataSpace =
                 getStmt(i)->getWriteDataSpace(data_write_index);
+            // Set node color from data space type
+            std::string color = isParameter(writeDataSpace) ? "purple" :
+                                isReturnValue(writeDataSpace) ? "red" :
+                                "grey";
             // Check to make sure the data space is not created if it already
             // exists
             if (!(std::count(data_spaces.begin(), data_spaces.end(),
@@ -1170,7 +1196,7 @@ std::string Computation::toDotString(){
                 ss
                     << "\"" << writeDataSpace << "\"["
                     << generateDotLabel({writeDataSpace, "[] "})
-                    << "] [shape=box][style=bold][color=grey];\n";
+                    << "] [shape=box][style=bold][color=" << color << "];\n";
 
                 data_spaces.push_back(writeDataSpace);
             }
@@ -1192,7 +1218,8 @@ std::string Computation::toDotString(){
                            ->getString()
                            .substr(start_pos + 1, end_pos - start_pos - 1),
                            "]"})
-                    << "]\n";
+                    << "][color=" << color << "]"
+                    << "\n";
         }
     }
 

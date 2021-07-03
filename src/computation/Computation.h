@@ -108,6 +108,8 @@ class Computation {
     std::string getParameterName(unsigned int index) const;
     //! Get a parameter's data type
     std::string getParameterType(unsigned int index) const;
+    //! Check if a data space is a parameter
+    bool isParameter(std::string dataSpaceName) const;
     //! Get the number of parameters this Computation has
     unsigned int getNumParams() const;
 
@@ -120,6 +122,8 @@ class Computation {
     void addReturnValue(std::string name, bool isDataSpace);
     //! Get the list of return values
     std::vector<std::string> getReturnValues() const;
+    //! Check if a data space is a return values
+    bool isReturnValue(std::string dataSpaceName) const;
     //! Get the number of return values this Computation has (some languages
     //! support multiple return)
     unsigned int getNumReturnValues() const;
