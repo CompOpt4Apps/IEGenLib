@@ -24,35 +24,42 @@ int main(int argc, char** argv) {
     //     s1:tmp1 = f1[i];
     //}
   
-    std::vector<std::pair<std::string, std::string> > dataReads;
-    std::vector<std::pair<std::string, std::string> > dataWrites;
-    
-    Computation* forLoopComp = new Computation();
+   Computation* forLoopComp = new Computation();
+
+    forLoopComp->addParameter("$f$", "int");
+    forLoopComp->addParameter("$f1$", "int");
     
     forLoopComp->addDataSpace("$tmp$");
-    forLoopComp->addDataSpace("$f$");
     forLoopComp->addDataSpace("$tmp1$");
-    forLoopComp->addDataSpace("$f1$");
     forLoopComp->addDataSpace("$N$");
-    
-    dataWrites.push_back(make_pair("$tmp$", "{[i]->[0]}"));
-    dataReads.push_back(make_pair("$f$", "{[i]->[i]}"));
-    Stmt* s0 = new Stmt("$tmp$ = $f$[i];", "{[i]: 0 <= i < N}", "{[i] ->[0,i,0]}",
-             dataReads, dataWrites);
-    
-    dataReads.clear();
-    dataWrites.clear();
-    
-    dataWrites.push_back(make_pair("$tmp1$", "{[i]->[0]}"));
-    dataReads.push_back(make_pair("$f1$", "{[i]->[i]}"));
-    Stmt* s1 = new Stmt("$tmp1$ = $f1$[i];", "{[i]: 0 <= i < N}", "{[i] ->[0,i,1]}",
-             dataReads, dataWrites);
-    
-    dataReads.clear();
-    dataWrites.clear();
+
+    Stmt* s0 = new Stmt("$tmp$ = $f$[i];",
+        "{[i]: 0 <= i < N}",
+        "{[i] ->[0,i,0]}",
+        {
+            {"$f$", "{[i]->[i]}"}
+        },
+        {
+            {"$tmp$", "{[i]->[0]}"}
+        }
+    );
+
+    Stmt* s1 = new Stmt("$tmp1$ = $f1$[i];",
+        "{[i]: 0 <= i < N}",
+        "{[i] ->[0,i,1]}",
+        {
+            {"$f1$", "{[i]->[i]}"}
+        },
+        {
+            {"$tmp1$", "{[i]->[0]}"}
+        }
+    ); 
     
     forLoopComp->addStmt(s0);
     forLoopComp->addStmt(s1);
+
+    forLoopComp->addReturnValue("$tmp$", true);
+    forLoopComp->addReturnValue("$tmp1$", true);
 
     //Making toDot, took example from geoac_codegen_driver
     ofstream dotFileStream("for_loop_comp_dot.txt");
@@ -114,12 +121,14 @@ int main(int argc, char** argv) {
     spsComp->addDataSpace("$y$");
     spsComp->addDataSpace("$A$");
     spsComp->addDataSpace("$x$");
+    spsComp->addDataSpace("$rowptr$");
 
     Stmt* sps0 = new Stmt(
       "$y$[i] += $A$[k] * $x$[j]",
       "{[i,k,j]: 0 <= i < N && rowptr(i) <= k < rowptr(i+1) && j = col(k)}",
       "{[i,k,j]->[0,i,0,k,0,j,0]}",
         {
+          {"$rowptr$", "{[0]->[i]}"}, 
           {"$y$", "{[i,k,j]->[i]}"},
           {"$A$", "{[i,k,j]->[k]}"},
           {"$x$", "{[i,k,j]->[j]}"}
@@ -138,7 +147,7 @@ int main(int argc, char** argv) {
     dotFileStream2.close();
     //Write codegen to a file
     ofstream outStream2;
-    outStream2.open("sparse_matrix_multipy.c");
+    outStream2.open("sparse_matrix_multiply.c");
     outStream2 << spsComp->codeGen();
     outStream2.close();
 
