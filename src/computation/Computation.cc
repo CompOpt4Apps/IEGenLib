@@ -1070,7 +1070,60 @@ void Computation::fuse (int s1, int s2, int fuseLevel){
     }
 }
 
+void Computation::padExecutionSchedules() {
+    // Get the max arity
+    int maxArity = 0;
+    for (int j = 0; j < getNumStmts(); j++) {
+        int tmp = getStmt(j)->getExecutionSchedule()->outArity();
+        if (tmp > maxArity) { maxArity = tmp; }
+    }
 
+    // Pads iteration spaces by padding the execution schedule
+    // The execution schedule is applied during applyTransformations()
+    // Generate composition relation of the form
+    // '{[a0,a1,...,an] -> [a0,a1,...am] : an+1 = 0 && an+2 = 0 && ... && am = 0}'
+    // where m > n
+    std::vector<iegenlib::Relation*> compositions;
+    for (int i = 1; i <= maxArity; i++) {
+        std::stringstream ss;
+        ss << "{[";
+        for (int j = 0; j < i; j++) {
+            ss << "a" << j;
+            if (j != i - 1) { ss << ","; }
+        }
+        ss << "] -> [";
+        for (int j = 0; j < maxArity; j++) {
+            ss << "a" << j;
+            if (j != maxArity - 1) { ss << ","; }
+        }
+        ss << "] : ";
+        for (int j = i; j < maxArity; j++) {
+            ss << "a" << j << " = 0";
+            if (j != maxArity - 1) { ss << " && "; }
+        }
+        ss << "}";
+        compositions.push_back(new Relation(ss.str()));
+//        std::cerr << "Composition Relation " << i << ": "
+//                  << compositions.back()->getString() << std::endl;
+    }
+
+    // Apply composition to generate new execution schedule for each statement
+    for (int i = 0; i < getNumStmts(); i++) {
+        Stmt* stmt = getStmt(i);
+        Relation* sched = stmt->getExecutionSchedule();
+        Relation* newSched = compositions[sched->outArity() - 1]->Compose(sched);
+//        std::cerr << "New Execution Schedule " << i << ": "
+//                  << newSched->getString() << std::endl;
+        stmt->setExecutionSchedule(newSched);
+    }
+}
+
+bool Computation::consistentSetArity(const std::vector<Set*>& sets) {
+    if (sets.size() == 0) { return true; }
+    int arity = sets[0]->arity();
+    for (Set* set : sets) { if (set->arity() != arity) return false; }
+    return true;
+}
 
 //! Function returns a dot string representing nesting
 //  and loop carrie dependency. Internally it uses
@@ -1080,21 +1133,30 @@ void Computation::fuse (int s1, int s2, int fuseLevel){
 std::string Computation::toDotString(){
     //TODO: Deal with disjunction of cunjunctions later.
     
+    padExecutionSchedules();
+
     // newIS is a list of pairs of statement id
     // to their transformed spaces.
     std::vector<std::pair<int,Set*> > newIS;
-    
+
     int i = 0;
     std::vector<Set*> transformedSpaces = applyTransformations();
+    if (!consistentSetArity(transformedSpaces)) {
+        std::cerr << "Iteration spaces do not have a consistent arity" << std::endl;
+        std::cerr << "Aborting toDotString()" << std::endl;
+        return "";
+    }
     for(Set* set : transformedSpaces){
 	newIS.push_back(std::make_pair(i,set));
         i++;
     }
+
     // Sort by lexicographical order
     std::sort(newIS.begin(),newIS.end(),
 		    Computation::activeStatementComparator);
     
     int maxLevel = newIS[0].second->arity();
+//    std::cerr << "Max Level: " << maxLevel << std::endl;
     std::vector<std::vector<Set*> > projectedIS(maxLevel);
     
     for(int i = 0 ; i < maxLevel; i++ ){
@@ -1110,11 +1172,12 @@ std::string Computation::toDotString(){
     //      Easier way. :) 
     for(int i = 0; i < stmts.size(); i++){
         if (maxLevel > 0)
-            projectedIS[maxLevel-1][i] =new Set(*newIS[i].second);
+            // Replace all '$' because iegenlib throw a fit TODO: why does iegenlib throw a fit? (it didn't previously)
+            projectedIS[maxLevel-1][i] = new Set(replaceInString(newIS[i].second->getString(), "$", ""));
 	//Perform projections for each column
-	for (int j = maxLevel -1; j >= 1 ; j --){
+	for (int j = maxLevel -1; j >= 1 ; j --) {
 	    projectedIS[j -1][i] = projectedIS[j][i]->projectOut(j);   
-	}
+       	}
     }
     std::ostringstream ss;
     ss << "digraph dataFlowGraph_1{ \n";
@@ -1150,7 +1213,7 @@ std::string Computation::toDotString(){
                 // Creates data space
                 ss
                     << "\"" << readDataSpace << "\"["
-                    << generateDotLabel({readDataSpace, "[] "})
+                    << generateDotLabel(readDataSpace)
                     << "] [shape=box][style=bold][color=" << color << "];\n";
 
                 data_spaces.push_back(readDataSpace);
@@ -1167,12 +1230,11 @@ std::string Computation::toDotString(){
 
             ss << "\t\t\"" << readDataSpace << "\"->"
                     << "S" << i << "["
-                    << generateDotLabel({"[", 
+                    << generateDotLabel(
                            getStmt(i)
                            ->getReadRelation(data_read_index)
                            ->getString()
-                           .substr(start_pos + 1, end_pos - start_pos - 1),
-                           "]"})
+                           .substr(start_pos + 1, end_pos - start_pos - 1))
                     << "][color=" << color << "]"
                     << "\n";
         }
@@ -1193,7 +1255,7 @@ std::string Computation::toDotString(){
                              writeDataSpace))) {
                 ss
                     << "\"" << writeDataSpace << "\"["
-                    << generateDotLabel({writeDataSpace, "[] "})
+                    << generateDotLabel(writeDataSpace)
                     << "] [shape=box][style=bold][color=" << color << "];\n";
 
                 data_spaces.push_back(writeDataSpace);
@@ -1210,12 +1272,11 @@ std::string Computation::toDotString(){
 
             ss << "\t\t"
                     << "S" << i << "->\"" << writeDataSpace << "\"["
-                    << generateDotLabel({"[",
+                    << generateDotLabel(
                            getStmt(i)
                            ->getWriteRelation(data_write_index)
                            ->getString()
-                           .substr(start_pos + 1, end_pos - start_pos - 1),
-                           "]"})
+                           .substr(start_pos + 1, end_pos - start_pos - 1))
                     << "][color=" << color << "]"
                     << "\n";
         }
@@ -1243,6 +1304,7 @@ std::vector<Set*> Computation::applyTransformations() const {
         Set* schedule = currentStmt->getExecutionSchedule()->Apply(currentStmt->getIterationSpace());
         // apply transformations in order, chaining together outputs and inputs
         for (Relation* transformation : transformationLists.at(stmtNum)) {
+            std::cerr << "Transformation " << transformation->getString() << std::endl;
             Set* scheduleAfterTransformation = transformation->Apply(schedule);
             delete schedule;
             schedule = scheduleAfterTransformation;
@@ -1303,6 +1365,7 @@ void Computation::toDotScan(std::vector<std::pair<int,Set*>> &activeStmts, int l
            << generateDotLabel({"Domain :", domainIter})
            << " \n";
     }
+
     for(auto active : bins){
         toDotScan(active,level+1,ss,projectedIS);
     }
@@ -1323,6 +1386,11 @@ std::string Computation::codeGen(Set* knownConstraints) {
     std::ostringstream stmtMacroDefs;
     int stmtCount = 0;
     std::vector<Set*> newIS = applyTransformations();
+    if (!consistentSetArity(newIS)) {
+        std::cerr << "Iteration spaces do not have a consistent arity" << std::endl;
+        std::cerr << "Aborting codeGen()" << std::endl;
+        return "";
+    }
 
     //Create a string for each statements iteration space
     for (const auto& stmt : stmts) {
