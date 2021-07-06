@@ -478,6 +478,68 @@ TEST_F(ComputationTest, ReplaceDataSpaceName) {
     delete forLoopComp;
 }
 
+TEST_F(ComputationTest, IsParameterOrReturn) {
+    Computation* testComp = new Computation();
+
+    testComp->addParameter("$Hi$", "int");
+    testComp->addDataSpace("$how$");
+    testComp->addDataSpace("$are$");
+    testComp->addReturnValue("$you$", true);
+
+    EXPECT_TRUE(testComp->isParameter("$Hi$"));
+    EXPECT_FALSE(testComp->isParameter("$you$"));
+    EXPECT_FALSE(testComp->isParameter("$oops$"));
+
+    EXPECT_TRUE(testComp->isReturnValue("$you$"));
+    EXPECT_FALSE(testComp->isReturnValue("$are$"));
+    EXPECT_FALSE(testComp->isReturnValue("$oops$"));
+
+    delete testComp;
+}
+
+TEST_F(ComputationTest, Colors) {
+    // Basic for loop with 2 statements 
+    // for (i = 0; i < N; i++) /loop over rows
+    //     s0:tmp = f[i];
+    //     s1:tmp1 = f1[i];
+    //}
+
+    std::vector<std::pair<std::string, std::string> > dataReads;
+    std::vector<std::pair<std::string, std::string> > dataWrites;
+    
+    Computation* forLoopComp = new Computation();
+    
+    forLoopComp->addReturnValue("$tmp$", true);
+    forLoopComp->addParameter("$f$", "int");
+    forLoopComp->addDataSpace("$tmp1$");
+    forLoopComp->addParameter("$f1$", "int");
+    forLoopComp->addDataSpace("$N$");
+    
+    dataWrites.push_back(make_pair("$tmp$", "{[i]->[0]}"));
+    dataReads.push_back(make_pair("$f$", "{[i]->[i]}"));
+    Stmt* s0 = new Stmt("$tmp$ = $f$[i];", "{[i]: 0 <= i < N}", "{[i] ->[0,i,0]}",
+             dataReads, dataWrites);
+    
+    dataReads.clear();
+    dataWrites.clear();
+    
+    dataWrites.push_back(make_pair("$tmp1$", "{[i]->[0]}"));
+    dataReads.push_back(make_pair("$f1$", "{[i]->[i]}"));
+    Stmt* s1 = new Stmt("$tmp1$ = $f1$[i];", "{[i]: 0 <= i < N}", "{[i] ->[0,i,1]}",
+             dataReads, dataWrites);
+    
+    dataReads.clear();
+    dataWrites.clear();
+    
+    forLoopComp->addStmt(s0);
+    forLoopComp->addStmt(s1);
+
+    string dotString = forLoopComp->toDotString();
+    std::cerr << dotString << std::endl;
+
+    delete forLoopComp;
+}
+
 #pragma mark ConvertToOmega
 // Test that we can correctly convert from IEGenLib SparseConstraints to Omega
 // Relations
