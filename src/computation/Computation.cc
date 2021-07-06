@@ -624,9 +624,7 @@ AppendComputationResult Computation::appendComputation(
 
     // add (already name prefixed) data spaces from appendee to appender
     for (const auto& dataSpace : toAppend->getDataSpaces()) {
-        if (toAppend->isParameter(dataSpace)) {addParameter(dataSpace, "int"); }
-        else if (toAppend->isReturnValue(dataSpace)) {addReturnValue(dataSpace, true); }
-        else {this->addDataSpace(dataSpace); }
+        this->addDataSpace(dataSpace);
     }
 
     // collect append result information to return
