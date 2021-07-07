@@ -160,6 +160,12 @@ class Computation {
         std::string surroundingExecScheduleStr,
         const std::vector<std::string>& arguments = {});
 
+    //! Pads each statement's execution schedule with 0's such the all
+    //  execution schedules have the same arity
+    void padExecutionSchedules();
+
+    //! Returns true if all input sets have the same arity, false otherwise
+    bool consistentSetArity(const std::vector<Set*>& sets);
 
     //! Function returns a dot string representing nesting
     //  and loop carrie dependency. Internally it uses

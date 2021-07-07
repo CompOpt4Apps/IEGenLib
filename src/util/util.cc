@@ -92,9 +92,11 @@ namespace iegenlib{
     std::stringstream ss;
     ss << "label=\"";
     std::string escapeChars = "><{}";
+    std::string removeChars = "$[]";
     for (std::string label : input) {
         int n = label.length();
         for (int i = 0; i < n; i++) {
+            if (removeChars.find(label[i]) != std::string::npos) { continue; }
             if (escapeChars.find(label[i]) != std::string::npos) { ss << '\\'; }
             ss << label[i];
         }
