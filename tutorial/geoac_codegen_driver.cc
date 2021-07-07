@@ -2291,6 +2291,7 @@ Computation* u_ddiff_Computation(){
     //Creating statement0
     //double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);
     uDdiffComputation->addDataSpace("$r_eval$");
+    /*
     Stmt* s0 = new Stmt("double $r_eval$ = min($r$, r_max); $r_eval$ = max($r_eval$, r_min);",
         "{[0]}",  //Iteration schedule - Only happening one time (not iterating)
         "{[0]->[0]}", //Execution schedule - scheduling statement to be first (scheduling function)
@@ -2302,13 +2303,32 @@ Computation* u_ddiff_Computation(){
     );
     //Adding s0 to the computation
     uDdiffComputation->addStmt(s0);
-
+    */
+    Stmt* s0a = new Stmt("double $r_eval$ = min($r$, r_max);",
+        "{[0]}",  //Iteration schedule - Only happening one time (not iterating)
+        "{[0]->[0]}", //Execution schedule - scheduling statement to be first (scheduling function)
+        {
+            {"$r$","{[0]->[0]}"}
+        }, //Data reads
+        {{"$r_eval$","{[0]->[0]}"}} //Data writes
+    );
+    uDdiffComputation->addStmt(s0a);
+    Stmt* s0b = new Stmt("$r_eval$ = max($r_eval$, r_min);",
+        "{[0]}", 
+        "{[0]->[1]}", 
+        {
+            {"$r_eval$","{[0]->[0]}"}
+        }, 
+        {{"$r_eval$","{[0]->[0]}"}} 
+    );
+    uDdiffComputation->addStmt(s0b);
+    
     //Creating statement1
     //double u_ddiff_return = 0.0;
     uDdiffComputation->addDataSpace("$u_ddiff_return$");
     Stmt* s1 = new Stmt("double $u_ddiff_return$ = 0.0",
         "{[0]}",
-        "{[0]->[1]}",
+        "{[0]->[2]}",
         {},
         {{"$u_ddiff_return$","{[0]->[0]}"}}
     );
@@ -2327,7 +2347,7 @@ Computation* u_ddiff_Computation(){
     evalSplineDdfCompArgs.push_back("$Windu_Spline_slopes$");
 
     // Return values are stored in a struct of the computation: AppendComputationResult
-    AppendComputationResult evalSplineDdfCompRes = uDdiffComputation->appendComputation(evalSplineDdfComputation, "{[0]}", "{[0]->[2]}", evalSplineDdfCompArgs);
+    AppendComputationResult evalSplineDdfCompRes = uDdiffComputation->appendComputation(evalSplineDdfComputation, "{[0]}", "{[0]->[3]}", evalSplineDdfCompArgs);
     unsigned int newTuplePos = evalSplineDdfCompRes.tuplePosition+1;
 
     //Creating statement2
@@ -2389,6 +2409,7 @@ Computation* v_ddiff_Computation(){
     //Creating statement0
     //double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);
     vDdiffComputation->addDataSpace("$r_eval$");
+    /* 
     Stmt* s0 = new Stmt("double $r_eval$ = min($r$, r_max); $r_eval$ = max($r_eval$, r_min);",
         "{[0]}",  //Iteration schedule - Only happening one time (not iterating)
         "{[0]->[0]}", //Execution schedule - scheduling statement to be first (scheduling function)
@@ -2400,13 +2421,34 @@ Computation* v_ddiff_Computation(){
     );
     //Adding s0 to the computation
     vDdiffComputation->addStmt(s0);
-
+    */
+    
+    Stmt* s0a = new Stmt("double $r_eval$ = min($r$, r_max);",
+        "{[0]}",  
+        "{[0]->[0]}",
+        {
+            {"$r$","{[0]->[0]}"}
+        },
+        {{"$r_eval$","{[0]->[0]}"}}
+    );
+    vDdiffComputation->addStmt(s0a);
+    Stmt* s0b = new Stmt("$r_eval$ = max($r_eval$, r_min);",
+        "{[0]}",  
+        "{[0]->[1]}",
+        {
+            {"$r_eval$","{[0]->[0]}"}
+        }, 
+        {{"$r_eval$","{[0]->[0]}"}}
+    );
+    vDdiffComputation->addStmt(s0b); 
+    
     //Creating statement1
     //double v_ddiff_return = 0.0;
     vDdiffComputation->addDataSpace("$v_ddiff_return$");
     Stmt* s1 = new Stmt("double $v_ddiff_return$ = 0.0",
         "{[0]}",
-        "{[0]->[1]}",
+        //"{[0]->[1]}",
+        "{[0]->[2]}",
         {},
         {{"$v_ddiff_return$","{[0]->[0]}"}}
     );
@@ -2425,7 +2467,8 @@ Computation* v_ddiff_Computation(){
     evalSplineDdfCompArgs.push_back("$Windv_Spline_slopes$");
 
     // Return values are stored in a struct of the computation: AppendComputationResult
-    AppendComputationResult evalSplineDdfCompRes = vDdiffComputation->appendComputation(evalSplineDdfComputation, "{[0]}", "{[0]->[2]}", evalSplineDdfCompArgs);
+    //AppendComputationResult evalSplineDdfCompRes = vDdiffComputation->appendComputation(evalSplineDdfComputation, "{[0]}", "{[0]->[2]}", evalSplineDdfCompArgs);
+    AppendComputationResult evalSplineDdfCompRes = vDdiffComputation->appendComputation(evalSplineDdfComputation, "{[0]}", "{[0]->[3]}", evalSplineDdfCompArgs);
     unsigned int newTuplePos = evalSplineDdfCompRes.tuplePosition+1;
 
     //Creating statement2
@@ -2492,6 +2535,7 @@ Computation* c_ddiff_Computation(){
     //Creating statement s0
     //double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);
     cDdiffComputation->addDataSpace("$r_eval$");
+    /* 
     Stmt* s0 = new Stmt("double $r_eval$ = min($r$, r_max); $r_eval$ = max($r_eval$, r_min);",
         "{[0]}",  //Iteration schedule - Only happening one time (not iterating)
         "{[0]->[0]}", //Execution schedule - scheduling statement to be first (scheduling function)
@@ -2500,13 +2544,33 @@ Computation* c_ddiff_Computation(){
         );
     //Adding s0 to the computation
     cDdiffComputation->addStmt(s0);
-
+    */
+    Stmt* s0a = new Stmt("double $r_eval$ = min($r$, r_max);",
+        "{[0]}",  
+        "{[0]->[0]}",
+        {
+            {"$r$","{[0]->[0]}"}
+        },
+        {{"$r_eval$","{[0]->[0]}"}} 
+    );
+    cDdiffComputation->addStmt(s0a);
+    Stmt* s0b = new Stmt("$r_eval$ = max($r_eval$, r_min);",
+        "{[0]}",  
+        "{[0]->[1]}",
+        {
+            {"$r_eval$","{[0]->[0]}"}
+        }, 
+        {{"$r_eval$","{[0]->[0]}"}} 
+    );
+    cDdiffComputation->addStmt(s0b);
+    
     //Creating statement s1
     //double c_ddiff_return = 0.0;
     cDdiffComputation->addDataSpace("$c_ddiff_return$");
     Stmt* s1 = new Stmt("double $c_ddiff_return$ = 0.0;",
         "{[0]}",
-        "{[0]->[1]}",
+        //"{[0]->[1]}",
+        "{[0]->[2]}",
         {},
         {{"$c_ddiff_return$","{[0]->[0]}"}}
         );
@@ -2529,7 +2593,8 @@ Computation* c_ddiff_Computation(){
 
 
     // Return values are stored in a struct of the computation: AppendComputationResult
-    AppendComputationResult cCompRes = cDdiffComputation->appendComputation(cComputation, "{[0]}", "{[0]->[2]}", cCompArgs);
+    //AppendComputationResult cCompRes = cDdiffComputation->appendComputation(cComputation, "{[0]}", "{[0]->[2]}", cCompArgs);
+    AppendComputationResult cCompRes = cDdiffComputation->appendComputation(cComputation, "{[0]}", "{[0]->[3]}", cCompArgs);
     unsigned int newTuplePos = cCompRes.tuplePosition+1;
 
     //Creating statement s2
@@ -2648,7 +2713,8 @@ Computation* u_diff_Computation(){
     //Creating statement1
     //double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);
     uDiffComputation->addDataSpace("$r_eval$");
-    Stmt* s0 = new Stmt("double $r_eval$ = min($r$, r_max); $r_eval$ = max($r_eval$, r_min);",
+   /*  
+   Stmt* s0 = new Stmt("double $r_eval$ = min($r$, r_max); $r_eval$ = max($r_eval$, r_min);",
         "{[0]}",  //Iteration schedule - Only happening one time (not iterating)
         "{[0]->[0]}", //Execution schedule - scheduling statement to be first (scheduling function)
         {{"$r$","{[0]->[0]}"},{"$r_eval$","{[0]->[0]}"}}, //Data reads
@@ -2660,12 +2726,32 @@ Computation* u_diff_Computation(){
 
     //Adding s0 to the computation
     uDiffComputation->addStmt(s0);
-
+    */
+    Stmt* s0a = new Stmt("double $r_eval$ = min($r$, r_max);",
+        "{[0]}",  
+        "{[0]->[0]}", 
+        {
+            {"$r$","{[0]->[0]}"}
+        }, 
+        {{"$r_eval$","{[0]->[0]}"}} 
+    );
+    uDiffComputation->addStmt(s0a);
+    Stmt* s0b = new Stmt("$r_eval$ = max($r_eval$, r_min);",
+        "{[0]}",  
+        "{[0]->[1]}", 
+        {
+            {"$r_eval$","{[0]->[0]}"}
+        }, 
+        {{"$r_eval$","{[0]->[0]}"}} 
+    );
+    uDiffComputation->addStmt(s0b);
+    
     //double u_diff_return = 0.0;
     uDiffComputation->addDataSpace("$u_diff_return$");
     Stmt* s1 = new Stmt("double $u_diff_return$ = 0.0",
         "{[0]}",
-        "{[0]->[1]}",
+        //"{[0]->[1]}",
+        "{[0]->[2]}",
         {},
         {{"$u_diff_return$","{[0]->[0]}"}}
         );
@@ -2688,7 +2774,8 @@ Computation* u_diff_Computation(){
     evalSplineDfCompArgs.push_back("$Windu_Spline_f_vals$");
     evalSplineDfCompArgs.push_back("$Windu_Spline_slopes$");
     
-    AppendComputationResult evalSplineDfCompRes = uDiffComputation->appendComputation(evalSplineDfComputation, "{[0]}", "{[0]->[2]}", evalSplineDfCompArgs);// possible 0->0?
+    //AppendComputationResult evalSplineDfCompRes = uDiffComputation->appendComputation(evalSplineDfComputation, "{[0]}", "{[0]->[2]}", evalSplineDfCompArgs);// possible 0->0?
+    AppendComputationResult evalSplineDfCompRes = uDiffComputation->appendComputation(evalSplineDfComputation, "{[0]}", "{[0]->[3]}", evalSplineDfCompArgs);// possible 0->0?
     unsigned int  newTuplePos = evalSplineDfCompRes.tuplePosition+1;
 
     //Creating statement s3
@@ -2756,6 +2843,7 @@ Computation* v_diff_Computation(){
     //Creating statement0
     //double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);
     vDiffComputation->addDataSpace("$r_eval$");
+    /*   
     Stmt* s0 = new Stmt("double $r_eval$ = min($r$, r_max); $r_eval$ = max($r_eval$, r_min);",
         "{[0]}",  //Iteration schedule - Only happening one time (not iterating)
         "{[0]->[0]}", //Execution schedule - scheduling statement to be first (scheduling function)
@@ -2767,13 +2855,33 @@ Computation* v_diff_Computation(){
     );
     //Adding s0 to the computation
     vDiffComputation->addStmt(s0);
-
+    */
+    Stmt* s0a = new Stmt("double $r_eval$ = min($r$, r_max);",
+        "{[0]}", 
+        "{[0]->[0]}", 
+        {
+            {"$r$","{[0]->[0]}"}
+        }, 
+        {{"$r_eval$","{[0]->[0]}"}} 
+    );
+    vDiffComputation->addStmt(s0a);
+    Stmt* s0b = new Stmt("$r_eval$ = max($r_eval$, r_min);",
+        "{[0]}", 
+        "{[0]->[1]}", 
+        {
+            {"$r_eval$","{[0]->[0]}"}
+        }, 
+        {{"$r_eval$","{[0]->[0]}"}} 
+    );
+    vDiffComputation->addStmt(s0b);
+    
     //Creating statement1
     //double v_diff_return = 0.0;
     vDiffComputation->addDataSpace("$v_diff_return$");
     Stmt* s1 = new Stmt("double $v_diff_return$ = 0.0",
         "{[0]}",
-        "{[0]->[1]}",
+        //"{[0]->[1]}",
+        "{[0]->[2]}",
         {},
         {{"$v_diff_return$","{[0]->[0]}"}}
     );
@@ -2795,7 +2903,8 @@ Computation* v_diff_Computation(){
 
 
     // Return values are stored in a struct of the computation: AppendComputationResult
-    AppendComputationResult evalSplineDfCompRes = vDiffComputation->appendComputation(evalSplineDfComputation, "{[0]}", "{[0]->[2]}", evalSplineDfCompArgs);
+    //AppendComputationResult evalSplineDfCompRes = vDiffComputation->appendComputation(evalSplineDfComputation, "{[0]}", "{[0]->[2]}", evalSplineDfCompArgs);
+    AppendComputationResult evalSplineDfCompRes = vDiffComputation->appendComputation(evalSplineDfComputation, "{[0]}", "{[0]->[3]}", evalSplineDfCompArgs);
     unsigned int newTuplePos = evalSplineDfCompRes.tuplePosition+1;
 
     //Creating statement2
@@ -2857,6 +2966,7 @@ Computation* c_diff_Computation(){
     //Creating statement1
     //double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);
     cDiffComputation->addDataSpace("$r_eval$");
+    /* 
     Stmt* s0 = new Stmt("double $r_eval$ = min($r$, r_max); $r_eval$ = max($r_eval$, r_min);",
         "{[0]}",  //Iteration schedule - Only happening one time (not iterating)
         "{[0]->[0]}", //Execution schedule - scheduling statement to be first (scheduling function)
@@ -2869,12 +2979,32 @@ Computation* c_diff_Computation(){
 
     //Adding s0 to the computation
     cDiffComputation->addStmt(s0);
-
+    */
+    Stmt* s0a = new Stmt("double $r_eval$ = min($r$, r_max);",
+        "{[0]}",  
+        "{[0]->[0]}", 
+        {
+            {"$r$","{[0]->[0]}"}
+        }, 
+        {{"$r_eval$","{[0]->[0]}"}}
+    );
+    cDiffComputation->addStmt(s0a);
+    Stmt* s0b = new Stmt("$r_eval$ = max($r_eval$, r_min);",
+        "{[0]}",  
+        "{[0]->[1]}", 
+        {
+            {"$r_eval$","{[0]->[0]}"}
+        }, 
+        {{"$r_eval$","{[0]->[0]}"}}
+    );
+    cDiffComputation->addStmt(s0b);
+    
     cDiffComputation->addDataSpace("$c_diff_return$");
     //double c_diff_return = 0.0;
     Stmt* s1 = new Stmt("double $c_diff_return$ = 0.0",
         "{[0]}",
-        "{[0]->[1]}",
+        //"{[0]->[1]}",
+        "{[0]->[2]}",
         {},
         {{"$c_diff_return$","{[0]->[0]}"}}
         );
@@ -2896,7 +3026,8 @@ Computation* c_diff_Computation(){
     cCompArgs.push_back("$Temp_Spline_slopes$");
 
     // Return values are stored in a struct of the computation: AppendComputationResult
-    AppendComputationResult cCompRes = cDiffComputation->appendComputation(cComputation, "{[0]}", "{[0]->[2]}", cCompArgs);
+    //AppendComputationResult cCompRes = cDiffComputation->appendComputation(cComputation, "{[0]}", "{[0]->[2]}", cCompArgs);
+    AppendComputationResult cCompRes = cDiffComputation->appendComputation(cComputation, "{[0]}", "{[0]->[3]}", cCompArgs);
     unsigned int newTuplePos = cCompRes.tuplePosition+1;
 
     //double c_return = c(r,theta,phi, Temp_Spline);
@@ -2982,6 +3113,7 @@ Computation* u_Computation(){
     //Creating statement1
     //double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);
     uComputation->addDataSpace("$r_eval$");
+    /*
     Stmt* s1 = new Stmt("double $r_eval$ = min($r$, r_max); $r_eval$ = max($r_eval$, r_min)",
         "{[0]}",  //Iteration schedule - Only happening one time (not iterating)
         "{[0]->[0]}", //Execution schedule - scheduling statement to be first (scheduling function)
@@ -2994,7 +3126,27 @@ Computation* u_Computation(){
 
     //Adding statement1
     uComputation->addStmt(s1);
-
+    */
+    
+    Stmt* s1a = new Stmt("double $r_eval$ = min($r$, r_max);",
+        "{[0]}",  
+        "{[0]->[0]}", 
+        {
+            {"$r$","{[0]->[0]}"}
+        },
+        {{"$r_eval$","{[0]->[0]}"}} 
+    );
+    uComputation->addStmt(s1a);
+    Stmt* s1b = new Stmt("$r_eval$ = max($r_eval$, r_min)",
+        "{[0]}",  
+        "{[0]->[1]}", 
+        {
+            {"$r_eval$","{[0]->[0]}"}
+        },
+        {{"$r_eval$","{[0]->[0]}"}} 
+    );
+    uComputation->addStmt(s1b);
+    
     //Args to the Eval_Spline_f_Computation
     vector<std::string> eSpFArgs;
     eSpFArgs.push_back("$r_eval$");
@@ -3009,8 +3161,8 @@ Computation* u_Computation(){
     Computation* EvalSplineFComputation = Eval_Spline_f_Computation();
     
     // Return values are stored in a struct of the computation: AppendComputationResult
-    AppendComputationResult eSpFCompRes = uComputation->appendComputation(EvalSplineFComputation, "{[0]}","{[0]->[1]}",eSpFArgs);
-
+    //AppendComputationResult eSpFCompRes = uComputation->appendComputation(EvalSplineFComputation, "{[0]}","{[0]->[1]}",eSpFArgs);
+    AppendComputationResult eSpFCompRes = uComputation->appendComputation(EvalSplineFComputation, "{[0]}","{[0]->[2]}",eSpFArgs);
     //Add return value to the current computation
     uComputation->addReturnValue(eSpFCompRes.returnValues.back(), true);
 
@@ -3042,6 +3194,7 @@ Computation* v_Computation(){
     //Creating statement1
     //double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);
     vComputation->addDataSpace("$r_eval$");
+    
     Stmt* s1 = new Stmt("double $r_eval$ = min($r$, r_max); $r_eval$ = max($r_eval$, r_min)",
         "{[0]}",  //Iteration schedule - Only happening one time (not iterating)
         "{[0]->[0]}", //Execution schedule - scheduling statement to be first (scheduling function)
@@ -3054,7 +3207,27 @@ Computation* v_Computation(){
 
     //Adding statement1
     vComputation->addStmt(s1);
-
+    
+    /*
+    Stmt* s1a = new Stmt("double $r_eval$ = min($r$, r_max);",
+        "{[0]}", 
+        "{[0]->[0]}",
+        {
+            {"$r$","{[0]->[0]}"}
+        }, 
+        {{"$r_eval$","{[0]->[0]}"}}
+    );
+    vComputation->addStmt(s1a);
+    Stmt* s1b = new Stmt("$r_eval$ = max($r_eval$, r_min)",
+        "{[0]}", 
+        "{[0]->[1]}",
+        {
+            {"$r_eval$","{[0]->[0]}"}
+        }, 
+        {{"$r_eval$","{[0]->[0]}"}}
+    );
+    vComputation->addStmt(s1b);
+    */
     //Args to the Eval_Spline_f_Computation
     vector<std::string> eSpFArgs;
     eSpFArgs.push_back("$r_eval$");
@@ -3070,7 +3243,7 @@ Computation* v_Computation(){
     Computation* EvalSplineFComputation = Eval_Spline_f_Computation();
     // Return values are stored in a struct of the computation: AppendComputationResult
     AppendComputationResult eSpFCompRes = vComputation->appendComputation(EvalSplineFComputation, "{[0]}","{[0]->[1]}",eSpFArgs);
-
+    //AppendComputationResult eSpFCompRes = vComputation->appendComputation(EvalSplineFComputation, "{[0]}","{[0]->[2]}",eSpFArgs);
     unsigned int newTuplePos = eSpFCompRes.tuplePosition+1;
 
     //double v_return = Eval_Spline_f(r_eval, Windv_Spline);
@@ -3117,6 +3290,7 @@ Computation* c_Computation(){
     //Creating statement1
     //double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);
     cComputation->addDataSpace("$r_eval$");
+    
     Stmt* s1 = new Stmt("double $r_eval$ = min($r$, r_max);",
         "{[0]}",  //Iteration schedule - Only happening one time (not iterating)
         "{[0]->[0]}", //Execution schedule - scheduling statement to be first (scheduling function)
