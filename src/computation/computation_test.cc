@@ -497,6 +497,23 @@ TEST_F(ComputationTest, IsParameterOrReturn) {
     delete testComp;
 }
 
+TEST_F(ComputationTest, SSARenaming) {
+    Computation* test = new Computation();
+
+    test->addParameter("$foo$", "int");
+    test->addDataSpace("$bar$");
+   
+    test->addStmt(new Stmt(
+        "$bar$ = $foo$;", "[0]", "[0]->[0]", {{"$foo$", "{[0]->[0]}"}}, {{"$bar$", "{[0]->[0]}"}}
+    ));
+    test->addStmt(new Stmt(
+        "$foo$ = $bar$ + 1", "[0]", "[0]->[1]", {{"$bar$", "{[0]->[0]}"}}, {{"$foo$", "{[0]->[0]}"}}
+    ));
+    std::cerr << test->codeGen() << std::endl;
+
+    delete test;
+}
+
 TEST_F(ComputationTest, Colors) {
     // Basic for loop with 2 statements 
     // for (i = 0; i < N; i++) /loop over rows

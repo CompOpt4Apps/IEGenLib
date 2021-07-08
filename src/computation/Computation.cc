@@ -46,8 +46,8 @@
 namespace iegenlib {
 
 /* Computation */
-
 unsigned int Computation::numRenames = 0;
+unsigned int Computation::dataRenameCnt = 0;
 
 Computation::Computation() {}
 
@@ -108,6 +108,17 @@ std::string Computation::getPrefixedDataSpaceName(const std::string& originalNam
 }
 
 void Computation::addStmt(Stmt* stmt) {
+    for (int i = 0; i < stmt->getNumWrites(); i++) {
+        std::string write = stmt->getWriteDataSpace(i);
+        if (write == "" || write[0] != '$') { continue; }
+        // Strip dollar signs
+        write = write.substr(1, write.length() - 2);
+
+        std::string newWrite = write + "__w__" + std::to_string(dataRenameCnt++);
+        // TODO: Speed up using reverse iteration method
+        replaceDataSpaceName(write, newWrite);
+        stmt->replaceDataSpaceRead(write, newWrite);
+    }
     stmts.push_back(stmt);
     transformationLists.push_back({});
 }
@@ -343,7 +354,7 @@ AppendComputationResult Computation::appendComputation(
     // Need this for the correct execution order
     int idx =0;
     for (int i = ((signed int)numArgs) - 1; i >= 0; --i) {
-        if(toAppend->isWrittenTo(toAppend->getParameterName(i)) && !(toAppend->getParameterType(i).find("&"))){
+        if(toAppend->isWrittenTo(toAppend->getParameterName(i)) != -1 && !(toAppend->getParameterType(i).find("&"))){
 
             Stmt* paramDeclStmt = new Stmt();
 
@@ -1544,7 +1555,7 @@ bool Computation::assertValidDataSpaceName(const std::string& name) {
     }
 }
 
-bool Computation::isWrittenTo(std::string dataSpace){ 
+int Computation::isWrittenTo(std::string dataSpace){ 
     for(int i = 0; i < getNumStmts(); i++) {
         for(int data_write_index = 0; 
                 data_write_index < getStmt(i)->getNumWrites(); 
@@ -1552,14 +1563,16 @@ bool Computation::isWrittenTo(std::string dataSpace){
             
             string writeDataSpace = getStmt(i)->getWriteDataSpace(data_write_index);
             if(dataSpace.compare(writeDataSpace) == 0){
-                return true;
+                return i;
             }
         }
     }
-    return false;
+    return -1;
 }
 
 void Computation::replaceDataSpaceName(std::string original, std::string newString){
+    if (original == "") { return; }
+
     std::string searchString;
     std::string replacedString; 
     if(original.at(0) == '$'){
@@ -1597,6 +1610,42 @@ Stmt::~Stmt() {
         write.second.reset();
     }
     dataWrites.clear();
+}
+
+void Stmt::replaceDataSpaceRead(std::string searchString, std::string replacedString) {
+    if (searchString == "") { return; }
+    if (searchString[0] != '$') { searchString = "$" + searchString + "$"; }
+    if (replacedString != "" && replacedString[0] != '$') { replacedString = "$" + replacedString + "$"; }
+
+    std::string oldSourceCode = getStmtSourceCode();
+    std::stringstream newSourceCode;
+    size_t eqPos = oldSourceCode.find("="), semiPos = oldSourceCode.find(";");
+    while (eqPos != std::string::npos) {
+        if (semiPos == std::string::npos) { semiPos = oldSourceCode.length() - 1; }
+        newSourceCode << oldSourceCode.substr(0, eqPos)
+                      << iegenlib::replaceInString(oldSourceCode.substr(eqPos, semiPos - eqPos + 1),
+                                                   searchString, replacedString);
+        oldSourceCode = oldSourceCode.substr(semiPos + 1);
+        eqPos = oldSourceCode.find("=");
+        semiPos = oldSourceCode.find(";");
+    }
+    newSourceCode << oldSourceCode;
+    setStmtSourceCode(newSourceCode.str());
+
+    for(auto& read: dataReads){
+       read.first = iegenlib::replaceInString(read.first, searchString, replacedString);
+    }
+    
+    // TODO: should I do this?
+    std::string iterSpaceStr = iterationSpace->prettyPrintString();
+    std::string execScheduleStr = executionSchedule->prettyPrintString();
+
+    iterSpaceStr = replaceInString(iterSpaceStr, searchString, replacedString);
+    execScheduleStr = replaceInString(execScheduleStr, searchString, replacedString);
+
+    // use modified strings to construct new values
+    setIterationSpace(iterSpaceStr);
+    setExecutionSchedule(execScheduleStr);
 }
 
 void Stmt::replaceDataSpace(std::string searchString, std::string replacedString){

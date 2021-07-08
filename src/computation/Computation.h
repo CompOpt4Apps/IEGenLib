@@ -95,8 +95,8 @@ class Computation {
     std::unordered_set<std::string> getDataSpaces() const;
     //! Check if a given string is a name of a data space of this Computation
     bool isDataSpace(std::string name) const;
-    //! Returns true if a data space is ever written to
-    bool isWrittenTo(std::string dataSpace);
+    //! Returns statement index of write if written to, else -1
+    int isWrittenTo(std::string dataSpace);
     //! Replace data space name if written to
     void replaceDataSpaceName(std::string original, std::string newString);
 
@@ -264,6 +264,8 @@ class Computation {
     //! Number of times *any* Computation has been appended into
     //! others, for creating unique name prefixes.
     static unsigned int numRenames;
+
+    static unsigned int dataRenameCnt;
 };
 
 /*!
@@ -303,6 +305,9 @@ class Stmt {
 
     //! Copy constructor
     Stmt(const Stmt& other);
+
+    //! Replace data space name only where read from
+    void replaceDataSpaceRead(std::string searchString, std::string replacedString);
 
     //! Replace data space name
     void replaceDataSpace(std::string searchString, std::string replacedString); 
