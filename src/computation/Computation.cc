@@ -43,6 +43,9 @@
 //! String delimiter expected on either side of data space names
 #define DATA_SPACE_DELIMITER "$"
 
+//! String added when renaming dataspace to avoid name conflicts
+#define DATA_RENAME_STR "__w__"
+
 namespace iegenlib {
 
 /* Computation */
@@ -107,18 +110,63 @@ std::string Computation::getPrefixedDataSpaceName(const std::string& originalNam
     return DATA_SPACE_DELIMITER + prefix + originalName.substr(1);
 }
 
-void Computation::addStmt(Stmt* stmt) {
+void Computation::updateDataSpaceVersions(Stmt* stmt) {
+    std::vector<std::pair<std::string, std::string>> writes;
     for (int i = 0; i < stmt->getNumWrites(); i++) {
         std::string write = stmt->getWriteDataSpace(i);
         if (write == "" || write[0] != '$') { continue; }
-        // Strip dollar signs
-        write = write.substr(1, write.length() - 2);
+        if (isWrittenTo(write) == -1) { continue; }
 
-        std::string newWrite = write + "__w__" + std::to_string(dataRenameCnt++);
-        // TODO: Speed up using reverse iteration method
-        replaceDataSpaceName(write, newWrite);
-        stmt->replaceDataSpaceRead(write, newWrite);
+        std::string newWrite = getDataSpaceRename(write);
+        writes.push_back({write, newWrite});
+
+        addDataSpace(newWrite);
+
+        // Rename in the reads of the new statement
+        stmt->replaceDataSpaceReads(write, newWrite);
     }
+
+    for (int i = getNumStmts() - 1; i >= 0; i--) {
+        Stmt* currStmt = getStmt(i);
+        for (auto it = writes.begin(); it != writes.end(); ++it) {
+            bool foundWrite = false;
+            for (int j = 0; j < currStmt->getNumWrites(); j++) {
+                std::string write = currStmt->getWriteDataSpace(j);
+                if (isRenameOf(it->first, write)) { foundWrite = true; break; }
+            }
+            if (foundWrite) {
+                // Rename in the writes of the current statement
+                currStmt->replaceDataSpaceWrites(it->first, it->second);
+                it = writes.erase(it);
+                if (it == writes.end()) { break; }
+                continue;
+            }
+            // Rename throughout the entire statment
+            currStmt->replaceDataSpace(it->first, it->second);
+        }
+        if (writes.empty()) { break; }
+    }
+}
+
+std::string Computation::getDataSpaceRename(std::string dataSpaceName) {
+    if (dataSpaceName == "") { return ""; }
+    dataSpaceName = trimDataSpaceName(dataSpaceName);
+    return "$" + dataSpaceName + DATA_RENAME_STR + std::to_string(dataRenameCnt++) + "$";
+}
+
+std::string Computation::trimDataSpaceName(std::string dataSpace) {
+    return dataSpace == "" || dataSpace[0] != '$' ? dataSpace :
+           dataSpace.substr(1, dataSpace.length() - 2);
+}
+
+bool Computation::isRenameOf(std::string original, std::string rename) {
+    original = trimDataSpaceName(original) + DATA_RENAME_STR;
+    rename = trimDataSpaceName(rename);
+    return rename.find(original) == 0; 
+}
+
+void Computation::addStmt(Stmt* stmt) {
+    updateDataSpaceVersions(stmt);
     stmts.push_back(stmt);
     transformationLists.push_back({});
 }
@@ -352,31 +400,73 @@ AppendComputationResult Computation::appendComputation(
 
     // Keep track of the number of writes. 
     // Need this for the correct execution order
-    int idx =0;
+    int idx = 0;
+    // Used to track number of statements not including parameter
+    // declarations. Used for paramter reassignments
+    int numStmts = toAppend->getNumStmts();
     for (int i = ((signed int)numArgs) - 1; i >= 0; --i) {
-        if(toAppend->isWrittenTo(toAppend->getParameterName(i)) != -1 && !(toAppend->getParameterType(i).find("&"))){
+        std::string param = toAppend->getParameterName(i);
+        std::string newParam = getDataSpaceRename(param);
+ 
+        Stmt* paramDeclStmt = new Stmt();
 
-            Stmt* paramDeclStmt = new Stmt();
-
-            paramDeclStmt->setStmtSourceCode(toAppend->getParameterType(i) + " " +
-                                         toAppend->getParameterName(i) + " = " +
-                                         arguments[i] + ";");
-            paramDeclStmt->setIterationSpace("{[0]}");
-            paramDeclStmt->setExecutionSchedule("{[0]->[" + std::to_string(idx) +
+        paramDeclStmt->setStmtSourceCode(toAppend->getParameterType(i) + " " +
+                                         newParam + " = " + arguments[i] + ";");
+        paramDeclStmt->setIterationSpace("{[0]}");
+        paramDeclStmt->setExecutionSchedule("{[0]->[" + std::to_string(idx) +
                                             "]}");
-           idx++;
-           // If passed-in argument is a data space, mark it as being read
-           // (otherwise it is a literal)
-           if (this->isDataSpace(arguments[i])) {
-               paramDeclStmt->addRead(arguments[i], "{[0]->[0]}");
-           }
-           paramDeclStmt->addWrite(toAppend->getParameterName(i), "{[0]->[0]}");
+        idx++;
+        // If passed-in argument is a data space, mark it as being read
+        // (otherwise it is a literal)
+        if (this->isDataSpace(arguments[i])) {
+            paramDeclStmt->addRead(arguments[i], "{[0]->[0]}");
+        }
+        paramDeclStmt->addWrite(newParam, "{[0]->[0]}");
 
-           toAppend->stmts.insert(toAppend->stmts.begin(), paramDeclStmt);
+        toAppend->stmts.insert(toAppend->stmts.begin(), paramDeclStmt);
+
+        // Rename the parameter up to its first write in toAppend
+        for (int i = 1; i < toAppend->getNumStmts(); i++) {
+            Stmt* currStmt = toAppend->getStmt(i);
+            bool foundWrite = false;
+            for (int j = 0; j < currStmt->getNumWrites(); j++) {
+                std::string write = currStmt->getWriteDataSpace(j);
+                if (isRenameOf(param, write)) { foundWrite = true; break; }
+            }
+            if (foundWrite) {
+                currStmt->replaceDataSpaceReads(param, newParam);
+                break;
+            }
+            currStmt->replaceDataSpace(param, newParam);
         }
-        else{
-            toAppend->replaceDataSpaceName(toAppend->getParameterName(i),arguments[i]);
+
+        bool activeOut = toAppend->getParameterType(i).find("&");
+        for (std::string retVal : toAppend->getReturnValues()) {
+            if (activeOut) { break; }
+            if (retVal.compare(arguments[i]) == 0)  { activeOut = true; }
         }
+
+        // If the argument is active out, reassign the toAssign parameter to it
+        if (activeOut) {
+            Stmt* paramReassignStmt = new Stmt();
+            paramReassignStmt->setStmtSourceCode(arguments[i] + " = " +
+                                                 param + ";");
+            paramReassignStmt->setIterationSpace("{[0]}");
+            paramReassignStmt->setExecutionSchedule("{[0]->[" + std::to_string(numStmts++) +
+                                            "]}");
+            // If passed-in argument is a data space, mark it as being read
+            // (otherwise it is a literal)
+            if (this->isDataSpace(arguments[i])) {
+                paramReassignStmt->addWrite(arguments[i], "{[0]->[0]}");
+            }
+            paramReassignStmt->addRead(param, "{[0]->[0]}");
+            toAppend->addStmt(paramReassignStmt);
+        }
+    }
+
+    // add (already name prefixed) data spaces from appendee to appender
+    for (const auto& dataSpace : toAppend->getDataSpaces()) {
+        this->addDataSpace(dataSpace);
     }
 
     // calculate indexes/offsets for execution tuple modifications
@@ -631,11 +721,6 @@ AppendComputationResult Computation::appendComputation(
 
         // add the adapted statement into this Computation
         this->addStmt(newStmt);
-    }
-
-    // add (already name prefixed) data spaces from appendee to appender
-    for (const auto& dataSpace : toAppend->getDataSpaces()) {
-        this->addDataSpace(dataSpace);
     }
 
     // collect append result information to return
@@ -1550,12 +1635,18 @@ std::string Computation::toOmegaString() {
 
 bool Computation::assertValidDataSpaceName(const std::string& name) {
     if (!(name.length() >= 3 && std::string(1, name.front()) == DATA_SPACE_DELIMITER
-            && std::string(1, name.back()) == DATA_SPACE_DELIMITER)) {
-        throw assert_exception("Data space names must be nonempty and surrounded in " DATA_SPACE_DELIMITER);
+            && std::string(1, name.back()) == DATA_SPACE_DELIMITER)){// || name.find('.') != std::string::npos) {
+        std::stringstream msg;
+        msg << "Data space names must be nonempty, surrounded in " << DATA_SPACE_DELIMITER
+            << ", and not contain '.'\nError triggered for data space: " << name;
+        throw assert_exception(msg.str());
     }
 }
 
-int Computation::isWrittenTo(std::string dataSpace){ 
+int Computation::isWrittenTo(std::string dataSpace){
+    if (dataSpace == "") { return -1; }
+    if (dataSpace[0] != '$') { dataSpace = "$"+dataSpace+"$"; }
+ 
     for(int i = 0; i < getNumStmts(); i++) {
         for(int data_write_index = 0; 
                 data_write_index < getStmt(i)->getNumWrites(); 
@@ -1612,7 +1703,7 @@ Stmt::~Stmt() {
     dataWrites.clear();
 }
 
-void Stmt::replaceDataSpaceRead(std::string searchString, std::string replacedString) {
+void Stmt::replaceDataSpaceReads(std::string searchString, std::string replacedString) {
     if (searchString == "") { return; }
     if (searchString[0] != '$') { searchString = "$" + searchString + "$"; }
     if (replacedString != "" && replacedString[0] != '$') { replacedString = "$" + replacedString + "$"; }
@@ -1648,7 +1739,45 @@ void Stmt::replaceDataSpaceRead(std::string searchString, std::string replacedSt
     setExecutionSchedule(execScheduleStr);
 }
 
+void Stmt::replaceDataSpaceWrites(std::string searchString, std::string replacedString) {
+    if (searchString == "") { return; }
+    if (searchString[0] != '$') { searchString = "$" + searchString + "$"; }
+    if (replacedString != "" && replacedString[0] != '$') { replacedString = "$" + replacedString + "$"; }
+
+    std::string oldSourceCode = getStmtSourceCode();
+    std::stringstream newSourceCode;
+    size_t eqPos = oldSourceCode.find("="), semiPos = oldSourceCode.find(";");
+    while (eqPos != std::string::npos) {
+        if (semiPos == std::string::npos) { semiPos = oldSourceCode.length() - 1; }
+        newSourceCode << iegenlib::replaceInString(oldSourceCode.substr(0, eqPos),
+                                                   searchString, replacedString)
+                      << oldSourceCode.substr(eqPos, semiPos - eqPos + 1);
+        oldSourceCode = oldSourceCode.substr(semiPos + 1);
+        eqPos = oldSourceCode.find("=");
+        semiPos = oldSourceCode.find(";");
+    }
+    newSourceCode << oldSourceCode;
+    setStmtSourceCode(newSourceCode.str());
+
+    for(auto& write: dataWrites){
+       write.first = iegenlib::replaceInString(write.first, searchString, replacedString);
+    }
+
+    // TODO: should I do this?
+    std::string iterSpaceStr = iterationSpace->prettyPrintString();
+    std::string execScheduleStr = executionSchedule->prettyPrintString();
+
+    iterSpaceStr = replaceInString(iterSpaceStr, searchString, replacedString);
+    execScheduleStr = replaceInString(execScheduleStr, searchString, replacedString);
+
+    // use modified strings to construct new values
+    setIterationSpace(iterSpaceStr);
+    setExecutionSchedule(execScheduleStr);
+}
+
 void Stmt::replaceDataSpace(std::string searchString, std::string replacedString){
+    if (searchString == "") { return; } 
+
     std::string oldSourceCode = getStmtSourceCode();
     std::string newSourceCode;
     newSourceCode = iegenlib::replaceInString(oldSourceCode, searchString, replacedString);

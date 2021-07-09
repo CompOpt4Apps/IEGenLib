@@ -80,6 +80,19 @@ class Computation {
     //! Get the new name for a data space that has the given prefix applied
     static std::string getPrefixedDataSpaceName(const std::string& originalName, const std::string& prefix);
 
+    //! For each write in the new statement, rename the written dataspace in all
+    //  statements from the last statement to the last write to that data space.
+    void updateDataSpaceVersions(Stmt* stmt);
+
+    //! Produces a rename for the inputted data space, incrementing dataRenameCnt
+    std::string getDataSpaceRename(std::string dataSpaceName);
+
+    //! Trims dollar signs off of data space
+    std::string trimDataSpaceName(std::string dataSpace);
+
+    //! Check if the 'rename' dataspace is a rename of the 'original' dataspace
+    bool isRenameOf(std::string original, std::string rename);
+
     //! Add a statement to this Computation.
     //! Statements are numbered sequentially from 0 as they are inserted.
     //! @param[in] stmt Stmt to add (adopted)
@@ -245,7 +258,8 @@ class Computation {
     
     //! Information on all statements in the Computation
     std::vector<Stmt*> stmts;
-    //! Data spaces available in the Computation
+    //! Data spaces available in the Computation, pairs of name : type
+    //std::vector<std::pair<std::string, std::string>> dataSpaces;
     std::unordered_set<std::string> dataSpaces;
     //! Parameters of the computation, pair of name : type. All parameters should also be data spaces.
     std::vector<std::pair<std::string, std::string>> parameters;
@@ -307,7 +321,10 @@ class Stmt {
     Stmt(const Stmt& other);
 
     //! Replace data space name only where read from
-    void replaceDataSpaceRead(std::string searchString, std::string replacedString);
+    void replaceDataSpaceReads(std::string searchString, std::string replacedString);
+
+    //! Replace data space name only where written to
+    void replaceDataSpaceWrites(std::string searchString, std::string replacedString);
 
     //! Replace data space name
     void replaceDataSpace(std::string searchString, std::string replacedString); 
