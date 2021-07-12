@@ -406,8 +406,11 @@ AppendComputationResult Computation::appendComputation(
     int numStmts = toAppend->getNumStmts();
     for (int i = ((signed int)numArgs) - 1; i >= 0; --i) {
         std::string param = toAppend->getParameterName(i);
-        std::string newParam = getDataSpaceRename(param);
- 
+        // Get the first write to the parameter
+        int firstWrite = toAppend->isWrittenTo(param);
+        // Only rename the parameter if there is a first write
+        std::string newParam = firstWrite == -1 ? param : getDataSpaceRename(param);
+
         Stmt* paramDeclStmt = new Stmt();
 
         paramDeclStmt->setStmtSourceCode(toAppend->getParameterType(i) + " " +
@@ -426,35 +429,21 @@ AppendComputationResult Computation::appendComputation(
         toAppend->stmts.insert(toAppend->stmts.begin(), paramDeclStmt);
 
         // Rename the parameter up to its first write in toAppend
-        for (int i = 1; i < toAppend->getNumStmts(); i++) {
-            Stmt* currStmt = toAppend->getStmt(i);
-            bool foundWrite = false;
-            for (int j = 0; j < currStmt->getNumWrites(); j++) {
-                std::string write = currStmt->getWriteDataSpace(j);
-                if (isRenameOf(param, write)) { foundWrite = true; break; }
-            }
-            if (foundWrite) {
-                currStmt->replaceDataSpaceReads(param, newParam);
-                break;
-            }
-            currStmt->replaceDataSpace(param, newParam);
+        for (int j = 0; j < firstWrite; j++) {
+            toAppend->getStmt(j)->replaceDataSpace(param, newParam);
         }
-
-        bool activeOut = toAppend->getParameterType(i).find("&");
-        for (std::string retVal : toAppend->getReturnValues()) {
-            if (activeOut) { break; }
-            if (retVal.compare(arguments[i]) == 0)  { activeOut = true; }
-        }
+        // Rename in the reads of the first write
+        if (firstWrite != -1) { toAppend->getStmt(firstWrite)->replaceDataSpaceReads(param, newParam); }
 
         // If the argument is active out, reassign the toAssign parameter to it
-        if (activeOut) {
+        if (toAppend->getParameterType(i).find("&") != std::string::npos) {
             Stmt* paramReassignStmt = new Stmt();
             paramReassignStmt->setStmtSourceCode(arguments[i] + " = " +
                                                  param + ";");
             paramReassignStmt->setIterationSpace("{[0]}");
             paramReassignStmt->setExecutionSchedule("{[0]->[" + std::to_string(numStmts++) +
                                             "]}");
-            // If passed-in argument is a data space, mark it as being read
+            // If passed-in argument is a data space, mark it as being written
             // (otherwise it is a literal)
             if (this->isDataSpace(arguments[i])) {
                 paramReassignStmt->addWrite(arguments[i], "{[0]->[0]}");
@@ -1704,10 +1693,11 @@ Stmt::~Stmt() {
 }
 
 void Stmt::replaceDataSpaceReads(std::string searchString, std::string replacedString) {
+     std::cerr << searchString << " " << replacedString << std::endl;
     if (searchString == "") { return; }
     if (searchString[0] != '$') { searchString = "$" + searchString + "$"; }
     if (replacedString != "" && replacedString[0] != '$') { replacedString = "$" + replacedString + "$"; }
-
+    
     std::string oldSourceCode = getStmtSourceCode();
     std::stringstream newSourceCode;
     size_t eqPos = oldSourceCode.find("="), semiPos = oldSourceCode.find(";");

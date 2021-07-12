@@ -514,6 +514,160 @@ TEST_F(ComputationTest, SSARenaming) {
     delete test;
 }
 
+TEST_F(ComputationTest, AppendComputationSSA) {
+    /* Code:
+     * useMe =  80;
+     * input = useMe * 8;
+     * useMe = useMe + input;
+     * input = func(input); // inlined
+     * useMe = useMe + input;
+     *
+     * func(int foo):
+     * bar = foo;
+     * foo = bar + 1;
+     * bar = foo + func1(foo); // inlined
+     * foo = foo - 1;
+     * return foo;
+     *
+     * func1(int foo):
+     * foo = 3 * 21;
+     * foo = foo + 1;
+     * return foo
+     */
+
+    std::vector<std::string> args;
+    int pos = 0;
+    AppendComputationResult res;
+    std::ofstream file;
+    file.open("out.c");
+
+    Computation* comp1 = new Computation();
+
+    comp1->addDataSpace("$input$");
+    comp1->addDataSpace("$useMe$");
+   
+    comp1->addStmt(new Stmt (
+        "$useMe$ = 80;", "{[0]}", "{[0]->[0]}", {}, {{"$useMe$", "{[0]->[0]}"}}
+    ));
+ 
+    comp1->addStmt(new Stmt (
+        "$input$ = $useMe$ * 8;", "{[0]}", "{[0]->[1]}", {{"$useMe$", "{[0]->[0]}"}}, {{"$input$", "{[0]->[0]}"}}
+    ));
+
+    comp1->addStmt(new Stmt (
+        "$useMe$ = $useMe$ + $input$;", "{[0]}", "{[0]->[2]}", {{"$useMe$", "{[0]->[0]}"}, {"$input$", "{[0]->[0]}"}}, {{"$useMe$", "{[0]->[0]}"}}
+    ));
+
+
+    Computation* comp2 = new Computation();
+
+    comp2->addParameter("$foo$", "int");
+    comp2->addReturnValue("$foo$");
+    comp2->addDataSpace("$bar$");
+
+    comp2->addStmt(new Stmt(
+        "$bar$ = $foo$;", "{[0]}", "{[0]->[0]}", {{"$foo$", "{[0]->[0]}"}}, {{"$bar$", "{[0]->[0]}"}}
+    ));
+    comp2->addStmt(new Stmt(
+        "$foo$ = $bar$ + 1;", "{[0]}", "{[0]->[1]}", {{"$bar$", "{[0]->[0]}"}}, {{"$foo$", "{[0]->[0]}"}}
+    ));
+
+    Computation* comp3 = new Computation();
+    
+    comp3->addParameter("$foo$", "int");
+    comp3->addReturnValue("$foo$");
+
+    comp3->addStmt(new Stmt(
+        "$foo$ = 3 * 21;", "{[0]}", "{[0]->[0]}", {}, {{"$foo$", "{[0]->[0]}"}}
+    ));
+    comp3->addStmt(new Stmt(
+        "$foo$ = $foo$ + 1;", "{[0]}", "{[0]->[1]}", {{"$foo$", "{[0]->[0]}"}}, {{"$foo$", "{[0]->[0]}"}}
+    ));
+
+    args = {"$foo$"};
+    res = comp2->appendComputation(comp3, "{[0]}", "{[0]->[2]}", args);
+    pos = res.tuplePosition + 1;
+
+    comp2->addStmt(new Stmt(
+        "$bar$ = $foo$ + "+res.returnValues.back()+";", "{[0]}", "{[0]->["+std::to_string(pos++)+"]}",
+        {{"$foo$", "{[0]->[0]}"},{res.returnValues.back(), "{[0]->[0]}"}}, {{"$bar$", "{[0]->[0]}"}}
+    ));
+    comp2->addStmt(new Stmt(
+        "$foo$ = $foo$ - 1;", "{[0]}", "{[0]->["+std::to_string(pos++)+"]}", {{"$foo$", "{[0]->[0]}"}}, {{"$foo$", "{[0]->[0]}"}}
+    ));
+
+    args = {"$input$"};
+    res = comp1->appendComputation(comp2, "{[0]}", "{[0]->[3]}", args);
+    pos = res.tuplePosition + 1;
+
+    comp1->addStmt(new Stmt("$input$ = "+res.returnValues.back()+";",
+        "{[0]}",
+        "{[0]->["+std::to_string(pos++)+"]}",
+        {{res.returnValues.back(), "{[0]->[0]}"}},
+        {{"$input$", "{[0]->[0]}"}}
+    ));
+
+    comp1->addStmt(new Stmt (
+        "$useMe$ = $useMe$ + $input$;", "{[0]}", "{[0]->["+std::to_string(pos++)+"]}", {{"$useMe$", "{[0]->[0]}"}, {"$input$", "{[0]->[0]}"}}, {{"$useMe$", "{[0]->[0]}"}}
+    ));
+
+    std::stringstream ss;
+    ss << "#undef s0\n#undef s1\n#undef s2\n#undef s3\n#undef s4\n#undef s5\n#undef s6\n#undef s7\n#undef s8\n#undef s9\n#undef s10\n#undef s11\n#undef s12\n";
+    ss << "#define s0(__x0)   useMe__w__0 = 80; \n" << "#define s1(__x0)   input__w__6 = useMe__w__0 * 8; \n" << "#define s2(__x0)   useMe__w__7 = useMe__w__0 + input__w__6; \n";
+    ss << "#define s3(__x0)   int _iegen_1foo__w__5 = input__w__6; \n" << "#define s4(__x0)   _iegen_1bar__w__3 = _iegen_1foo__w__4; \n";
+    ss << "#define s5(__x0)   _iegen_1foo__w__4 = _iegen_1bar__w__3 + 1; \n" << "#define s6(__x0)   int _iegen_0foo__w__2 = _iegen_1foo__w__4; \n";
+    ss << "#define s7(__x0)   _iegen_1_iegen_0foo__w__1 = 3 * 21; \n" << "#define s8(__x0)   _iegen_1_iegen_0foo = _iegen_1_iegen_0foo__w__1 + 1; \n";
+    ss << "#define s9(__x0)   _iegen_1bar = _iegen_1foo__w__4 + _iegen_1_iegen_0foo; \n" << "#define s10(__x0)   _iegen_1foo = _iegen_1foo__w__4 - 1; \n";
+    ss << "#define s11(__x0)   input = _iegen_1foo; \n" << "#define s12(__x0)   useMe = useMe__w__7 + input; \n\n\n";
+    ss << "t1 = 0; \n\ns0(0);\ns1(1);\ns2(2);\ns3(3);\ns4(4);\ns5(5);\ns6(6);\ns7(7);\ns8(8);\ns9(9);\ns10(10);\ns11(11);\ns12(12);\n\n";
+    ss << "#undef s0\n#undef s1\n#undef s2\n#undef s3\n#undef s4\n#undef s5\n#undef s6\n#undef s7\n#undef s8\n#undef s9\n#undef s10\n#undef s11\n#undef s12\n";
+    EXPECT_EQ(comp1->codeGen(), ss.str());
+
+    delete comp1;
+    delete comp2;
+    delete comp3;
+
+    comp1 = new Computation();
+
+    comp1->addDataSpace("$input$");
+    
+    comp1->addStmt(new Stmt (
+        "$input$ = 4 * 8;", "{[0]}", "{[0]->[0]}", {}, {{"$input$", "{[0]->[0]}"}}
+    ));
+
+
+    comp2 = new Computation();
+
+    comp2->addParameter("$foo$", "int");
+    comp2->addReturnValue("$foo$");
+    comp2->addDataSpace("$bar$");
+
+    comp2->addStmt(new Stmt(
+        "$bar$ = $foo$;", "{[0]}", "{[0]->[0]}", {{"$foo$", "{[0]->[0]}"}}, {{"$bar$", "{[0]->[0]}"}}
+    ));
+
+    args = {"$input$"};
+    res = comp1->appendComputation(comp2, "{[0]}", "{[0]->[1]}", args);
+    pos = res.tuplePosition + 1;
+
+    comp1->addStmt(new Stmt("$input$ = "+res.returnValues.back()+";",
+        "{[0]}",
+        "{[0]->["+std::to_string(pos++)+"]}",
+        {{res.returnValues.back(), "{[0]->[0]}"}},
+        {{"$input$", "{[0]->[0]}"}}
+    ));
+ 
+    ss.str("");
+    ss << "#undef s0\n#undef s1\n#undef s2\n#undef s3\n";
+    ss << "#define s0(__x0)   input__w__8 = 4 * 8; \n" << "#define s1(__x0)   int _iegen_2foo = input__w__8; \n";
+    ss << "#define s2(__x0)   _iegen_2bar = _iegen_2foo; \n" << "#define s3(__x0)   input = _iegen_2foo; \n\n\n";
+    ss << "t1 = 0; \n\ns0(0);\ns1(1);\ns2(2);\ns3(3);\n\n#undef s0\n#undef s1\n#undef s2\n#undef s3\n";
+    EXPECT_EQ(comp1->codeGen(), ss.str());
+
+    delete comp1;
+    delete comp2;
+}
+
 TEST_F(ComputationTest, Colors) {
     // Basic for loop with 2 statements 
     // for (i = 0; i < N; i++) /loop over rows
