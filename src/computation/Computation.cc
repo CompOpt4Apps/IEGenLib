@@ -132,7 +132,7 @@ void Computation::updateDataSpaceVersions(Stmt* stmt) {
             bool foundWrite = false;
             for (int j = 0; j < currStmt->getNumWrites(); j++) {
                 std::string write = currStmt->getWriteDataSpace(j);
-                if (isRenameOf(it->first, write)) { foundWrite = true; break; }
+                if (/*isRenameOf(it->first, write)*/write.compare(it->first) == 0) { foundWrite = true; break; }
             }
             if (foundWrite) {
                 // Rename in the writes of the current statement
@@ -409,12 +409,15 @@ AppendComputationResult Computation::appendComputation(
         // Get the first write to the parameter
         int firstWrite = toAppend->isWrittenTo(param);
         // Only rename the parameter if there is a first write
-        std::string newParam = firstWrite == -1 ? param : getDataSpaceRename(param);
+        std::string newParam = param;
+        if (firstWrite != -1) {
+            newParam = getDataSpaceRename(param);
+            toAppend->addDataSpace(newParam);
+        }
 
         Stmt* paramDeclStmt = new Stmt();
 
-        paramDeclStmt->setStmtSourceCode(toAppend->getParameterType(i) + " " +
-                                         newParam + " = " + arguments[i] + ";");
+        paramDeclStmt->setStmtSourceCode(newParam + " = " + arguments[i] + ";");
         paramDeclStmt->setIterationSpace("{[0]}");
         paramDeclStmt->setExecutionSchedule("{[0]->[" + std::to_string(idx) +
                                             "]}");
@@ -426,14 +429,15 @@ AppendComputationResult Computation::appendComputation(
         }
         paramDeclStmt->addWrite(newParam, "{[0]->[0]}");
 
-        toAppend->stmts.insert(toAppend->stmts.begin(), paramDeclStmt);
-
         // Rename the parameter up to its first write in toAppend
         for (int j = 0; j < firstWrite; j++) {
             toAppend->getStmt(j)->replaceDataSpace(param, newParam);
         }
         // Rename in the reads of the first write
         if (firstWrite != -1) { toAppend->getStmt(firstWrite)->replaceDataSpaceReads(param, newParam); }
+
+        // Add the statement
+        toAppend->stmts.insert(toAppend->stmts.begin(), paramDeclStmt);
 
         // If the argument is active out, reassign the toAssign parameter to it
         if (toAppend->getParameterType(i).find("&") != std::string::npos) {
@@ -1693,11 +1697,10 @@ Stmt::~Stmt() {
 }
 
 void Stmt::replaceDataSpaceReads(std::string searchString, std::string replacedString) {
-     std::cerr << searchString << " " << replacedString << std::endl;
     if (searchString == "") { return; }
     if (searchString[0] != '$') { searchString = "$" + searchString + "$"; }
     if (replacedString != "" && replacedString[0] != '$') { replacedString = "$" + replacedString + "$"; }
-    
+   
     std::string oldSourceCode = getStmtSourceCode();
     std::stringstream newSourceCode;
     size_t eqPos = oldSourceCode.find("="), semiPos = oldSourceCode.find(";");
@@ -1714,7 +1717,7 @@ void Stmt::replaceDataSpaceReads(std::string searchString, std::string replacedS
     setStmtSourceCode(newSourceCode.str());
 
     for(auto& read: dataReads){
-       read.first = iegenlib::replaceInString(read.first, searchString, replacedString);
+       if (read.first.compare(searchString) == 0) { read.first = replacedString; }
     }
     
     // TODO: should I do this?
@@ -1750,7 +1753,7 @@ void Stmt::replaceDataSpaceWrites(std::string searchString, std::string replaced
     setStmtSourceCode(newSourceCode.str());
 
     for(auto& write: dataWrites){
-       write.first = iegenlib::replaceInString(write.first, searchString, replacedString);
+        if (write.first.compare(searchString) == 0) { write.first = replacedString; }
     }
 
     // TODO: should I do this?
