@@ -83,15 +83,8 @@ class Computation {
     //! For each write in the new statement, rename the written dataspace in all
     //  statements from the last statement to the last write to that data space.
     void updateDataSpaceVersions(Stmt* stmt);
+    void updateDataDependencies(Stmt* stmt);
 
-    //! Produces a rename for the inputted data space, incrementing dataRenameCnt
-    std::string getDataSpaceRename(std::string dataSpaceName);
-
-    //! Trims dollar signs off of data space
-    std::string trimDataSpaceName(std::string dataSpace);
-
-    //! Check if the 'rename' dataspace is a rename of the 'original' dataspace
-    bool isRenameOf(std::string original, std::string rename);
 
     //! Add a statement to this Computation.
     //! Statements are numbered sequentially from 0 as they are inserted.
@@ -112,6 +105,16 @@ class Computation {
     int isWrittenTo(std::string dataSpace);
     //! Replace data space name if written to
     void replaceDataSpaceName(std::string original, std::string newString);
+    //! Gets color of data space for writing to dot file
+    std::string getDataSpaceDotColor(std::string dataSpaceName);
+    //! Produces a rename for the inputted data space, incrementing dataRenameCnt
+    std::string getDataSpaceRename(std::string dataSpaceName);
+
+    //! Trims dollar signs off of data space
+    std::string trimDataSpaceName(std::string dataSpace);
+
+    //! Check if the 'rename' dataspace is a rename of the 'original' dataspace
+    bool isRenameOf(std::string original, std::string rename);
 
     //! Add a (formal) parameter to this Computation, including adding it as a data space.
     //! @param paramName Name of the parameter
@@ -185,6 +188,7 @@ class Computation {
     //  a lite version of polyhedral scanning to generate
     //  subgraphs in the dot file.
     std::string toDotString();
+    std::string toDotString2();
 
     //! Environment used by this Computation
     Environment env;
@@ -248,7 +252,11 @@ class Computation {
     void fuse (int s1, int s2, int fuseLevel);
    
     private:
-    
+ 
+    void toDotScan2(std::vector<std::pair<int,Set*>> &activeStmts, int level,
+		    std::ostringstream& ss ,
+		    std::vector<std::vector<Set*> >&projectedIS);
+   
     //! Lite version of polyhedra scanning to generate 
     //! toDot Clusters
     void toDotScan(std::vector<std::pair<int,Set*>> &activeStmts, int level,
@@ -321,10 +329,12 @@ class Stmt {
     Stmt(const Stmt& other);
 
     //! Replace data space name only where read from
-    void replaceDataSpaceReads(std::string searchString, std::string replacedString);
+    //! Returns true if such a read is found, false otherwise
+    bool replaceDataSpaceReads(std::string searchString, std::string replacedString);
 
     //! Replace data space name only where written to
-    void replaceDataSpaceWrites(std::string searchString, std::string replacedString);
+    //! Returns true if such a write is found, false otherwise
+    bool replaceDataSpaceWrites(std::string searchString, std::string replacedString);
 
     //! Replace data space name
     void replaceDataSpace(std::string searchString, std::string replacedString); 
@@ -383,7 +393,15 @@ class Stmt {
     //! Get a data write's relation by index
     Relation* getWriteRelation(unsigned int index) const;
 
+    void addInDependency(int i) { inDependencies.push_back(i); }
+    void addOutDependency(int i) { outDependencies.push_back(i); }
+    std::vector<int> getInDependencies() { return inDependencies; }
+    std::vector<int> getOutDependencies() { return outDependencies; }
+
    private:
+    //! inDependencies: indices of statements which write to this statement's reads
+    //! frontDept: pointers to statements which read from this statement's write
+    std::vector<int> inDependencies, outDependencies;
     //! Source code of the statement, for debugging purposes
     std::string stmtSourceCode;
     //! Iteration space of a statement

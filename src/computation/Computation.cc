@@ -132,7 +132,7 @@ void Computation::updateDataSpaceVersions(Stmt* stmt) {
             bool foundWrite = false;
             for (int j = 0; j < currStmt->getNumWrites(); j++) {
                 std::string write = currStmt->getWriteDataSpace(j);
-                if (/*isRenameOf(it->first, write)*/write.compare(it->first) == 0) { foundWrite = true; break; }
+                if (write.compare(it->first) == 0) { foundWrite = true; break; }
             }
             if (foundWrite) {
                 // Rename in the writes of the current statement
@@ -148,25 +148,35 @@ void Computation::updateDataSpaceVersions(Stmt* stmt) {
     }
 }
 
-std::string Computation::getDataSpaceRename(std::string dataSpaceName) {
-    if (dataSpaceName == "") { return ""; }
-    dataSpaceName = trimDataSpaceName(dataSpaceName);
-    return "$" + dataSpaceName + DATA_RENAME_STR + std::to_string(dataRenameCnt++) + "$";
+void Computation::updateDataDependencies(Stmt* stmt) {
+    std::vector<std::string> reads;
+    for (int i = 0; i < stmt->getNumReads(); i++) {
+        reads.push_back(stmt->getReadDataSpace(i));
+    }
+
+    for (int i = getNumStmts() - 1; i >= 0; i--)  {
+        Stmt* currStmt = getStmt(i);
+        for (int j = 0; j < currStmt->getNumWrites(); j++) {
+            std::string write = currStmt->getWriteDataSpace(j);
+            for (auto it = reads.begin(); it != reads.end(); it++) {
+                if (isRenameOf(write, *it) || isRenameOf(*it, write)) { std::cerr << write << " is rename of " << (*it) << std::endl;}
+                if (write.compare(*it) == 0) {
+                    currStmt->addOutDependency(getNumStmts());
+                    stmt->addInDependency(i);
+                    it = reads.erase(it);
+                    if (it == reads.end()) { break; }
+                }
+            }
+            if (reads.empty()) { break; }
+        }
+        if (reads.empty()) { break; }
+    }
 }
 
-std::string Computation::trimDataSpaceName(std::string dataSpace) {
-    return dataSpace == "" || dataSpace[0] != '$' ? dataSpace :
-           dataSpace.substr(1, dataSpace.length() - 2);
-}
-
-bool Computation::isRenameOf(std::string original, std::string rename) {
-    original = trimDataSpaceName(original) + DATA_RENAME_STR;
-    rename = trimDataSpaceName(rename);
-    return rename.find(original) == 0; 
-}
 
 void Computation::addStmt(Stmt* stmt) {
     updateDataSpaceVersions(stmt);
+    updateDataDependencies(stmt);
     stmts.push_back(stmt);
     transformationLists.push_back({});
 }
@@ -1214,6 +1224,164 @@ bool Computation::consistentSetArity(const std::vector<Set*>& sets) {
     return true;
 }
 
+std::string Computation::toDotString2() {
+    //TODO: Deal with disjunction of cunjunctions later.
+    
+    padExecutionSchedules();
+
+    // newIS is a list of pairs of statement id
+    // to their transformed spaces.
+    std::vector<std::pair<int,Set*> > newIS;
+
+    std::vector<Set*> transformedSpaces = applyTransformations();
+    if (!consistentSetArity(transformedSpaces)) {
+        std::cerr << "Iteration spaces do not have a consistent arity" << std::endl;
+        std::cerr << "Aborting toDotString()" << std::endl;
+        return "";
+    }
+     
+    std::ostringstream edges;
+
+    bool visited[getNumStmts()];
+    for (int i = 0; i < getNumStmts(); i++) { visited[i] = false; }
+
+    for (int i = 0; i < getNumStmts(); i++) {
+        if (visited[i]) { continue; }
+
+        std::queue<int> toVisit;
+        toVisit.push(i);
+        while (!toVisit.empty()) {
+            int idx = toVisit.front();
+            toVisit.pop();
+            if (visited[idx]) { continue; }
+
+            Stmt* stmt = getStmt(idx);
+            std::vector<int> outDeps = stmt->getOutDependencies();
+            // If we are only using the variable once, juust skip to its use statement
+            while (outDeps.size() == 1) {
+                int newIdx = outDeps[0];
+                stmt = getStmt(newIdx);
+                outDeps = stmt->getOutDependencies();
+                std::cerr << "Unused: " << idx << std::endl;
+                idx = newIdx;
+            }
+
+            // From the final use statement, back track to collect all backwards dependencies
+            std::vector<int> inDeps;
+            std::queue<int> depQueue;
+            for (int dep : stmt->getInDependencies()) { depQueue.push(dep); }
+            while (!depQueue.empty()) {
+                int idx2 = depQueue.front();
+                depQueue.pop();
+                Stmt* depStmt = getStmt(idx2);
+                // If it only has one write, ignore it and keep going back
+                if (depStmt->getOutDependencies().size() == 1) {
+                    visited[idx2] = true;
+                    for (int dep : depStmt->getInDependencies()) {
+                        depQueue.push(dep);
+                    }
+                // Otherwise recognize as a dependence
+                } else { inDeps.push_back(idx2); }
+            }
+
+            for (int j : inDeps) { std::cerr << j << ", ";} std::cerr << std::endl;
+            // Remove duplicate dependencies
+            std::sort(inDeps.begin(), inDeps.end());
+            inDeps.erase(std::unique(inDeps.begin(), inDeps.end()), inDeps.end());
+            for (int j : inDeps) { std::cerr << j << ", ";} std::cerr << std::endl;
+
+            Set* sched = transformedSpaces[idx];
+            newIS.push_back(std::make_pair(idx, sched));
+    
+            // Collect all writes
+            std::string color;
+            std::stringstream label;
+            label << sched->prettyPrintString() << "\\n ";
+            for (int j = 0; j < stmt->getNumWrites(); j++) {
+                std::string write = stmt->getWriteDataSpace(j);
+                if (j > 0) { label << ", "; }
+                label << write;
+                color = getDataSpaceDotColor(write);
+            }
+
+/*            edges << "S" << idx
+                      << "[" << generateDotLabel(label.str())
+                      << "][shape=Mrecord][style=bold]  [color="
+                      << color << "];\n";*/
+
+/*            size_t start_pos = getStmt(i)
+                                   ->getReadRelation(data_read_index)
+                                   ->getString()
+                                   .rfind("[");
+            size_t end_pos = getStmt(i)
+                                 ->getReadRelation(data_read_index)
+                                 ->getString()
+                                 .rfind("]");*/
+    
+            // Connect each backwards dependency to this statement
+            for (int dep : inDeps) {
+                edges << "S" << dep << "->" << "S" << idx
+                   << "[" << generateDotLabel("0")
+/*                          stmt
+                          ->getReadRelation(data_read_index)
+                          ->getString()
+                          .substr(start_pos + 1, end_pos - start_pos - 1))*/
+                   << "][color=" << color << "]\n";
+            }
+            std::cerr << "Used: " << idx << std::endl;
+            visited[idx] = true;
+
+            // Add our next statements to visit
+            for (int dep : outDeps) { toVisit.push(dep); }
+        }
+    }
+
+    // Sort by lexicographical order
+    std::sort(newIS.begin(),newIS.end(),
+		    Computation::activeStatementComparator);  
+    
+    int maxLevel = newIS[0].second->arity();
+    std::vector<std::vector<Set*>> projectedIS(maxLevel);
+    
+    for(int i = 0 ; i < maxLevel; i++ ){
+        projectedIS[i] = std::vector<Set*>(newIS.size());
+    }
+   
+    //TODO: Move deleting of active statement's set pointers to
+    //      toDotScan. This is because overlapping 
+    //      statements might result to new disjoint
+    //      active iteration spaces of the same statement.
+    //      and these disjoint active statements cannot
+    //      be seen at this point. Or use unique pointers
+    //      to help delete when sets get out of scope. 
+    //      Easier way. :) 
+    for(int i = 0; i < newIS.size(); i++){
+        if (maxLevel > 0)
+            // Replace all '$' because iegenlib throw a fit
+            projectedIS[maxLevel-1][i] = new Set(replaceInString(newIS[i].second->getString(), "$", ""));
+	//Perform projections for each column
+	for (int j = maxLevel -1; j >= 1 ; j--) {
+	    projectedIS[j -1][i] = projectedIS[j][i]->projectOut(j);   
+       	}
+    }
+
+    // Generates Nodes
+    std::ostringstream ss;
+    ss << "digraph dataFlowGraph_1{ \n";
+    toDotScan2(newIS,0,ss,projectedIS);
+    // Added edges
+    ss << edges.str() << "}";
+
+    for(int j = 0 ; j < maxLevel ; j++)
+	for (int k = 0 ; k <  newIS.size(); k++)
+	    delete projectedIS[j][k];
+    for(Set* set : transformedSpaces){
+        delete set;
+    }
+
+    return ss.str();
+}
+
 //! Function returns a dot string representing nesting
 //  and loop carrie dependency. Internally it uses
 //  a lite version of polyhedral scanning to generate
@@ -1243,15 +1411,19 @@ std::string Computation::toDotString(){
     // Sort by lexicographical order
     std::sort(newIS.begin(),newIS.end(),
 		    Computation::activeStatementComparator);
-    
+     i = 0;
+    for (auto thing : newIS) {
+        if (i != thing.first) { std::cerr << i << " " << thing.first << std::endl; }
+        i++;
+    }
+   
     int maxLevel = newIS[0].second->arity();
-//    std::cerr << "Max Level: " << maxLevel << std::endl;
     std::vector<std::vector<Set*> > projectedIS(maxLevel);
     
     for(int i = 0 ; i < maxLevel; i++ ){
         projectedIS[i] = std::vector<Set*>(newIS.size());
     }
-    //TODO: Move deletiing of active statement's set pointersto
+    //TODO: Move deleting of active statement's set pointers to
     //      toDotScan. This is because overlapping 
     //      statements might result to new disjoint
     //      active iteration spaces of the same statement.
@@ -1261,7 +1433,7 @@ std::string Computation::toDotString(){
     //      Easier way. :) 
     for(int i = 0; i < stmts.size(); i++){
         if (maxLevel > 0)
-            // Replace all '$' because iegenlib throw a fit TODO: why does iegenlib throw a fit? (it didn't previously)
+            // Replace all '$' because iegenlib throw a fit
             projectedIS[maxLevel-1][i] = new Set(replaceInString(newIS[i].second->getString(), "$", ""));
 	//Perform projections for each column
 	for (int j = maxLevel -1; j >= 1 ; j --) {
@@ -1286,6 +1458,9 @@ std::string Computation::toDotString(){
     // Adding the participating dataspaces for each statement and mapping out
     // the read and write access.
     for (int i = 0; i < getNumStmts(); i++) {
+        int n = getStmt(i)->getNumWrites();
+        if (n != 1) { std::cerr << "Num Writes: " << n << std::endl;
+            std::cerr << "Stmt: " << getStmt(i)->getStmtSourceCode() << std::endl; }
         // Iterates over the read-DataSpaces
         for (int data_read_index = 0;
              data_read_index < getStmt(i)->getNumReads(); data_read_index++) {
@@ -1427,6 +1602,48 @@ std::vector<std::vector<std::pair<int,Set*> > > Computation::split
    return res;
 }
 
+// TODO: Alternative to cnt
+static int cntr = 0;
+void Computation::toDotScan2(std::vector<std::pair<int,Set*>> &activeStmts, int level,
+	       std::ostringstream& ss ,
+	       std::vector<std::vector<Set*> >&projectedIS){
+    if(activeStmts.size() == 1){
+        cntr++;
+	std::string stmIter = activeStmts[0].second->prettyPrintString();
+
+        Stmt* stmt = getStmt(activeStmts[0].first);
+        std::string write = "No Write";
+        if (stmt->getNumWrites() > 0) { write = stmt->getWriteDataSpace(0); }
+
+        ss << "S" << activeStmts[0].first
+           << "[" << generateDotLabel({stmIter, "\\n ",
+              //getStmt(activeStmts[0].first)->getStmtSourceCode()})
+              write})
+           << "][shape=Mrecord][style=bold]  [color="
+           << getDataSpaceDotColor(write) << "];\n";
+        return;
+    }
+    std::vector<std::vector< std::pair <int, Set*> > > bins=
+	    split(level,activeStmts);
+    if(bins.size() > 1 && level > 0 && level <= projectedIS.size() ){
+	std::string domainIter = projectedIS[level-1]
+		[cntr]->prettyPrintString();
+
+        ss << "subgraph cluster"<< level << " {\n"
+           << "style = filled;\n"
+           << " color = \"\";\n"
+           << generateDotLabel({"Domain :", domainIter})
+           << " \n";
+    }
+
+    for(auto active : bins){
+        toDotScan(active,level+1,ss,projectedIS);
+    }
+    if(bins.size() > 1 && level > 0 && level <= projectedIS.size() ){
+        ss << "}\n"; 
+    }
+}
+
 //! Lite version of polyhedra scanning to generate 
 //! toDot Clusters
 void Computation::toDotScan(std::vector<std::pair<int,Set*>> &activeStmts, int level,
@@ -1434,12 +1651,12 @@ void Computation::toDotScan(std::vector<std::pair<int,Set*>> &activeStmts, int l
 	       std::vector<std::vector<Set*> >&projectedIS){
     if(activeStmts.size() == 1){
 	std::string stmIter = activeStmts[0].second->prettyPrintString();
-
+       
         ss << "S" << activeStmts[0].first
-                << "[" << generateDotLabel({stmIter, "\\n ",
-                   //getStmt(activeStmts[0].first)->getStmtSourceCode()})
-                   "S", std::to_string(activeStmts[0].first)})
-                << "][shape=Mrecord][style=bold]  [color=grey];\n";
+           << "[" << generateDotLabel({stmIter, "\\n ",
+              //getStmt(activeStmts[0].first)->getStmtSourceCode()})
+              "S", std::to_string(activeStmts[0].first)})
+           << "][shape=Mrecord][style=bold]  [color=grey];\n";
         return;
     }
     std::vector<std::vector< std::pair <int, Set*> > > bins=
@@ -1681,6 +1898,27 @@ void Computation::replaceDataSpaceName(std::string original, std::string newStri
     }
 }
 
+std::string Computation::getDataSpaceRename(std::string dataSpaceName) {
+    if (dataSpaceName == "") { return ""; }
+    dataSpaceName = trimDataSpaceName(dataSpaceName);
+    return "$" + dataSpaceName + DATA_RENAME_STR + std::to_string(dataRenameCnt++) + "$";
+}
+
+std::string Computation::trimDataSpaceName(std::string dataSpace) {
+    return dataSpace == "" || dataSpace[0] != '$' ? dataSpace :
+           dataSpace.substr(1, dataSpace.length() - 2);
+}
+
+bool Computation::isRenameOf(std::string original, std::string rename) {
+    original = trimDataSpaceName(original) + DATA_RENAME_STR;
+    rename = trimDataSpaceName(rename);
+    return rename.find(original) == 0; 
+}
+
+std::string Computation::getDataSpaceDotColor(std::string dataSpaceName) {
+    return isParameter(dataSpaceName) ? "purple" : isReturnValue(dataSpaceName) ? "red" : "grey";
+}
+
 /* Stmt */
 
 Stmt::~Stmt() {
@@ -1696,8 +1934,8 @@ Stmt::~Stmt() {
     dataWrites.clear();
 }
 
-void Stmt::replaceDataSpaceReads(std::string searchString, std::string replacedString) {
-    if (searchString == "") { return; }
+bool Stmt::replaceDataSpaceReads(std::string searchString, std::string replacedString) {
+    if (searchString == "") { return false; }
     if (searchString[0] != '$') { searchString = "$" + searchString + "$"; }
     if (replacedString != "" && replacedString[0] != '$') { replacedString = "$" + replacedString + "$"; }
    
@@ -1730,10 +1968,12 @@ void Stmt::replaceDataSpaceReads(std::string searchString, std::string replacedS
     // use modified strings to construct new values
     setIterationSpace(iterSpaceStr);
     setExecutionSchedule(execScheduleStr);
+
+    return getStmtSourceCode().compare(newSourceCode.str()) != 0;
 }
 
-void Stmt::replaceDataSpaceWrites(std::string searchString, std::string replacedString) {
-    if (searchString == "") { return; }
+bool Stmt::replaceDataSpaceWrites(std::string searchString, std::string replacedString) {
+    if (searchString == "") { return false; }
     if (searchString[0] != '$') { searchString = "$" + searchString + "$"; }
     if (replacedString != "" && replacedString[0] != '$') { replacedString = "$" + replacedString + "$"; }
 
@@ -1766,6 +2006,8 @@ void Stmt::replaceDataSpaceWrites(std::string searchString, std::string replaced
     // use modified strings to construct new values
     setIterationSpace(iterSpaceStr);
     setExecutionSchedule(execScheduleStr);
+
+    return getStmtSourceCode().compare(newSourceCode.str()) != 0;
 }
 
 void Stmt::replaceDataSpace(std::string searchString, std::string replacedString){
