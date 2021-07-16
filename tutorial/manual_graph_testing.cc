@@ -23,7 +23,7 @@ int main(int argc, char** argv) {
     //     s0:tmp = f[i];
     //     s1:tmp1 = f1[i];
     //}
-  
+/*  
    Computation* forLoopComp = new Computation();
 
     forLoopComp->addParameter("$f$", "int");
@@ -150,5 +150,5 @@ int main(int argc, char** argv) {
     outStream2.open("sparse_matrix_multiply.c");
     outStream2 << spsComp->codeGen();
     outStream2.close();
-
+*/
 }

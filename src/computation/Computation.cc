@@ -87,7 +87,7 @@ Computation* Computation::getUniquelyNamedClone() const {
         prefixedCopy->addStmt(stmt->getUniquelyNamedClone(namePrefix, this->getDataSpaces()));
     }
     for (auto& space : this->dataSpaces) {
-        prefixedCopy->addDataSpace(getPrefixedDataSpaceName(space, namePrefix));
+        prefixedCopy->addDataSpace(getPrefixedDataSpaceName(space.first, namePrefix), space.second);
     }
     for (auto& param : this->parameters) {
         prefixedCopy->addParameter(getPrefixedDataSpaceName(param.first, namePrefix), param.second);
@@ -120,7 +120,7 @@ void Computation::updateDataSpaceVersions(Stmt* stmt) {
         std::string newWrite = getDataSpaceRename(write);
         writes.push_back({write, newWrite});
 
-        addDataSpace(newWrite);
+        addDataSpace(newWrite, "string");
 
         // Rename in the reads of the new statement
         stmt->replaceDataSpaceReads(write, newWrite);
@@ -185,24 +185,35 @@ Stmt* Computation::getStmt(unsigned int index) const { return stmts.at(index); }
 
 unsigned int Computation::getNumStmts() const { return stmts.size(); }
 
-void Computation::addDataSpace(std::string dataSpaceName) {
+void Computation::addDataSpace(std::string dataSpaceName, std::string dataSpaceType) {
     assertValidDataSpaceName(dataSpaceName);
-    dataSpaces.emplace(dataSpaceName);
+    dataSpaces[dataSpaceName] = dataSpaceType;
 }
 
-std::unordered_set<std::string> Computation::getDataSpaces() const {
+std::map<std::string, std::string> Computation::getDataSpaces() const {
     return dataSpaces;
 }
 
 bool Computation::isDataSpace(std::string name) const {
-    return dataSpaces.count(name) > 0;
-}
+
+   /*bool isMatch(std::pair<std::string, std::string> dataSpace){
+   return name.compare(dataSpace.first) == 0;
+   } 
+   auto pos = std::find_if(dataSpaces.begin(), dataSpaces.end(), 
+                             [&name](const std::pair<std::string, std::string> &dataSpace) {
+                             return name.compare(dataSpace.first) == 0;
+                             });
+    return pos != dataSpaces.end();
+    */
+    return dataSpaces.find(name) != dataSpaces.end();
+    
+ }
 
 void Computation::addParameter(std::string paramName, std::string paramType) {
     assertValidDataSpaceName(paramName);
     parameters.push_back({paramName, paramType});
     // parameters are automatically available as data spaces to the Computation
-    addDataSpace(paramName);
+    addDataSpace(paramName, paramType);
 }
 
 std::string Computation::getParameterName(unsigned int index) const {
@@ -312,7 +323,7 @@ void Computation::printInfo() const {
         if (it != *dataSpaces.begin()) {
             dataSpacesOutput << ", ";
         }
-        dataSpacesOutput << it;
+        dataSpacesOutput << it.first << " " << it.second;
     }
     dataSpacesOutput << "}\n";
 
@@ -326,7 +337,7 @@ void Computation::printInfo() const {
 }
 
 bool Computation::isComplete() const {
-    std::unordered_set<std::string> dataSpacesActuallyAccessed;
+    std::map<std::string, std::string> dataSpacesActuallyAccessed;
     for (const auto& stmt : stmts) {
         // check completeness of each statement
         if (!stmt->isComplete()) {
@@ -335,10 +346,12 @@ bool Computation::isComplete() const {
 
         // collect all data space accesses
         for (unsigned int i = 0; i < stmt->getNumReads(); ++i) {
-            dataSpacesActuallyAccessed.emplace(stmt->getReadDataSpace(i));
+            dataSpacesActuallyAccessed[stmt->getReadDataSpace(i)] = "";
+            //dataSpacesActuallyAccessed.emplace_back(stmt->getReadDataSpace(i), "");
         }
         for (unsigned int i = 0; i < stmt->getNumWrites(); ++i) {
-            dataSpacesActuallyAccessed.emplace(stmt->getWriteDataSpace(i));
+            dataSpacesActuallyAccessed[stmt->getWriteDataSpace(i)] = "";
+            // dataSpacesActuallyAccessed.emplace_back(stmt->getWriteDataSpace(i), "");
         }
     }
 
@@ -346,8 +359,9 @@ bool Computation::isComplete() const {
     if (dataSpaces != dataSpacesActuallyAccessed) {
         return false;
     }
-
+    
     return true;
+
 }
 
 void Computation::clear() {
@@ -422,7 +436,7 @@ AppendComputationResult Computation::appendComputation(
         std::string newParam = param;
         if (firstWrite != -1) {
             newParam = getDataSpaceRename(param);
-            toAppend->addDataSpace(newParam);
+            toAppend->addDataSpace(newParam,"string");
         }
 
         Stmt* paramDeclStmt = new Stmt();
@@ -469,7 +483,7 @@ AppendComputationResult Computation::appendComputation(
 
     // add (already name prefixed) data spaces from appendee to appender
     for (const auto& dataSpace : toAppend->getDataSpaces()) {
-        this->addDataSpace(dataSpace);
+        this->addDataSpace(dataSpace.first, dataSpace.second);
     }
 
     // calculate indexes/offsets for execution tuple modifications
@@ -1889,8 +1903,13 @@ void Computation::replaceDataSpaceName(std::string original, std::string newStri
     }
     //This is being used with appendComputation so we don't need
     //to save a copy     
-    dataSpaces.erase(searchString);
-    
+    auto iterator = dataSpaces.find(searchString);
+    //auto iterator = std::find(dataSpaces.begin(), dataSpaces.end(), searchString);
+    if(iterator != dataSpaces.end()){
+        dataSpaces.erase(iterator);
+    }
+    // TODO add new dataspce?
+
     //Rename return values as well
     for(auto it = returnValues.begin(); it != returnValues.end(); it++){
         std::string origReturnValue = (*it).first; 
@@ -2104,7 +2123,7 @@ bool Stmt::operator==(const Stmt& other) const {
     return true;
 }
 
-Stmt* Stmt::getUniquelyNamedClone(const std::string& prefix, const std::unordered_set<std::string>& dataSpaceNames) const {
+Stmt* Stmt::getUniquelyNamedClone(const std::string& prefix, const std::map<std::string, std::string>& dataSpaces) const {
     Stmt* prefixedCopy = new Stmt(*this);
 
     // modify reads and writes
@@ -2119,7 +2138,8 @@ Stmt* Stmt::getUniquelyNamedClone(const std::string& prefix, const std::unordere
     std::string srcCode = prefixedCopy->stmtSourceCode;
     std::string iterSpaceStr = prefixedCopy->iterationSpace->prettyPrintString();
     std::string execScheduleStr = prefixedCopy->executionSchedule->prettyPrintString();
-    for (const string& originalName : dataSpaceNames) {
+    for (auto dataSpace : dataSpaces) {
+        const string&  originalName = dataSpace.first;
         srcCode = replaceInString(srcCode, originalName,
                                   Computation::getPrefixedDataSpaceName(originalName, prefix));
         iterSpaceStr = replaceInString(iterSpaceStr, originalName,

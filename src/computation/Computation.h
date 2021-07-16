@@ -96,9 +96,9 @@ class Computation {
     unsigned int getNumStmts() const;
 
     //! Add a data space to this Computation
-    void addDataSpace(std::string dataSpaceName);
+    void addDataSpace(std::string dataSpaceName, std::string dataSpaceType);
     //! Get data spaces
-    std::unordered_set<std::string> getDataSpaces() const;
+    std::map<std::string, std::string> getDataSpaces() const;
     //! Check if a given string is a name of a data space of this Computation
     bool isDataSpace(std::string name) const;
     //! Returns statement index of write if written to, else -1
@@ -266,9 +266,12 @@ class Computation {
     
     //! Information on all statements in the Computation
     std::vector<Stmt*> stmts;
+    
+    //std::unordered_set<std::string> dataSpaces;
     //! Data spaces available in the Computation, pairs of name : type
-    //std::vector<std::pair<std::string, std::string>> dataSpaces;
-    std::unordered_set<std::string> dataSpaces;
+    //std::vector<std::pair<std::string, std::string>> dataSpaces;  
+    std::map<std::string, std::string> dataSpaces;
+
     //! Parameters of the computation, pair of name : type. All parameters should also be data spaces.
     std::vector<std::pair<std::string, std::string>> parameters;
     //! Names of values that are returned if this Computation is called. May be
@@ -347,7 +350,8 @@ class Stmt {
     bool operator==(const Stmt& other) const;
 
     //! Get a copy of this Stmt with the given prefix applied to all names
-    Stmt* getUniquelyNamedClone(const std::string& prefix, const std::unordered_set<std::string>& dataSpaceNames) const;
+    //Stmt* getUniquelyNamedClone(const std::string& prefix, const std::unordered_set<std::string>& dataSpaceNames) const;
+    Stmt* getUniquelyNamedClone(const std::string& prefix, const std::map<std::string, std::string>& dataSpaceNames) const;
 
     //! Get whether or not all necessary information for this Stmt is set
     bool isComplete() const;
@@ -379,6 +383,7 @@ class Stmt {
     unsigned int getNumReads() const;
     //! Get a data read's data space by index
     std::string getReadDataSpace(unsigned int index) const;
+    //std::string getReadDataSpaceType(unsigned int index) const;
     //! Get a data read's relation by index
     Relation* getReadRelation(unsigned int index) const;
 
@@ -390,6 +395,7 @@ class Stmt {
     unsigned int getNumWrites() const;
     //! Get a data write's data space by index
     std::string getWriteDataSpace(unsigned int index) const;
+    //std::string getWriteDataSpaceType(unsigned int index) const;
     //! Get a data write's relation by index
     Relation* getWriteRelation(unsigned int index) const;
 
@@ -444,7 +450,6 @@ class VisitorChangeUFsForOmega : public Visitor {
    public:
     //! Construct a new VisitorChangeUFsForOmega
     VisitorChangeUFsForOmega();
-
     //! Destructor
     ~VisitorChangeUFsForOmega();
 
