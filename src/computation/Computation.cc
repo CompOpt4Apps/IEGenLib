@@ -194,6 +194,13 @@ std::map<std::string, std::string> Computation::getDataSpaces() const {
     return dataSpaces;
 }
 
+std::string Computation::getDataSpaceType(std::string dataSpaceName) const{
+    if(isDataSpace(dataSpaceName)){
+        return dataSpaces.at(dataSpaceName);
+    }
+    return "";
+}
+
 bool Computation::isDataSpace(std::string name) const {
 
    /*bool isMatch(std::pair<std::string, std::string> dataSpace){
@@ -1727,6 +1734,7 @@ std::string Computation::codeGen(Set* knownConstraints) {
         stmtMacroUndefs << "#undef s" << stmtCount << "\n";
         stmtMacroDefs << "#define s" << stmtCount << "(" << tupleString
                       << ")   "
+                      << getDataSpaceType(stmt->getWriteDataSpace(0)) << " "  
                       << iegenlib::replaceInString(stmt->getStmtSourceCode(), DATA_SPACE_DELIMITER,
                                                "")
                       << " \n";

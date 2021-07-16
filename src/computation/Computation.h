@@ -99,6 +99,9 @@ class Computation {
     void addDataSpace(std::string dataSpaceName, std::string dataSpaceType);
     //! Get data spaces
     std::map<std::string, std::string> getDataSpaces() const;
+    
+    
+    std::string getDataSpaceType(std::string) const;
     //! Check if a given string is a name of a data space of this Computation
     bool isDataSpace(std::string name) const;
     //! Returns statement index of write if written to, else -1
