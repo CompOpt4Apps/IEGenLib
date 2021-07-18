@@ -112,12 +112,12 @@ class Computation {
     std::string getDataSpaceDotColor(std::string dataSpaceName);
     //! Produces a rename for the inputted data space, incrementing dataRenameCnt
     std::string getDataSpaceRename(std::string dataSpaceName);
-
     //! Trims dollar signs off of data space
-    std::string trimDataSpaceName(std::string dataSpace);
-
-    //! Check if the 'rename' dataspace is a rename of the 'original' dataspace
-    bool isRenameOf(std::string original, std::string rename);
+    std::string trimDataSpaceName(std::string dataSpaceName);
+    //! Gets original data space name by trimming off final "__w__#" sequence
+    std::string getOriginalDataSpaceName(std::string dataSpaceName);
+    //! Returns if a and b are renames of the same dataspace
+    bool areEquivalentRenames(std::string a, std::string b);
 
     //! Add a (formal) parameter to this Computation, including adding it as a data space.
     //! @param paramName Name of the parameter
@@ -186,12 +186,21 @@ class Computation {
     //! Returns true if all input sets have the same arity, false otherwise
     bool consistentSetArity(const std::vector<Set*>& sets);
 
+    //! Compresses producer-consumer statements and returns a vector
+    //  of indices corresponding to all the remaining statements
+    std::vector<int> compressPCNodes();
+
     //! Function returns a dot string representing nesting
     //  and loop carrie dependency. Internally it uses
     //  a lite version of polyhedral scanning to generate
     //  subgraphs in the dot file.
-    std::string toDotString();
-    std::string toDotString2();
+    //  param compressPCNodes: if true, data spaces which are read only once
+    //      will be removed and their reads mapped to their single use instance
+    //  param mergeStmts: if true, data spaces and statements will not generate
+    //      separate nodes
+    std::string toDotString(bool compressPCNodes, bool mergeStmts);
+//    std::string toDotString();
+//    std::string toDotString2();
 
     //! Environment used by this Computation
     Environment env;
@@ -256,7 +265,7 @@ class Computation {
    
     private:
  
-    void toDotScan2(std::vector<std::pair<int,Set*>> &activeStmts, int level,
+/*    void toDotScan2(std::vector<std::pair<int,Set*>> &activeStmts, int level,
 		    std::ostringstream& ss ,
 		    std::vector<std::vector<Set*> >&projectedIS);
    
@@ -264,8 +273,27 @@ class Computation {
     //! toDot Clusters
     void toDotScan(std::vector<std::pair<int,Set*>> &activeStmts, int level,
 		    std::ostringstream& ss ,
-		    std::vector<std::vector<Set*> >&projectedIS);
+		    std::vector<std::vector<Set*> >&projectedIS);*/
+
+    // Generates nodes statements in the dot file format
+    // mergeStmts specifies whether to combine dataSpace and stmt nodes (if true)
+    // or not (if false)
+    // Returns true if successful, false otherwise
+    bool generateDotStmts(std::vector<int> &stmts, std::ostringstream &ss, bool mergeStmts);
+
+    // Recursive function which generates statement nodes and subgraphs
+    // Called by the above overload of generateDotStmts()
+    void generateDotStmts(std::vector<std::pair<int,Set*>> &activeStmts, int level,
+                          std::ostringstream &ss, bool mergeStmts);
     
+    // Generates nodes for read/write data spaces in the dot file format
+    // Generates dependencies between statement and data space nodes
+    // using each statement's read and write data spaces
+    void generateDotReadWrites(std::vector<int> &stmts, std::ostringstream &ss);
+
+    // Generates dependencies between statement nodes using
+    // each statement's in/out dependencies
+    void generateDotDependencies(std::vector<int> &stmts, std::ostringstream &ss);
     
     //! Information on all statements in the Computation
     std::vector<Stmt*> stmts;
@@ -389,6 +417,8 @@ class Stmt {
     //std::string getReadDataSpaceType(unsigned int index) const;
     //! Get a data read's relation by index
     Relation* getReadRelation(unsigned int index) const;
+    //! Get a data read's relation by name
+    Relation* getReadRelation(std::string name) const;
 
     //! Add a data write
     void addWrite(std::string dataSpace, std::string relationStr);
@@ -401,16 +431,29 @@ class Stmt {
     //std::string getWriteDataSpaceType(unsigned int index) const;
     //! Get a data write's relation by index
     Relation* getWriteRelation(unsigned int index) const;
+    //! Get a data write's relation by name
+    Relation* getWriteRelation(std::string name) const;
 
-    void addInDependency(int i) { inDependencies.push_back(i); }
-    void addOutDependency(int i) { outDependencies.push_back(i); }
-    std::vector<int> getInDependencies() { return inDependencies; }
-    std::vector<int> getOutDependencies() { return outDependencies; }
+    //! Adds a new in/out-dependency
+    void addInDependency(int i) { inDependencies.insert(i); }
+    void addOutDependency(int i) { outDependencies.insert(i); }
+    //! Removes the specified in/out-dependency
+    void removeInDependency(int i) { inDependencies.erase(i); }
+    void removeOutDependency(int i) { outDependencies.erase(i); }
+    //! Removes all in/out-dependencies
+    void clearInDependencies() { inDependencies.clear(); }
+    void clearOutDependencies() { outDependencies.clear(); }
+    //! Gets all in/out-dependencies
+    std::set<int> getInDependencies() { return inDependencies; }
+    std::set<int> getOutDependencies() { return outDependencies; }
+    //! Gets number of in/out-dependencies
+    int numInDependencies() { return inDependencies.size(); }
+    int numOutDependencies() { return outDependencies.size(); }
 
    private:
     //! inDependencies: indices of statements which write to this statement's reads
-    //! frontDept: pointers to statements which read from this statement's write
-    std::vector<int> inDependencies, outDependencies;
+    //! outDependencies: indicies of statements which read from this statement's write
+    std::set<int> inDependencies, outDependencies;
     //! Source code of the statement, for debugging purposes
     std::string stmtSourceCode;
     //! Iteration space of a statement
