@@ -112,6 +112,7 @@ int main(int argc, char **argv){
          }
          );
     updateSources->addStmt(s01a);
+    s01a->setDebugStr("example of using the debug string");
 
     updateSources->addDataSpace("$theta$", "double");
     Stmt* s01b = new Stmt("$theta$=$current_values$[1];",

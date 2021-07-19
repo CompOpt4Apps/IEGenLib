@@ -434,6 +434,13 @@ class Stmt {
     //! Get a data write's relation by name
     Relation* getWriteRelation(std::string name) const;
 
+    //Set debug string for the statement
+    void setDebugStr(std::string str);
+    //Returns first debug string for the statement
+    std::string getDebugStr() const;
+    //Returns all added debug strings for the statement
+    std::string getAllDebugStr() const;
+
     //! Adds a new in/out-dependency
     void addInDependency(int i) { inDependencies.insert(i); }
     void addOutDependency(int i) { outDependencies.insert(i); }
@@ -451,6 +458,8 @@ class Stmt {
     int numOutDependencies() { return outDependencies.size(); }
 
    private:
+    //! Debug string
+    std::vector<string> debug;
     //! inDependencies: indices of statements which write to this statement's reads
     //! outDependencies: indicies of statements which read from this statement's write
     std::set<int> inDependencies, outDependencies;

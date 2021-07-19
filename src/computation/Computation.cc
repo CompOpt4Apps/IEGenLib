@@ -1385,24 +1385,12 @@ void Computation::generateDotStmts(std::vector<std::pair<int,Set*>> &activeStmts
 
         std::string label, color = DEFAULT_COLOR;
         // label = getStmt(activeStmts[0].first)->getStmtSourceCode();
-        if (mergeStmts) {
-            Stmt* stmt = getStmt(activeStmts[0].first);
-            if (stmt->getNumWrites() > 0) {
-                std::string write = stmt->getWriteDataSpace(0);
-                std::string relStr = stmt->getWriteRelation(0)->getString();
-                int pos1 = relStr.rfind('[');
-                int pos2 = relStr.rfind(']');
-                relStr = relStr.substr(pos1 + 1, pos2 - pos1 + 1);
-
-                label = trimDataSpaceName(write) + ": " + relStr;
-                color = getDataSpaceDotColor(write);
-            } else { label = "No Write"; }
-        } else {
-            label = "S" + std::to_string(activeStmts[0].first);
-        }
-
+        label = "S" + std::to_string(activeStmts[0].first); 
+        
+        Stmt* stmt = getStmt(activeStmts[0].first);
         ss << "S" << activeStmts[0].first
-           << "[" << generateDotLabel({stmIter, "\\n ", label})
+           << "[" << generateDotLabel({stmIter, "\\n ", label,
+                                       "\\n ", stmt->getAllDebugStr()})
            << "][shape=Mrecord][style=bold]  [color="
            << color << "];\n";
         return;
@@ -1459,7 +1447,7 @@ void Computation::generateDotReadWrites(std::vector<int> &stmts, std::ostringstr
             // Check to make sure the data space is not created if it already
             // exists
             if (std::find(data_spaces.begin(), data_spaces.end(),
-                          readDataSpace) != data_spaces.end()) {
+                          readDataSpace) == data_spaces.end()) {
                 // Creates data space
                 ss
                     << "\"" << readDataSpace << "\"["
@@ -1493,7 +1481,7 @@ void Computation::generateDotReadWrites(std::vector<int> &stmts, std::ostringstr
             // Check to make sure the data space is not created if it already
             // exists
             if (std::find(data_spaces.begin(), data_spaces.end(),
-                          writeDataSpace) != data_spaces.end()) {
+                          writeDataSpace) == data_spaces.end()) {
                 ss
                     << "\"" << writeDataSpace << "\"["
                     << generateDotLabel(writeDataSpace)
@@ -2171,6 +2159,22 @@ Relation* Stmt::getWriteRelation(std::string name) const {
     return pos->second.get();
 }
 
+void Stmt::setDebugStr(std::string str){
+    debug.push_back(str);
+}
+
+std::string Stmt::getDebugStr() const {
+    return debug.front();
+}
+
+std::string Stmt::getAllDebugStr() const{
+    std::ostringstream ss;
+    for(int i = 0; i < debug.size(); ++i){
+       if (i != 0){ss << "\n";}
+       ss << debug[i];   
+    }
+    return ss.str();
+}
 /* VisitorChangeUFsForOmega */
 
 VisitorChangeUFsForOmega::VisitorChangeUFsForOmega() { reset(); }
