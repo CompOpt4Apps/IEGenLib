@@ -154,7 +154,7 @@ class ComputationTest : public ::testing::Test {
     }
     
     void checkToDotString(Computation* comp, std::string expectedDot){
-        EXPECT_EQ(expectedDot, comp->toDotString());
+        EXPECT_EQ(expectedDot, comp->toDotString(false, false));
     }
 
     //! EXPECT with gTest that two Computations are equal, component by component.
@@ -328,11 +328,11 @@ TEST_F(ComputationTest, BasicForLoop) {
     
     Computation* forLoopComp = new Computation();
     
-    forLoopComp->addDataSpace("$tmp$");
-    forLoopComp->addDataSpace("$f$");
-    forLoopComp->addDataSpace("$tmp1$");
-    forLoopComp->addDataSpace("$f1$");
-    forLoopComp->addDataSpace("$N$");
+    forLoopComp->addDataSpace("$tmp$", "int");
+    forLoopComp->addDataSpace("$f$", "int");
+    forLoopComp->addDataSpace("$tmp1$", "int");
+    forLoopComp->addDataSpace("$f1$", "int");
+    forLoopComp->addDataSpace("$N$", "int");
     
     dataWrites.push_back(make_pair("$tmp$", "{[i]->[0]}"));
     dataReads.push_back(make_pair("$f$", "{[i]->[i]}"));
@@ -392,11 +392,11 @@ TEST_F(ComputationTest, IsWrittenTo) {
     
     Computation* forLoopComp = new Computation();
     
-    forLoopComp->addDataSpace("$tmp$");
-    forLoopComp->addDataSpace("$f$");
-    forLoopComp->addDataSpace("$tmp1$");
-    forLoopComp->addDataSpace("$f1$");
-    forLoopComp->addDataSpace("$N$");
+    forLoopComp->addDataSpace("$tmp$", "int");
+    forLoopComp->addDataSpace("$f$", "int");
+    forLoopComp->addDataSpace("$tmp1$", "int");
+    forLoopComp->addDataSpace("$f1$", "int");
+    forLoopComp->addDataSpace("$N$", "int");
     
     dataWrites.push_back(make_pair("$tmp$", "{[i]->[0]}"));
     dataReads.push_back(make_pair("$f$", "{[i]->[i]}"));
@@ -439,11 +439,11 @@ TEST_F(ComputationTest, ReplaceDataSpaceName) {
     
     Computation* forLoopComp = new Computation();
     
-    forLoopComp->addDataSpace("$tmp$");
-    forLoopComp->addDataSpace("$f$");
-    forLoopComp->addDataSpace("$tmp1$");
-    forLoopComp->addDataSpace("$f1$");
-    forLoopComp->addDataSpace("$N$");
+    forLoopComp->addDataSpace("$tmp$", "int");
+    forLoopComp->addDataSpace("$f$", "int");
+    forLoopComp->addDataSpace("$tmp1$", "int");
+    forLoopComp->addDataSpace("$f1$", "int");
+    forLoopComp->addDataSpace("$N$", "int");
     
     dataWrites.push_back(make_pair("$tmp$", "{[i]->[0]}"));
     dataReads.push_back(make_pair("$f$", "{[i]->[i]}"));
@@ -482,8 +482,8 @@ TEST_F(ComputationTest, IsParameterOrReturn) {
     Computation* testComp = new Computation();
 
     testComp->addParameter("$Hi$", "int");
-    testComp->addDataSpace("$how$");
-    testComp->addDataSpace("$are$");
+    testComp->addDataSpace("$how$", "int");
+    testComp->addDataSpace("$are$", "int");
     testComp->addReturnValue("$you$", true);
 
     EXPECT_TRUE(testComp->isParameter("$Hi$"));
@@ -501,7 +501,7 @@ TEST_F(ComputationTest, SSARenaming) {
     Computation* test = new Computation();
 
     test->addParameter("$foo$", "int");
-    test->addDataSpace("$bar$");
+    test->addDataSpace("$bar$", "int");
    
     test->addStmt(new Stmt(
         "$bar$ = $foo$;", "[0]", "[0]->[0]", {{"$foo$", "{[0]->[0]}"}}, {{"$bar$", "{[0]->[0]}"}}
@@ -543,8 +543,8 @@ TEST_F(ComputationTest, AppendComputationSSA) {
 
     Computation* comp1 = new Computation();
 
-    comp1->addDataSpace("$input$");
-    comp1->addDataSpace("$useMe$");
+    comp1->addDataSpace("$input$", "int");
+    comp1->addDataSpace("$useMe$", "int");
    
     comp1->addStmt(new Stmt (
         "$useMe$ = 80;", "{[0]}", "{[0]->[0]}", {}, {{"$useMe$", "{[0]->[0]}"}}
@@ -563,7 +563,7 @@ TEST_F(ComputationTest, AppendComputationSSA) {
 
     comp2->addParameter("$foo$", "int");
     comp2->addReturnValue("$foo$");
-    comp2->addDataSpace("$bar$");
+    comp2->addDataSpace("$bar$", "int");
 
     comp2->addStmt(new Stmt(
         "$bar$ = $foo$;", "{[0]}", "{[0]->[0]}", {{"$foo$", "{[0]->[0]}"}}, {{"$bar$", "{[0]->[0]}"}}
@@ -629,7 +629,7 @@ TEST_F(ComputationTest, AppendComputationSSA) {
 
     comp1 = new Computation();
 
-    comp1->addDataSpace("$input$");
+    comp1->addDataSpace("$input$", "int");
     
     comp1->addStmt(new Stmt (
         "$input$ = 4 * 8;", "{[0]}", "{[0]->[0]}", {}, {{"$input$", "{[0]->[0]}"}}
@@ -640,7 +640,7 @@ TEST_F(ComputationTest, AppendComputationSSA) {
 
     comp2->addParameter("$foo$", "int");
     comp2->addReturnValue("$foo$");
-    comp2->addDataSpace("$bar$");
+    comp2->addDataSpace("$bar$", "int");
 
     comp2->addStmt(new Stmt(
         "$bar$ = $foo$;", "{[0]}", "{[0]->[0]}", {{"$foo$", "{[0]->[0]}"}}, {{"$bar$", "{[0]->[0]}"}}
@@ -682,9 +682,9 @@ TEST_F(ComputationTest, Colors) {
     
     forLoopComp->addReturnValue("$tmp$", true);
     forLoopComp->addParameter("$f$", "int");
-    forLoopComp->addDataSpace("$tmp1$");
+    forLoopComp->addDataSpace("$tmp1$", "int");
     forLoopComp->addParameter("$f1$", "int");
-    forLoopComp->addDataSpace("$N$");
+    forLoopComp->addDataSpace("$N$", "int");
     
     dataWrites.push_back(make_pair("$tmp$", "{[i]->[0]}"));
     dataReads.push_back(make_pair("$f$", "{[i]->[i]}"));
@@ -705,7 +705,7 @@ TEST_F(ComputationTest, Colors) {
     forLoopComp->addStmt(s0);
     forLoopComp->addStmt(s1);
 
-    string dotString = forLoopComp->toDotString();
+    string dotString = forLoopComp->toDotString(false, false);
     std::cerr << dotString << std::endl;
 
     delete forLoopComp;
@@ -799,8 +799,8 @@ TEST_F(ComputationTest, AppendComputationBasic) {
 #pragma mark AppendComputationArgumentPassing
 TEST_F(ComputationTest, AppendComputationArgumentPassing) {
     Computation* comp1 = new Computation();
-    comp1->addDataSpace("$myInt$");
-    comp1->addDataSpace("$myDouble$");
+    comp1->addDataSpace("$myInt$", "int");
+    comp1->addDataSpace("$myDouble$", "double");
 
     Computation* comp2 = new Computation();
     Stmt* s2 = new Stmt("s2;", "{[k]}", "{[k] -> [0,k,1]}", {}, {});
@@ -810,14 +810,14 @@ TEST_F(ComputationTest, AppendComputationArgumentPassing) {
     comp2->addParameter("$c$", "float");
 
     Computation* ecomp = new Computation();
-    ecomp->addDataSpace("$myInt$");
-    ecomp->addDataSpace("$myDouble$");
-    ecomp->addDataSpace("$_iegen_0a$");
-    ecomp->addDataSpace("$_iegen_0b$");
-    ecomp->addDataSpace("$_iegen_0c$");
-    Stmt* e_gen_s1 = new Stmt("int $_iegen_0a$ = $myInt$;", "{[i]}", "{[i] -> [2,i,2]}", {{"$myInt$", "{[i]->[0]}"}}, {{"$_iegen_0a$", "{[i]->[0]}"}});
-    Stmt* e_gen_s2 = new Stmt("double $_iegen_0b$ = $myDouble$;", "{[i]}", "{[i] -> [2,i,3]}", {{"$myDouble$", "{[i]->[0]}"}}, {{"$_iegen_0b$", "{[i]->[0]}"}});
-    Stmt* e_gen_s3 = new Stmt("float $_iegen_0c$ = 0;", "{[i]}", "{[i] -> [2,i,4]}", {}, {{"$_iegen_0c$", "{[i]->[0]}"}});
+    ecomp->addDataSpace("$myInt$", "int");
+    ecomp->addDataSpace("$myDouble$", "double");
+    ecomp->addDataSpace("$_iegen_0a$", "int");
+    ecomp->addDataSpace("$_iegen_0b$", "double");
+    ecomp->addDataSpace("$_iegen_0c$", "float");
+    Stmt* e_gen_s1 = new Stmt("$_iegen_0a$ = $myInt$;", "{[i]}", "{[i] -> [2,i,2]}", {{"$myInt$", "{[i]->[0]}"}}, {{"$_iegen_0a$", "{[i]->[0]}"}});
+    Stmt* e_gen_s2 = new Stmt("$_iegen_0b$ = $myDouble$;", "{[i]}", "{[i] -> [2,i,3]}", {{"$myDouble$", "{[i]->[0]}"}}, {{"$_iegen_0b$", "{[i]->[0]}"}});
+    Stmt* e_gen_s3 = new Stmt("$_iegen_0c$ = 0;", "{[i]}", "{[i] -> [2,i,4]}", {}, {{"$_iegen_0c$", "{[i]->[0]}"}});
     Stmt* es1 = new Stmt("s2;", "{[i,k]}", "{[i,k] -> [2,i,5,k,1]}", {}, {});
     ecomp->addStmt(e_gen_s1);
     ecomp->addStmt(e_gen_s2);
@@ -849,18 +849,18 @@ TEST_F(ComputationTest, AppendComputationEmpty) {
 
     // with params
     comp1 = new Computation();
-    comp1->addDataSpace("$myInt$");
+    comp1->addDataSpace("$myInt$", "int");
 
     comp2 = new Computation();
     comp2->addParameter("$a$", "int");
     comp2->addParameter("$b$", "double");
 
     ecomp = new Computation();
-    ecomp->addDataSpace("$myInt$");
-    ecomp->addDataSpace("$_iegen_1a$");
-    ecomp->addDataSpace("$_iegen_1b$");
-    Stmt* e_gen_s1 = new Stmt("int $_iegen_1a$ = $myInt$;", "{[i]}", "{[i] -> [2,i,2]}", {{"$myInt$", "{[i]->[0]}"}}, {{"$_iegen_1a$", "{[i]->[0]}"}});
-    Stmt* e_gen_s2 = new Stmt("double $_iegen_1b$ = 3.14159;", "{[i]}", "{[i] -> [2,i,3]}", {}, {{"$_iegen_1b$", "{[i]->[0]}"}});
+    ecomp->addDataSpace("$myInt$", "int");
+    ecomp->addDataSpace("$_iegen_1a$", "int");
+    ecomp->addDataSpace("$_iegen_1b$", "double");
+    Stmt* e_gen_s1 = new Stmt("$_iegen_1a$ = $myInt$;", "{[i]}", "{[i] -> [2,i,2]}", {{"$myInt$", "{[i]->[0]}"}}, {{"$_iegen_1a$", "{[i]->[0]}"}});
+    Stmt* e_gen_s2 = new Stmt("$_iegen_1b$ = 3.14159;", "{[i]}", "{[i] -> [2,i,3]}", {}, {{"$_iegen_1b$", "{[i]->[0]}"}});
     ecomp->addStmt(e_gen_s1);
     ecomp->addStmt(e_gen_s2);
 
@@ -879,12 +879,12 @@ TEST_F(ComputationTest, AppendComputationReturnValues) {
     Computation* comp2 = new Computation();
     Stmt* s1 = new Stmt("s2;", "{[k]}", "{[k] -> [0,k,1]}", {}, {});
     comp2->addStmt(s1);
-    comp2->addDataSpace("$res$");
+    comp2->addDataSpace("$res$", "int");
     comp2->addReturnValue("$res$");
     comp2->addReturnValue("0");
 
     Computation* ecomp = new Computation();
-    ecomp->addDataSpace("$_iegen_0res$");
+    ecomp->addDataSpace("$_iegen_0res$", "int");
     Stmt* es1 = new Stmt("s2;", "{[i,k]}", "{[i,k] -> [2,i,2,k,1]}", {}, {});
     ecomp->addStmt(es1);
 
@@ -902,9 +902,9 @@ TEST_F(ComputationTest, AppendComputationComplex) {
     // want are ironed out yet so it will change.
     // comp3 is appended onto comp2, which is then appended on to comp1.
     Computation* comp1 = new Computation();
-    comp1->addDataSpace("$index$");
-    comp1->addDataSpace("$N$");
-    comp1->addDataSpace("$tmp$");
+    comp1->addDataSpace("$index$", "int");
+    comp1->addDataSpace("$N$", "int");
+    comp1->addDataSpace("$tmp$", "int");
     Stmt* s1 = new Stmt("$tmp$ = $index$[0] + 1;", "{[0]}", "{[0]->[0]}",
                         {{"$index$", "{[0]->[0]}"}}, {{"$tmp$", "{[0]->[0]}"}});
     Stmt* s2 =
@@ -914,8 +914,8 @@ TEST_F(ComputationTest, AppendComputationComplex) {
     comp1->addStmt(s2);
 
     Computation* comp2 = new Computation();
-    comp2->addDataSpace("$A$");
-    comp2->addDataSpace("$tmp$");
+    comp2->addDataSpace("$A$", "int");
+    comp2->addDataSpace("$tmp$", "int");
     comp2->addParameter("$someInteger$", "int");
     comp2->addReturnValue("$tmp$");
     Stmt* s3 =
@@ -930,14 +930,14 @@ TEST_F(ComputationTest, AppendComputationComplex) {
     comp2->addStmt(s4);
 
     Computation* comp3 = new Computation();
-    comp3->addDataSpace("$asdf$");
+    comp3->addDataSpace("$asdf$", "int");
     Stmt* s5 = new Stmt("$asdf$ = 2;", "{[0]}", "{[0]->[0]}", {}, {{"$asdf$", "{[0]->[0]}"}});
     comp3->addStmt(s5);
 
     Computation* ecomp2 = new Computation();
-    ecomp2->addDataSpace("$A$");
-    ecomp2->addDataSpace("$tmp$");
-    ecomp2->addDataSpace("$_iegen_0asdf$");
+    ecomp2->addDataSpace("$A$", "int");
+    ecomp2->addDataSpace("$tmp$", "int");
+    ecomp2->addDataSpace("$_iegen_0asdf$", "int");
     ecomp2->addParameter("$someInteger$", "int");
     ecomp2->addReturnValue("$tmp$");
     Stmt* e1s1 = new Stmt(*s3);
@@ -951,16 +951,16 @@ TEST_F(ComputationTest, AppendComputationComplex) {
     checkAppendComputation(comp2, comp3, "{[0]}", "{[0]->[2]}", {}, 2, {}, ecomp2);
 
     Computation* ecomp1 = new Computation();
-    ecomp1->addDataSpace("$index$");
-    ecomp1->addDataSpace("$N$");
-    ecomp1->addDataSpace("$tmp$");
-    ecomp1->addDataSpace("$_iegen_1A$");
-    ecomp1->addDataSpace("$_iegen_1tmp$");
-    ecomp1->addDataSpace("$_iegen_1someInteger$");
-    ecomp1->addDataSpace("$_iegen_1_iegen_0asdf$");
+    ecomp1->addDataSpace("$index$", "int");
+    ecomp1->addDataSpace("$N$", "int");
+    ecomp1->addDataSpace("$tmp$", "int");
+    ecomp1->addDataSpace("$_iegen_1A$", "int");
+    ecomp1->addDataSpace("$_iegen_1tmp$", "int");
+    ecomp1->addDataSpace("$_iegen_1someInteger$", "int");
+    ecomp1->addDataSpace("$_iegen_1_iegen_0asdf$", "int");
     Stmt* e2s1 = new Stmt(*s1);
     Stmt* e2s2 = new Stmt(*s2);
-    Stmt* e2s3 = new Stmt("int $_iegen_1someInteger$ = $tmp$;", "{[i]: 0<=i<$N$}", "{[i]->[1,i,1]}", {{"$tmp$", "{[i]->[0]}"}}, {{"$_iegen_1someInteger$", "{[i]->[0]}"}});
+    Stmt* e2s3 = new Stmt("$_iegen_1someInteger$ = $tmp$;", "{[i]: 0<=i<$N$}", "{[i]->[1,i,1]}", {{"$tmp$", "{[i]->[0]}"}}, {{"$_iegen_1someInteger$", "{[i]->[0]}"}});
     Stmt* e2s4 = new Stmt("$_iegen_1A$[k] += $_iegen_1A$[k+1];",
                          "{[i,k]: 0<=i<$N$ && 0<=k<5}", "{[i,k]->[1,i,2,k,0]}",
                          {{"$_iegen_1A$", "{[i,k]->[k]}"},
@@ -992,9 +992,9 @@ TEST_F(ComputationTest, AppendComputationComplex) {
 // Check creating a copy of a Computation with prefixed names works properly
 TEST_F(ComputationTest, ComputationNamePrefixing) {
     Computation* comp1 = new Computation();
-    comp1->addDataSpace("$product$");
-    comp1->addDataSpace("$x$");
-    comp1->addDataSpace("$y$");
+    comp1->addDataSpace("$product$", "int");
+    comp1->addDataSpace("$x$", "int");
+    comp1->addDataSpace("$y$", "int");
     Stmt* s0 = new Stmt("$product$[i] += $x$[i][j] * $y$[j];",
                         "{[i,j]: i >= 0 && i < a && j >= 0 && j < b}",
                         "{[i,j]->[2,i,1,j,0]}",
@@ -1011,8 +1011,12 @@ TEST_F(ComputationTest, ComputationNamePrefixing) {
     delete execSchedule;
 
     Computation* prefixedComp1 = comp1->getUniquelyNamedClone();
-    EXPECT_EQ(std::unordered_set<std::string>({"$_iegen_0product$", "$_iegen_0x$", "$_iegen_0y$"}),
-              prefixedComp1->getDataSpaces());
+    std::map<std::string, std::string> mapPrefixedComp1 = {
+                                                  {"$_iegen_0product$", "int"},
+                                                  {"$_iegen_0x$", "int"},
+                                                  {"$_iegen_0y$", "int"}
+                                                };
+    EXPECT_EQ(mapPrefixedComp1, prefixedComp1->getDataSpaces());
     EXPECT_EQ("$_iegen_0product$[i] += $_iegen_0x$[i][j] * $_iegen_0y$[j];",
               prefixedComp1->getStmt(0)->getStmtSourceCode());
     EXPECT_EQ(
@@ -1029,7 +1033,12 @@ TEST_F(ComputationTest, ComputationNamePrefixing) {
               prefixedComp1->getStmt(0)->getWriteDataSpace(0));
 
     Computation* prefixedComp2 = comp1->getUniquelyNamedClone();
-    EXPECT_EQ(std::unordered_set<std::string>({"$_iegen_1product$", "$_iegen_1x$", "$_iegen_1y$"}),
+    std::map<std::string, std::string> mapPrefixedComp2 = {
+                                                  {"$_iegen_1product$", "int"},
+                                                  {"$_iegen_1x$", "int"},
+                                                  {"$_iegen_1y$", "int"}
+                                                };
+    EXPECT_EQ(mapPrefixedComp2,
               prefixedComp2->getDataSpaces());
     EXPECT_EQ("$_iegen_1product$[i] += $_iegen_1x$[i][j] * $_iegen_1y$[j];",
               prefixedComp2->getStmt(0)->getStmtSourceCode());
@@ -1048,7 +1057,12 @@ TEST_F(ComputationTest, ComputationNamePrefixing) {
 
     // prefix an already-prefixed Computation
     Computation* prefixedComp3 = prefixedComp1->getUniquelyNamedClone();
-    EXPECT_EQ(std::unordered_set<std::string>({"$_iegen_2_iegen_0product$", "$_iegen_2_iegen_0x$", "$_iegen_2_iegen_0y$"}),
+    std::map<std::string, std::string> mapPrefixedComp3 = {
+                                                  {"$_iegen_2_iegen_0product$", "int"},
+                                                  {"$_iegen_2_iegen_0x$", "int"},
+                                                  {"$_iegen_2_iegen_0y$", "int"}
+                                                };
+    EXPECT_EQ(mapPrefixedComp3,
               prefixedComp3->getDataSpaces());
     EXPECT_EQ("$_iegen_2_iegen_0product$[i] += $_iegen_2_iegen_0x$[i][j] * $_iegen_2_iegen_0y$[j];",
               prefixedComp3->getStmt(0)->getStmtSourceCode());
@@ -1156,7 +1170,7 @@ TEST_F(ComputationTest, ToDotUnitTest){
                   },
                   { {"u"  ,"{[i]->[i]}"}}));
     
-    EXPECT_EQ(comp->toDotString(),
+    EXPECT_EQ(comp->toDotString(false, false),
               "digraph dataFlowGraph_1{"
               " \nsubgraph cluster2"
 	      " {\nstyle = filled;\n"

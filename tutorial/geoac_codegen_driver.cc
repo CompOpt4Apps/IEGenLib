@@ -2061,7 +2061,7 @@ int main(int argc, char **argv){
     //Calling toDot() on the Computation structure
     ofstream dotFileStream("codegen_dot.txt");
     cout << "Entering toDot()" << "\n";
-    string dotString = updateSources->toDotString();
+    string dotString = updateSources->toDotString(false, false);
     dotFileStream << dotString;
     dotFileStream.close();
 
