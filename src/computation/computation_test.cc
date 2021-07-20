@@ -154,7 +154,7 @@ class ComputationTest : public ::testing::Test {
     }
     
     void checkToDotString(Computation* comp, std::string expectedDot){
-        EXPECT_EQ(expectedDot, comp->toDotString(false, false));
+        EXPECT_EQ(expectedDot, comp->toDotString());
     }
 
     //! EXPECT with gTest that two Computations are equal, component by component.
@@ -705,7 +705,7 @@ TEST_F(ComputationTest, Colors) {
     forLoopComp->addStmt(s0);
     forLoopComp->addStmt(s1);
 
-    string dotString = forLoopComp->toDotString(false, false);
+    string dotString = forLoopComp->toDotString();
     std::cerr << dotString << std::endl;
 
     delete forLoopComp;
@@ -1170,7 +1170,7 @@ TEST_F(ComputationTest, ToDotUnitTest){
                   },
                   { {"u"  ,"{[i]->[i]}"}}));
     
-    EXPECT_EQ(comp->toDotString(false, false),
+    EXPECT_EQ(comp->toDotString(),
               "digraph dataFlowGraph_1{"
               " \nsubgraph cluster2"
 	      " {\nstyle = filled;\n"

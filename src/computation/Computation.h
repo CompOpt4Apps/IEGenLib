@@ -31,6 +31,7 @@
 
 #include <basic/boolset.h>
 
+#include "CompGraph.h"
 #include "set_relation/Visitor.h"
 #include "set_relation/environment.h"
 #include "set_relation/expression.h"
@@ -188,7 +189,7 @@ class Computation {
 
     //! Compresses producer-consumer statements and returns a vector
     //  of indices corresponding to all the remaining statements
-    std::vector<int> compressPCNodes();
+    //std::vector<int> compressPCNodes();
 
     //! Function returns a dot string representing nesting
     //  and loop carrie dependency. Internally it uses
@@ -198,9 +199,10 @@ class Computation {
     //      will be removed and their reads mapped to their single use instance
     //  param mergeStmts: if true, data spaces and statements will not generate
     //      separate nodes
-    std::string toDotString(bool compressPCNodes, bool mergeStmts);
-//    std::string toDotString();
-//    std::string toDotString2();
+    std::string toDotString();
+    std::string toDotStringOld();
+    void toDotScan(std::vector<std::pair<int,Set*>> &activeStmts, int level,
+	       std::ostringstream& ss, std::vector<std::vector<Set*> >&projectedIS);
 
     //! Environment used by this Computation
     Environment env;

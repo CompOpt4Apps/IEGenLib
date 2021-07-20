@@ -1250,7 +1250,7 @@ bool Computation::consistentSetArity(const std::vector<Set*>& sets) {
     return true;
 }
 
-std::vector<int> Computation::compressPCNodes() {
+/*std::vector<int> Computation::compressPCNodes() {
     // Because this process uses a graph structure,
     // statements are often refered to as nodes
     int numStmts = getNumStmts();
@@ -1307,44 +1307,16 @@ std::vector<int> Computation::compressPCNodes() {
         results.push_back(i);
     }
 
-/*    results.clear();
+    results.clear();
     for (int i = 0; i < numStmts; i++) {
         if (getStmt(i)->numOutDependencies() != 1) { results.push_back(i); }
-    }*/
+    }
     return results; 
-}
+}*/
 
-std::string Computation::toDotString(bool removePCNodes, bool mergeStmts) {
+std::string Computation::toDotString() {
     //TODO: Deal with disjunction of conjunctions later.
 
-    std::vector<int> stmts;
-    if (removePCNodes) {
-        // TODO: fix compress PCNodes so we just call it once
-        stmts = compressPCNodes();
-        size_t len = -1;
-        while (len != stmts.size()) {
-            len = stmts.size();
-            stmts = compressPCNodes();
-        }
-    } else { for (int i = 0; i < getNumStmts(); i++) { stmts.push_back(i); } }
-  
-    std::ostringstream ss;
-    ss << "digraph dataFlowGraph_1{ \n";
-
-    if (!generateDotStmts(stmts, ss, mergeStmts)) { return ""; }
-    if (mergeStmts) {
-        generateDotDependencies(stmts, ss);
-    } else {
-        generateDotReadWrites(stmts, ss);
-    }
- 
-    ss << "}";
- 
-    return ss.str();
-}
-
-bool Computation::generateDotStmts(std::vector<int> &stmts, std::ostringstream &ss,
-                bool mergeStmts) {
     padExecutionSchedules();
 
     std::vector<Set*> transformedSpaces = applyTransformations();
@@ -1359,95 +1331,112 @@ bool Computation::generateDotStmts(std::vector<int> &stmts, std::ostringstream &
   
     // newIS is a list of pairs of statement id
     // to their transformed spaces.
-    std::vector<std::pair<int,Set*> > newIS;
+    std::vector<std::pair<int,Set*>> newIS;
 
-    for(int idx : stmts){
-	newIS.push_back(std::make_pair(idx,transformedSpaces[idx]));
+    for(int i = 0; i < transformedSpaces.size(); i++){
+	newIS.push_back(std::make_pair(i,transformedSpaces[i]));
     }
 
     // Sort by lexicographical order
     std::sort(newIS.begin(),newIS.end(),
 		    Computation::activeStatementComparator);
 
-    generateDotStmts(newIS, 0, ss, mergeStmts);
+    CompGraph graph = CompGraph();
+    graph.create(this);
+    std::string result = graph.toDotString(newIS);
 
     for(Set* set : transformedSpaces){
         delete set;
     }
 
-    return true;  
+    return result;
 }
 
-void Computation::generateDotStmts(std::vector<std::pair<int,Set*>> &activeStmts, int level,
-	       std::ostringstream& ss, bool mergeStmts){
-    if(activeStmts.size() == 1){
-	std::string stmIter = activeStmts[0].second->prettyPrintString();
+//! Function returns a dot string representing nesting
+//  and loop carrie dependency. Internally it uses
+//  a lite version of polyhedral scanning to generate
+//  subgraphs in the dot file.
+//
+std::string Computation::toDotStringOld(){
+    //TODO: Deal with disjunction of cunjunctions later.
+    
+    padExecutionSchedules();
 
-        std::string label, color = DEFAULT_COLOR;
-        // label = getStmt(activeStmts[0].first)->getStmtSourceCode();
-        label = "S" + std::to_string(activeStmts[0].first); 
-        
-        Stmt* stmt = getStmt(activeStmts[0].first);
-        ss << "S" << activeStmts[0].first
-           << "[" << generateDotLabel({stmIter, "\\n ", label,
-                                       "\\n ", stmt->getAllDebugStr()})
-           << "][shape=Mrecord][style=bold]  [color="
-           << color << "];\n";
-        return;
+    // newIS is a list of pairs of statement id
+    // to their transformed spaces.
+    std::vector<std::pair<int,Set*> > newIS;
+
+    int i = 0;
+    std::vector<Set*> transformedSpaces = applyTransformations();
+    if (!consistentSetArity(transformedSpaces)) {
+        std::cerr << "Iteration spaces do not have a consistent arity" << std::endl;
+        std::cerr << "Aborting toDotString()" << std::endl;
+        return "";
     }
-    std::vector<std::vector< std::pair <int, Set*> > > bins=
-	    split(level,activeStmts);
-    if(bins.size() > 1 && level > 0){
-        // Replace all '$' because dot throws a fit
-        Set* projectedIS = new Set(replaceInString(activeStmts[0].second->getString(), "$", ""));
-            //Perform projections for each column
-        for (int j = activeStmts[0].second->arity() - 1; j >= level; j--) {
-            Set* tmp = projectedIS;
-            projectedIS = projectedIS->projectOut(j);
-            delete tmp;
-            }
-
-        std::string domainIter = projectedIS->prettyPrintString();
-
-        ss << "subgraph cluster"<< level << " {\n"
-           << "style = filled;\n"
-           << " color = \"\";\n"
-           << generateDotLabel({"Domain :", domainIter})
-           << " \n";
-
-        delete projectedIS;
+    for(Set* set : transformedSpaces){
+	newIS.push_back(std::make_pair(i,set));
+        i++;
     }
 
-    for(auto active : bins){
-        generateDotStmts(active, level+1, ss, mergeStmts);
+    // Sort by lexicographical order
+    std::sort(newIS.begin(),newIS.end(),
+		    Computation::activeStatementComparator);
+    
+    int maxLevel = newIS[0].second->arity();
+//    std::cerr << "Max Level: " << maxLevel << std::endl;
+    std::vector<std::vector<Set*> > projectedIS(maxLevel);
+    
+    for(int i = 0 ; i < maxLevel; i++ ){
+        projectedIS[i] = std::vector<Set*>(newIS.size());
     }
-    if(bins.size() > 1 && level > 0){
-        ss << "}\n"; 
+    //TODO: Move deletiing of active statement's set pointersto
+    //      toDotScan. This is because overlapping 
+    //      statements might result to new disjoint
+    //      active iteration spaces of the same statement.
+    //      and these disjoint active statements cannot
+    //      be seen at this point. Or use unique pointers
+    //      to help delete when sets get out of scope. 
+    //      Easier way. :) 
+    for(int i = 0; i < stmts.size(); i++){
+        if (maxLevel > 0)
+            // Replace all '$' because iegenlib throw a fit TODO: why does iegenlib throw a fit? (it didn't previously)
+            projectedIS[maxLevel-1][i] = new Set(replaceInString(newIS[i].second->getString(), "$", ""));
+	//Perform projections for each column
+	for (int j = maxLevel -1; j >= 1 ; j --) {
+	    projectedIS[j -1][i] = projectedIS[j][i]->projectOut(j);   
+       	}
     }
-}
-
-void Computation::generateDotReadWrites(std::vector<int> &stmts, std::ostringstream &ss) {
+    std::ostringstream ss;
+    ss << "digraph dataFlowGraph_1{ \n";
+    toDotScan(newIS,0,ss,projectedIS);
+    // Cleanup.
+    /*
+    for (int i = 0; i < stmts.size(); i++){
+        delete newIS[i].second;
+	for(int j = 0 ; j < maxLevel; j++)
+            delete projectedIS[j][i];
+    }*/
     // Code section from shivani for adding 
     // data nodes
-
-    // Maintains the list of dataspaces already created
-    std::vector<string>data_spaces;
+    std::vector<string>
+        data_spaces;  // Maintains the list of dataspaces already created
 
     // Adding the participating dataspaces for each statement and mapping out
     // the read and write access.
-    for (int idx : stmts) {
-        Stmt* stmt = getStmt(idx);
+    for (int i = 0; i < getNumStmts(); i++) {
         // Iterates over the read-DataSpaces
-        for (int read_idx = 0; read_idx < stmt->getNumReads(); read_idx++) {
-            string readDataSpace = stmt->getReadDataSpace(read_idx);
+        for (int data_read_index = 0;
+             data_read_index < getStmt(i)->getNumReads(); data_read_index++) {
+            string readDataSpace =
+                getStmt(i)->getReadDataSpace(data_read_index);
             // Set node color from data space type
-            std::string color = getDataSpaceDotColor(readDataSpace);
-            // Remove '$'
-            readDataSpace = trimDataSpaceName(readDataSpace);
+            std::string color = isParameter(readDataSpace) ? "purple" :
+                                isReturnValue(readDataSpace) ? "red" :
+                                "grey";
             // Check to make sure the data space is not created if it already
             // exists
-            if (std::find(data_spaces.begin(), data_spaces.end(),
-                          readDataSpace) == data_spaces.end()) {
+            if (!(std::count(data_spaces.begin(), data_spaces.end(),
+                             readDataSpace))) {
                 // Creates data space
                 ss
                     << "\"" << readDataSpace << "\"["
@@ -1457,31 +1446,40 @@ void Computation::generateDotReadWrites(std::vector<int> &stmts, std::ostringstr
                 data_spaces.push_back(readDataSpace);
             }
 
-            std::string readRelStr = stmt
-                                     ->getReadRelation(read_idx)
-                                     ->toString();
-            size_t start_pos = readRelStr.rfind("[");
-            size_t end_pos = readRelStr.rfind("]");
-
+            size_t start_pos = getStmt(i)
+                                   ->getReadRelation(data_read_index)
+                                   ->getString()
+                                   .rfind("[");
+            size_t end_pos = getStmt(i)
+                                 ->getReadRelation(data_read_index)
+                                 ->getString()
+                                 .rfind("]");
+	
             ss << "\t\t\"" << readDataSpace << "\"->"
-                    << "S" << idx << "["
+                    << "S" << i << "["
                     << generateDotLabel(
-                           readRelStr.substr(start_pos + 1, end_pos - start_pos - 1))
+                           getStmt(i)
+                           ->getReadRelation(data_read_index)
+                           ->getString()
+                           .substr(start_pos + 1, end_pos - start_pos - 1))
                     << "][color=" << color << "]"
                     << "\n";
         }
 
         // Iterates over the write-DataSpaces
-        for (int write_idx = 0; write_idx < stmt->getNumWrites(); write_idx++) {
-            string writeDataSpace = stmt->getWriteDataSpace(write_idx);
+        for (int data_write_index = 0;
+             data_write_index < getStmt(i)->getNumWrites();
+             data_write_index++) {
+            string writeDataSpace =
+                getStmt(i)->getWriteDataSpace(data_write_index);
             // Set node color from data space type
-            std::string color = getDataSpaceDotColor(writeDataSpace);
-            // Remove '$'
-            writeDataSpace = trimDataSpaceName(writeDataSpace);
+            std::string color = isParameter(writeDataSpace) ? "purple" :
+                                isReturnValue(writeDataSpace) ? "red" :
+                                "grey";
             // Check to make sure the data space is not created if it already
             // exists
-            if (std::find(data_spaces.begin(), data_spaces.end(),
-                          writeDataSpace) == data_spaces.end()) {
+            if (!(std::count(data_spaces.begin(), data_spaces.end(),
+                             writeDataSpace))) {
                 ss
                     << "\"" << writeDataSpace << "\"["
                     << generateDotLabel(writeDataSpace)
@@ -1490,87 +1488,74 @@ void Computation::generateDotReadWrites(std::vector<int> &stmts, std::ostringstr
                 data_spaces.push_back(writeDataSpace);
             }
 
-            std::string writeRelStr = stmt
-                                      ->getWriteRelation(write_idx)
-                                      ->toString();
-            size_t start_pos = writeRelStr.rfind("[");
-            size_t end_pos = writeRelStr.rfind("]");
+            size_t start_pos = getStmt(i)
+                                   ->getWriteRelation(data_write_index)
+                                   ->getString()
+                                   .rfind("[");
+            size_t end_pos = getStmt(i)
+                                 ->getWriteRelation(data_write_index)
+                                 ->getString()
+                                 .rfind("]");
 
             ss << "\t\t"
-                    << "S" << idx << "->\"" << writeDataSpace << "\"["
+                    << "S" << i << "->\"" << writeDataSpace << "\"["
                     << generateDotLabel(
-                           writeRelStr.substr(start_pos + 1, end_pos - start_pos - 1))
+                           getStmt(i)
+                           ->getWriteRelation(data_write_index)
+                           ->getString()
+                           .substr(start_pos + 1, end_pos - start_pos - 1))
                     << "][color=" << color << "]"
                     << "\n";
         }
     }
+
+    ss << "}"; 
+    // Clean up memory.
+    for(int j = 0 ; j < maxLevel ; j++)
+	for (int k = 0 ; k <  stmts.size(); k++)
+	    delete projectedIS[j][k];
+    for(Set* set : transformedSpaces){
+        delete set;
+    }
+    return ss.str();
 }
 
-void Computation::generateDotDependencies(std::vector<int> &stmts, std::ostringstream &ss) {
-    for (int idx : stmts) {
-        Stmt* stmt = getStmt(idx);
-        std::string write = "";
-        if (stmt->getNumWrites() > 0) {
-            write = stmt->getWriteDataSpace(0);
-        }
-        //TODO: handle read relation
-        std::string relStr = "[0]";
-        int pos1 = relStr.rfind('[');
-        int pos2 = relStr.rfind(']');
-        relStr = relStr.substr(pos1 + 1, pos2 - pos1 + 1);
-        for (int dep : stmt->getOutDependencies()) {
-            ss << "S" << idx << "->S" << dep
-               << "[" << generateDotLabel(relStr)
-               << "][color=" << getDataSpaceDotColor(write) << "]\n";
-        }
-        // Connect each backwards dependency to this statement
-/*        for (int dep : stmt->getInDependencies()) {
-            // Get the dataSpace written to by this dependency
-            std::string dataSpace = "";
-            if (getStmt(dep)->getNumWrites() > 0) {
-                dataSpace = getStmt(dep)->getWriteDataSpace(0);
-            }
-            color = getDataSpaceDotColor(dataSpace);
-            // Find an equivalent data space in our statement's reads
-            std::string relStr = "[0]";
-            for (int j = 0; j < stmt->getNumReads(); j++) {
-                if (areEquivalentRenames(dataSpace, stmt->getReadDataSpace(j))) {
-                    // Store the read's relation string
-                    relStr = stmt->getReadRelation(j)->getString();
-                    break;
-                }
-            }
-            // Get the relevant information from the relation string
-            int pos = relStr.rfind('[');
-            relStr = relStr.substr(pos + 1, relStr.rfind(']') - pos + 1);
+//! Lite version of polyhedra scanning to generate 
+//! toDot Clusters
+void Computation::toDotScan(std::vector<std::pair<int,Set*>> &activeStmts, int level,
+	       std::ostringstream& ss ,
+	       std::vector<std::vector<Set*> >&projectedIS){
+    if(activeStmts.size() == 1){
+	std::string stmIter = activeStmts[0].second->prettyPrintString();
 
-            ss << "S" << dep << "->S" << idx
-               << "[" << generateDotLabel(relStr)
-               << "][color=" << color << "]\n";
-        }*/
+        ss << "S" << activeStmts[0].first
+                << "[" << generateDotLabel({stmIter, "\\n ",
+                   //getStmt(activeStmts[0].first)->getStmtSourceCode()})
+                   "S", std::to_string(activeStmts[0].first)})
+                << "][shape=Mrecord][style=bold]  [color=grey];\n";
+        return;
+    }
+    std::vector<std::vector< std::pair <int, Set*> > > bins=
+	    split(level,activeStmts);
+    if(bins.size() > 1 && level > 0 && level <= projectedIS.size() ){
+	std::string domainIter = projectedIS[level-1]
+		[activeStmts[0].first]->prettyPrintString();
+
+        ss << "subgraph cluster"<< level << " {\n"
+           << "style = filled;\n"
+           << " color = \"\";\n"
+           << generateDotLabel({"Domain :", domainIter})
+           << " \n";
+    }
+
+    for(auto active : bins){
+        toDotScan(active,level+1,ss,projectedIS);
+    }
+    if(bins.size() > 1 && level > 0 && level <= projectedIS.size() ){
+        ss << "}\n"; 
     }
 }
 
-void Computation::addTransformation(unsigned int stmtIndex, Relation* rel) {
-    transformationLists.at(stmtIndex).emplace_back(rel);
-}
-
-std::vector<Set*> Computation::applyTransformations() const {
-    std::vector<Set*> transformedSchedules;
-    for (int stmtNum = 0; stmtNum < this->getNumStmts(); ++stmtNum) {
-        Stmt* currentStmt = getStmt(stmtNum);
-        Set* schedule = currentStmt->getExecutionSchedule()->Apply(currentStmt->getIterationSpace());
-        // apply transformations in order, chaining together outputs and inputs
-        for (Relation* transformation : transformationLists.at(stmtNum)) {
-            std::cerr << "Transformation " << transformation->getString() << std::endl;
-            Set* scheduleAfterTransformation = transformation->Apply(schedule);
-            delete schedule;
-            schedule = scheduleAfterTransformation;
-        }
-        transformedSchedules.push_back(schedule);
-    }
-    return transformedSchedules;
-}
 
 //! param  activeStmt is assumed to be sorted lexicographically
 std::vector<std::vector<std::pair<int,Set*> > > Computation::split
@@ -1594,6 +1579,27 @@ std::vector<std::vector<std::pair<int,Set*> > > Computation::split
        res.push_back(k.second);
    }
    return res;
+}
+
+void Computation::addTransformation(unsigned int stmtIndex, Relation* rel) {
+    transformationLists.at(stmtIndex).emplace_back(rel);
+}
+
+std::vector<Set*> Computation::applyTransformations() const {
+    std::vector<Set*> transformedSchedules;
+    for (int stmtNum = 0; stmtNum < this->getNumStmts(); ++stmtNum) {
+        Stmt* currentStmt = getStmt(stmtNum);
+        Set* schedule = currentStmt->getExecutionSchedule()->Apply(currentStmt->getIterationSpace());
+        // apply transformations in order, chaining together outputs and inputs
+        for (Relation* transformation : transformationLists.at(stmtNum)) {
+            std::cerr << "Transformation " << transformation->getString() << std::endl;
+            Set* scheduleAfterTransformation = transformation->Apply(schedule);
+            delete schedule;
+            schedule = scheduleAfterTransformation;
+        }
+        transformedSchedules.push_back(schedule);
+    }
+    return transformedSchedules;
 }
 
 std::string Computation::codeGen(Set* knownConstraints) {
