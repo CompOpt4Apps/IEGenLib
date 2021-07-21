@@ -1279,6 +1279,9 @@ std::string Computation::toDotString() {
     CompGraph graph = CompGraph();
     graph.create(this);
     graph.addDebugStmts(getStmtDebugStrings());
+//    graph.reduceStmts(0, false);
+    graph.reduceDataSpaces(0);
+    graph.reduceStmts(-1);
     return graph.toDotString();
 }
 

@@ -23,22 +23,34 @@ class Node;
 typedef std::shared_ptr<Node> NodePtr;
 
 class Edge {
-    friend class CompGraph;
-
   public:
     Edge() = default;
     Edge(bool _isWrite, NodePtr _stmtNode, NodePtr _dataNode)
         : isWrite(_isWrite), stmtNode(_stmtNode), dataNode(_dataNode) {}
     ~Edge() = default;
 
-    void generateDotString(std::ostringstream &ss);
-
-    NodePtr getStmtNode() { return stmtNode; }
-    NodePtr getDataNode() { return dataNode; }
-
-  private:
     void generateLabel(Relation* dataRelation);
 
+    void generateDotString(std::ostringstream &ss);
+
+    // Getter/Setters
+    // stmtNode
+    void setStmtNode(NodePtr ptr) { stmtNode = ptr; }
+    NodePtr getStmtNode() { return stmtNode; }
+    // dataNode
+    void setDataNode(NodePtr ptr) { dataNode = ptr; }
+    NodePtr getDataNode() { return dataNode; }
+    // label
+    void setLabel(std::string str) { label = str; }
+    void addLabel(std::string str) { label.append(str); }
+    std::string getLabel() { return label; }
+    // color
+    void setColor(std::string str) { color = str; }
+    std::string getColor() { return color; }
+
+    void reset() { written = false; }
+
+  private:
     // is the edge a write (stmt->dataSpace)
     // or a read (dataSpace->stmt)
     bool isWrite;
@@ -52,31 +64,42 @@ class Edge {
 };
 
 class Node {
-    friend class CompGraph;
-
   public:
     Node() = default;
     ~Node() = default;
 
     void generateDotString(std::ostringstream &ss);
 
-    std::string getName() { return name; }
-
     std::vector<EdgePtr> getInEdges() { return inEdges; }
     EdgePtr getInEdge(int idx) { return idx < inEdges.size() ? inEdges[idx] : nullptr; }
     int numInEdges() { return inEdges.size(); }
-  
+    void addInEdge(EdgePtr ptr) { inEdges.push_back(ptr); }
+    void removeInEdge(EdgePtr ptr);
+ 
     std::vector<EdgePtr> getOutEdges() { return outEdges; }
     EdgePtr getOutEdge(int idx) { return idx < outEdges.size() ? outEdges[idx] : nullptr; }
     int numOutEdges() { return outEdges.size(); }
-
-  private:
-    void addInEdge(EdgePtr ptr) { inEdges.push_back(ptr); }
-    void removeInEdge(EdgePtr ptr);
-
     void addOutEdge(EdgePtr ptr) { outEdges.push_back(ptr); }
     void removeOutEdge(EdgePtr ptr);
 
+    // Getter/Setters
+    // name
+    void setName(std::string str) { name = str; }
+    std::string getName() { return name; }
+    // label
+    void setLabel(std::string str) { label = str; }
+    void addLabel(std::string str) { label.append(str); }
+    std::string getLabel() { return label; }
+    // shape
+    void setShape(std::string str) { shape = str; }
+    std::string getShape() { return shape; }
+    // color
+    void setColor(std::string str) { color = str; }
+    std::string getColor() { return color; }
+
+    void reset() { written = false; }
+
+  private:
     std::vector<EdgePtr> inEdges, outEdges;
 
     std::string name, label, shape;
@@ -86,18 +109,29 @@ class Node {
 };
 
 class Subgraph {
-    friend class CompGraph;
-
   public:
-    Subgraph() = default;;
+    Subgraph() = default;
+    Subgraph(int _level) : level(_level) {}
     ~Subgraph() = default;
 
     void generateDotString(std::ostringstream &ss);
 
-  private:
     void addStmt(NodePtr node) { stmts.insert(node); }
+    std::set<NodePtr> getStmts() { return stmts; }
     void addSubgraph(Subgraph graph) { subgraphs.push_back(graph); }
+    
+    void reduceStmts(int toLevel);
+    void reduceDataSpaces(int toLevel);
 
+    // Getter/Setters
+    // level
+    int getLevel() { return level; }
+    // label
+    void setLabel(std::string str) { label = str; }
+    void addLabel(std::string str) { label.append(str); }
+    std::string getLabel() { return label; }
+
+  private:
     int level;
     std::string label;
     std::set<NodePtr> stmts;
@@ -113,6 +147,8 @@ class CompGraph {
 
     void create(Computation* comp);
     void addDebugStmts(std::vector<std::pair<int, std::string>> debugStmts);
+    void reduceStmts(int toLevel);
+    void reduceDataSpaces(int toLevel);
     void fusePCRelations();
 
     std::string toDotString();
