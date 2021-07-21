@@ -84,7 +84,6 @@ class Computation {
     //! For each write in the new statement, rename the written dataspace in all
     //  statements from the last statement to the last write to that data space.
     void updateDataSpaceVersions(Stmt* stmt);
-    void updateDataDependencies(Stmt* stmt);
 
 
     //! Add a statement to this Computation.
@@ -128,6 +127,8 @@ class Computation {
     std::string getParameterName(unsigned int index) const;
     //! Get a parameter's data type
     std::string getParameterType(unsigned int index) const;
+    //! Get the list of parameters
+    std::vector<std::string> getParameters() const { return parameters; }
     //! Check if a data space is a parameter
     bool isParameter(std::string dataSpaceName) const;
     //! Get the number of parameters this Computation has
@@ -204,6 +205,16 @@ class Computation {
     void toDotScan(std::vector<std::pair<int,Set*>> &activeStmts, int level,
 	       std::ostringstream& ss, std::vector<std::vector<Set*> >&projectedIS);
 
+    //! Function splits an active statement to disjoint
+    //! list of statements.
+    //  \param   level
+    //  \param   activeStmt current active statements.
+    std::vector<std::vector<std::pair<int,Set*> > > split
+	    (int level, std::vector<std::pair<int,Set*> >& activeStmt);
+
+    //! Compiles each statement's debug string into a list
+    std::vector<std::pair<int, std::string>> getStmtDebugStrings();
+
     //! Environment used by this Computation
     Environment env;
 
@@ -213,6 +224,9 @@ class Computation {
     //! Sequentially apply added transformations to all statements.
     //! Returns a list of final statement schedules after transformation.
     std::vector<Set*> applyTransformations() const;
+
+    //! Returns a list of iteration spaces after padding and applying transformations
+    std::vector<std::pair<int, Set*>> getIterSpaces();
 
     //! Method generates c code.
     //! Known constraints are constraints that can be considered already
@@ -233,13 +247,6 @@ class Computation {
     //  lower in order to b. 
     static bool activeStatementComparator(const std::pair<int,Set*>& a, 
 		   const std::pair<int,Set*>& b);
-    
-    //! Function splits an active statement to disjoint
-    //! list of statements.
-    //  \param   level
-    //  \param   activeStmt current active statements.
-    std::vector<std::vector<std::pair<int,Set*> > > split
-	    (int level, std::vector<std::pair<int,Set*> >& activeStmt);
    
     //! Function reschudles statment s1 to come before 
     //  statement s2
@@ -266,37 +273,7 @@ class Computation {
     void fuse (int s1, int s2, int fuseLevel);
    
     private:
- 
-/*    void toDotScan2(std::vector<std::pair<int,Set*>> &activeStmts, int level,
-		    std::ostringstream& ss ,
-		    std::vector<std::vector<Set*> >&projectedIS);
-   
-    //! Lite version of polyhedra scanning to generate 
-    //! toDot Clusters
-    void toDotScan(std::vector<std::pair<int,Set*>> &activeStmts, int level,
-		    std::ostringstream& ss ,
-		    std::vector<std::vector<Set*> >&projectedIS);*/
 
-    // Generates nodes statements in the dot file format
-    // mergeStmts specifies whether to combine dataSpace and stmt nodes (if true)
-    // or not (if false)
-    // Returns true if successful, false otherwise
-    bool generateDotStmts(std::vector<int> &stmts, std::ostringstream &ss, bool mergeStmts);
-
-    // Recursive function which generates statement nodes and subgraphs
-    // Called by the above overload of generateDotStmts()
-    void generateDotStmts(std::vector<std::pair<int,Set*>> &activeStmts, int level,
-                          std::ostringstream &ss, bool mergeStmts);
-    
-    // Generates nodes for read/write data spaces in the dot file format
-    // Generates dependencies between statement and data space nodes
-    // using each statement's read and write data spaces
-    void generateDotReadWrites(std::vector<int> &stmts, std::ostringstream &ss);
-
-    // Generates dependencies between statement nodes using
-    // each statement's in/out dependencies
-    void generateDotDependencies(std::vector<int> &stmts, std::ostringstream &ss);
-    
     //! Information on all statements in the Computation
     std::vector<Stmt*> stmts;
     
@@ -306,7 +283,7 @@ class Computation {
     std::map<std::string, std::string> dataSpaces;
 
     //! Parameters of the computation, pair of name : type. All parameters should also be data spaces.
-    std::vector<std::pair<std::string, std::string>> parameters;
+    std::vector<std::string> parameters;
     //! Names of values that are returned if this Computation is called. May be
     //! data space names or literals. This is an ordered list because some
     //! languages allow multiple returns.
@@ -443,28 +420,9 @@ class Stmt {
     //Returns all added debug strings for the statement
     std::string getAllDebugStr() const;
 
-    //! Adds a new in/out-dependency
-    void addInDependency(int i) { inDependencies.insert(i); }
-    void addOutDependency(int i) { outDependencies.insert(i); }
-    //! Removes the specified in/out-dependency
-    void removeInDependency(int i) { inDependencies.erase(i); }
-    void removeOutDependency(int i) { outDependencies.erase(i); }
-    //! Removes all in/out-dependencies
-    void clearInDependencies() { inDependencies.clear(); }
-    void clearOutDependencies() { outDependencies.clear(); }
-    //! Gets all in/out-dependencies
-    std::set<int> getInDependencies() { return inDependencies; }
-    std::set<int> getOutDependencies() { return outDependencies; }
-    //! Gets number of in/out-dependencies
-    int numInDependencies() { return inDependencies.size(); }
-    int numOutDependencies() { return outDependencies.size(); }
-
    private:
     //! Debug string
     std::vector<string> debug;
-    //! inDependencies: indices of statements which write to this statement's reads
-    //! outDependencies: indicies of statements which read from this statement's write
-    std::set<int> inDependencies, outDependencies;
     //! Source code of the statement, for debugging purposes
     std::string stmtSourceCode;
     //! Iteration space of a statement

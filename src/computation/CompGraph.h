@@ -17,31 +17,39 @@ namespace iegenlib {
 #define RETURN_COLOR "red"
 #define PARAM_RETURN_COLOR "lime"
 
+class Edge;
+typedef std::shared_ptr<Edge> EdgePtr;
+class Node;
+typedef std::shared_ptr<Node> NodePtr;
+
 class Edge {
     friend class CompGraph;
 
   public:
     Edge() = default;
-    Edge(bool _isWrite, int _stmtIdx, std::string _dataSpace, Relation* dataRel, std::string _color)
-        : isWrite(_isWrite), stmtIdx(_stmtIdx), dataSpace(_dataSpace),
-          color(_color) { setAccessSpace(dataRel); }
+    Edge(bool _isWrite, NodePtr _stmtNode, NodePtr _dataNode)
+        : isWrite(_isWrite), stmtNode(_stmtNode), dataNode(_dataNode) {}
     ~Edge() = default;
 
-  private:
-    void setAccessSpace(Relation* dataRelation);
+    void generateDotString(std::ostringstream &ss);
 
-    std::string toDotString();
+    NodePtr getStmtNode() { return stmtNode; }
+    NodePtr getDataNode() { return dataNode; }
+
+  private:
+    void generateLabel(Relation* dataRelation);
 
     // is the edge a write (stmt->dataSpace)
     // or a read (dataSpace->stmt)
     bool isWrite;
 
-    int stmtIdx;
-    std::string dataSpace, accessSpace;
+    NodePtr stmtNode, dataNode;
+    
+    std::string label;
     std::string color = DEFAULT_COLOR;
-};
 
-typedef std::shared_ptr<Edge> EdgePtr;
+    bool written = false;
+};
 
 class Node {
     friend class CompGraph;
@@ -50,21 +58,50 @@ class Node {
     Node() = default;
     ~Node() = default;
 
+    void generateDotString(std::ostringstream &ss);
+
+    std::string getName() { return name; }
+
+    std::vector<EdgePtr> getInEdges() { return inEdges; }
+    EdgePtr getInEdge(int idx) { return idx < inEdges.size() ? inEdges[idx] : nullptr; }
+    int numInEdges() { return inEdges.size(); }
+  
+    std::vector<EdgePtr> getOutEdges() { return outEdges; }
+    EdgePtr getOutEdge(int idx) { return idx < outEdges.size() ? outEdges[idx] : nullptr; }
+    int numOutEdges() { return outEdges.size(); }
+
   private:
     void addInEdge(EdgePtr ptr) { inEdges.push_back(ptr); }
     void removeInEdge(EdgePtr ptr);
-    EdgePtr getInEdge(int idx) { return idx < inEdges.size() ? inEdges[idx] : nullptr; }
-    std::vector<EdgePtr> getInEdges() { return inEdges; }
-    int numInEdges() { return inEdges.size(); }
 
     void addOutEdge(EdgePtr ptr) { outEdges.push_back(ptr); }
     void removeOutEdge(EdgePtr ptr);
-    EdgePtr getOutEdge(int idx) { return idx < outEdges.size() ? outEdges[idx] : nullptr; }
-    std::vector<EdgePtr> getOutEdges() { return outEdges; }
-    int numOutEdges() { return outEdges.size(); }
 
-    std::string color = DEFAULT_COLOR;
     std::vector<EdgePtr> inEdges, outEdges;
+
+    std::string name, label, shape;
+    std::string color = DEFAULT_COLOR;
+
+    bool written = false;
+};
+
+class Subgraph {
+    friend class CompGraph;
+
+  public:
+    Subgraph() = default;;
+    ~Subgraph() = default;
+
+    void generateDotString(std::ostringstream &ss);
+
+  private:
+    void addStmt(NodePtr node) { stmts.insert(node); }
+    void addSubgraph(Subgraph graph) { subgraphs.push_back(graph); }
+
+    int level;
+    std::string label;
+    std::set<NodePtr> stmts;
+    std::vector<Subgraph> subgraphs;
 };
 
 class Computation;
@@ -75,20 +112,26 @@ class CompGraph {
     ~CompGraph() = default;
 
     void create(Computation* comp);
-
+    void addDebugStmts(std::vector<std::pair<int, std::string>> debugStmts);
     void fusePCRelations();
 
-    std::string toDotString(std::vector<std::pair<int, Set*>> &iterSpace);
-    std::string toDotString(std::vector<std::pair<int, Set*>> &iterSpace, int stmtIdx);
- 
+    std::string toDotString();
+
   private:
     std::vector<std::vector<std::pair<int,Set*>>> split
 	(int level, std::vector<std::pair<int,Set*>>& activeStmt);
-    void generateDotStmts(std::vector<std::pair<int,Set*>>& activeStmt, int level, std::ostringstream &ss);
-    void generateDotReadWrites(std::ostringstream &ss);
+    Subgraph generateSubgraph(std::vector<std::pair<NodePtr ,Set*>>& activeStmt, int level);
 
-    std::map<int, Node> stmtNodes;
-    std::map<std::string, Node> dataNodes;
+    void resetWritten();
+
+    void generateDotWrites(Subgraph &subgraph, std::ostringstream &ss);
+    void generateDotReads(std::ostringstream &ss);
+
+    static std::string getDotColor(std::string color1, std::string color2);
+
+    std::map<int, NodePtr> stmtNodes;
+    std::map<std::string, NodePtr> dataNodes;
+    Subgraph subgraph;
 };
 
 }

@@ -96,7 +96,7 @@ Computation* Computation::getUniquelyNamedClone() const {
         prefixedCopy->addDataSpace(getPrefixedDataSpaceName(space.first, namePrefix), space.second);
     }
     for (auto& param : this->parameters) {
-        prefixedCopy->addParameter(getPrefixedDataSpaceName(param.first, namePrefix), param.second);
+        prefixedCopy->addParameter(getPrefixedDataSpaceName(param, namePrefix), getDataSpaceType(param));
     }
     for (auto& retVal : this->returnValues) {
         // only prefix values that are data space names, avoid trying to prefix
@@ -154,34 +154,8 @@ void Computation::updateDataSpaceVersions(Stmt* stmt) {
     }
 }
 
-void Computation::updateDataDependencies(Stmt* stmt) {
-    std::vector<std::string> reads;
-    for (int i = 0; i < stmt->getNumReads(); i++) {
-        reads.push_back(stmt->getReadDataSpace(i));
-    }
-
-    for (int i = getNumStmts() - 1; i >= 0; i--)  {
-        Stmt* currStmt = getStmt(i);
-        for (int j = 0; j < currStmt->getNumWrites(); j++) {
-            std::string write = currStmt->getWriteDataSpace(j);
-            for (auto it = reads.begin(); it != reads.end(); it++) {
-                if (write.compare(*it) == 0) {
-                    currStmt->addOutDependency(getNumStmts());
-                    stmt->addInDependency(i);
-                    it = reads.erase(it);
-                    if (it == reads.end()) { break; }
-                }
-            }
-            if (reads.empty()) { break; }
-        }
-        if (reads.empty()) { break; }
-    }
-}
-
-
 void Computation::addStmt(Stmt* stmt) {
     updateDataSpaceVersions(stmt);
-    updateDataDependencies(stmt);
     stmts.push_back(stmt);
     transformationLists.push_back({});
 }
@@ -207,41 +181,27 @@ std::string Computation::getDataSpaceType(std::string dataSpaceName) const{
 }
 
 bool Computation::isDataSpace(std::string name) const {
-
-   /*bool isMatch(std::pair<std::string, std::string> dataSpace){
-   return name.compare(dataSpace.first) == 0;
-   } 
-   auto pos = std::find_if(dataSpaces.begin(), dataSpaces.end(), 
-                             [&name](const std::pair<std::string, std::string> &dataSpace) {
-                             return name.compare(dataSpace.first) == 0;
-                             });
-    return pos != dataSpaces.end();
-    */
-    return dataSpaces.find(name) != dataSpaces.end();
-    
- }
+    return dataSpaces.find(name) != dataSpaces.end();    
+}
 
 void Computation::addParameter(std::string paramName, std::string paramType) {
     assertValidDataSpaceName(paramName);
-    parameters.push_back({paramName, paramType});
+    parameters.push_back(paramName);
     // parameters are automatically available as data spaces to the Computation
     addDataSpace(paramName, paramType);
 }
 
 std::string Computation::getParameterName(unsigned int index) const {
-    return parameters.at(index).first;
+    return parameters.at(index);
 }
 
 std::string Computation::getParameterType(unsigned int index) const {
-    return parameters.at(index).second;
+    return getDataSpaceType(getParameterName(index));
 }
 
 bool Computation::isParameter(std::string dataSpaceName) const {
-    auto pos = std::find_if(parameters.begin(), parameters.end(),
-                            [&dataSpaceName](const std::pair<std::string, std::string>& param) {
-                                return dataSpaceName.compare(param.first) == 0;
-                            });
-    return pos != parameters.end();
+    return std::find(parameters.begin(), parameters.end(),
+                     dataSpaceName) != parameters.end();
 }
 
 unsigned int Computation::getNumParams() const {
@@ -455,9 +415,8 @@ AppendComputationResult Computation::appendComputation(
 
         paramDeclStmt->setStmtSourceCode(newParam + " = " + arguments[i] + ";");
         paramDeclStmt->setIterationSpace("{[0]}");
-        paramDeclStmt->setExecutionSchedule("{[0]->[" + std::to_string(idx) +
+        paramDeclStmt->setExecutionSchedule("{[0]->[" + std::to_string(idx++) +
                                             "]}");
-        idx++;
         // If passed-in argument is a data space, mark it as being read
         // (otherwise it is a literal)
         if (this->isDataSpace(arguments[i])) {
@@ -1317,39 +1276,10 @@ bool Computation::consistentSetArity(const std::vector<Set*>& sets) {
 std::string Computation::toDotString() {
     //TODO: Deal with disjunction of conjunctions later.
 
-    padExecutionSchedules();
-
-    std::vector<Set*> transformedSpaces = applyTransformations();
-    if (!consistentSetArity(transformedSpaces)) {
-        std::cerr << "Iteration spaces do not have a consistent arity" << std::endl;
-        std::cerr << "Aborting generateDotStmts()" << std::endl;
-        for(Set* set : transformedSpaces){
-            delete set;
-        }
-        return false;
-    }
-  
-    // newIS is a list of pairs of statement id
-    // to their transformed spaces.
-    std::vector<std::pair<int,Set*>> newIS;
-
-    for(int i = 0; i < transformedSpaces.size(); i++){
-	newIS.push_back(std::make_pair(i,transformedSpaces[i]));
-    }
-
-    // Sort by lexicographical order
-    std::sort(newIS.begin(),newIS.end(),
-		    Computation::activeStatementComparator);
-
     CompGraph graph = CompGraph();
     graph.create(this);
-    std::string result = graph.toDotString(newIS);
-
-    for(Set* set : transformedSpaces){
-        delete set;
-    }
-
-    return result;
+    graph.addDebugStmts(getStmtDebugStrings());
+    return graph.toDotString();
 }
 
 //! Function returns a dot string representing nesting
@@ -1560,26 +1490,36 @@ void Computation::toDotScan(std::vector<std::pair<int,Set*>> &activeStmts, int l
 //! param  activeStmt is assumed to be sorted lexicographically
 std::vector<std::vector<std::pair<int,Set*> > > Computation::split
 	(int level, std::vector<std::pair<int,Set*> >& activeStmt){
-   std::map<std::string,std::vector<std::pair<int,Set*> > > grouping;
-   
-   for(std::pair<int,Set*> s : activeStmt){
-      if(s.second->getTupleDecl().elemIsConst(level)){
-          grouping[std::to_string(
-			  s.second->getTupleDecl().elemConstVal(level))].push_back(s); 
-	     	  
-      }else {
-	  // This will be expanded further to use constraints;
-          grouping["t"].push_back(s);
-      }  
-   }
-   std::vector<std::vector <std::pair<int,Set*> > > res;
-   for( auto k : grouping){
-       //Next iteration of the algorithm will be
-       //focused on this section. 
-       res.push_back(k.second);
-   }
-   return res;
+    std::map<std::string,std::vector<std::pair<int,Set*> > > grouping;
+    
+    for(std::pair<int,Set*> s : activeStmt){
+       if(s.second->getTupleDecl().elemIsConst(level)){
+           grouping[std::to_string(
+ 			  s.second->getTupleDecl().elemConstVal(level))].push_back(s); 
+ 	     	  
+       }else {
+ 	  // This will be expanded further to use constraints;
+           grouping["t"].push_back(s);
+       }  
+    }
+    std::vector<std::vector <std::pair<int,Set*> > > res;
+    for( auto k : grouping){
+        //Next iteration of the algorithm will be
+        //focused on this section. 
+        res.push_back(k.second);
+    }
+    return res;
 }
+
+std::vector<std::pair<int, std::string>> Computation::getStmtDebugStrings() {
+    std::vector<std::pair<int, std::string>> result;
+    for (int i = 0; i < getNumStmts(); i++) {
+        std::string debugStr = getStmt(i)->getAllDebugStr();
+        if (!debugStr.empty()) { result.push_back({i, debugStr}); }
+    }
+    return result;
+}
+
 
 void Computation::addTransformation(unsigned int stmtIndex, Relation* rel) {
     transformationLists.at(stmtIndex).emplace_back(rel);
@@ -1600,6 +1540,33 @@ std::vector<Set*> Computation::applyTransformations() const {
         transformedSchedules.push_back(schedule);
     }
     return transformedSchedules;
+}
+
+std::vector<std::pair<int, Set*>> Computation::getIterSpaces() {
+    padExecutionSchedules();
+
+    std::vector<Set*> transformedSpaces = applyTransformations();
+    if (!consistentSetArity(transformedSpaces)) {
+        std::cerr << "Iteration spaces do not have a consistent arity" << std::endl;
+        for(Set* set : transformedSpaces){
+            delete set;
+        }
+        return {};
+    }
+  
+    // newIS is a list of pairs of statement id
+    // to their transformed spaces.
+    std::vector<std::pair<int,Set*>> newIS;
+
+    for(int i = 0; i < transformedSpaces.size(); i++){
+	newIS.push_back(std::make_pair(i,transformedSpaces[i]));
+    }
+
+    // Sort by lexicographical order
+    std::sort(newIS.begin(),newIS.end(),
+		    Computation::activeStatementComparator);
+ 
+    return newIS;  
 }
 
 std::string Computation::codeGen(Set* knownConstraints) {

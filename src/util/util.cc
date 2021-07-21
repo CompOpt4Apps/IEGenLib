@@ -91,8 +91,8 @@ namespace iegenlib{
   std::string generateDotLabel(std::initializer_list<std::string> input) {
     std::stringstream ss;
     ss << "label=\"";
-    std::string escapeChars = "><{}";
-    std::string removeChars = "$[]";
+    std::string escapeChars = "><{}[]";
+    std::string removeChars = "$";
     for (std::string label : input) {
         int n = label.length();
         for (int i = 0; i < n; i++) {

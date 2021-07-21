@@ -3,29 +3,25 @@
 #include "util.h"
 #include "Computation.h"
 
+//#define DEBUG
+
 namespace iegenlib {
 
-void Edge::setAccessSpace(Relation* dataRelation) {
+void Edge::generateLabel(Relation* dataRelation) {
     std::string relStr = dataRelation->getString();
     int pos1 = relStr.rfind('[');
     int pos2 = relStr.rfind(']');
-    accessSpace = relStr.substr(pos1 + 1, pos2 - pos1 + 1);
+    label = relStr.substr(pos1, pos2 - pos1 + 1);
 }
 
-std::string Edge::toDotString() {
-    std::string color = DEFAULT_COLOR;
-    std::ostringstream ss;
+void Edge::generateDotString(std::ostringstream &ss) {
+    if (written) { return; }
     ss << "\t\t";
-    if (isWrite) {
-        ss << "S" << stmtIdx << "->\"" << dataSpace << "\"";
-//        if (isReturnValue(dataSpace)) { color = RETURN_COLOR; }
-    } else {
-        ss << "\"" << dataSpace << "\"->S" << stmtIdx;
-//        if (isParameter(dataSpace)) P color = PARAM_COLOR; }
-    }
-    ss << "[" << generateDotLabel(accessSpace)
+    if (isWrite) { ss << stmtNode->getName() << "->" << dataNode->getName(); }
+    else { ss << dataNode->getName() << "->" << stmtNode->getName(); }
+    ss << "[" << generateDotLabel(label)
        << "][color=" << color << "]\n";
-    return ss.str();
+    written = true;
 }
 
 void Node::removeInEdge(EdgePtr ptr) {
@@ -38,36 +34,203 @@ void Node::removeOutEdge(EdgePtr ptr) {
     if (it != outEdges.end()) { outEdges.erase(it); }
 }
 
-void CompGraph::create(Computation* comp) {
-    stmtNodes.clear();
-    dataNodes.clear();
-    for (int i = 0; i < comp->getNumStmts(); i++) {
-        Stmt* stmt = comp->getStmt(i);
-        // TODO: Color
-        for (int j = 0; j < stmt->getNumReads(); j++) {
-            std::string read = stmt->getReadDataSpace(j);
-            Relation* readRel = stmt->getReadRelation(j); 
-            EdgePtr ptr = std::make_shared<Edge>(false, i, read,
-                                                 readRel, DEFAULT_COLOR);
-            stmtNodes[i].addInEdge(ptr);
-            dataNodes[read].addOutEdge(ptr);
-        }
-        for (int j = 0; j < stmt->getNumWrites(); j++) {
-            std::string write = stmt->getWriteDataSpace(j);
-            Relation* writeRel = stmt->getWriteRelation(j);
-            EdgePtr ptr = std::make_shared<Edge>(true, i, write,
-                                                 writeRel, DEFAULT_COLOR);
-            stmtNodes[i].addOutEdge(ptr);
-            dataNodes[write].addInEdge(ptr);
+void Node::generateDotString(std::ostringstream &ss) {
+    if (written) { return; }
+    ss << name
+       << "[" << generateDotLabel(label)
+       << "][shape=" << shape << "][style=bold]"
+       << "[color=" << color << "];\n";
+    written = true;
+}
+
+static int subgraphCnt;
+void Subgraph::generateDotString(std::ostringstream &ss) {
+    if (level == 0) { subgraphCnt = 0; }
+
+    if (level > 0) {
+//        ss << "subgraph cluster" << subgraph.level << " {\n"
+        ss << "subgraph cluster" << subgraphCnt++ << " {\n"
+           << "style = filled;\n"
+           << "color = \"\";\n"
+           << generateDotLabel(label)
+           << "\n";
+    }
+
+    // Generate statements
+    for (NodePtr stmtNode : stmts) {
+        stmtNode->generateDotString(ss);
+        for (EdgePtr ptr : stmtNode->getOutEdges()) {
+            ptr->getDataNode()->generateDotString(ss);
+            ptr->generateDotString(ss);
         }
     }
+
+    // Generate subgraphs
+    for (Subgraph &s : subgraphs) {
+        s.generateDotString(ss);
+    }
+
+    if (level > 0) { ss << "}\n"; }
+}
+
+void CompGraph::create(Computation* comp) {
+#ifdef DEBUG 
+    std::cerr << "Creating Graph" << std::endl;
+#endif
+    stmtNodes.clear();
+    dataNodes.clear();
+    // Populate nodes
+    for (int i = 0; i < comp->getNumStmts(); i++) {
+        Stmt* stmt = comp->getStmt(i);
+        NodePtr stmtNode = std::make_shared<Node>();
+        for (int j = 0; j < stmt->getNumReads(); j++) {
+            std::string read = comp->trimDataSpaceName(stmt->getReadDataSpace(j));
+            auto it = dataNodes.find(read);
+            if (it == dataNodes.end()) {
+                it = dataNodes.insert(it, {read, std::make_shared<Node>()});
+            }
+            EdgePtr ptr = std::make_shared<Edge>(false, stmtNode, it->second);
+            ptr->generateLabel(stmt->getReadRelation(j));
+            stmtNode->addInEdge(ptr);
+            it->second->addOutEdge(ptr);
+        }
+        for (int j = 0; j < stmt->getNumWrites(); j++) {
+            std::string write = comp->trimDataSpaceName(stmt->getWriteDataSpace(j));
+            auto it = dataNodes.find(write);
+            if (it == dataNodes.end()) {
+                it = dataNodes.insert(it, {write, std::make_shared<Node>()});
+            }
+            EdgePtr ptr = std::make_shared<Edge>(true, stmtNode, it->second);
+            ptr->generateLabel(stmt->getWriteRelation(j));
+            stmtNode->addOutEdge(ptr);
+            it->second->addInEdge(ptr);
+        }
+        stmtNode->shape = "Mrecord";
+        stmtNode->name = "S";
+        stmtNode->name.append(std::to_string(i));
+        stmtNodes[i] = stmtNode;
+    }
+    for (auto& pair : dataNodes) { 
+        pair.second->shape = "box";
+        pair.second->name = pair.first;
+        pair.second->label = pair.first;
+    }
+
+    // Generate parameter/return colors
+    for (std::string param : comp->getParameters()) {
+        auto it = dataNodes.find(comp->trimDataSpaceName(param));
+        if (it == dataNodes.end()) { continue; }
+        it->second->color = getDotColor(it->second->color, PARAM_COLOR);
+        for (EdgePtr ptr : it->second->getOutEdges()) {
+            ptr->color = getDotColor(ptr->color, PARAM_COLOR);
+        }
+    }
+    for (std::string ret : comp->getReturnValues()) {
+        auto it = dataNodes.find(comp->trimDataSpaceName(ret));
+        if (it == dataNodes.end()) { continue; }
+        it->second->color = getDotColor(it->second->color, RETURN_COLOR);
+        for (EdgePtr ptr : it->second->getInEdges()) {
+            ptr->color = getDotColor(ptr->color, RETURN_COLOR);
+        }
+    }
+
+    std::vector<std::pair<int, Set*>> compIterSpaces = comp->getIterSpaces();
+    std::vector<std::pair<NodePtr, Set*>> iterSpaces;
+    // Generate statement lavels and remove any unused iteration spaces
+    for (auto pair = compIterSpaces.begin(); pair != compIterSpaces.end(); pair++) {
+        auto it = stmtNodes.find(pair->first);
+        if (it != stmtNodes.end()) {
+            it->second->label = pair->second->prettyPrintString()
+                                    .append("\\nS")
+                                    .append(std::to_string(pair->first));
+            iterSpaces.push_back({it->second, pair->second});
+        }
+    }
+    // Generate subgraphs
+    subgraph = generateSubgraph(iterSpaces, 0);
+    for (auto& pair : iterSpaces) {
+        delete pair.second;
+    }
+#ifdef DEBUG
+    std::cerr << "Graph Created" << std::endl;
+#endif
+}
+
+Subgraph CompGraph::generateSubgraph(std::vector<std::pair<NodePtr, Set*>> &activeStmts, int level) {
+#ifdef DEBUG
+    std::cerr << "Creating Subgraphs" << std::endl;
+#endif
+    Subgraph subgraph;
+    subgraph.level = level;
+
+    if (activeStmts.size() == 0) { return subgraph; }
+
+ // std::vector<std::vector<std::pair<int, Set*>>> bins = split(level, activeStmts);
+
+    Set* set = activeStmts[0].second;
+    if (level > 0) {
+        // Replace all '$' because dot throws a fit
+        Set* projectedIS = new Set(replaceInString(set->getString(), "$", ""));
+        //Perform projections for each column
+        for (int j = set->arity() - 1; j >= level; j--) {
+            Set* tmp = projectedIS;
+            projectedIS = projectedIS->projectOut(j);
+            delete tmp;
+        }
+
+        subgraph.label = "Domain: ";
+        subgraph.label.append(projectedIS->prettyPrintString());
+
+        delete projectedIS;
+    }
+
+    // This is the final subgraph
+    if (level >= set->arity() - 1) {
+        for (auto &pair : activeStmts) {
+            subgraph.addStmt(pair.first);
+        }
+    // Differentiate between statements in this subgraph
+    // and those in further nested subgraphs
+    } else {
+        std::map<int, std::vector<std::pair<NodePtr, Set*>>> stmtGroups;
+        for (auto &pair : activeStmts) {
+            TupleDecl tupleDecl = pair.second->getTupleDecl();
+            // No more iterators
+            if (tupleDecl.elemIsConst(level + 1)) {
+                subgraph.addStmt(pair.first);
+            // More iterators
+            } else {                
+                stmtGroups[tupleDecl.elemConstVal(level)].push_back(pair);
+            }
+        }
+        for(auto &pair : stmtGroups) {
+//            if (pair.second.size() > 1) {
+                subgraph.addSubgraph(generateSubgraph(pair.second, level+2));
+//            } else if (pair.second.size() == 1){
+//                subgraph.addStmt(pair.second.begin()->first);
+//            }
+        }
+    }
+#ifdef DEBUG
+    std::cerr << "Subgraphs Created" << std::endl;
+#endif
+   return subgraph;
+}
+
+void CompGraph::addDebugStmts(std::vector<std::pair<int, std::string>> debugStmts) {
+    // Add debug statements
+    for (auto& pair : debugStmts) {
+        auto it = stmtNodes.find(pair.first);
+        if (it == stmtNodes.end()) { continue; }
+        it->second->label.append("\\n").append(pair.second);
+    }   
 }
 
 void CompGraph::fusePCRelations() {
-    bool didFuse = false;
+/*    bool didFuse = false;
     for (auto it = stmtNodes.begin(); it != stmtNodes.end(); it++) {
         // Make sure the statement writes to only one dataSpace
-        Node writeNode = it->second;
+        Node& writeNode = it->second;
         if (writeNode.numOutEdges() != 1) { continue; }
 
         // This is the edge between writeNode and dataNode
@@ -76,18 +239,18 @@ void CompGraph::fusePCRelations() {
         if (dataIt == dataNodes.end()) { continue; }
         // Make sure the data space is written to and read from only one statement,
         // respectively
-        Node dataNode = dataIt->second;
+        Node& dataNode = dataIt->second;
         if (dataNode.numInEdges() != 1 || dataNode.numOutEdges() != 1) { continue; }
 
         // This is the edge between dataNode and readNode
         EdgePtr read = dataNode.getOutEdge(0);
 
         // Make sure we are doing a scalar write (access space is 0)
-        if (write->accessSpace.compare(read->accessSpace) != 0) { continue; }
-        if (write->accessSpace != "0" || read->accessSpace != "0") { continue; }
+        if (write->label != read->label) { continue; }
+        if (write->label != "0" || read->label != "0") { continue; }
 
         // Get the read statement's node
-        Node readNode = stmtNodes.at(read->stmtIdx);
+        Node& readNode = stmtNodes.at(read->stmtIdx);
         // Remove its connection to dataNode
         readNode.removeInEdge(read);
         // Connect it to and update all of writeNode's reads
@@ -105,103 +268,77 @@ void CompGraph::fusePCRelations() {
         if (it == stmtNodes.end()) { break; }
     }
 
-    if (didFuse) { fusePCRelations(); }
+    if (didFuse) { fusePCRelations(); }*/
 }
 
-std::string CompGraph::toDotString(std::vector<std::pair<int, Set*>> &iterSpace) {
+std::string CompGraph::toDotString() {
+#ifdef DEBUG
+    std::cerr << "Creating Dot String" << std::endl;
+#endif
+    resetWritten();
+
     std::ostringstream ss;
     ss << "digraph dataFlowGraph_1{ \n";
-    generateDotStmts(iterSpace, 0, ss);
-    generateDotReadWrites(ss);
+    subgraph.generateDotString(ss);
+    generateDotReads(ss);
     ss << "}";
+#ifdef DEBUG
+    std::cerr << "Dot String Created" << std::endl;
+#endif
     return ss.str();
 }
 
-std::string CompGraph::toDotString(std::vector<std::pair<int, Set*>> &iterSpace, int stmtIdx) {
-
+void CompGraph::resetWritten() {
+    for (auto& pair : stmtNodes) {
+        pair.second->written = false;
+        for (EdgePtr ptr : pair.second->getInEdges()) {
+            ptr->written = false;
+        }
+        for (EdgePtr ptr : pair.second->getOutEdges()) {
+            ptr->written = false;
+        }
+    }
+    for (auto& pair : dataNodes) {
+        pair.second->written = false;
+    }
 }
 
 //! param  activeStmt is assumed to be sorted lexicographically
-std::vector<std::vector<std::pair<int,Set*> > > CompGraph::split
+std::vector<std::vector<std::pair<int,Set*>>> CompGraph::split
 	(int level, std::vector<std::pair<int,Set*> >& activeStmt){
-   std::map<std::string,std::vector<std::pair<int,Set*> > > grouping;
-   
-   for(std::pair<int,Set*> s : activeStmt){
-      if(s.second->getTupleDecl().elemIsConst(level)){
-          grouping[std::to_string(
-			  s.second->getTupleDecl().elemConstVal(level))].push_back(s); 
-	     	  
-      }else {
-	  // This will be expanded further to use constraints;
-          grouping["t"].push_back(s);
-      }  
-   }
-   std::vector<std::vector <std::pair<int,Set*> > > res;
-   for( auto k : grouping){
-       //Next iteration of the algorithm will be
-       //focused on this section. 
-       res.push_back(k.second);
-   }
-   return res;
+    std::map<std::string,std::vector<std::pair<int,Set*>>> grouping;
+    
+    for(std::pair<int,Set*> s : activeStmt) {
+       if (s.second->getTupleDecl().elemIsConst(level)) {
+           grouping[std::to_string(
+ 			  s.second->getTupleDecl().elemConstVal(level))].push_back(s);
+       } else {
+ 	   // This will be expanded further to use constraints;
+           grouping["t"].push_back(s);
+       }  
+    }
+    std::vector<std::vector<std::pair<int,Set*>>> res;
+    for( auto k : grouping){
+        //Next iteration of the algorithm will be
+        //focused on this section. 
+        res.push_back(k.second);
+    }
+    return res;
 }
 
-void CompGraph::generateDotStmts(std::vector<std::pair<int, Set*>> &activeStmts, int level,
-	       std::ostringstream& ss){
-    if(activeStmts.size() == 1){
-	std::string stmIter = activeStmts[0].second->prettyPrintString();
-
-        std::string label;
-        // label = getStmt(activeStmts[0].first)->getStmtSourceCode();
-        label = "S" + std::to_string(activeStmts[0].first);
-
-        ss << "S" << activeStmts[0].first
-           << "[" << generateDotLabel({stmIter, "\\n ", label})
-           << "][shape=Mrecord][style=bold]"
-           << "[color=" << DEFAULT_COLOR << "];\n";
-        return;
-    }
-    std::vector<std::vector< std::pair <int, Set*> > > bins=
-	    split(level,activeStmts);
-    if(bins.size() > 1 && level > 0){
-        // Replace all '$' because dot throws a fit
-        Set* projectedIS = new Set(replaceInString(activeStmts[0].second->getString(), "$", ""));
-            //Perform projections for each column
-        for (int j = activeStmts[0].second->arity() - 1; j >= level; j--) {
-            Set* tmp = projectedIS;
-            projectedIS = projectedIS->projectOut(j);
-            delete tmp;
+void CompGraph::generateDotReads(std::ostringstream &ss) {
+    for (auto& pair : stmtNodes) {
+        for (EdgePtr ptr : pair.second->getInEdges()) {
+            ptr->dataNode->generateDotString(ss);
+            ptr->generateDotString(ss);
         }
-
-        std::string domainIter = projectedIS->prettyPrintString();
-
-        ss << "subgraph cluster" << level << " {\n"
-           << "style = filled;\n"
-           << "color = \"\";\n"
-           << generateDotLabel({"Domain :", domainIter})
-           << "\n";
-
-        delete projectedIS;
-    }
-
-    for(auto active : bins){
-        generateDotStmts(active, level+1, ss);
-    }
-    if(bins.size() > 1 && level > 0){
-        ss << "}\n"; 
     }
 }
 
-void CompGraph::generateDotReadWrites(std::ostringstream &ss) {
-    for (auto pair : dataNodes) {
-        ss << "\"" << pair.first << "\"["
-           << generateDotLabel(pair.first)
-           << "][shape=box][style=bold]"
-           << "[color=" << /*getDataSpaceDotColor(pair.first)*/DEFAULT_COLOR << "];\n";
-
-        Node node = pair.second;
-        for (EdgePtr ptr : node.getInEdges())  { ss << ptr->toDotString(); }
-        for (EdgePtr ptr : node.getOutEdges())  { ss << ptr->toDotString(); }
-    }
+std::string CompGraph::getDotColor(std::string color1, std::string color2) {
+    if (color1 == DEFAULT_COLOR) { return color2; }
+    if (color2 == DEFAULT_COLOR) { return color1; }
+    return PARAM_RETURN_COLOR;
 }
 
 }

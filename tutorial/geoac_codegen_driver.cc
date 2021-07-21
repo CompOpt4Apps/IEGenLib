@@ -1442,7 +1442,7 @@ int main(int argc, char **argv){
     Computation* uDdiffComputation = u_ddiff_Computation();
 
     // Return values are stored in a struct of the computation: AppendComputationResult
-    AppendComputationResult uDdiffCompRes = updateSources->appendComputation(uDdiffComputation, "{[n,m]: GeoAc_CalcAmp = 1 && n>=0 && n<3 && m>=0 && m<3}", "{[n,m]->["+std::to_string(newTuplePos+40)+", n, "+std::to_string(nTuplePos+1)+",m,"+std::to_string(mTuplePos+1)+"]}", vDdiffCompArgs);
+    AppendComputationResult uDdiffCompRes = updateSources->appendComputation(uDdiffComputation, "{[n,m]: GeoAc_CalcAmp = 1 && n>=0 && n<3 && m>=0 && m<3}", "{[n,m]->["+std::to_string(newTuplePos+36)+", n, "+std::to_string(nTuplePos+1)+",m,"+std::to_string(mTuplePos+1)+"]}", vDdiffCompArgs);
     mTuplePos = uDdiffCompRes.tuplePosition+1;
 
     //Creating s59
