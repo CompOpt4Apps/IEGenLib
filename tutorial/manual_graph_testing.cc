@@ -23,15 +23,15 @@ int main(int argc, char** argv) {
     //     s0:tmp = f[i];
     //     s1:tmp1 = f1[i];
     //}
-/*  
+ 
    Computation* forLoopComp = new Computation();
 
     forLoopComp->addParameter("$f$", "int");
     forLoopComp->addParameter("$f1$", "int");
     
-    forLoopComp->addDataSpace("$tmp$");
-    forLoopComp->addDataSpace("$tmp1$");
-    forLoopComp->addDataSpace("$N$");
+    forLoopComp->addDataSpace("$tmp$", "int");
+    forLoopComp->addDataSpace("$tmp1$", "int");
+    forLoopComp->addDataSpace("$N$", "int");
 
     Stmt* s0 = new Stmt("$tmp$ = $f$[i];",
         "{[i]: 0 <= i < N}",
@@ -80,9 +80,9 @@ int main(int argc, char** argv) {
     //}
   
    Computation* dsComp = new Computation();
-   dsComp->addDataSpace("$y$");
-   dsComp->addDataSpace("$A$");
-   dsComp->addDataSpace("$x$");
+   dsComp->addDataSpace("$y$", "int");
+   dsComp->addDataSpace("$A$", "int");
+   dsComp->addDataSpace("$x$", "int");
    
    Stmt* ds0 = new Stmt("$y$[i] += $A$[i][j]*$x$[j];",
      "{[i,j]: 0 <= i < N && 0 <= j < M}",
@@ -118,10 +118,10 @@ int main(int argc, char** argv) {
     //} 
     Computation* spsComp = new Computation();
 
-    spsComp->addDataSpace("$y$");
-    spsComp->addDataSpace("$A$");
-    spsComp->addDataSpace("$x$");
-    spsComp->addDataSpace("$rowptr$");
+    spsComp->addDataSpace("$y$", "int");
+    spsComp->addDataSpace("$A$", "int");
+    spsComp->addDataSpace("$x$", "int");
+    spsComp->addDataSpace("$rowptr$", "int");
 
     Stmt* sps0 = new Stmt(
       "$y$[i] += $A$[k] * $x$[j]",
@@ -150,5 +150,5 @@ int main(int argc, char** argv) {
     outStream2.open("sparse_matrix_multiply.c");
     outStream2 << spsComp->codeGen();
     outStream2.close();
-*/
+
 }
