@@ -11,7 +11,8 @@ void Edge::generateLabel(Relation* dataRelation) {
     std::string relStr = dataRelation->getString();
     int pos1 = relStr.rfind('[');
     int pos2 = relStr.rfind(']');
-    label = relStr.substr(pos1, pos2 - pos1 + 1);
+    accessStr = relStr.substr(pos1, pos2 - pos1 + 1);
+    label = accessStr;
 }
 
 void Edge::generateDotString(std::ostringstream &ss) {
@@ -22,6 +23,13 @@ void Edge::generateDotString(std::ostringstream &ss) {
     ss << "[" << generateDotLabel(label)
        << "][color=" << color << "]\n";
     written = true;
+}
+
+bool Edge::isConst() {
+    for (auto &ch : accessStr) {
+        if (isalpha(ch)) { return false; }
+    }
+    return true;
 }
 
 void Node::removeInEdge(EdgePtr ptr) {
@@ -290,8 +298,40 @@ void CompGraph::addDebugStmts(std::vector<std::pair<int, std::string>> debugStmt
     }   
 }
 
+void CompGraph::reduceStmts() {
+    for (auto &pair : stmtNodes) {
+        bool allConst = true;
+        for (EdgePtr ptr : pair.second->getInEdges()) {
+            if (!ptr->isConst()) { allConst = false; break; }
+        }
+        if (!allConst) { continue; }
+        for (EdgePtr ptr : pair.second->getOutEdges()) {
+            if (!ptr->isConst()) { allConst = false; break; }
+        }
+        if (allConst) {
+            pair.second->setShape("point");
+        }
+    }
+}
+
 void CompGraph::reduceStmts(int toLevel) {
     subgraph.reduceStmts(toLevel);
+}
+
+void CompGraph::reduceDataSpaces() {
+    for (auto &pair : dataNodes) {
+        bool allConst = true;
+        for (EdgePtr ptr : pair.second->getInEdges()) {
+            if (!ptr->isConst()) { allConst = false; break; }
+        }
+        if (!allConst) { continue; }
+        for (EdgePtr ptr : pair.second->getOutEdges()) {
+            if (!ptr->isConst()) { allConst = false; break; }
+        }
+        if (allConst) {
+            pair.second->setShape("point");
+        }
+    }
 }
 
 void CompGraph::reduceDataSpaces(int toLevel) {

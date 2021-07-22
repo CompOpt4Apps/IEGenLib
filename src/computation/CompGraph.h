@@ -33,6 +33,8 @@ class Edge {
 
     void generateDotString(std::ostringstream &ss);
 
+    bool isConst();
+
     // Getter/Setters
     // stmtNode
     void setStmtNode(NodePtr ptr) { stmtNode = ptr; }
@@ -57,7 +59,7 @@ class Edge {
 
     NodePtr stmtNode, dataNode;
     
-    std::string label;
+    std::string label, accessStr;
     std::string color = DEFAULT_COLOR;
 
     bool written = false;
@@ -147,7 +149,9 @@ class CompGraph {
 
     void create(Computation* comp);
     void addDebugStmts(std::vector<std::pair<int, std::string>> debugStmts);
+    void reduceStmts();
     void reduceStmts(int toLevel);
+    void reduceDataSpaces();
     void reduceDataSpaces(int toLevel);
     void fusePCRelations();
 
