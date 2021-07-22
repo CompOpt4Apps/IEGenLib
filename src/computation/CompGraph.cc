@@ -7,6 +7,15 @@
 
 namespace iegenlib {
 
+/*Edge copy() {
+    Edge edge;
+    edge.write = write;
+    edge.label = label;
+    edge.accessStr = accessStr;
+    edge.color = color;
+    return edge;
+}*/
+
 void Edge::generateLabel(Relation* dataRelation) {
     std::string relStr = dataRelation->getString();
     int pos1 = relStr.rfind('[');
@@ -18,7 +27,7 @@ void Edge::generateLabel(Relation* dataRelation) {
 void Edge::generateDotString(std::ostringstream &ss) {
     if (written) { return; }
     ss << "\t\t";
-    if (isWrite) { ss << stmtNode->getName() << "->" << dataNode->getName(); }
+    if (write) { ss << stmtNode->getName() << "->" << dataNode->getName(); }
     else { ss << dataNode->getName() << "->" << stmtNode->getName(); }
     ss << "[" << generateDotLabel(label)
        << "][color=" << color << "]\n";
@@ -31,6 +40,14 @@ bool Edge::isConst() {
     }
     return true;
 }
+
+/*Node copy() {
+    Node node;
+    node.name = name;
+    node.label = label;
+    node.shape = shape;
+    node.color = color;
+}*/
 
 void Node::removeInEdge(EdgePtr ptr) {
     auto it = std::find(inEdges.begin(), inEdges.end(), ptr);
@@ -98,12 +115,30 @@ void Subgraph::generateDotString(std::ostringstream &ss) {
     }
 
     // Generate subgraphs
-    for (Subgraph &s : subgraphs) {
-        s.generateDotString(ss);
+    for (Subgraph &sg : subgraphs) {
+        sg.generateDotString(ss);
     }
 
     if (level > 0) { ss << "}\n"; }
 }
+
+/*CompGraph CompGraph::copy() {
+    CompGraph compGraph;
+    compGraph.subgraph = copySubgraph(compGraph, subgraph);
+}
+
+Subgraph CompGraph::copySubgraph(CompGraph &toGraph, Subgraph &fromSG) {
+    Subgraph copySG;
+ 
+    for (StmtPtr stmt : fromSG.stmts) {
+
+    }   
+
+    for (Subgraph &sg : fromSG.subgraphs) {
+        copySG.addSubgraph(copySubgraph(toGraph, sg));
+    }
+    return copySG;
+}*/
 
 void CompGraph::create(Computation* comp) {
 #ifdef DEBUG 
@@ -167,7 +202,7 @@ void CompGraph::create(Computation* comp) {
 
     std::vector<std::pair<int, Set*>> compIterSpaces = comp->getIterSpaces();
     std::vector<std::pair<NodePtr, Set*>> iterSpaces;
-    // Generate statement lavels and remove any unused iteration spaces
+    // Generate statement labels and remove any unused iteration spaces
     for (auto pair = compIterSpaces.begin(); pair != compIterSpaces.end(); pair++) {
         auto it = stmtNodes.find(pair->first);
         if (it != stmtNodes.end()) {
@@ -261,6 +296,49 @@ std::string CompGraph::toDotString() {
 #ifdef DEBUG
     std::cerr << "Dot String Created" << std::endl;
 #endif
+    return ss.str();
+}
+
+std::string CompGraph::toDotString(int stmtIdx, bool reads, bool writes) {
+    auto it = stmtNodes.find(stmtIdx);
+    if (it == stmtNodes.end()) { return ""; }
+    NodePtr stmt = it->second;
+
+    resetWritten();
+
+    std::ostringstream ss;
+    ss << "digraph dataFlowGraph_1{ \n";
+
+    std::string color = stmt->getColor();
+    stmt->setColor(SOURCE_COLOR);
+    stmt->generateDotString(ss);
+    stmt->setColor(color);
+
+    bool arr[2] = {reads, writes};
+    for (int i = 0; i < 2; i++) {
+        if (!arr[i]) { continue; }
+        std::queue<NodePtr> toVisit;
+        for (EdgePtr ptr : (i == 0 ? stmt->getInEdges() : stmt->getOutEdges())) {
+            std::string color = ptr->getColor();
+            ptr->setColor(SOURCE_COLOR);
+            ptr->generateDotString(ss);
+            ptr->setColor(color);
+            toVisit.push(ptr->getDataNode());
+        }
+        while (!toVisit.empty()) {
+            NodePtr node = toVisit.front();
+            toVisit.pop();
+            if (node->isWritten()) { continue; }
+            node->generateDotString(ss);
+            for (EdgePtr ptr : (i == 0 ? node->getInEdges() : node->getOutEdges())) {
+                ptr->generateDotString(ss);
+                toVisit.push(ptr->isWrite() == (i == 0) ? ptr->getStmtNode() :
+                                                          ptr->getDataNode());
+            }
+        }
+    }
+    ss << "}";
+
     return ss.str();
 }
 
@@ -382,29 +460,6 @@ void CompGraph::fusePCRelations() {
 
     if (didFuse) { fusePCRelations(); }*/
 }
-
-/*//! param  activeStmt is assumed to be sorted lexicographically
-std::vector<std::vector<std::pair<int,Set*>>> CompGraph::split
-	(int level, std::vector<std::pair<int,Set*> >& activeStmt){
-    std::map<std::string,std::vector<std::pair<int,Set*>>> grouping;
-    
-    for(std::pair<int,Set*> s : activeStmt) {
-       if (s.second->getTupleDecl().elemIsConst(level)) {
-           grouping[std::to_string(
- 			  s.second->getTupleDecl().elemConstVal(level))].push_back(s);
-       } else {
- 	   // This will be expanded further to use constraints;
-           grouping["t"].push_back(s);
-       }  
-    }
-    std::vector<std::vector<std::pair<int,Set*>>> res;
-    for( auto k : grouping){
-        //Next iteration of the algorithm will be
-        //focused on this section. 
-        res.push_back(k.second);
-    }
-    return res;
-}*/
 
 std::string CompGraph::getDotColor(std::string color1, std::string color2) {
     if (color1 == DEFAULT_COLOR) { return color2; }

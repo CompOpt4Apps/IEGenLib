@@ -16,6 +16,8 @@ namespace iegenlib {
 #define PARAM_COLOR "purple"
 #define RETURN_COLOR "red"
 #define PARAM_RETURN_COLOR "lime"
+// Color of the source node when creating a graph from a single statement
+#define SOURCE_COLOR "goldenrod"
 
 class Edge;
 typedef std::shared_ptr<Edge> EdgePtr;
@@ -25,15 +27,18 @@ typedef std::shared_ptr<Node> NodePtr;
 class Edge {
   public:
     Edge() = default;
-    Edge(bool _isWrite, NodePtr _stmtNode, NodePtr _dataNode)
-        : isWrite(_isWrite), stmtNode(_stmtNode), dataNode(_dataNode) {}
+    Edge(bool _write, NodePtr _stmtNode, NodePtr _dataNode)
+        : write(_write), stmtNode(_stmtNode), dataNode(_dataNode) {}
     ~Edge() = default;
+
+//    Edge copy();
 
     void generateLabel(Relation* dataRelation);
 
     void generateDotString(std::ostringstream &ss);
 
     bool isConst();
+    bool isWrite() { return write; }
 
     // Getter/Setters
     // stmtNode
@@ -50,12 +55,13 @@ class Edge {
     void setColor(std::string str) { color = str; }
     std::string getColor() { return color; }
 
+    bool isWritten() { return written; }
     void reset() { written = false; }
 
   private:
     // is the edge a write (stmt->dataSpace)
     // or a read (dataSpace->stmt)
-    bool isWrite;
+    bool write;
 
     NodePtr stmtNode, dataNode;
     
@@ -69,6 +75,8 @@ class Node {
   public:
     Node() = default;
     ~Node() = default;
+
+//    Node copy();
 
     void generateDotString(std::ostringstream &ss);
 
@@ -99,6 +107,7 @@ class Node {
     void setColor(std::string str) { color = str; }
     std::string getColor() { return color; }
 
+    bool isWritten() { return written; }
     void reset() { written = false; }
 
   private:
@@ -147,19 +156,24 @@ class CompGraph {
     CompGraph() = default;
     ~CompGraph() = default;
 
+//    CompGraph copy();
+
     void create(Computation* comp);
     void addDebugStmts(std::vector<std::pair<int, std::string>> debugStmts);
+
     void reduceStmts();
     void reduceStmts(int toLevel);
     void reduceDataSpaces();
     void reduceDataSpaces(int toLevel);
+
     void fusePCRelations();
 
     std::string toDotString();
+    std::string toDotString(int stmtIdx, bool reads, bool writes);
 
   private:
-    std::vector<std::vector<std::pair<int,Set*>>> split
-	(int level, std::vector<std::pair<int,Set*>>& activeStmt);
+//    Subgraph copySubgraph(CompGrpah &toGraph, subgraph &fromSG);
+
     Subgraph generateSubgraph(std::vector<std::pair<NodePtr ,Set*>>& activeStmt, int level);
 
     void resetWritten();
