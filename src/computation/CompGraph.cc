@@ -7,6 +7,81 @@
 
 namespace iegenlib {
 
+struct NodeType {
+    std::string shape, style, color;
+
+    std::string generate() const {
+        std::ostringstream ss;
+        if (shape != "") { ss << "[shape=" << shape << "]"; }
+        if (style != "") { ss << "[style=" << style << "]"; }
+        if (color != "") { ss << "[color=" << color << "]"; }
+        return ss.str();
+    }
+};
+
+const std::pair<const char*, NodeType> nodeTypes[] = {
+    std::make_pair("Debug Statements are Enabled", NodeType {"box", "", "white"}),
+    std::make_pair("Statement", NodeType {"Mrecord", "bold", DEFAULT_COLOR}),
+    std::make_pair("Data Space", NodeType {"box", "bold", DEFAULT_COLOR}),
+    std::make_pair("Read-only Parameter", NodeType {"box", "bold", PARAM_COLOR}),
+    std::make_pair("Parameter", NodeType {"box", "filled", PARAM_COLOR}),
+    std::make_pair("Returned Data Space", NodeType {"box", "bold", RETURN_COLOR}),
+    std::make_pair("Read-only Returned Paramter", NodeType {"box", "bold", PARAM_RETURN_COLOR}),
+    std::make_pair("Returned Parameter", NodeType {"box", "filled", PARAM_RETURN_COLOR}),
+    std::make_pair("Source Statement", NodeType {"Mrecord", "bold", SOURCE_COLOR}),
+    std::make_pair("Hidden Statement/Data Space", NodeType {"point", "", ""})
+};
+
+std::string generateNode(std::string name, std::string label, NodeTypes type) {
+    std::ostringstream ss;
+    ss << name << "[" << generateDotLabel(label) << "]"
+       << nodeTypes[type].second.generate() << ";\n";
+    return ss.str();
+}
+
+std::string generateLegendNode(NodeTypes type) {
+    std::string label = nodeTypes[type].first;
+    const NodeType &nodeType = nodeTypes[type].second;
+    std::ostringstream ss;
+    if (nodeType.shape == "point") {
+        ss << "subgraph clusterLegend" << type << " {\n"
+           << "style=bold;\n" << generateDotLabel(label) << ";\n";
+    }
+    ss << "Legend" << type << "[" << generateDotLabel(label) << "]"
+       << nodeType.generate() << ";\n";
+    if (nodeType.shape == "point") { ss << "}\n"; }
+    return ss.str();
+}
+
+std::string createLegend(const std::set<NodeTypes> &nodes) {
+#ifdef DEBUG
+    std::cerr << "Creating Legend" << std::endl;
+#endif
+
+    std::ostringstream ss, arrows;
+    ss << "subgraph clusterLegend {\n"
+       << "style = bold;\n"
+       << "color = black;\n"
+       << "label = \"Legend\";\n";
+
+    for (NodeTypes type : nodes) {
+        ss << generateLegendNode(type);
+        if (type != *nodes.begin()) { arrows << "->"; }
+        arrows << "Legend" << type;
+    }
+    
+    ss << arrows.str() << "[style=invis]\n";
+
+    ss << "}\n";
+
+#ifdef DEBUG
+    std::cerr << "Legend Created" << std::endl;
+#endif
+
+    return ss.str();
+}
+
+
 /*Edge copy() {
     Edge edge;
     edge.write = write;
@@ -61,17 +136,14 @@ void Node::removeOutEdge(EdgePtr ptr) {
 
 void Node::generateDotString(std::ostringstream &ss) {
     if (written) { return; }
-    ss << name
-       << "[" << generateDotLabel(label)
-       << "][shape=" << shape << "][style=bold]"
-       << "[color=" << color << "];\n";
+    ss << generateNode(name, label, type);
     written = true;
 }
 
 void Subgraph::reduceStmts(int toLevel) {
     if (toLevel == -1 || level <= toLevel) {
         for (NodePtr stmtNode : stmts) {
-            stmtNode->setShape("point");
+            stmtNode->setType(NodeTypes::hidden);
         }
         for (Subgraph& subgraph : subgraphs) {
             subgraph.reduceStmts(toLevel);
@@ -83,7 +155,7 @@ void Subgraph::reduceDataSpaces(int toLevel) {
     if (toLevel == -1 || level <= toLevel) {
         for (NodePtr stmtNode : stmts) {
             for (EdgePtr ptr : stmtNode->getOutEdges()) {
-                ptr->getDataNode()->setShape("point");
+                ptr->getDataNode()->setType(NodeTypes::hidden);
             }
         }
         for (Subgraph& subgraph : subgraphs) {
@@ -92,13 +164,10 @@ void Subgraph::reduceDataSpaces(int toLevel) {
     }
 }
 
-static int subgraphCnt;
-void Subgraph::generateDotString(std::ostringstream &ss) {
-    if (level == 0) { subgraphCnt = 0; }
-
+void Subgraph::generateDotString(std::ostringstream &ss, int cnt) {
     if (level > 0) {
 //        ss << "subgraph cluster" << subgraph.level << " {\n"
-        ss << "subgraph cluster" << subgraphCnt++ << " {\n"
+        ss << "subgraph cluster" << cnt++ << " {\n"
            << "style = filled;\n"
            << "color = \"\";\n"
            << generateDotLabel(label)
@@ -116,7 +185,7 @@ void Subgraph::generateDotString(std::ostringstream &ss) {
 
     // Generate subgraphs
     for (Subgraph &sg : subgraphs) {
-        sg.generateDotString(ss);
+        sg.generateDotString(ss, cnt);
     }
 
     if (level > 0) { ss << "}\n"; }
@@ -172,12 +241,12 @@ void CompGraph::create(Computation* comp) {
             stmtNode->addOutEdge(ptr);
             it->second->addInEdge(ptr);
         }
-        stmtNode->setShape("Mrecord");
+        stmtNode->setType(NodeTypes::stmt);
         stmtNode->setName("S" + std::to_string(i));
         stmtNodes[i] = stmtNode;
     }
-    for (auto& pair : dataNodes) { 
-        pair.second->setShape("box");
+    for (auto& pair : dataNodes) {
+        pair.second->setType(NodeTypes::data); 
         pair.second->setName(pair.first);
         pair.second->setLabel(pair.first);
     }
@@ -186,7 +255,8 @@ void CompGraph::create(Computation* comp) {
     for (std::string param : comp->getParameters()) {
         auto it = dataNodes.find(comp->trimDataSpaceName(param));
         if (it == dataNodes.end()) { continue; }
-        it->second->setColor(getDotColor(it->second->getColor(), PARAM_COLOR));
+        it->second->setType(it->second->numInEdges() > 0 ? NodeTypes::param
+                                                         : NodeTypes::readParam);
         for (EdgePtr ptr : it->second->getOutEdges()) {
             ptr->setColor(getDotColor(ptr->getColor(), PARAM_COLOR));
         }
@@ -194,7 +264,13 @@ void CompGraph::create(Computation* comp) {
     for (std::string ret : comp->getReturnValues()) {
         auto it = dataNodes.find(comp->trimDataSpaceName(ret));
         if (it == dataNodes.end()) { continue; }
-        it->second->setColor(getDotColor(it->second->getColor(), RETURN_COLOR));
+        if (it->second->getType() == NodeTypes::data) {
+            it->second->setType(NodeTypes::returnVal);
+        } else if (it->second->getType() == NodeTypes::readParam) {
+            it->second->setType(NodeTypes::readReturnedParam);
+        } else {
+            it->second->setType(NodeTypes::returnedParam);
+        }
         for (EdgePtr ptr : it->second->getInEdges()) {
             ptr->setColor(getDotColor(ptr->getColor(), RETURN_COLOR));
         }
@@ -217,6 +293,7 @@ void CompGraph::create(Computation* comp) {
     for (auto& pair : iterSpaces) {
         delete pair.second;
     }
+
 #ifdef DEBUG
     std::cerr << "Graph Created" << std::endl;
 #endif
@@ -289,7 +366,8 @@ std::string CompGraph::toDotString() {
     resetWritten();
 
     std::ostringstream ss;
-    ss << "digraph dataFlowGraph_1{ \n";
+    ss << "digraph dataFlowGraph_1{ \n"
+       << createLegend(legend);
     subgraph.generateDotString(ss);
     generateDotReads(ss);
     ss << "}";
@@ -306,13 +384,16 @@ std::string CompGraph::toDotString(int stmtIdx, bool reads, bool writes) {
 
     resetWritten();
 
+    auto myLegend = legend;
+    myLegend.insert(NodeTypes::source);
     std::ostringstream ss;
-    ss << "digraph dataFlowGraph_1{ \n";
+    ss << "digraph dataFlowGraph_1{ \n"
+       << createLegend(myLegend);
 
-    std::string color = stmt->getColor();
-    stmt->setColor(SOURCE_COLOR);
+    NodeTypes type = stmt->getType();
+    stmt->setType(NodeTypes::source);
     stmt->generateDotString(ss);
-    stmt->setColor(color);
+    stmt->setType(type);
 
     bool arr[2] = {reads, writes};
     for (int i = 0; i < 2; i++) {
@@ -373,7 +454,8 @@ void CompGraph::addDebugStmts(std::vector<std::pair<int, std::string>> debugStmt
         if (it == stmtNodes.end()) { continue; }
         it->second->addLabel("\\n");
         it->second->addLabel(pair.second);
-    }   
+    }
+    legend.insert(NodeTypes::debug);
 }
 
 void CompGraph::reduceStmts() {
@@ -387,9 +469,10 @@ void CompGraph::reduceStmts() {
             if (!ptr->isConst()) { allConst = false; break; }
         }
         if (allConst) {
-            pair.second->setShape("point");
+            pair.second->setType(NodeTypes::hidden);
         }
     }
+    legend.insert(NodeTypes::hidden);
 }
 
 void CompGraph::reduceStmts(int toLevel) {
@@ -407,13 +490,15 @@ void CompGraph::reduceDataSpaces() {
             if (!ptr->isConst()) { allConst = false; break; }
         }
         if (allConst) {
-            pair.second->setShape("point");
+            pair.second->setType(NodeTypes::hidden);
         }
     }
+    legend.insert(NodeTypes::hidden);
 }
 
 void CompGraph::reduceDataSpaces(int toLevel) {
     subgraph.reduceDataSpaces(toLevel);
+    legend.insert(NodeTypes::hidden);
 }
 
 void CompGraph::fusePCRelations() {
@@ -460,6 +545,7 @@ void CompGraph::fusePCRelations() {
 
     if (didFuse) { fusePCRelations(); }*/
 }
+
 
 std::string CompGraph::getDotColor(std::string color1, std::string color2) {
     if (color1 == DEFAULT_COLOR) { return color2; }
