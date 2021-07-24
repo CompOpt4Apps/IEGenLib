@@ -164,10 +164,15 @@ void Subgraph::reduceDataSpaces(int toLevel) {
     }
 }
 
-void Subgraph::generateDotString(std::ostringstream &ss, int cnt) {
+void Subgraph::generateDotString(std::ostringstream &ss) {
+    int cnt = 0;
+    generateDotString(ss, cnt);
+}
+
+void Subgraph::generateDotString(std::ostringstream &ss, int &cnt) {
     if (level > 0) {
 //        ss << "subgraph cluster" << subgraph.level << " {\n"
-        ss << "subgraph cluster" << cnt++ << " {\n"
+        ss << "subgraph cluster" << cnt << " {\n"
            << "style = filled;\n"
            << "color = \"\";\n"
            << generateDotLabel(label)
@@ -184,12 +189,24 @@ void Subgraph::generateDotString(std::ostringstream &ss, int cnt) {
     }
 
     // Generate subgraphs
+    cnt++;
     for (Subgraph &sg : subgraphs) {
         sg.generateDotString(ss, cnt);
     }
 
     if (level > 0) { ss << "}\n"; }
 }
+
+bool Subgraph::removeStmt(NodePtr stmt) {
+    for (auto it = stmts.begin(); it != stmts.end(); it++) {
+        if (*it == stmt) { stmts.erase(it); return true; }
+    }
+    for (Subgraph& sg : subgraphs) {
+        if (sg.removeStmt(stmt)) { return true; }
+    }
+    return false;
+}
+
 
 /*CompGraph CompGraph::copy() {
     CompGraph compGraph;
@@ -502,48 +519,48 @@ void CompGraph::reduceDataSpaces(int toLevel) {
 }
 
 void CompGraph::fusePCRelations() {
-/*    bool didFuse = false;
-    for (auto it = stmtNodes.begin(); it != stmtNodes.end(); it++) {
+    auto it = stmtNodes.begin();
+    while (it != stmtNodes.end()) {
+        NodePtr writeNode = it->second;
+        // Increment it in case we need to go to the next iteration
+        ++it;
         // Make sure the statement writes to only one dataSpace
-        Node& writeNode = it->second;
-        if (writeNode.numOutEdges() != 1) { continue; }
+        if (writeNode->numOutEdges() != 1) { continue; }
 
         // This is the edge between writeNode and dataNode
-        EdgePtr write = writeNode.getOutEdge(0);
-        auto dataIt = dataNodes.find(write->dataSpace);
-        if (dataIt == dataNodes.end()) { continue; }
+        EdgePtr write = writeNode->getOutEdge(0);
+        NodePtr dataNode = write->getDataNode();
         // Make sure the data space is written to and read from only one statement,
         // respectively
-        Node& dataNode = dataIt->second;
-        if (dataNode.numInEdges() != 1 || dataNode.numOutEdges() != 1) { continue; }
+        if (dataNode->numInEdges() != 1 || dataNode->numOutEdges() != 1) { continue; }
 
         // This is the edge between dataNode and readNode
-        EdgePtr read = dataNode.getOutEdge(0);
+        EdgePtr read = dataNode->getOutEdge(0);
 
-        // Make sure we are doing a scalar write (access space is 0)
-        if (write->label != read->label) { continue; }
-        if (write->label != "0" || read->label != "0") { continue; }
+        // Make sure we are doing a scalar write (access space is constant)
+        if (!write->isConst() || !read->isConst()) { continue; }
 
         // Get the read statement's node
-        Node& readNode = stmtNodes.at(read->stmtIdx);
+        NodePtr readNode = read->getStmtNode();
         // Remove its connection to dataNode
-        readNode.removeInEdge(read);
+        readNode->removeInEdge(read);
         // Connect it to and update all of writeNode's reads
-        for (EdgePtr ptr : readNode.getInEdges()) {
-            ptr->stmtIdx = read->stmtIdx;
-            readNode.addInEdge(ptr);
+        for (EdgePtr ptr : writeNode->getInEdges()) {
+            ptr->setStmtNode(readNode);
+            readNode->addInEdge(ptr);
         }
 
-        didFuse = true;
-
         // Remove dataNode
-        dataNodes.erase(dataIt);
+        for (auto it2 = dataNodes.begin(); it2 != dataNodes.end(); it2++) {
+            if (it2->second == dataNode) { dataNodes.erase(it2); break; }
+        }
         // Remove writeNode
-        it = stmtNodes.erase(it);
-        if (it == stmtNodes.end()) { break; }
+        // Don't forget to decrement it
+        stmtNodes.erase(--it);
+        subgraph.removeStmt(writeNode);
+        // Start over
+        it = stmtNodes.begin();
     }
-
-    if (didFuse) { fusePCRelations(); }*/
 }
 
 

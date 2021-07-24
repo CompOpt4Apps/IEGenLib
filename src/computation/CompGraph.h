@@ -140,7 +140,8 @@ class Subgraph {
     Subgraph(int _level) : level(_level) {}
     ~Subgraph() = default;
 
-    void generateDotString(std::ostringstream &ss, int cnt = 0);
+    void generateDotString(std::ostringstream &ss);
+    void generateDotString(std::ostringstream &ss, int &cnt);
 
     void addStmt(NodePtr node) { stmts.insert(node); }
     std::set<NodePtr> getStmts() { return stmts; }
@@ -148,6 +149,8 @@ class Subgraph {
     
     void reduceStmts(int toLevel);
     void reduceDataSpaces(int toLevel);
+
+    bool removeStmt(NodePtr stmt);
 
     // Getter/Setters
     // level

@@ -1272,9 +1272,10 @@ std::string Computation::toDotString() {
 
     CompGraph graph = CompGraph();
     graph.create(this);
-    graph.addDebugStmts(getStmtDebugStrings());
-    return graph.toDotString(546, true, true);
-//    return graph.toDotString();
+    graph.fusePCRelations();
+//    graph.addDebugStmts(getStmtDebugStrings());
+//    return graph.toDotString(546, true, true);
+    return graph.toDotString();
 }
 
 //! Function returns a dot string representing nesting
