@@ -46,12 +46,6 @@
 //! String added when renaming dataspace to avoid name conflicts
 #define DATA_RENAME_STR "__w__"
 
-//! Colors used in dot nodes
-#define DEFAULT_COLOR "grey"
-#define PARAM_COLOR "purple"
-#define RETURN_COLOR "red"
-#define PARAM_RETURN_COLOR "lime"
-
 namespace iegenlib {
 
 /* Computation */
@@ -1279,7 +1273,8 @@ std::string Computation::toDotString() {
     CompGraph graph = CompGraph();
     graph.create(this);
     graph.addDebugStmts(getStmtDebugStrings());
-    return graph.toDotString();
+    return graph.toDotString(546, true, true);
+//    return graph.toDotString();
 }
 
 //! Function returns a dot string representing nesting
@@ -1497,7 +1492,7 @@ std::vector<std::vector<std::pair<int,Set*> > > Computation::split
            grouping[std::to_string(
  			  s.second->getTupleDecl().elemConstVal(level))].push_back(s); 
  	     	  
-       }else {
+       } else {
  	  // This will be expanded further to use constraints;
            grouping["t"].push_back(s);
        }  

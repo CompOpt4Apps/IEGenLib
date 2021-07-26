@@ -282,7 +282,7 @@ class Computation {
     //std::vector<std::pair<std::string, std::string>> dataSpaces;  
     std::map<std::string, std::string> dataSpaces;
 
-    //! Parameters of the computation, pair of name : type. All parameters should also be data spaces.
+    //! Parameters of the computation. All parameters should also be data spaces.
     std::vector<std::string> parameters;
     //! Names of values that are returned if this Computation is called. May be
     //! data space names or literals. This is an ordered list because some

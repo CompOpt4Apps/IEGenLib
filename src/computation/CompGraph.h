@@ -13,11 +13,21 @@ namespace iegenlib {
 
 //! Colors used in dot nodes
 #define DEFAULT_COLOR "grey"
-#define PARAM_COLOR "purple"
+#define PARAM_COLOR "deepskyblue"
 #define RETURN_COLOR "red"
-#define PARAM_RETURN_COLOR "lime"
+#define PARAM_RETURN_COLOR "darkorchid"
 // Color of the source node when creating a graph from a single statement
 #define SOURCE_COLOR "goldenrod"
+
+enum NodeTypes {
+    debug = 0, stmt, data, readParam, param,
+    returnVal, readReturnedParam, returnedParam,
+    source, hidden
+};
+
+std::string generateNode(std::string name, std::string label, NodeTypes type);
+std::string generateLegendNode(NodeTypes type);
+std::string createLegend(const std::vector<NodeTypes> &nodes);
 
 class Edge;
 typedef std::shared_ptr<Edge> EdgePtr;
@@ -93,6 +103,8 @@ class Node {
     void removeOutEdge(EdgePtr ptr);
 
     // Getter/Setters
+    void setType(NodeTypes newType) { type = newType; }
+    NodeTypes getType() { return type; }
     // name
     void setName(std::string str) { name = str; }
     std::string getName() { return name; }
@@ -100,12 +112,15 @@ class Node {
     void setLabel(std::string str) { label = str; }
     void addLabel(std::string str) { label.append(str); }
     std::string getLabel() { return label; }
-    // shape
+/*    // shape
     void setShape(std::string str) { shape = str; }
     std::string getShape() { return shape; }
     // color
     void setColor(std::string str) { color = str; }
     std::string getColor() { return color; }
+    // filled
+    void setFilled(bool b) { filled = b; }
+    bool isFilled() { return filled; }*/
 
     bool isWritten() { return written; }
     void reset() { written = false; }
@@ -113,8 +128,8 @@ class Node {
   private:
     std::vector<EdgePtr> inEdges, outEdges;
 
-    std::string name, label, shape;
-    std::string color = DEFAULT_COLOR;
+    std::string name, label;
+    NodeTypes type;
 
     bool written = false;
 };
@@ -125,7 +140,7 @@ class Subgraph {
     Subgraph(int _level) : level(_level) {}
     ~Subgraph() = default;
 
-    void generateDotString(std::ostringstream &ss);
+    void generateDotString(std::ostringstream &ss, int cnt = 0);
 
     void addStmt(NodePtr node) { stmts.insert(node); }
     std::set<NodePtr> getStmts() { return stmts; }
@@ -181,11 +196,17 @@ class CompGraph {
     void generateDotWrites(Subgraph &subgraph, std::ostringstream &ss);
     void generateDotReads(std::ostringstream &ss);
 
-    static std::string getDotColor(std::string color1, std::string color2);
-
     std::map<int, NodePtr> stmtNodes;
     std::map<std::string, NodePtr> dataNodes;
     Subgraph subgraph;
+
+    // Nodes to generate in the legend
+    std::set<NodeTypes> legend = {
+        NodeTypes::stmt, NodeTypes::data, NodeTypes::readParam, NodeTypes::param,
+        NodeTypes::returnVal, NodeTypes::readReturnedParam, NodeTypes::returnedParam
+    };
+
+    static std::string getDotColor(std::string color1, std::string color2);
 };
 
 }
