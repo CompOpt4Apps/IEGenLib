@@ -70,7 +70,7 @@ std::string createLegend(const std::set<NodeTypes> &nodes) {
         arrows << "Legend" << type;
     }
     
-    ss << arrows.str() << "[style=invis]\n";
+//    ss << arrows.str() << "[style=invis]\n";
 
     ss << "}\n";
 
@@ -384,7 +384,7 @@ std::string CompGraph::toDotString() {
     resetWritten();
 
     std::ostringstream ss;
-    ss << "digraph dataFlowGraph_1{ \n"
+    ss << "digraph dataFlowGraph_1{\nrankdir=LR;\n"
        << createLegend(legend);
     subgraph.generateDotString(ss);
     generateDotReads(ss);
@@ -405,7 +405,7 @@ std::string CompGraph::toDotString(int stmtIdx, bool reads, bool writes) {
     auto myLegend = legend;
     myLegend.insert(NodeTypes::source);
     std::ostringstream ss;
-    ss << "digraph dataFlowGraph_1{ \n"
+    ss << "digraph dataFlowGraph_1{\nrankdir=LR;\n"
        << createLegend(myLegend);
 
     NodeTypes type = stmt->getType();
