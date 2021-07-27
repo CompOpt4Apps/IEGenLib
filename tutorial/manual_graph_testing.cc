@@ -152,6 +152,20 @@ int main(int argc, char** argv) {
     outStream2.close();
 */
     //Phi Node Computations
+    //CODE
+    /* 
+    int j = 2;
+    int N = 1;
+    int i = 2
+    int foo = 0;
+    if (j > N) {
+        foo = 4;
+    }
+    if (i > N) {
+        foo = 1;
+    }
+    int bar = foo;
+    */
     Computation* test1Computation = new Computation();
     // add stmts
     test1Computation->addDataSpace("$j$", "int");
@@ -226,4 +240,54 @@ int main(int argc, char** argv) {
     outStream3 << test1Computation->codeGen();
     outStream3.close();
     
+    /*
+ *  int bar = 3;
+    int foo = 1;
+    for(int i = 0; i < 0; i++){
+        foo += 2;
+    }
+    if(foo < 1){ foo = bar; }
+   */
+       
+    Computation* test2Computation = new Computation();
+
+    test2Computation->addDataSpace("$foo$", "int");
+    Stmt* s21 = new Stmt("$foo$=1;",
+        "{[0]}",
+        "{[0]->[0]}",
+        {},
+        {{"$foo$", "{[0]->[0]}"}}
+    );
+    test2Computation->addStmt(s21);
+
+    //Inside for loop :
+    //for(int i = 0; i < 0; i++)
+    Stmt* s22 = new Stmt("$foo$ += 2;",
+        "{[i]: i >= 0 && i < 0}",
+        "{[0]->[1]}",
+        {{"$foo$", "{[0]->[0]}"}},
+        {{"$foo$", "{[0]->[0]}"}}
+    );
+    test2Computation->addStmt(s22);
+    
+    Stmt* s23 = new Stmt("$foo$ = 0;",
+        "{[0]: foo < 2}",
+        "{[0]->[2]}",
+        {},
+        {{"$foo$", "{[0]->[0]}"}}
+    );
+    test2Computation->addStmt(s23);
+
+    ofstream dotFileStream4("phi_test2.txt");
+    cout << "Entering toDot()" << "\n";
+    string dotString4 = test2Computation->toDotString(); //name of computation
+    dotFileStream4 << dotString4;
+    dotFileStream4.close();
+    //Write codegen to a file
+    ofstream outStream4;
+    outStream4.open("phi_test2.c");
+    outStream4 << test2Computation->codeGen();
+    outStream4.close();
+   
+    return 0; 
 }
