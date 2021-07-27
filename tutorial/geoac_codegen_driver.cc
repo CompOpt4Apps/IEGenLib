@@ -2174,12 +2174,10 @@ Computation* u_ddiff_Computation(){
 
     //Creating statement3
     //if(n1==0&&n2==0){u_ddiff_return = eval_spline_ddf_return;}
-    Stmt* s3 = new Stmt("if($n1$==0 && $n2$==0){$u_ddiff_return$ = $eval_Spline_ddf_return$;}",
-        "{[0]}",
+    Stmt* s3 = new Stmt("$u_ddiff_return$ = $eval_Spline_ddf_return$;",
+        "{[0]: $n1$ = 0 && $n2$ = 0}",
         "{[0]->["+std::to_string(newTuplePos+1)+"]}",
         {
-            {"$n1$", "{[0]->[0]}"},
-            {"$n2$", "{[0]->[0]}"},
             {"$eval_Spline_ddf_return$", "{[0]->[0]}"}
         },
         {
@@ -2295,12 +2293,10 @@ Computation* v_ddiff_Computation(){
 
     //Creating statement3
     //if(n1==0&&n2==0){v_ddiff_return = eval_spline_ddf_return;}
-    Stmt* s3 = new Stmt("if($n1$==0 && $n2$==0){$v_ddiff_return$ = $eval_Spline_ddf_return$;}",
-        "{[0]}",
+    Stmt* s3 = new Stmt("$v_ddiff_return$ = $eval_Spline_ddf_return$;",
+        "{[0]: $n1$ = 0 && $n2$ = 0}",
         "{[0]->["+std::to_string(newTuplePos+1)+"]}",
         {
-            {"$n1$", "{[0]->[0]}"},
-            {"$n2$", "{[0]->[0]}"},
             {"$eval_Spline_ddf_return$", "{[0]->[0]}"}
         },
         {
@@ -2475,12 +2471,10 @@ Computation* c_ddiff_Computation(){
     //    return gamR / (2.0 * SndSpd) * eval_spline_ddf_return
     //            - pow(gamR,2)/(4.0 * pow(SndSpd,3)) * pow(eval_spline_df_return,2);
     //}
-    Stmt* s5 = new Stmt("if($n1$==0 && $n2$==0){$c_ddiff_return$ = gamR / (2.0 * $SndSpd$) * $eval_spline_ddf_return$ - pow(gamR,2)/(4.0*pow($SndSpd$,3)) * pow($eval_spline_df_return$,2);}",
-        "{[0]}",
+    Stmt* s5 = new Stmt("$c_ddiff_return$ = gamR / (2.0 * $SndSpd$) * $eval_spline_ddf_return$ - pow(gamR,2)/(4.0*pow($SndSpd$,3)) * pow($eval_spline_df_return$,2);",
+        "{[0]: $n1$ = 0 && $n2$ = 0}",
         "{[0]->["+std::to_string(newTuplePos+1)+"]}",
         {
-            {"$n1$", "{[0]->[0]}"},
-            {"$n2$", "{[0]->[0]}"},
             {"$SndSpd$", "{[0]->[0]}"},
             {"$eval_spline_ddf_return$", "{[0]->[0]}"},
             {"$eval_spline_df_return$", "{[0]->[0]}"}
@@ -2607,11 +2601,10 @@ Computation* u_diff_Computation(){
 
     //Creating statement s3
     // if(n==0){u_diff_return = eval_Spline_df_return;}
-    Stmt* s3 = new Stmt("if($n$==0){$u_diff_return$ = $eval_Spline_df_return$;}",
-        "{[0]}",
+    Stmt* s3 = new Stmt("$u_diff_return$ = $eval_Spline_df_return$;",
+        "{[0]: $n$ = 0}",
         "{[0]->["+std::to_string(newTuplePos+1)+"]}",
         {
-            {"$n$", "{[0]->[0]}"},
             {"$eval_Spline_df_return$", "{[0]->[0]}"}
         },
         {
@@ -2731,11 +2724,10 @@ Computation* v_diff_Computation(){
 
     //Creating statement3
     //if(n==0) { v_diff_return =  eval_Spline_df_return; }
-    Stmt* s3 = new Stmt("if($n$==0){$v_diff_return$ = $eval_Spline_df_return$;}",
-        "{[0]}",
+    Stmt* s3 = new Stmt("$v_diff_return$ = $eval_Spline_df_return$;",
+        "{[0]: $n$ = 0}",
         "{[0]->["+std::to_string(newTuplePos+1)+"]}",
         {
-           {"$n$", "{[0]->[0]}"},
            {"$eval_Spline_df_return$", "{[0]->[0]}"}
         },
         {
@@ -2881,11 +2873,10 @@ Computation* c_diff_Computation(){
     cDiffComputation->addStmt(s3);
 
     //if(n==0){c_diff_return = gamR / (2.0 * c_return) * eval_spline_df_return;}
-    Stmt* s4 = new Stmt("if($n$==0){$c_diff_return$ = gamR / (2.0 * $c_return$) * $eval_spline_df_return$;}",
-        "{[0]}",
+    Stmt* s4 = new Stmt("$c_diff_return$ = gamR / (2.0 * $c_return$) * $eval_spline_df_return$;",
+        "{[0]: $n$ = 0}",
         "{[0]->["+std::to_string(newTuplePos+1)+"]}",
         {
-            {"$n$", "{[0]->[0]}"},
             {"$c_return$", "{[0]->[0]}"},
             {"$eval_spline_df_return$", "{[0]->[0]}"}
         },
@@ -3637,9 +3628,12 @@ Computation* Find_Segment_Computation(){
     Stmt*  s0 = new Stmt("if($x$ >= $x_vals$[i] && $x$ <= $x_vals$[i+1]) $prev$ = i;",
         "{[i]: i>=0 && i<$length$-1}",  //Iteration schedule
         "{[i]->[0, i, 0]}", //Execution schedule - scheduling statement to be first (scheduling function)
-        {{"$x$","{[0]->[0]}"}, {"$x_vals$","{[i]->[i]}"}, {"$x_vals$","{[i]->[ip1]: ip1 = i+1}"}}, //Reads
+        {
+            {"$x$","{[0]->[0]}"},
+            {"$x_vals$","{[i]->[i]}"},
+            {"$x_vals$","{[i]->[ip1]: ip1 = i+1}"}}, //Reads
         {{"$prev$","{[0]->[0]}"}}   //writes
-        );
+        ); 
     cout << "Source statement : " << s0->getStmtSourceCode() << "\n\t"
       <<"- Iteration Space : "<< s0->getIterationSpace()->prettyPrintString() << "\n\t"
       << "- Execution Schedule : "<< s0->getExecutionSchedule()->prettyPrintString() << "\n\t" ;
