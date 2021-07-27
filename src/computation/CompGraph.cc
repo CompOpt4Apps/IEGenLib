@@ -105,7 +105,7 @@ void Edge::generateDotString(std::ostringstream &ss) {
     if (write) { ss << stmtNode->getName() << "->" << dataNode->getName(); }
     else { ss << dataNode->getName() << "->" << stmtNode->getName(); }
     ss << "[" << generateDotLabel(label)
-       << "][color=" << color << "]\n";
+       << "][style=bold][color=" << color << "]\n";
     written = true;
 }
 
@@ -330,7 +330,8 @@ Subgraph CompGraph::generateSubgraph(std::vector<std::pair<NodePtr, Set*>> &acti
     if (level > 0) {
         // Replace all '$' because dot throws a fit
         Set* projectedIS = new Set(replaceInString(set->getString(), "$", ""));
-        //Perform projections for each column
+        // Perform projections for each column
+        // TODO: Don't need to iterate
         for (int j = set->arity() - 1; j >= level; j--) {
             Set* tmp = projectedIS;
             projectedIS = projectedIS->projectOut(j);

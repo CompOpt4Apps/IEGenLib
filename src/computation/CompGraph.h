@@ -12,7 +12,7 @@
 namespace iegenlib {
 
 //! Colors used in dot nodes
-#define DEFAULT_COLOR "grey"
+#define DEFAULT_COLOR "darkgray"
 #define PARAM_COLOR "deepskyblue"
 #define RETURN_COLOR "red"
 #define PARAM_RETURN_COLOR "darkorchid"

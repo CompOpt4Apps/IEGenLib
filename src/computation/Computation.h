@@ -84,11 +84,26 @@ class Computation {
     //! For each write in the new statement, rename the written dataspace in all
     //  statements from the last statement to the last write to that data space.
     void updateDataSpaceVersions(Stmt* stmt);
+    //! TODO: Description
+    void locatePhiNodes(Stmt* stmt);
+    void locatePhiNode(std::string dataSpace, Stmt* srcStmt);
+    void addPhiNode(std::pair<int, std::string> &first, std::pair<int, std::string> &guaranteed, Stmt* srcStmt);
 
+    //! Takes in an iteration space set and removes all "$"
+    //  all trimmed data spaces are stored in dataSpaces if passed in 
+    //  returns the new trimmed set, which must be deallocated by the caller
+    Set* trimISDataSpaces(Set* set);
+    Set* trimISDataSpaces(Set* set, std::vector<std::string> &trimmedNames);
 
-    //! Add a statement to this Computation.
-    //! Statements are numbered sequentially from 0 as they are inserted.
-    //! @param[in] stmt Stmt to add (adopted)
+    //! Returns true if stmt1 is guaranteed to have executed by
+    //  the time stmt2 is reached, false otherwise
+    bool isGuaranteedExecute(Stmt* stmt1, Stmt* stmt2);
+
+    //! Returns a list of all the constraints of the given set
+    //  Note only inequalities count as constraints
+    std::vector<std::string> getSetConstraints(Set* set);
+
+    //! add stmt
     void addStmt(Stmt* stmt);
     //! Get a statement by index
     Stmt* getStmt(unsigned int index) const;
@@ -273,6 +288,10 @@ class Computation {
     void fuse (int s1, int s2, int fuseLevel);
    
     private:
+/*    struct ScopeData {
+        std::vector<std::string> conditions;
+        std::vector<std::pair<std::string, int>> domain;
+    };*/
 
     //! Information on all statements in the Computation
     std::vector<Stmt*> stmts;
@@ -419,6 +438,8 @@ class Stmt {
     std::string getDebugStr() const;
     //Returns all added debug strings for the statement
     std::string getAllDebugStr() const;
+
+    std::string prettyPrintString() const;
 
    private:
     //! Debug string

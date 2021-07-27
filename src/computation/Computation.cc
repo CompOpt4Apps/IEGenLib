@@ -46,6 +46,9 @@
 //! String added when renaming dataspace to avoid name conflicts
 #define DATA_RENAME_STR "__w__"
 
+//! Constraint used to test if constraints evaluate to false/true for phi nodes
+#define CONSTR_TEST "test__"
+
 namespace iegenlib {
 
 /* Computation */
@@ -148,7 +151,238 @@ void Computation::updateDataSpaceVersions(Stmt* stmt) {
     }
 }
 
+void Computation::locatePhiNodes(Stmt* stmt) {
+    for (int i = 0; i < stmt->getNumReads(); i++) {
+        locatePhiNode(stmt->getReadDataSpace(i), stmt);
+    }
+}
+
+void Computation::locatePhiNode(std::string dataSpace, Stmt* srcStmt) {
+//    std::cerr << "Locating Phi Node" << std::endl;
+    std::pair<int, std::string> first {-1, ""}, guaranteed {-1, ""};
+    for (int i = getNumStmts() - 1; i >= 0; i--) {
+        Stmt* stmt = getStmt(i);
+        for (int j = 0; j < stmt->getNumWrites(); j++) {
+            std::string write = stmt->getWriteDataSpace(j);
+            if (areEquivalentRenames(dataSpace, write)) {
+                if (isGuaranteedExecute(stmt, srcStmt)) {
+                    guaranteed = {i, write};
+                    addPhiNode(first, guaranteed, srcStmt);
+//                    std::cerr << "Phi Node Located" << std::endl;
+                    return;
+                } else if (first.first == -1) { first = {i, write}; }
+            }
+        }
+    }
+//    std::cerr << "No guaranteed write identified" << std::endl;
+}
+
+void Computation::addPhiNode(std::pair<int, std::string> &first, std::pair<int, std::string> &guaranteed,
+        Stmt* srcStmt) {
+    if (first.first == -1) { return; }
+//    std::cerr << "Adding Phi Node" << std::endl;
+
+    // Removing every tuple element will cause an error
+    // add an extra tuple element at the end to ensure there is one
+    // tuple element remaining
+    TupleDecl pad(1);
+    pad.setTupleElem(0, 0);
+
+    // Test constraint to check for true/false constraints in firstIS
+    // If it is eliminated, 1+ other constraint(s) = false
+    // If it is the last constraint, all other constraints = true
+    // Otherwise, ignore
+    Conjunction* testConstr = new Conjunction(1);
+    Exp* testExp = new Exp();
+    testExp->addTerm(new VarTerm(CONSTR_TEST));
+    testExp->setEquality();
+    testConstr->addEquality(testExp);
+
+    // Project out everything in the source read's iteration space
+    Set* sourceIS = trimISDataSpaces(srcStmt->getIterationSpace());
+    // Pad the tuple
+    sourceIS->setTupleDecl(sourceIS->getTupleDecl().concat(pad));
+//    std::cerr << "sourceIS: " << sourceIS->prettyPrintString() << std::endl;
+    // Ignore the padded element
+    int size = sourceIS->getTupleDecl().size() - 1;
+    // Remove all iterators, generating a single condition for each corresponding loop
+    for (int i = 0; i < size; i++) {
+        Set* tmp = sourceIS;
+        sourceIS = sourceIS->projectOut(i);
+        delete tmp;
+    }
+//    std::cerr << "\t-> " << sourceIS->prettyPrintString() << std::endl;
+
+    // Stores all data spaces in the first write's constraints
+    std::vector<std::string> trimmedNames;
+    // Project out everything in the first write's iteration space
+    Stmt* firstStmt = getStmt(first.first);
+    Set* firstIS = trimISDataSpaces(firstStmt->getIterationSpace(), trimmedNames);
+    // Add the test constraint
+    firstIS->addConjunction(testConstr);
+    // Pad the tuple
+    firstIS->setTupleDecl(firstIS->getTupleDecl().concat(pad));
+//    std::cerr << "firstIS: " << firstIS->prettyPrintString() << std::endl;
+    // Ignore the padded element
+    size = firstIS->getTupleDecl().size() - 1;
+    for (int i = 0; i < size; i++) {
+        Set* tmp = firstIS;
+        firstIS = firstIS->projectOut(i);
+        delete tmp;
+    }
+//    std::cerr << "\t-> " << firstIS->prettyPrintString() << std::endl;
+
+    // Get all conditions for the source read
+    std::vector<std::string> sourceConstr = getSetConstraints(sourceIS);
+//    std::cerr << "Source Read Constraints: ";
+    for (std::string str : sourceConstr) {
+        if (str != sourceConstr.at(0)) { std::cerr << " && "; }
+//        std::cerr << str;
+    }
+//    std::cerr << std::endl;
+
+    // Get all conditions for the first write that aren't
+    // used by the source read
+    std::vector<std::string> constrs;
+    for (std::string constr : getSetConstraints(firstIS)) {
+        if (std::find(sourceConstr.begin(), sourceConstr.end(), constr) ==
+                sourceConstr.end()) {
+            constrs.push_back(constr);
+        }
+    }
+//    std::cerr << "First Write Constraints: ";
+    for (std::string str : constrs) {
+        if (str != constrs.at(0)) { std::cerr << " && "; }
+//        std::cerr << str;
+    }
+//    std::cerr << std::endl;
+
+    // Stmt source code
+    std::ostringstream code;
+    // Stmt reads/writes
+    std::vector<std::pair<std::string, std::string>> reads, writes; 
+    // We always write to this
+    writes.push_back({first.second, "{[0]->[0]}"});
+    // No constraints so one of the constraints = false
+    // skip to guaranteed write
+    if (constrs.size() == 0) {
+        reads.push_back({guaranteed.second, "{[0]->[0]}"});
+        code << first.second << " = " << guaranteed.second << ";";
+    // The only constraint is the test constraint, so all constraints = true
+    // skip to first write
+    } else if (constrs.size() == 1) {
+        reads.push_back({first.second, "{[0]->[0]}"});
+        code << first.second << " = " << first.second << ";";
+    // Some constraints are left, generate ternary expression
+    } else {
+        reads.push_back({first.second, "{[0]->[0]}"});
+        reads.push_back({guaranteed.second, "{[0]->[0]}"});
+
+        // Remove the test string
+        std::string testStr = " == 0";
+        testStr = CONSTR_TEST + testStr;
+        constrs.erase(std::find(constrs.begin(), constrs.end(), testStr));
+        // Write all our constraints
+        for (int i = 0; i < constrs.size(); i++) {
+            if (i != 0) { code << " && "; }
+            code << constrs.at(i);
+        }
+        // Re-add "$" to data spaces
+        std::string codeStr = code.str();
+        for (std::string str : trimmedNames) {
+            std::string newStr = "$" + str + "$";
+            std::string old = codeStr;
+            codeStr = iegenlib::replaceInString(codeStr, str, newStr);
+            if (codeStr != old) {
+                // TODO: correct access relation
+                // Add the data space as a read
+                reads.push_back({newStr, "{[0]->[0]}"});
+            }
+        }
+        // Compose full string
+        code.str("");
+        code << first.second << " = " << codeStr << " ? "
+             << first.second << " : " << guaranteed.second << ";";
+    }
+    // TODO: better way to identify phi nodes
+    // Extra semicolon to identify phi nodes
+    code << ";";
+
+    // Create phi node
+    Stmt* phiStmt = new Stmt(code.str(), sourceIS->prettyPrintString(),
+                             srcStmt->getExecutionSchedule()->prettyPrintString(),
+                             reads, writes);
+//    std::cerr << "New Phi Node {\n" << phiStmt->prettyPrintString() << "}" << std::endl;
+
+    // Add the statement (but don't call locatePhiNodes())
+    updateDataSpaceVersions(phiStmt);
+    stmts.push_back(phiStmt);
+    transformationLists.push_back({});
+
+    // Clean up
+    delete sourceIS;
+    delete firstIS;
+
+    std::cerr << "Phi Node Added {\n" << phiStmt->prettyPrintString() << "}" << std::endl;
+}
+
+bool Computation::isGuaranteedExecute(Stmt* stmt1, Stmt* stmt2) {
+    Set* iterSpace1 = stmt1->getIterationSpace();
+    Set* iterSpace2 = stmt2->getIterationSpace();
+
+    std::vector<std::string> match = getSetConstraints(iterSpace2);
+
+    // Is guaranteed if all constraints in idx1 are in idx2
+    for (std::string str : getSetConstraints(iterSpace1)) {
+        if (std::find(match.begin(), match.end(), str) == match.end()) {
+            return false;
+        }
+    }
+    return true;
+}
+
+std::vector<std::string> Computation::getSetConstraints(Set* set) {
+    std::vector<std::string> result;
+    for (auto it = set->conjunctionBegin(); it != set->conjunctionEnd(); it++) {
+        for (Exp* e : (*it)->inequalities()) {
+            result.push_back(e->prettyPrintString((*it)->getTupleDecl()) + " >= 0");
+        }
+        for (Exp* e : (*it)->equalities()) {
+            result.push_back(e->prettyPrintString((*it)->getTupleDecl()) + " == 0");
+        }
+    }
+    return result;
+}
+
+Set* Computation::trimISDataSpaces(Set* set) {
+    Set* s = new Set(iegenlib::replaceInString(set->getString(), "$", ""));
+    return s;
+}
+
+Set* Computation::trimISDataSpaces(Set* set, std::vector<std::string> &trimmedNames) {
+    std::string setStr = set->getString();
+    int pos = setStr.find('$');
+    while (pos != std::string::npos) {
+        std::string begin = setStr.substr(0, pos);
+        std::string end = setStr.substr(pos + 1);
+        pos = end.find('$');
+        if (pos == std::string::npos) {
+            setStr = begin + end;
+            break;
+        }
+        trimmedNames.push_back(end.substr(0, pos));
+        setStr = begin + end.substr(0, pos) + end.substr(pos + 1);
+        pos = setStr.find('$');
+    }
+    return new Set(setStr);
+}
+
 void Computation::addStmt(Stmt* stmt) {
+    // We don't want to create phi nodes for a phi nodes
+    // TODO: better method of phi node detection
+    if (stmt->getStmtSourceCode().find(";;") == std::string::npos) {
+        locatePhiNodes(stmt);
+    }
     updateDataSpaceVersions(stmt);
     stmts.push_back(stmt);
     transformationLists.push_back({});
@@ -273,8 +507,8 @@ void Computation::printInfo() const {
         } else {
             dataWritesOutput << "{\n";
             for (unsigned int i = 0; i < numWrites; ++i) {
-                dataWritesOutput << "    " << (*it).getReadDataSpace(i) << ": "
-                                 << (*it).getReadRelation(i)->prettyPrintString()
+                dataWritesOutput << "    " << (*it).getWriteDataSpace(i) << ": "
+                                 << (*it).getWriteRelation(i)->prettyPrintString()
                                  << "\n";
             }
             dataWritesOutput << "}";
@@ -1272,7 +1506,7 @@ std::string Computation::toDotString() {
 
     CompGraph graph = CompGraph();
     graph.create(this);
-    graph.fusePCRelations();
+//    graph.fusePCRelations();
 //    graph.addDebugStmts(getStmtDebugStrings());
 //    return graph.toDotString(546, true, true);
     return graph.toDotString();
@@ -1780,7 +2014,6 @@ void Computation::replaceDataSpaceName(std::string original, std::string newStri
     if(iterator != dataSpaces.end()){
         dataSpaces.erase(iterator);
     }
-    // TODO add new dataspce?
 
     //Rename return values as well
     for(auto it = returnValues.begin(); it != returnValues.end(); it++){
@@ -1853,17 +2086,6 @@ bool Stmt::replaceDataSpaceReads(std::string searchString, std::string replacedS
     for(auto& read: dataReads){
        if (read.first.compare(searchString) == 0) { read.first = replacedString; }
     }
-    
-    // TODO: should I do this?
-    std::string iterSpaceStr = iterationSpace->prettyPrintString();
-    std::string execScheduleStr = executionSchedule->prettyPrintString();
-
-    iterSpaceStr = replaceInString(iterSpaceStr, searchString, replacedString);
-    execScheduleStr = replaceInString(execScheduleStr, searchString, replacedString);
-
-    // use modified strings to construct new values
-    setIterationSpace(iterSpaceStr);
-    setExecutionSchedule(execScheduleStr);
 
     return getStmtSourceCode().compare(newSourceCode.str()) != 0;
 }
@@ -1892,17 +2114,6 @@ bool Stmt::replaceDataSpaceWrites(std::string searchString, std::string replaced
         if (write.first.compare(searchString) == 0) { write.first = replacedString; }
     }
 
-    // TODO: should I do this?
-    std::string iterSpaceStr = iterationSpace->prettyPrintString();
-    std::string execScheduleStr = executionSchedule->prettyPrintString();
-
-    iterSpaceStr = replaceInString(iterSpaceStr, searchString, replacedString);
-    execScheduleStr = replaceInString(execScheduleStr, searchString, replacedString);
-
-    // use modified strings to construct new values
-    setIterationSpace(iterSpaceStr);
-    setExecutionSchedule(execScheduleStr);
-
     return getStmtSourceCode().compare(newSourceCode.str()) != 0;
 }
 
@@ -1920,16 +2131,6 @@ void Stmt::replaceDataSpace(std::string searchString, std::string replacedString
     for(auto& read: dataReads){
        read.first = iegenlib::replaceInString(read.first, searchString, replacedString);
     }
-
-    std::string iterSpaceStr = iterationSpace->prettyPrintString();
-    std::string execScheduleStr = executionSchedule->prettyPrintString();
-    
-    iterSpaceStr = replaceInString(iterSpaceStr, searchString, replacedString);
-    execScheduleStr = replaceInString(execScheduleStr, searchString, replacedString);
-    
-    // use modified strings to construct new values
-    setIterationSpace(iterSpaceStr);
-    setExecutionSchedule(execScheduleStr);
 }
 
 Stmt::Stmt(std::string stmtSourceCode, std::string iterationSpaceStr,
@@ -2144,6 +2345,49 @@ std::string Stmt::getAllDebugStr() const{
     }
     return ss.str();
 }
+
+std::string Stmt::prettyPrintString() const {
+    std::ostringstream ss;
+    ss << "Statement:\n";
+    // stmt source code
+    ss << "Source Code: " << getStmtSourceCode() << "\n";
+    // iter spaces
+    ss << "Iteration Space: " << getIterationSpace()->prettyPrintString() << "\n";
+    // exec schedules
+    ss << "Execution Schedule: " << getExecutionSchedule()->prettyPrintString() << "\n";
+    // data reads
+    ss << "Data Reads: ";
+    unsigned int numReads = getNumReads();
+    if (numReads == 0) {
+        ss << " none";
+    } else {
+        ss << "{\n";
+        for (unsigned int i = 0; i < numReads; ++i) {
+            ss << "    " << getReadDataSpace(i) << ": "
+                         << getReadRelation(i)->prettyPrintString()
+                         << "\n";
+        }
+        ss << "}";
+    }
+    ss << "\n";
+    // data writes
+    ss << "Data Writes: ";
+    unsigned int numWrites = getNumWrites();
+    if (numWrites == 0) {
+        ss << " none";
+    } else {
+        ss << "{\n";
+        for (unsigned int i = 0; i < numWrites; ++i) {
+            ss << "    " << getWriteDataSpace(i) << ": "
+                         << getWriteRelation(i)->prettyPrintString()
+                         << "\n";
+        }
+        ss << "}";
+    }
+    ss << "\n";
+    return ss.str();
+}
+
 /* VisitorChangeUFsForOmega */
 
 VisitorChangeUFsForOmega::VisitorChangeUFsForOmega() { reset(); }
