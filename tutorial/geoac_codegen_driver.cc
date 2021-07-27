@@ -3253,7 +3253,7 @@ Computation* Eval_Spline_f_Computation(){
     evalSplineFComputation->addDataSpace("$A$", "double");
     evalSplineFComputation->addDataSpace("$B$", "double");
     Stmt* s3 = new Stmt("$X$ = ($x$ - $Spline_x_vals$[$k$])/($Spline_x_vals$[$k$+1] - $Spline_x_vals$[$k$]);",
-        "{[0]: k < Spline_length}",
+        "{[0]: k < $Spline_length$}",
         "{[0]->["+std::to_string(newTuplePos+2)+"]}",
         {
             {"$x$","{[0]->[0]}"},
@@ -3269,7 +3269,7 @@ Computation* Eval_Spline_f_Computation(){
     evalSplineFComputation->addStmt(s3);
 
     Stmt* s4 = new Stmt("$A$ = $Spline_slopes$[$k$] * ($Spline_x_vals$[$k$+1] - $Spline_x_vals$[$k$]) - ($Spline_f_vals$[$k$+1] - $Spline_f_vals$[$k$]);",
-        "{[0]: k < Spline_length}",
+        "{[0]: k < $Spline_length$}",
         "{[0]->["+std::to_string(newTuplePos+3)+"]}",
         {
             {"$Spline_slopes$","{[0]->[x1]: x1 = $k$}"},
@@ -3287,7 +3287,7 @@ Computation* Eval_Spline_f_Computation(){
     evalSplineFComputation->addStmt(s4);
 
     Stmt* s5 = new Stmt("$B$ = -$Spline_slopes$[$k$+1] * ($Spline_x_vals$[$k$+1] - $Spline_x_vals$[$k$]) + ($Spline_f_vals$[$k$+1] - $Spline_f_vals$[$k$]);",
-        "{[0]: k < Spline_length}",
+        "{[0]: k < $Spline_length$}",
         "{[0]->["+std::to_string(newTuplePos+4)+"]}",
         {
             {"$Spline_slopes$","{[0]->[kp1]: kp1 = $k$+1}"},
@@ -3305,7 +3305,7 @@ Computation* Eval_Spline_f_Computation(){
     evalSplineFComputation->addStmt(s5);
 
     Stmt* s6 = new Stmt("$eval_spline_f_return$ = (1.0 - $X$) * $Spline_f_vals$[$k$] + $X$ * $Spline_f_vals$[$k$+1] + $X$ * (1.0 - $X$) * ($A$ * (1.0 - $X$ ) + $B$ * $X$);",
-        "{[0]: k < Spline_length}",
+        "{[0]: k < $Spline_length$}",
         "{[0]->["+std::to_string(newTuplePos+5)+"]}",
         {
             {"$X$","{[0]->[0]}"},
@@ -3404,7 +3404,7 @@ Computation* Eval_Spline_df_Computation(){
     evalSplineDfComputation->addDataSpace("$A$", "double");
     evalSplineDfComputation->addDataSpace("$B$", "double");
     Stmt* s2 = new Stmt("$X$ = ($x$ - $Spline_x_vals$[$k$])/($Spline_x_vals$[$k$+1] - $Spline_x_vals$[$k$]);",
-        "{[0]: k < Spline_length}", //Iteration Schedule
+        "{[0]: k < $Spline_length$}", //Iteration Schedule
         "{[0]->["+std::to_string(newTuplePos+2)+"]}", //Execution schedule
         {
             {"$x$","{[0]->[0]}"},
@@ -3419,7 +3419,7 @@ Computation* Eval_Spline_df_Computation(){
     evalSplineDfComputation->addStmt(s2);
 
     Stmt* s3 = new Stmt("$A$ = $Spline_slopes$[$k$] * ($Spline_x_vals$[$k$+1] -$Spline_x_vals$[$k$]) - ($Spline_f_vals$[$k$+1] - $Spline_f_vals$[$k$]);",
-        "{[0]: k < Spline_length}",
+        "{[0]: k < $Spline_length$}",
         "{[0]->["+std::to_string(newTuplePos+3)+"]}",
         {
             {"$Spline_slopes$","{[0]->[k1]: k1 = $k$}"},
@@ -3436,7 +3436,7 @@ Computation* Eval_Spline_df_Computation(){
     evalSplineDfComputation->addStmt(s3);
 
     Stmt* s4 = new Stmt("$B$ = -$Spline_slopes$[$k$+1] * ($Spline_x_vals$[$k$+1] - $Spline_x_vals$[$k$]) + ($Spline_f_vals$[$k$+1] - $Spline_f_vals$[$k$]);",
-        "{[0]: k < Spline_length}",
+        "{[0]: k < $Spline_length$}",
         "{[0]->["+std::to_string(newTuplePos+4)+"]}",
         {
             {"$Spline_slopes$","{[0]->[kp1]: kp1 = $k$+1}"},
@@ -3453,7 +3453,7 @@ Computation* Eval_Spline_df_Computation(){
     evalSplineDfComputation->addStmt(s4);
 
     Stmt* s5 = new Stmt("$eval_spline_df_return$ = ($Spline_f_vals$[$k$+1] - $Spline_f_vals$[$k$])/($Spline_x_vals$[$k$+1] - $Spline_x_vals$[$k$]) + (1.0 - 2.0 * $X$) * ($A$ * (1.0 - $X$) + $B$ * $X$)/($Spline_x_vals$[$k$+1] - $Spline_x_vals$[$k$])+ $X$ * (1.0 - $X$) * ($B$ - $A$)/($Spline_x_vals$[$k$+1] - $Spline_x_vals$[$k$]);",
-        "{[0]: k < Spline_length}",
+        "{[0]: k < $Spline_length$}",
         "{[0]->["+std::to_string(newTuplePos+5)+"]}",
         {
             {"$Spline_f_vals$","{[0]->[kp1]: kp1 = $k$+1}"},
@@ -3544,7 +3544,7 @@ Computation* Eval_Spline_ddf_Computation(){
     evalSplineDdfComputation->addDataSpace("$A$", "double");
     evalSplineDdfComputation->addDataSpace("$B$", "double");
    Stmt* s3 = new Stmt("$X$ = ($x$ - $Spline_x_vals$[$k$])/($Spline_x_vals$[$k$+1] - $Spline_x_vals$[$k$]);",
-        "{[0]: k < Spline_length}", //Iteration Schedule
+        "{[0]: k < $Spline_length$}", //Iteration Schedule
         "{[0]->["+std::to_string(newTuplePos+2)+"]}", //Execution schedule
         {
             {"$x$","{[0]->[0]}"},
@@ -3559,7 +3559,7 @@ Computation* Eval_Spline_ddf_Computation(){
     evalSplineDdfComputation->addStmt(s3);
 
     Stmt* s4 = new Stmt("$A$ = $Spline_slopes$[$k$] * ($Spline_x_vals$[$k$+1] -$Spline_x_vals$[$k$]) - ($Spline_f_vals$[$k$+1] - $Spline_f_vals$[$k$]);",
-        "{[0]: k < Spline_length}",
+        "{[0]: k < $Spline_length$}",
         "{[0]->["+std::to_string(newTuplePos+3)+"]}",
         {
             {"$Spline_slopes$","{[0]->[k1]: k1 = $k$}"},
@@ -3576,7 +3576,7 @@ Computation* Eval_Spline_ddf_Computation(){
     evalSplineDdfComputation->addStmt(s4);
 
     Stmt* s5 = new Stmt("$B$ = -$Spline_slopes$[$k$+1] * ($Spline_x_vals$[$k$+1] - $Spline_x_vals$[$k$]) + ($Spline_f_vals$[$k$+1] - $Spline_f_vals$[$k$]);",
-        "{[0]: k < Spline_length}",
+        "{[0]: k < $Spline_length$}",
         "{[0]->["+std::to_string(newTuplePos+4)+"]}",
         {
             {"$Spline_slopes$","{[0]->[kp1]: kp1 = $k$+1}"},
@@ -3593,7 +3593,7 @@ Computation* Eval_Spline_ddf_Computation(){
     evalSplineDdfComputation->addStmt(s5);
 
     Stmt* s6 = new Stmt("$eval_Spline_ddf_return$ = 2.0 * ($B$ - 2.0 * $A$ + ($A$ - $B$) * 3.0 * $X$) / pow($Spline_x_vals$[$k$+1] - $Spline_x_vals$[$k$], 2);",
-        "{[0]: k < Spline_length}",
+        "{[0]: k < $Spline_length$}",
         "{[0]->["+std::to_string(newTuplePos+5)+"]}",
         {
             {"$A$", "{[0]->[0]}"},
