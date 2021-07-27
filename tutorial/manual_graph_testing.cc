@@ -17,7 +17,7 @@ using iegenlib::Computation;
 using namespace std;
 
 int main(int argc, char** argv) {
-
+/*
     // Basic for loop with 2 statements 
     // for (i = 0; i < N; i++) /loop over rows
     //     s0:tmp = f[i];
@@ -150,5 +150,80 @@ int main(int argc, char** argv) {
     outStream2.open("sparse_matrix_multiply.c");
     outStream2 << spsComp->codeGen();
     outStream2.close();
+*/
+    //Phi Node Computations
+    Computation* test1Computation = new Computation();
+    // add stmts
+    test1Computation->addDataSpace("$j$", "int");
+    Stmt* s1 = new Stmt("$j$=2;",
+        "{[0]}",
+        "{[0]->[0]}",
+        {},
+        {{"$j$", "{[0]->[0]}"}}
+    );
+    test1Computation->addStmt(s1);
 
+    test1Computation->addDataSpace("$N$", "int");
+    Stmt* s2 = new Stmt("$N$=1;",
+        "{[0]}",
+        "{[0]->[1]}",
+        {},
+        {{"$N$", "{[0]->[0]}"}}
+    );
+    test1Computation->addStmt(s2);
+
+    test1Computation->addDataSpace("$i$", "int");
+    Stmt* s3 = new Stmt("$i$=2;",
+        "{[0]}",
+        "{[0]->[2]}",
+        {},
+        {{"$i$", "{[0]->[0]}"}}
+    );
+    test1Computation->addStmt(s3);
+
+    test1Computation->addDataSpace("$foo$", "int");
+    Stmt* s4 = new Stmt("$foo$=0;",
+        "{[0]}",
+        "{[0]->[3]}",
+        {},
+        {{"$foo$", "{[0]->[0]}"}}
+    );
+    test1Computation->addStmt(s4);
+
+    Stmt* s5 = new Stmt("$foo$=4;",
+        "{[0]: j > N}",
+        "{[0]->[4]}",
+        {},
+        {{"$foo$", "{[0]->[0]}"}}
+    );
+    test1Computation->addStmt(s5);
+
+    Stmt* s6 = new Stmt("$foo$=1;",
+        "{[0]: i > N}",
+        "{[0]->[5]}",
+        {},
+        {{"$foo$", "{[0]->[0]}"}}
+    );
+    test1Computation->addStmt(s6);
+
+    test1Computation->addDataSpace("$bar$", "int");
+    Stmt* s7 = new Stmt("$bar$=$foo$;",
+        "{[0]}",
+        "{[0]->[6]}",
+        {{"$foo$", "{[0]->[0]}"}},
+        {{"$bar$", "{[0]->[0]}"}}
+    );
+    test1Computation->addStmt(s7);
+
+    ofstream dotFileStream3("phi_test1.txt");
+    cout << "Entering toDot()" << "\n";
+    string dotString3 = test1Computation->toDotString(); //name of computation
+    dotFileStream3 << dotString3;
+    dotFileStream3.close();
+    //Write codegen to a file
+    ofstream outStream3;
+    outStream3.open("phi_test1.c");
+    outStream3 << test1Computation->codeGen();
+    outStream3.close();
+    
 }
