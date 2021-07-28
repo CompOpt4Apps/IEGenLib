@@ -183,6 +183,7 @@ class CompGraph {
     void reduceStmts(int toLevel);
     void reduceDataSpaces();
     void reduceDataSpaces(int toLevel);
+    void reduceNormalNodes();
 
     void fusePCRelations();
 

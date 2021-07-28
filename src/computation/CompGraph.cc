@@ -519,6 +519,20 @@ void CompGraph::reduceDataSpaces(int toLevel) {
     legend.insert(NodeTypes::hidden);
 }
 
+void CompGraph::reduceNormalNodes() {
+    for (auto pair : stmtNodes) {
+        if (pair.second->getType() == stmt) {
+            pair.second->setType(hidden);
+        }
+    }
+    for (auto pair : dataNodes) {
+        if (pair.second->getType() == data) {
+            pair.second->setType(hidden);
+        }
+    }
+    legend.insert(NodeTypes::hidden);
+}
+
 void CompGraph::fusePCRelations() {
     auto it = stmtNodes.begin();
     while (it != stmtNodes.end()) {
