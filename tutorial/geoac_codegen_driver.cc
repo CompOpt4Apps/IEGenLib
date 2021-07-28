@@ -3670,8 +3670,8 @@ Computation* Find_Segment_Computation(){
 
     //Creating s0
     //if(x >= x_vals[i] && x <= x_vals[i+1]) prev = i;
-    Stmt*  s0 = new Stmt("if($x$ >= $x_vals$[i] && $x$ <= $x_vals$[i+1]) $prev$ = i;",
-        "{[i]: i>=0 && i<$length$-1}",  //Iteration schedule
+    Stmt*  s0 = new Stmt("$prev$ = i;",
+        "{[i]: i>=0 && i<$length$-1 && $x$ >= $x_vals$ && $x$ <= $x_vals$}",  //Iteration schedule
         "{[i]->[0, i, 0]}", //Execution schedule - scheduling statement to be first (scheduling function)
         {
             {"$x$","{[0]->[0]}"},
