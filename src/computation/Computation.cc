@@ -214,7 +214,7 @@ void Computation::addPhiNode(std::pair<int, std::string> &first, std::pair<int, 
 //    std::cerr << "\t-> " << sourceIS->prettyPrintString() << std::endl;
 
     // Stores all data spaces in the first write's constraints
-    std::vector<std::string> trimmedNames;
+    std::set<std::string> trimmedNames;
     // Project out everything in the first write's iteration space
     Stmt* firstStmt = getStmt(first.first);
     Set* firstIS = trimISDataSpaces(firstStmt->getIterationSpace(), trimmedNames);
@@ -359,7 +359,7 @@ Set* Computation::trimISDataSpaces(Set* set) {
     return s;
 }
 
-Set* Computation::trimISDataSpaces(Set* set, std::vector<std::string> &trimmedNames) {
+Set* Computation::trimISDataSpaces(Set* set, std::set<std::string> &trimmedNames) {
     std::string setStr = set->getString();
     int pos = setStr.find('$');
     while (pos != std::string::npos) {
@@ -370,7 +370,7 @@ Set* Computation::trimISDataSpaces(Set* set, std::vector<std::string> &trimmedNa
             setStr = begin + end;
             break;
         }
-        trimmedNames.push_back(end.substr(0, pos));
+        trimmedNames.insert(end.substr(0, pos));
         setStr = begin + end.substr(0, pos) + end.substr(pos + 1);
         pos = setStr.find('$');
     }

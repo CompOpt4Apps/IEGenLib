@@ -93,7 +93,7 @@ class Computation {
     //  all trimmed data spaces are stored in dataSpaces if passed in 
     //  returns the new trimmed set, which must be deallocated by the caller
     Set* trimISDataSpaces(Set* set);
-    Set* trimISDataSpaces(Set* set, std::vector<std::string> &trimmedNames);
+    Set* trimISDataSpaces(Set* set, std::set<std::string> &trimmedNames);
 
     //! Returns true if stmt1 is guaranteed to have executed by
     //  the time stmt2 is reached, false otherwise
