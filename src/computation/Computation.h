@@ -10,7 +10,7 @@
  *
  * \date Started: 10/09/20
  *
- * \authors Anna Rift, Tobi Popoola
+ * \authors Anna Rift, Tobi Popoola, Aaron Orenstein
  *
  * Copyright (c) 2020, University of Arizona <br>
  * Copyright (c) 2020, Boise State University <br>
@@ -114,16 +114,17 @@ class Computation {
     int isWrittenTo(std::string dataSpace);
     //! Replace data space name if written to
     void replaceDataSpaceName(std::string original, std::string newString);
-    //! Gets color of data space for writing to dot file
-    std::string getDataSpaceDotColor(std::string dataSpaceName);
     //! Produces a rename for the inputted data space, incrementing dataRenameCnt
     std::string getDataSpaceRename(std::string dataSpaceName);
+    //! Checks if the given data space is an array with only constant accesses
+    bool isConstArray(std::string dataSpaceName);
+
     //! Trims dollar signs off of data space
-    std::string trimDataSpaceName(std::string dataSpaceName);
+    static std::string trimDataSpaceName(std::string dataSpaceName);
     //! Gets original data space name by trimming off final "__w__#" sequence
-    std::string getOriginalDataSpaceName(std::string dataSpaceName);
+    static std::string getOriginalDataSpaceName(std::string dataSpaceName);
     //! Returns if a and b are renames of the same dataspace
-    bool areEquivalentRenames(std::string a, std::string b);
+    static bool areEquivalentRenames(std::string a, std::string b);
 
     //! Add a (formal) parameter to this Computation, including adding it as a data space.
     //! @param paramName Name of the parameter
@@ -149,6 +150,8 @@ class Computation {
     void addReturnValue(std::string name, bool isDataSpace);
     //! Get the list of return values
     std::vector<std::string> getReturnValues() const;
+    //! Gets all active out data spaces - return values and reference parameters
+    std::vector<std::string> getActiveOutValues() const;
     //! Check if a data space is a return values
     bool isReturnValue(std::string dataSpaceName) const;
     //! Get the number of return values this Computation has (some languages
@@ -279,10 +282,17 @@ class Computation {
     void fuse (int s1, int s2, int fuseLevel);
    
     private:
-    //! For each write in the new statement, rename the written dataspace in all
-    //  statements from the last statement to the last write to that data space.
-    void updateDataSpaceVersions(Stmt* stmt);
-    
+
+    //! maps array name : true - has constant accesses at all dimensions
+    std::map<std::string, bool> arrays;
+    //! Performs special SSA renaming on arrays
+    //  splits constant-access arrays into separate data spaces
+    void enforceArraySSA(Stmt* stmt);
+    //! Performs special SSA renaming for the data space
+    //  at the specified read/write index in stmt
+    //  returns true if successful, false otherwise
+    bool enforceArraySSA(Stmt* stmt, int dataIdx, bool isRead);
+ 
     //! Locates phi nodes for a given statement. These occur when a data space
     //  which is being read can take multiple values based on the control flow
     void locatePhiNodes(Stmt* stmt);
@@ -290,12 +300,14 @@ class Computation {
     //! Adds in a phi node
     void addPhiNode(std::pair<int, std::string> &first, std::pair<int, std::string> &guaranteed, Stmt* srcStmt);
 
+    //! For each write in the new statement, rename the written dataspace in all
+    //  statements from the last statement to the last write to that data space.
+    void enforceSSA(Stmt* stmt);
+ 
     //! Information on all statements in the Computation
     std::vector<Stmt*> stmts;
     
-    //std::unordered_set<std::string> dataSpaces;
     //! Data spaces available in the Computation, pairs of name : type
-    //std::vector<std::pair<std::string, std::string>> dataSpaces;  
     std::map<std::string, std::string> dataSpaces;
 
     //! Parameters of the computation. All parameters should also be data spaces.
@@ -405,6 +417,8 @@ class Stmt {
     void addRead(std::string dataSpace, std::string relationStr);
     //! Add a data read, adopting the given relation
     void addRead(std::string dataSpace, Relation* relation);
+    //! Update read
+    void updateRead(int idx, std::string dataSpace, std::string relationStr);
     //! Get the number of data reads for this statement
     unsigned int getNumReads() const;
     //! Get a data read's data space by index
@@ -419,6 +433,8 @@ class Stmt {
     void addWrite(std::string dataSpace, std::string relationStr);
     //! Add a data write, adopting the given relation
     void addWrite(std::string dataSpace, Relation* relation);
+    //! Update write
+    void updateWrite(int idx, std::string dataSpace, std::string relationStr);
     //! Get the number of data writes for this statement
     unsigned int getNumWrites() const;
     //! Get a data write's data space by index
@@ -438,7 +454,15 @@ class Stmt {
 
     std::string prettyPrintString() const;
 
+    // Getter/setters for Stmt booleans
+    bool isPhiNode() const { return phiNode; }
+    void setPhiNode() { phiNode = true; };
+    bool isArrayAccess() const { return arrayAccess; }
+    void setArrayAccess() { arrayAccess = true; };
+
    private:
+    //! Is the statement a phi node or array access
+    bool phiNode = false, arrayAccess = false;
     //! Debug string
     std::vector<string> debug;
     //! Source code of the statement, for debugging purposes
