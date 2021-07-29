@@ -40,7 +40,7 @@ int forComp2(Computation* c, int i, int idx) {
     //for(int n = 0; n < 3; n++){
     //    int loopN = n;
     c->addDataSpace("$loopN$", "int");
-    Stmt* s47a = new Stmt("$loopN$ = n;",
+    Stmt* s47a = new Stmt("$loopN$ = "+n+";",
           "{[0]: GeoAc_CalcAmp = 1}",
           "{[0]->["+std::to_string(i++)+"]}",
           {},
@@ -69,7 +69,7 @@ int forComp2(Computation* c, int i, int idx) {
 
     //Creating s48
     //sources.dc[3] += R_lt[n]*c_diff(r,theta,phi,loopN,spl.Temp_Spline);
-    Stmt* s48 = new Stmt("$sources_dc$[3] += $R_lt$["+n+"]*"+cDiff3CompRes.returnValues.back()+";",
+    Stmt* s48 = new Stmt("$sources_dc$[3] = $sources_dc$[3] + $R_lt$["+n+"]*"+cDiff3CompRes.returnValues.back()+";",
         "{[0]: GeoAc_CalcAmp = 1}",
         "{[0]->["+std::to_string(i++)+"]}",
         {
@@ -83,7 +83,7 @@ int forComp2(Computation* c, int i, int idx) {
 
     //Creating s49
     //sources.dw[3] += 0.0; //The w_diff function always returns 0
-    Stmt* s49 = new Stmt("$sources_dw$[3] += 0;",
+    Stmt* s49 = new Stmt("$sources_dw$[3] = $sources_dw$[3] + 0;",
         "{[0]: GeoAc_CalcAmp = 1}",
         "{[0]->["+std::to_string(i++)+"]}",
         {{"$sources_dw$", "{[0]->[3]}"}},
@@ -110,7 +110,7 @@ int forComp2(Computation* c, int i, int idx) {
 
     //Creating s50
     //sources.dv[3] += R_lt["+n+"]*v_diff(r,theta,phi,loopN,spl_Windv_Spline_;
-    Stmt* s50 = new Stmt("$sources_dv$[3] += $R_lt$["+n+"]*"+vDiff3CompRes.returnValues.back()+";",
+    Stmt* s50 = new Stmt("$sources_dv$[3] = $sources_dv$[3] + $R_lt$["+n+"]*"+vDiff3CompRes.returnValues.back()+";",
         "{[0]: GeoAc_CalcAmp = 1}",
         "{[0]->["+std::to_string(i++)+"]}",
         {
@@ -141,7 +141,7 @@ int forComp2(Computation* c, int i, int idx) {
 
     //Creating s51
     //sources.du[3] += R_lt["+n+"]*u_diff(r,theta,phi,n,spl_Windu_Spline_;
-    Stmt* s51 = new Stmt("$sources_du$[3] += $R_lt$["+n+"]*"+uDiff3CompRes.returnValues.back()+";",
+    Stmt* s51 = new Stmt("$sources_du$[3] = $sources_du$[3] + $R_lt$["+n+"]*"+uDiff3CompRes.returnValues.back()+";",
         "{[0]: GeoAc_CalcAmp = 1}",
         "{[0]->["+std::to_string(i++)+"]}",
         {
@@ -172,7 +172,7 @@ int forComp2(Computation* c, int i, int idx) {
 
     //Creating s52
     //sources.dc[4] += R_lp["+n+"]*c_diff(r,theta,phi,n,spl.Temp_Spline);
-    Stmt* s52 = new Stmt("$sources_dc$[4] += $R_lp$["+n+"]*"+cDiff4CompRes.returnValues.back()+";",
+    Stmt* s52 = new Stmt("$sources_dc$[4] = $sources_dc$[4] + $R_lp$["+n+"]*"+cDiff4CompRes.returnValues.back()+";",
         "{[0]: GeoAc_CalcAmp = 1}",
         "{[0]->["+std::to_string(i++)+"]}",
         {
@@ -186,7 +186,7 @@ int forComp2(Computation* c, int i, int idx) {
 
     //Creating s53
     //sources.dw[4] += 0.0; //The w_diff function always returns 0
-    Stmt* s53 = new Stmt("$sources_dw$[4] += 0;",
+    Stmt* s53 = new Stmt("$sources_dw$[4] = $sources_dw$[4] + 0;",
         "{[0]: GeoAc_CalcAmp = 1}",
         "{[0]->["+std::to_string(i++)+"]}",
         {{"$sources_dw$", "{[0]->[4]}"}},
@@ -213,7 +213,7 @@ int forComp2(Computation* c, int i, int idx) {
 
     //Creating s54
     //sources.dv[4] += R_lp["+n+"]*v_diff(r,theta,phi,loopN,spl_Windv_Spline_;
-    Stmt* s54 = new Stmt("$sources_dv$[4] += $R_lp$["+n+"]*"+vDiff4CompRes.returnValues.back()+";",
+    Stmt* s54 = new Stmt("$sources_dv$[4] = $sources_dv$[4] + $R_lp$["+n+"]*"+vDiff4CompRes.returnValues.back()+";",
         "{[0]: GeoAc_CalcAmp = 1}",
         "{[0]->["+std::to_string(i++)+"]}",
        {
@@ -244,7 +244,7 @@ int forComp2(Computation* c, int i, int idx) {
 
     //Creating s55
     //sources.du[4] += R_lp["+n+"]*u_diff(r,theta,phi,n,spl_Windu_Spline_;
-    Stmt* s55 = new Stmt("$sources_du$[4] += $R_lp$["+n+"]*"+uDiff4CompRes.returnValues.back()+";",
+    Stmt* s55 = new Stmt("$sources_du$[4] = $sources_du$[4] + $R_lp$["+n+"]*"+uDiff4CompRes.returnValues.back()+";",
         "{[0]: GeoAc_CalcAmp = 1}",
         "{[0]->["+std::to_string(i++)+"]}",
         {
@@ -271,7 +271,7 @@ int forComp3(Computation* c, int i, int idx, int idx2) {
     std::string n = std::to_string(idx), m = std::to_string(idx2);
 
     c->addDataSpace("$loopN$", "int");
-    Stmt* s56a1 = new Stmt("$loopN$ = n;",
+    Stmt* s56a1 = new Stmt("$loopN$ = "+n+";",
           "{[0]: GeoAc_CalcAmp = 1}",
           "{[0]->["+std::to_string(i++)+"]}",
           {},
@@ -285,7 +285,7 @@ int forComp3(Computation* c, int i, int idx, int idx2) {
     //for(int m = 0; m < 3; m++){
     //    int loopM = m;
     c->addDataSpace("$loopM$", "int");
-    Stmt* s56a = new Stmt("$loopM$ = m;",
+    Stmt* s56a = new Stmt("$loopM$ = "+m+";",
           "{[0]: GeoAc_CalcAmp = 1}",
           "{[0]->["+std::to_string(i++)+"]}",
           {},
@@ -315,7 +315,7 @@ int forComp3(Computation* c, int i, int idx, int idx2) {
 
     //Creating s56
     //sources.ddc[m][0] += R_lt[n]*c_ddiff(r, theta, phi, m, n, spl.Temp_Spline);
-    Stmt* s56 = new Stmt("$sources_ddc$["+m+"][0] += $R_lt$["+n+"]*"+cDdiffCompRes.returnValues.back()+";",
+    Stmt* s56 = new Stmt("$sources_ddc$["+m+"][0] = $sources_ddc$["+m+"][0] + $R_lt$["+n+"]*"+cDdiffCompRes.returnValues.back()+";",
         "{[0]: GeoAc_CalcAmp = 1}",
         "{[0]->["+std::to_string(i++)+"]}",
         {
@@ -329,7 +329,7 @@ int forComp3(Computation* c, int i, int idx, int idx2) {
 
     //Creating s57
     //sources.ddw[m][0] += R_lt[n]*w_ddiff(r, theta, phi, m, n); //The w_ddiff function always returns 0
-    Stmt* s57 = new Stmt("$sources_ddw$["+m+"][0] += 0;",
+    Stmt* s57 = new Stmt("$sources_ddw$["+m+"][0] = $sources_ddw$["+m+"][0] + 0;",
         "{[0]: GeoAc_CalcAmp = 1}",
         "{[0]->["+std::to_string(i++)+"]}",
         {
@@ -361,11 +361,11 @@ int forComp3(Computation* c, int i, int idx, int idx2) {
 
     //Creating s58
     //sources.ddv[m][0] += R_lt[n]*v_ddiff(r, theta, phi, m, n, spl_Windv_Spline_;
-    Stmt* s58 = new Stmt("$sources_ddv$["+m+"][0] += $R_lt$["+n+"]*"+vDdiffCompRes.returnValues.back()+";",
+    Stmt* s58 = new Stmt("$sources_ddv$["+m+"][0] = $sources_ddv$["+m+"][0] + $R_lt$["+n+"]*"+vDdiffCompRes.returnValues.back()+";",
         "{[0]: GeoAc_CalcAmp = 1}",
         "{[0]->["+std::to_string(i++)+"]}",
         {
-            {"$sources_ddv$", "{[0]->[0,"+m+"]}"},
+            {"$sources_ddv$", "{[0]->["+m+",0]}"},
             {"$R_lt$","{[0]->["+n+"]}"},
             {vDdiffCompRes.returnValues.back(), "{[0]->[0]}"}
         },
@@ -393,7 +393,7 @@ int forComp3(Computation* c, int i, int idx, int idx2) {
 
     //Creating s59
     //sources.ddu[m][0] += R_lt[n]*v_ddiff(r, theta, phi, m, n, spl_Windv_Spline_;
-    Stmt* s59 = new Stmt("$sources_ddu$["+m+"][0] += $R_lt$["+n+"]*"+uDdiffCompRes.returnValues.back()+";",
+    Stmt* s59 = new Stmt("$sources_ddu$["+m+"][0] = $sources_ddu$["+m+"][0] + $R_lt$["+n+"]*"+uDdiffCompRes.returnValues.back()+";",
         "{[0]: GeoAc_CalcAmp = 1}",
         "{[0]->["+std::to_string(i++)+"]}",
         {
@@ -424,7 +424,7 @@ int forComp3(Computation* c, int i, int idx, int idx2) {
 
     //Creating s60
     //sources.ddc[m][1] += R_lp[n]*c_ddiff(r, theta, phi, m, n, spl.Temp_Spline);
-    Stmt* s60 = new Stmt("$sources_ddc$["+m+"][1] += $R_lp$["+n+"]*"+cDdiff1CompRes.returnValues.back()+";",
+    Stmt* s60 = new Stmt("$sources_ddc$["+m+"][1] = $sources_ddc$["+m+"][1] + $R_lp$["+n+"]*"+cDdiff1CompRes.returnValues.back()+";",
         "{[0]: GeoAc_CalcAmp = 1}",
         "{[0]->["+std::to_string(i++)+"]}",
         {
@@ -438,7 +438,7 @@ int forComp3(Computation* c, int i, int idx, int idx2) {
 
     //Creating s61
     //sources.ddw[m][1] += R_lp[n]*w_ddiff(r, theta, phi, m, n); //The w_ddiff function always returns 0
-    Stmt* s61 = new Stmt("$sources_ddw$["+m+"][1] += 0;",
+    Stmt* s61 = new Stmt("$sources_ddw$["+m+"][1] = $sources_ddw$["+m+"][1] + 0;",
         "{[0]: GeoAc_CalcAmp = 1}",
         "{[0]->["+std::to_string(i++)+"]}",
         {
@@ -469,7 +469,7 @@ int forComp3(Computation* c, int i, int idx, int idx2) {
 
     //Creating s62
     //sources.ddv[m][1] += R_lp[n]*v_ddiff(r, theta, phi, m, n, spl_Windv_Spline_;
-    Stmt* s62 = new Stmt("$sources_ddv$["+m+"][1] += $R_lp$["+n+"]*"+vDdiff1CompRes.returnValues.back()+";",
+    Stmt* s62 = new Stmt("$sources_ddv$["+m+"][1] = $sources_ddv$["+m+"][1] + $R_lp$["+n+"]*"+vDdiff1CompRes.returnValues.back()+";",
         "{[0]: GeoAc_CalcAmp = 1}",
         "{[0]->["+std::to_string(i++)+"]}",
         {
@@ -500,10 +500,11 @@ int forComp3(Computation* c, int i, int idx, int idx2) {
 
     //Creating s63
     //sources.ddu[m][1] += R_lp[n]*u_ddiff(r, theta, phi, m, n, spl_Windu_Spline_;
-    Stmt* s63 = new Stmt("$sources_ddu$["+m+"][1] += $R_lp$["+n+"]*"+uDdiff1CompRes.returnValues.back()+";",
+    Stmt* s63 = new Stmt("$sources_ddu$["+m+"][1] = $sources_ddu$["+m+"][1] + $R_lp$["+n+"]*"+uDdiff1CompRes.returnValues.back()+";",
         "{[0]: GeoAc_CalcAmp = 1}",
         "{[0]->["+std::to_string(i++)+"]}",
         {
+            {"$sources_ddu$", "{[0]->["+m+",1]}"},
             {"$R_lp$","{[0]->["+n+"]}"},
             {uDdiff1CompRes.returnValues.back(), "{[0]->[0]}"}
         },
@@ -627,66 +628,66 @@ int main(int argc, char **argv){
     //SplineStruct
     updateSources->addParameter("$sources_r_cnt$", "int&");
     updateSources->addParameter("$sources_accel$", "int&");
-    updateSources->addParameter("$sources_r_vals$", "double*");
-    updateSources->addParameter("$sources_T_vals$", "double*");
-    updateSources->addParameter("$sources_u_vals$", "double*");
-    updateSources->addParameter("$sources_v_vals$", "double*");
-    updateSources->addParameter("$sources_rho_vals$", "double*");
+    updateSources->addParameter("$sources_r_vals$", "double*&");
+    updateSources->addParameter("$sources_T_vals$", "double*&");
+    updateSources->addParameter("$sources_u_vals$", "double*&");
+    updateSources->addParameter("$sources_v_vals$", "double*&");
+    updateSources->addParameter("$sources_rho_vals$", "double*&");
 
     //SplineStruct.Temp_Spline
     updateSources->addParameter("$spl_Temp_Spline_length$", "int&");
     updateSources->addParameter("$spl_Temp_Spline_accel$", "int&");
-    updateSources->addParameter("$spl_Temp_Spline_x_vals$", "double*");
-    updateSources->addParameter("$spl_Temp_Spline_f_vals$", "double*");
-    updateSources->addParameter("$spl_Temp_Spline_slopes$", "double*");
+    updateSources->addParameter("$spl_Temp_Spline_x_vals$", "double*&");
+    updateSources->addParameter("$spl_Temp_Spline_f_vals$", "double*&");
+    updateSources->addParameter("$spl_Temp_Spline_slopes$", "double*&");
 
     //SplineStruct.Windu_Spline
     updateSources->addParameter("$spl_Windu_Spline_length$", "int&");
     updateSources->addParameter("$spl_Windu_Spline_accel$", "int&");
-    updateSources->addParameter("$spl_Windu_Spline_x_vals$", "double*");
-    updateSources->addParameter("$spl_Windu_Spline_f_vals$", "double*");
-    updateSources->addParameter("$spl_Windu_Spline_slopes$", "double*");
+    updateSources->addParameter("$spl_Windu_Spline_x_vals$", "double*&");
+    updateSources->addParameter("$spl_Windu_Spline_f_vals$", "double*&");
+    updateSources->addParameter("$spl_Windu_Spline_slopes$", "double*&");
 
     //SplineStruct.Windv_Spline
     updateSources->addParameter("$spl_Windv_Spline_length$", "int&");
     updateSources->addParameter("$spl_Windv_Spline_accel$", "int&");
-    updateSources->addParameter("$spl_Windv_Spline_x_vals$", "double*");
-    updateSources->addParameter("$spl_Windv_Spline_f_vals$", "double*");
-    updateSources->addParameter("$spl_Windv_Spline_slopes$", "double*");
+    updateSources->addParameter("$spl_Windv_Spline_x_vals$", "double*&");
+    updateSources->addParameter("$spl_Windv_Spline_f_vals$", "double*&");
+    updateSources->addParameter("$spl_Windv_Spline_slopes$", "double*&");
 
     //SplineStruct.Density_Spline
     updateSources->addParameter("$spl_Density_Spline_length$", "int&");
     updateSources->addParameter("$spl_Density_Spline_accel$", "int&");
-    updateSources->addParameter("$spl_Density_Spline_x_vals$", "double*");
-    updateSources->addParameter("$spl_Density_Spline_f_vals$", "double*");
-    updateSources->addParameter("$spl_Density_Spline_slopes$", "double*");
+    updateSources->addParameter("$spl_Density_Spline_x_vals$", "double*&");
+    updateSources->addParameter("$spl_Density_Spline_f_vals$", "double*&");
+    updateSources->addParameter("$spl_Density_Spline_slopes$", "double*&");
 
     //GeoAc_Sources_Struct
-    updateSources->addParameter("$sources_src_loc$", "double*");
+    updateSources->addParameter("$sources_src_loc$", "double*&");
     updateSources->addParameter("$sources_c0$", "double&");
     updateSources->addParameter("$sources_c$", "double&");
-    updateSources->addParameter("$sources_dc$", "double*");
-    updateSources->addParameter("$sources_ddc$", "double (*)[2]");
+    updateSources->addParameter("$sources_dc$", "double*&");
+    updateSources->addParameter("$sources_ddc$", "double (*)[2]&");
     updateSources->addParameter("$sources_w$", "double&");
-    updateSources->addParameter("$sources_dw$", "double*");
-    updateSources->addParameter("$sources_ddw$", "double (*)[2]");
+    updateSources->addParameter("$sources_dw$", "double*&");
+    updateSources->addParameter("$sources_ddw$", "double (*)[2]&");
     updateSources->addParameter("$sources_v$", "double&");
-    updateSources->addParameter("$sources_dv$", "double*");
-    updateSources->addParameter("$sources_ddv$", "double (*)[2]");
+    updateSources->addParameter("$sources_dv$", "double*&");
+    updateSources->addParameter("$sources_ddv$", "double (*)[2]&");
     updateSources->addParameter("$sources_u$", "double&");
-    updateSources->addParameter("$sources_du$", "double*");
-    updateSources->addParameter("$sources_ddu$", "double (*)[2]");
+    updateSources->addParameter("$sources_du$", "double*&");
+    updateSources->addParameter("$sources_ddu$", "double (*)[2]&");
     updateSources->addParameter("$sources_nu0$", "double&");
     updateSources->addParameter("$sources_nu_mag$", "double&");
-    updateSources->addParameter("$sources_dnu_mag$", "double*");
-    updateSources->addParameter("$sources_c_gr$", "double*");
+    updateSources->addParameter("$sources_dnu_mag$", "double*&");
+    updateSources->addParameter("$sources_c_gr$", "double*&");
     updateSources->addParameter("$sources_c_gr_mag$", "double&");
-    updateSources->addParameter("$sources_dc_gr$", "double (*)[2]");
-    updateSources->addParameter("$sources_dc_gr_mag$", "double*");
-    updateSources->addParameter("$sources_GeoCoeff$", "double*");
-    updateSources->addParameter("$sources_d_GeoCoeff$", "double (*)[2]");
-    updateSources->addParameter("$sources_GeoTerms$", "double*");
-    updateSources->addParameter("$sources_d_GeoTerms$", "double (*)[2]");
+    updateSources->addParameter("$sources_dc_gr$", "double (*)[2]&");
+    updateSources->addParameter("$sources_dc_gr_mag$", "double*&");
+    updateSources->addParameter("$sources_GeoCoeff$", "double*&");
+    updateSources->addParameter("$sources_d_GeoCoeff$", "double (*)[2]&");
+    updateSources->addParameter("$sources_GeoTerms$", "double*&");
+    updateSources->addParameter("$sources_d_GeoTerms$", "double (*)[2]&");
 
 
     // double r = current_values[0], theta = current_values[1], phi = current_values[2];
@@ -1277,7 +1278,7 @@ int main(int argc, char **argv){
 
     //Creating S28
     //sources.GeoTerms[0] += 1.0/r * (nu[1]*sources.c_gr[1] + nu[2]*sources.c_gr[2]);
-    Stmt* s28 = new Stmt("$sources_GeoTerms$[0] += 1.0/$r$ * ($nu$[1]*$sources_c_gr$[1] + $nu$[2]*$sources_c_gr$[2]);",
+    Stmt* s28 = new Stmt("$sources_GeoTerms$[0] = $sources_GeoTerms$[0] + 1.0/$r$ * ($nu$[1]*$sources_c_gr$[1] + $nu$[2]*$sources_c_gr$[2]);",
       "{[0]}",
       "{[0]->["+std::to_string(newTuplePos+12)+"]}",
       {
@@ -1294,7 +1295,7 @@ int main(int argc, char **argv){
 
     //Creating s29
     //sources.GeoTerms[1] += -nu[0]*sources.c_gr[1] + nu[2]*sources.c_gr[2]*tan(theta);
-    Stmt* s29 = new Stmt("$sources_GeoTerms$[1] += -$nu$[0]*$sources_c_gr$[1] + $nu$[2]*$sources_c_gr$[2]*tan($theta$);",
+    Stmt* s29 = new Stmt("$sources_GeoTerms$[1] = $sources_GeoTerms$[1] + -$nu$[0]*$sources_c_gr$[1] + $nu$[2]*$sources_c_gr$[2]*tan($theta$);",
       "{[0]}",
       "{[0]->["+std::to_string(newTuplePos+13)+"]}",
       {
@@ -1311,10 +1312,11 @@ int main(int argc, char **argv){
 
     //Creating s30
     //sources.GeoTerms[2] += -sources.c_gr[2]*(nu[0]*cos(theta) + nu[1]*sin(theta));
-    Stmt* s30 = new Stmt("$sources_GeoTerms$[2] += -$sources_c_gr$[2]*($nu$[0]*cos($theta$) + $nu$[1]*sin($theta$));",
+    Stmt* s30 = new Stmt("$sources_GeoTerms$[2] = $sources_GeoTerms$[2] + -$sources_c_gr$[2]*($nu$[0]*cos($theta$) + $nu$[1]*sin($theta$));",
         "{[0]}",
         "{[0]->["+std::to_string(newTuplePos+14)+"]}",
         {
+            {"$sources_GeoTerms$", "{[0]->[2]}"},
             {"$sources_c_gr$", "{[0]->[2]}"},
             {"$nu$", "{[0]->[0]}"},
             {"$theta$", "{[0]->[0]}"},
@@ -1920,7 +1922,7 @@ int main(int argc, char **argv){
     //Creating s83
     //sources.d_GeoTerms[0][0] += -R_lt[0]/pow(r,2)*(nu[1]*sources.c_gr[1] + nu[2]*sources.c_gr[2])
     //                                        + 1.0/r*(mu_lt[1]*sources.c_gr[1] + nu[1]*sources.dc_gr[1][0] + mu_lt[2]*sources.c_gr[2] + nu[2]*sources.dc_gr[2][0]);
-    Stmt* s83 = new Stmt("$sources_d_GeoTerms$[0][0] += -$R_lt$[0]/pow($r$,2)*($nu$[1]*$sources_c_gr$[1] + $nu$[2]*$sources_c_gr$[2])+ 1.0/$r$*($mu_lt$[1]*$sources_c_gr$[1] + $nu$[1]*$sources_dc_gr$[1][0] + $mu_lt$[2]*$sources_c_gr$[2] + $nu$[2]*$sources_dc_gr$[2][0]);",
+    Stmt* s83 = new Stmt("$sources_d_GeoTerms$[0][0] = $sources_d_GeoTerms$[0][0] + -$R_lt$[0]/pow($r$,2)*($nu$[1]*$sources_c_gr$[1] + $nu$[2]*$sources_c_gr$[2])+ 1.0/$r$*($mu_lt$[1]*$sources_c_gr$[1] + $nu$[1]*$sources_dc_gr$[1][0] + $mu_lt$[2]*$sources_c_gr$[2] + $nu$[2]*$sources_dc_gr$[2][0]);",
         "{[0]: GeoAc_CalcAmp = 1}",
         "{[0]->["+std::to_string(newTuplePos++)+"]}",
         {
@@ -1943,7 +1945,7 @@ int main(int argc, char **argv){
 
     //Creating s84
     //sources.d_GeoTerms[1][0] += -mu_lt[0]*sources.c_gr[1] - nu[0]*sources.dc_gr[1][0] + mu_lt[2]*sources.c_gr[2]*tan(theta) + nu[2]*sources.dc_gr[2][0]*tan(theta) + nu[2]*sources.c_gr[2]*R_lt[1]/pow(cos(theta),2);
-    Stmt* s84 = new Stmt("$sources_d_GeoTerms$[1][0] += -$mu_lt$[0]*$sources_c_gr$[1] - $nu$[0]*$sources_dc_gr$[1][0] + $mu_lt$[2]*$sources_c_gr$[2]*tan($theta$) + $nu$[2]*$sources_dc_gr$[2][0]*tan($theta$) + $nu$[2]*$sources_c_gr$[2]*$R_lt$[1]/pow(cos($theta$),2);",
+    Stmt* s84 = new Stmt("$sources_d_GeoTerms$[1][0] = $sources_d_GeoTerms$[1][0] + -$mu_lt$[0]*$sources_c_gr$[1] - $nu$[0]*$sources_dc_gr$[1][0] + $mu_lt$[2]*$sources_c_gr$[2]*tan($theta$) + $nu$[2]*$sources_dc_gr$[2][0]*tan($theta$) + $nu$[2]*$sources_c_gr$[2]*$R_lt$[1]/pow(cos($theta$),2);",
         "{[0]: GeoAc_CalcAmp = 1}",
         "{[0]->["+std::to_string(newTuplePos++)+"]}",
         {
@@ -1965,7 +1967,7 @@ int main(int argc, char **argv){
 
     //Creating s85
     //sources.d_GeoTerms[2][0] += -sources.dc_gr[2][0]*(nu[0]*cos(theta) + nu[1]*sin(theta)) - sources.c_gr[2]*(mu_lt[0]*cos(theta) - nu[0]*R_lt[1]*sin(theta) + mu_lt[1]*sin(theta) + nu[1]*R_lt[1]*cos(theta));
-    Stmt* s85 = new Stmt("$sources_d_GeoTerms$[2][0] += -$sources_dc_gr$[2][0]*($nu$[0]*cos($theta$) + $nu$[1]*sin($theta$)) - $sources_c_gr$[2]*($mu_lt$[0]*cos($theta$) - $nu$[0]*$R_lt$[1]*sin($theta$) + $mu_lt$[1]*sin($theta$) + $nu$[1]*$R_lt$[1]*cos($theta$));",
+    Stmt* s85 = new Stmt("$sources_d_GeoTerms$[2][0] = $sources_d_GeoTerms$[2][0] + -$sources_dc_gr$[2][0]*($nu$[0]*cos($theta$) + $nu$[1]*sin($theta$)) - $sources_c_gr$[2]*($mu_lt$[0]*cos($theta$) - $nu$[0]*$R_lt$[1]*sin($theta$) + $mu_lt$[1]*sin($theta$) + $nu$[1]*$R_lt$[1]*cos($theta$));",
         "{[0]: GeoAc_CalcAmp = 1}",
         "{[0]->["+std::to_string(newTuplePos++)+"]}",
         {
@@ -2041,7 +2043,7 @@ int main(int argc, char **argv){
     //Creating s89
     //sources.d_GeoTerms[0][1] += -R_lp[0]/pow(r,2)*(nu[1]*sources.c_gr[1] + nu[2]*sources.c_gr[2])
     //                                        + 1.0/r*(mu_lp[1]*sources.c_gr[1] + nu[1]*sources.dc_gr[1][1] + mu_lp[2]*sources.c_gr[2] + nu[2]*sources.dc_gr[2][1]);
-    Stmt* s89 = new Stmt("$sources_d_GeoTerms$[0][1] += -$R_lp$[0]/pow($r$,2)*($nu$[1]*$sources_c_gr$[1] + $nu$[2]*$sources_c_gr$[2])+ 1.0/$r$*($mu_lp$[1]*$sources_c_gr$[1] + $nu$[1]*$sources_dc_gr$[1][1] + $mu_lp$[2]*$sources_c_gr$[2] + $nu$[2]*$sources_dc_gr$[2][1]);",
+    Stmt* s89 = new Stmt("$sources_d_GeoTerms$[0][1] = $sources_d_GeoTerms$[0][1] + -$R_lp$[0]/pow($r$,2)*($nu$[1]*$sources_c_gr$[1] + $nu$[2]*$sources_c_gr$[2])+ 1.0/$r$*($mu_lp$[1]*$sources_c_gr$[1] + $nu$[1]*$sources_dc_gr$[1][1] + $mu_lp$[2]*$sources_c_gr$[2] + $nu$[2]*$sources_dc_gr$[2][1]);",
         "{[0]: GeoAc_CalcAmp = 1}",
         "{[0]->["+std::to_string(newTuplePos++)+"]}",
         {
@@ -2064,7 +2066,7 @@ int main(int argc, char **argv){
 
     //Creating s90
     //sources.d_GeoTerms[1][1] += -mu_lp[0]*sources.c_gr[1] - nu[0]*sources.dc_gr[1][1] + mu_lp[2]*sources.c_gr[2]*tan(theta) + nu[2]*sources.dc_gr[2][1]*tan(theta) + nu[2]*sources.c_gr[2]*R_lp[1]/pow(cos(theta),2);
-    Stmt* s90 = new Stmt("$sources_d_GeoTerms$[1][1] += -$mu_lp$[0]*$sources_c_gr$[1] - $nu$[0]*$sources_dc_gr$[1][1] + $mu_lp$[2]*$sources_c_gr$[2]*tan($theta$) + $nu$[2]*$sources_dc_gr$[2][1]*tan($theta$) + $nu$[2]*$sources_c_gr$[2]*$R_lp$[1]/pow(cos($theta$),2);",
+    Stmt* s90 = new Stmt("$sources_d_GeoTerms$[1][1] = $sources_d_GeoTerms$[1][1] + -$mu_lp$[0]*$sources_c_gr$[1] - $nu$[0]*$sources_dc_gr$[1][1] + $mu_lp$[2]*$sources_c_gr$[2]*tan($theta$) + $nu$[2]*$sources_dc_gr$[2][1]*tan($theta$) + $nu$[2]*$sources_c_gr$[2]*$R_lp$[1]/pow(cos($theta$),2);",
         "{[0]: GeoAc_CalcAmp = 1}",
         "{[0]->["+std::to_string(newTuplePos++)+"]}",
         {
@@ -2086,7 +2088,7 @@ int main(int argc, char **argv){
 
     //Creating s91
     //sources.d_GeoTerms[2][1] += -sources.dc_gr[2][1]*(nu[0]*cos(theta) + nu[1]*sin(theta)) - sources.c_gr[2]*(mu_lp[0]*cos(theta) - nu[0]*R_lp[1]*sin(theta) + mu_lp[1]*sin(theta) + nu[1]*R_lp[1]*cos(theta));
-    Stmt* s91 = new Stmt("$sources_d_GeoTerms$[2][1] += -$sources_dc_gr$[2][1]*($nu$[0]*cos($theta$) + $nu$[1]*sin($theta$)) - $sources_c_gr$[2]*($mu_lp$[0]*cos($theta$) - $nu$[0]*$R_lp$[1]*sin($theta$) + $mu_lp$[1]*sin($theta$) + $nu$[1]*$R_lp$[1]*cos($theta$));",
+    Stmt* s91 = new Stmt("$sources_d_GeoTerms$[2][1] = $sources_d_GeoTerms$[2][1] + -$sources_dc_gr$[2][1]*($nu$[0]*cos($theta$) + $nu$[1]*sin($theta$)) - $sources_c_gr$[2]*($mu_lp$[0]*cos($theta$) - $nu$[0]*$R_lp$[1]*sin($theta$) + $mu_lp$[1]*sin($theta$) + $nu$[1]*$R_lp$[1]*cos($theta$));",
         "{[0]: GeoAc_CalcAmp = 1}",
         "{[0]->["+std::to_string(newTuplePos++)+"]}",
         {
@@ -2114,7 +2116,7 @@ int main(int argc, char **argv){
     //Write codegen to a file
     ofstream outStream;
     outStream.open("codegen.c");
-    outStream << updateSources->codeGen();
+//    outStream << updateSources->codeGen();
     outStream.close();
 
     return 0;
@@ -2137,11 +2139,11 @@ Computation* u_ddiff_Computation(){
     uDdiffComputation->addParameter("$n1$","int");
     uDdiffComputation->addParameter("$n2$","int");
     //uDdiffComputation->addParameter("$Windu_Spline$", "NaturalCubicSpline_1D &");
-    uDdiffComputation->addParameter("$Windu_Spline_length$", "int");
-    uDdiffComputation->addParameter("$Windu_Spline_accel$", "int");
-    uDdiffComputation->addParameter("$Windu_Spline_x_vals$", "double*");
-    uDdiffComputation->addParameter("$Windu_Spline_f_vals$", "double*");
-    uDdiffComputation->addParameter("$Windu_Spline_slopes$", "double*");
+    uDdiffComputation->addParameter("$Windu_Spline_length$", "int&");
+    uDdiffComputation->addParameter("$Windu_Spline_accel$", "int&");
+    uDdiffComputation->addParameter("$Windu_Spline_x_vals$", "double*&");
+    uDdiffComputation->addParameter("$Windu_Spline_f_vals$", "double*&");
+    uDdiffComputation->addParameter("$Windu_Spline_slopes$", "double*&");
 
 
     //Creating statement0
@@ -2254,11 +2256,11 @@ Computation* v_ddiff_Computation(){
     vDdiffComputation->addParameter("$n1$","int");
     vDdiffComputation->addParameter("$n2$","int");
     //vDdiffComputation->addParameter("$Windv_Spline$", "NaturalCubicSpline_1D &");
-    vDdiffComputation->addParameter("$Windv_Spline_length$", "int");
-    vDdiffComputation->addParameter("$Windv_Spline_accel$", "int");
-    vDdiffComputation->addParameter("$Windv_Spline_x_vals$", "double*");
-    vDdiffComputation->addParameter("$Windv_Spline_f_vals$", "double*");
-    vDdiffComputation->addParameter("$Windv_Spline_slopes$", "double*");
+    vDdiffComputation->addParameter("$Windv_Spline_length$", "int&");
+    vDdiffComputation->addParameter("$Windv_Spline_accel$", "int&");
+    vDdiffComputation->addParameter("$Windv_Spline_x_vals$", "double*&");
+    vDdiffComputation->addParameter("$Windv_Spline_f_vals$", "double*&");
+    vDdiffComputation->addParameter("$Windv_Spline_slopes$", "double*&");
 
     //Creating statement0
     //double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);
@@ -2378,11 +2380,11 @@ Computation* c_ddiff_Computation(){
     cDdiffComputation->addParameter("$n1$","int");
     cDdiffComputation->addParameter("$n2$","int");
     //cDdiffComputation->addParameter("$Temp_Spline$","NaturalCubicSpline_1D &");
-    cDdiffComputation->addParameter("$Temp_Spline_length$", "int");
-    cDdiffComputation->addParameter("$Temp_Spline_accel$", "int");
-    cDdiffComputation->addParameter("$Temp_Spline_x_vals$", "double*");
-    cDdiffComputation->addParameter("$Temp_Spline_f_vals$", "double*");
-    cDdiffComputation->addParameter("$Temp_Spline_slopes$", "double*");
+    cDdiffComputation->addParameter("$Temp_Spline_length$", "int&");
+    cDdiffComputation->addParameter("$Temp_Spline_accel$", "int&");
+    cDdiffComputation->addParameter("$Temp_Spline_x_vals$", "double*&");
+    cDdiffComputation->addParameter("$Temp_Spline_f_vals$", "double*&");
+    cDdiffComputation->addParameter("$Temp_Spline_slopes$", "double*&");
 
     //Creating statement s0
     //double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);
@@ -2554,11 +2556,11 @@ Computation* u_diff_Computation(){
     uDiffComputation->addParameter("$phi$","double");
     uDiffComputation->addParameter("$n$","int");
     //uDiffComputation->addParameter("$Windu_Spline$", "NaturalCubicSpline_1D &");
-    uDiffComputation->addParameter("$Windu_Spline_length$", "int");
-    uDiffComputation->addParameter("$Windu_Spline_accel$", "int");
-    uDiffComputation->addParameter("$Windu_Spline_x_vals$", "double*");
-    uDiffComputation->addParameter("$Windu_Spline_f_vals$", "double*");
-    uDiffComputation->addParameter("$Windu_Spline_slopes$", "double*");
+    uDiffComputation->addParameter("$Windu_Spline_length$", "int&");
+    uDiffComputation->addParameter("$Windu_Spline_accel$", "int&");
+    uDiffComputation->addParameter("$Windu_Spline_x_vals$", "double*&");
+    uDiffComputation->addParameter("$Windu_Spline_f_vals$", "double*&");
+    uDiffComputation->addParameter("$Windu_Spline_slopes$", "double*&");
 
     //Creating statement1
     //double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);
@@ -2683,11 +2685,11 @@ Computation* v_diff_Computation(){
     vDiffComputation->addParameter("$phi$","double");
     vDiffComputation->addParameter("$n$","int");
     //vDiffComputation->addParameter("$Windv_Spline$", "NaturalCubicSpline_1D &");
-    vDiffComputation->addParameter("$Windv_Spline_length$", "int");
-    vDiffComputation->addParameter("$Windv_Spline_accel$", "int");
-    vDiffComputation->addParameter("$Windv_Spline_x_vals$", "double*");
-    vDiffComputation->addParameter("$Windv_Spline_f_vals$", "double*");
-    vDiffComputation->addParameter("$Windv_Spline_slopes$", "double*");
+    vDiffComputation->addParameter("$Windv_Spline_length$", "int&");
+    vDiffComputation->addParameter("$Windv_Spline_accel$", "int&");
+    vDiffComputation->addParameter("$Windv_Spline_x_vals$", "double*&");
+    vDiffComputation->addParameter("$Windv_Spline_f_vals$", "double*&");
+    vDiffComputation->addParameter("$Windv_Spline_slopes$", "double*&");
 
     //Creating statement0
     //double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);
@@ -2805,11 +2807,11 @@ Computation* c_diff_Computation(){
     cDiffComputation->addParameter("$phi$","double");
     cDiffComputation->addParameter("$n$","int");
     //cDiffComputation->addParameter("$Temp_Spline$","NaturalCubicSpline_1D &");
-    cDiffComputation->addParameter("$Temp_Spline_length$", "int");
-    cDiffComputation->addParameter("$Temp_Spline_accel$", "int");
-    cDiffComputation->addParameter("$Temp_Spline_x_vals$", "double*");
-    cDiffComputation->addParameter("$Temp_Spline_f_vals$", "double*");
-    cDiffComputation->addParameter("$Temp_Spline_slopes$", "double*");
+    cDiffComputation->addParameter("$Temp_Spline_length$", "int&");
+    cDiffComputation->addParameter("$Temp_Spline_accel$", "int&");
+    cDiffComputation->addParameter("$Temp_Spline_x_vals$", "double*&");
+    cDiffComputation->addParameter("$Temp_Spline_f_vals$", "double*&");
+    cDiffComputation->addParameter("$Temp_Spline_slopes$", "double*&");
 
     //Creating statement1
     //double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);
@@ -2951,11 +2953,11 @@ Computation* u_Computation(){
     uComputation->addParameter("$theta$","double");
     uComputation->addParameter("$phi$","double");
     //uComputation->addParameter("$Windu_Spline$","NaturalCubicSpline_1D &");
-    uComputation->addParameter("$Windu_Spline_length$", "int");
-    uComputation->addParameter("$Windu_Spline_accel$", "int");
-    uComputation->addParameter("$Windu_Spline_x_vals$", "double*");
-    uComputation->addParameter("$Windu_Spline_f_vals$", "double*");
-    uComputation->addParameter("$Windu_Spline_slopes$", "double*");
+    uComputation->addParameter("$Windu_Spline_length$", "int&");
+    uComputation->addParameter("$Windu_Spline_accel$", "int&");
+    uComputation->addParameter("$Windu_Spline_x_vals$", "double*&");
+    uComputation->addParameter("$Windu_Spline_f_vals$", "double*&");
+    uComputation->addParameter("$Windu_Spline_slopes$", "double*&");
 
     //Creating statement1
     //double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);
@@ -3032,11 +3034,11 @@ Computation* v_Computation(){
     vComputation->addParameter("$theta$","double");
     vComputation->addParameter("$phi$","double");
     //vComputation->addParameter("$Windv_Spline$","NaturalCubicSpline_1D &");
-    vComputation->addParameter("$Windv_Spline_length$", "int");
-    vComputation->addParameter("$Windv_Spline_accel$", "int");
-    vComputation->addParameter("$Windv_Spline_x_vals$", "double*");
-    vComputation->addParameter("$Windv_Spline_f_vals$", "double*");
-    vComputation->addParameter("$Windv_Spline_slopes$", "double*");
+    vComputation->addParameter("$Windv_Spline_length$", "int&");
+    vComputation->addParameter("$Windv_Spline_accel$", "int&");
+    vComputation->addParameter("$Windv_Spline_x_vals$", "double*&");
+    vComputation->addParameter("$Windv_Spline_f_vals$", "double*&");
+    vComputation->addParameter("$Windv_Spline_slopes$", "double*&");
 
     //Creating statement1
     //double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);
@@ -3128,11 +3130,11 @@ Computation* c_Computation(){
     cComputation->addParameter("$theta$","double");
     cComputation->addParameter("$phi$","double");
     //cComputation->addParameter("$Temp_Spline$","NaturalCubicSpline_1D &");
-    cComputation->addParameter("$Temp_Spline_length$", "int");
-    cComputation->addParameter("$Temp_Spline_accel$", "int");
-    cComputation->addParameter("$Temp_Spline_x_vals$", "double*");
-    cComputation->addParameter("$Temp_Spline_f_vals$", "double*");
-    cComputation->addParameter("$Temp_Spline_slopes$", "double*");
+    cComputation->addParameter("$Temp_Spline_length$", "int&");
+    cComputation->addParameter("$Temp_Spline_accel$", "int&");
+    cComputation->addParameter("$Temp_Spline_x_vals$", "double*&");
+    cComputation->addParameter("$Temp_Spline_f_vals$", "double*&");
+    cComputation->addParameter("$Temp_Spline_slopes$", "double*&");
 
     //Creating statement1
     //double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);
@@ -3234,11 +3236,11 @@ Computation* Eval_Spline_f_Computation(){
     Computation* evalSplineFComputation = new Computation();
     evalSplineFComputation->addParameter("$x$", "double");
     //evalSplineFComputation->addParameter("$Spline$", "struct NaturalCubicSpline_1D &");
-    evalSplineFComputation->addParameter("$Spline_length$", "int");
-    evalSplineFComputation->addParameter("$Spline_accel$", "int");
-    evalSplineFComputation->addParameter("$Spline_x_vals$", "double*");
-    evalSplineFComputation->addParameter("$Spline_f_vals$", "double*");
-    evalSplineFComputation->addParameter("$Spline_slopes$", "double*");
+    evalSplineFComputation->addParameter("$Spline_length$", "int&");
+    evalSplineFComputation->addParameter("$Spline_accel$", "int&");
+    evalSplineFComputation->addParameter("$Spline_x_vals$", "double*&");
+    evalSplineFComputation->addParameter("$Spline_f_vals$", "double*&");
+    evalSplineFComputation->addParameter("$Spline_slopes$", "double*&");
 
     Computation* FindSegmentComputation= Find_Segment_Computation();
 
@@ -3271,7 +3273,7 @@ Computation* Eval_Spline_f_Computation(){
 
     //Creating s2
     evalSplineFComputation->addDataSpace("$eval_spline_f_return$", "double");
-    Stmt* s2 = new Stmt("$eval_spline_f_return$ = 0.0;",
+    Stmt* s2 = new Stmt("$eval_spline_f_reurn$ = 0.0;",
         "{[0]}",  //Iteration schedule - Only happening one time (not iterating)
         "{[0]->["+std::to_string(newTuplePos+1)+"]}", //Execution schedule - scheduling statement to be first (scheduling function)
         {},
@@ -3289,9 +3291,10 @@ Computation* Eval_Spline_f_Computation(){
     evalSplineFComputation->addDataSpace("$A$", "double");
     evalSplineFComputation->addDataSpace("$B$", "double");
     Stmt* s3 = new Stmt("$X$ = ($x$ - $Spline_x_vals$[$k$])/($Spline_x_vals$[$k$+1] - $Spline_x_vals$[$k$]);",
-        "{[0]: k < $Spline_length$}",
+        "{[0]: $k$ < $Spline_length$}",
         "{[0]->["+std::to_string(newTuplePos+2)+"]}",
         {
+            {"$k$","{[0]->[0]}"},
             {"$x$","{[0]->[0]}"},
             {"$Spline_x_vals$","{[0]->[k1]: k1 = $k$}"},
             {"$Spline_x_vals$","{[0]->[kp1]: kp1 = $k$+1}"}
@@ -3305,9 +3308,10 @@ Computation* Eval_Spline_f_Computation(){
     evalSplineFComputation->addStmt(s3);
 
     Stmt* s4 = new Stmt("$A$ = $Spline_slopes$[$k$] * ($Spline_x_vals$[$k$+1] - $Spline_x_vals$[$k$]) - ($Spline_f_vals$[$k$+1] - $Spline_f_vals$[$k$]);",
-        "{[0]: k < $Spline_length$}",
+        "{[0]: $k$ < $Spline_length$}",
         "{[0]->["+std::to_string(newTuplePos+3)+"]}",
         {
+            {"$k$","{[0]->[0]}"},
             {"$Spline_slopes$","{[0]->[x1]: x1 = $k$}"},
             {"$Spline_x_vals$","{[0]->[kp1]: kp1 = $k$+1}"},
             {"$Spline_x_vals$","{[0]->[k1]: k1 = $k$}"},
@@ -3323,9 +3327,10 @@ Computation* Eval_Spline_f_Computation(){
     evalSplineFComputation->addStmt(s4);
 
     Stmt* s5 = new Stmt("$B$ = -$Spline_slopes$[$k$+1] * ($Spline_x_vals$[$k$+1] - $Spline_x_vals$[$k$]) + ($Spline_f_vals$[$k$+1] - $Spline_f_vals$[$k$]);",
-        "{[0]: k < $Spline_length$}",
+        "{[0]: $k$ < $Spline_length$}",
         "{[0]->["+std::to_string(newTuplePos+4)+"]}",
         {
+            {"$k$","{[0]->[0]}"},
             {"$Spline_slopes$","{[0]->[kp1]: kp1 = $k$+1}"},
             {"$Spline_x_vals$","{[0]->[kp1]: kp1 = $k$+1}"},
             {"$Spline_x_vals$","{[0]->[k1]: k1 = $k$}"},
@@ -3341,9 +3346,10 @@ Computation* Eval_Spline_f_Computation(){
     evalSplineFComputation->addStmt(s5);
 
     Stmt* s6 = new Stmt("$eval_spline_f_return$ = (1.0 - $X$) * $Spline_f_vals$[$k$] + $X$ * $Spline_f_vals$[$k$+1] + $X$ * (1.0 - $X$) * ($A$ * (1.0 - $X$ ) + $B$ * $X$);",
-        "{[0]: k < $Spline_length$}",
+        "{[0]: $k$ < $Spline_length$}",
         "{[0]->["+std::to_string(newTuplePos+5)+"]}",
         {
+            {"$k$","{[0]->[0]}"},
             {"$X$","{[0]->[0]}"},
             {"$Spline_f_vals$","{[0]->[kp1]: kp1 = $k$+1}"},
             {"$Spline_f_vals$","{[0]->[k1]: k1 = $k$}"},
@@ -3385,11 +3391,11 @@ Computation* Eval_Spline_df_Computation(){
     Computation* evalSplineDfComputation = new Computation();
     evalSplineDfComputation->addParameter("$x$", "double");
     //evalSplineDfComputation->addParameter("$Spline$", "NaturalCubicSpline_1D &");
-    evalSplineDfComputation->addParameter("$Spline_length$", "int");
-    evalSplineDfComputation->addParameter("$Spline_accel$", "int");
-    evalSplineDfComputation->addParameter("$Spline_x_vals$", "double*");
-    evalSplineDfComputation->addParameter("$Spline_f_vals$", "double*");
-    evalSplineDfComputation->addParameter("$Spline_slopes$", "double*");
+    evalSplineDfComputation->addParameter("$Spline_length$", "int&");
+    evalSplineDfComputation->addParameter("$Spline_accel$", "int&");
+    evalSplineDfComputation->addParameter("$Spline_x_vals$", "double*&");
+    evalSplineDfComputation->addParameter("$Spline_f_vals$", "double*&");
+    evalSplineDfComputation->addParameter("$Spline_slopes$", "double*&");
 
     Computation* findSegmentComputation= Find_Segment_Computation();
 
@@ -3440,9 +3446,10 @@ Computation* Eval_Spline_df_Computation(){
     evalSplineDfComputation->addDataSpace("$A$", "double");
     evalSplineDfComputation->addDataSpace("$B$", "double");
     Stmt* s2 = new Stmt("$X$ = ($x$ - $Spline_x_vals$[$k$])/($Spline_x_vals$[$k$+1] - $Spline_x_vals$[$k$]);",
-        "{[0]: k < $Spline_length$}", //Iteration Schedule
+        "{[0]: $k$ < $Spline_length$}", //Iteration Schedule
         "{[0]->["+std::to_string(newTuplePos+2)+"]}", //Execution schedule
         {
+            {"$k$","{[0]->[0]}"},
             {"$x$","{[0]->[0]}"},
             {"$Spline_x_vals$","{[0]->[k1]: k1 = $k$}"},
             {"$Spline_x_vals$","{[0]->[kp1]: kp1 = $k$+1}"}
@@ -3455,9 +3462,10 @@ Computation* Eval_Spline_df_Computation(){
     evalSplineDfComputation->addStmt(s2);
 
     Stmt* s3 = new Stmt("$A$ = $Spline_slopes$[$k$] * ($Spline_x_vals$[$k$+1] -$Spline_x_vals$[$k$]) - ($Spline_f_vals$[$k$+1] - $Spline_f_vals$[$k$]);",
-        "{[0]: k < $Spline_length$}",
+        "{[0]: $k$ < $Spline_length$}",
         "{[0]->["+std::to_string(newTuplePos+3)+"]}",
         {
+            {"$k$","{[0]->[0]}"},
             {"$Spline_slopes$","{[0]->[k1]: k1 = $k$}"},
             {"$Spline_x_vals$","{[0]->[kp1]: kp1 = $k$+1}"},
             {"$Spline_x_vals$","{[0]->[k1]: k1 = $k$}"},
@@ -3472,9 +3480,10 @@ Computation* Eval_Spline_df_Computation(){
     evalSplineDfComputation->addStmt(s3);
 
     Stmt* s4 = new Stmt("$B$ = -$Spline_slopes$[$k$+1] * ($Spline_x_vals$[$k$+1] - $Spline_x_vals$[$k$]) + ($Spline_f_vals$[$k$+1] - $Spline_f_vals$[$k$]);",
-        "{[0]: k < $Spline_length$}",
+        "{[0]: $k$ < $Spline_length$}",
         "{[0]->["+std::to_string(newTuplePos+4)+"]}",
         {
+            {"$k$","{[0]->[0]}"},
             {"$Spline_slopes$","{[0]->[kp1]: kp1 = $k$+1}"},
             {"$Spline_x_vals$","{[0]->[kp1]: kp1 = $k$+1}"},
             {"$Spline_x_vals$","{[0]->[k1]: k1 = $k$}"},
@@ -3489,9 +3498,10 @@ Computation* Eval_Spline_df_Computation(){
     evalSplineDfComputation->addStmt(s4);
 
     Stmt* s5 = new Stmt("$eval_spline_df_return$ = ($Spline_f_vals$[$k$+1] - $Spline_f_vals$[$k$])/($Spline_x_vals$[$k$+1] - $Spline_x_vals$[$k$]) + (1.0 - 2.0 * $X$) * ($A$ * (1.0 - $X$) + $B$ * $X$)/($Spline_x_vals$[$k$+1] - $Spline_x_vals$[$k$])+ $X$ * (1.0 - $X$) * ($B$ - $A$)/($Spline_x_vals$[$k$+1] - $Spline_x_vals$[$k$]);",
-        "{[0]: k < $Spline_length$}",
+        "{[0]: $k$ < $Spline_length$}",
         "{[0]->["+std::to_string(newTuplePos+5)+"]}",
         {
+            {"$k$","{[0]->[0]}"},
             {"$Spline_f_vals$","{[0]->[kp1]: kp1 = $k$+1}"},
             {"$Spline_f_vals$","{[0]->[k1]: k1 = $k$}"},
             {"$Spline_x_vals$","{[0]->[kp1]: kp1 = $k$+1}"},
@@ -3531,11 +3541,11 @@ Computation* Eval_Spline_ddf_Computation(){
     Computation* evalSplineDdfComputation = new Computation();
     evalSplineDdfComputation->addParameter("$x$", "double");
     //evalSplineDdfComputation->addParameter("$Spline$", "struct NaturalCubicSpline_1D &");
-    evalSplineDdfComputation->addParameter("$Spline_length$", "int");
-    evalSplineDdfComputation->addParameter("$Spline_accel$", "int");
-    evalSplineDdfComputation->addParameter("$Spline_x_vals$", "double*");
-    evalSplineDdfComputation->addParameter("$Spline_f_vals$", "double*");
-    evalSplineDdfComputation->addParameter("$Spline_slopes$", "double*");
+    evalSplineDdfComputation->addParameter("$Spline_length$", "int&");
+    evalSplineDdfComputation->addParameter("$Spline_accel$", "int&");
+    evalSplineDdfComputation->addParameter("$Spline_x_vals$", "double*&");
+    evalSplineDdfComputation->addParameter("$Spline_f_vals$", "double*&");
+    evalSplineDdfComputation->addParameter("$Spline_slopes$", "double*&");
 
     Computation* findSegmentComputation= Find_Segment_Computation();
 
@@ -3564,7 +3574,7 @@ Computation* Eval_Spline_ddf_Computation(){
     evalSplineDdfComputation->addStmt(s1);
 
     //Creating s2
-    evalSplineDdfComputation->addDataSpace("$eval_Spline_ddf_return$", "duoble");
+    evalSplineDdfComputation->addDataSpace("$eval_Spline_ddf_return$", "double");
     Stmt* s2 = new Stmt(
         "double $eval_Spline_ddf_return$ = 0.0;",
         "{[0]}",  //Iteration schedule
@@ -3580,9 +3590,10 @@ Computation* Eval_Spline_ddf_Computation(){
     evalSplineDdfComputation->addDataSpace("$A$", "double");
     evalSplineDdfComputation->addDataSpace("$B$", "double");
    Stmt* s3 = new Stmt("$X$ = ($x$ - $Spline_x_vals$[$k$])/($Spline_x_vals$[$k$+1] - $Spline_x_vals$[$k$]);",
-        "{[0]: k < $Spline_length$}", //Iteration Schedule
+        "{[0]: $k$ < $Spline_length$}", //Iteration Schedule
         "{[0]->["+std::to_string(newTuplePos+2)+"]}", //Execution schedule
         {
+            {"$k$","{[0]->[0]}"},
             {"$x$","{[0]->[0]}"},
             {"$Spline_x_vals$","{[0]->[k1]: k1 = $k$}"},
             {"$Spline_x_vals$","{[0]->[kp1]: kp1 = $k$+1}"}
@@ -3595,9 +3606,10 @@ Computation* Eval_Spline_ddf_Computation(){
     evalSplineDdfComputation->addStmt(s3);
 
     Stmt* s4 = new Stmt("$A$ = $Spline_slopes$[$k$] * ($Spline_x_vals$[$k$+1] -$Spline_x_vals$[$k$]) - ($Spline_f_vals$[$k$+1] - $Spline_f_vals$[$k$]);",
-        "{[0]: k < $Spline_length$}",
+        "{[0]: $k$ < $Spline_length$}",
         "{[0]->["+std::to_string(newTuplePos+3)+"]}",
         {
+            {"$k$","{[0]->[0]}"},
             {"$Spline_slopes$","{[0]->[k1]: k1 = $k$}"},
             {"$Spline_x_vals$","{[0]->[kp1]: kp1 = $k$+1}"},
             {"$Spline_x_vals$","{[0]->[k1]: k1 = $k$}"},
@@ -3612,9 +3624,10 @@ Computation* Eval_Spline_ddf_Computation(){
     evalSplineDdfComputation->addStmt(s4);
 
     Stmt* s5 = new Stmt("$B$ = -$Spline_slopes$[$k$+1] * ($Spline_x_vals$[$k$+1] - $Spline_x_vals$[$k$]) + ($Spline_f_vals$[$k$+1] - $Spline_f_vals$[$k$]);",
-        "{[0]: k < $Spline_length$}",
+        "{[0]: $k$ < $Spline_length$}",
         "{[0]->["+std::to_string(newTuplePos+4)+"]}",
         {
+            {"$k$","{[0]->[0]}"},
             {"$Spline_slopes$","{[0]->[kp1]: kp1 = $k$+1}"},
             {"$Spline_x_vals$","{[0]->[kp1]: kp1 = $k$+1}"},
             {"$Spline_x_vals$","{[0]->[k1]: k1 = $k$}"},
@@ -3629,9 +3642,10 @@ Computation* Eval_Spline_ddf_Computation(){
     evalSplineDdfComputation->addStmt(s5);
 
     Stmt* s6 = new Stmt("$eval_Spline_ddf_return$ = 2.0 * ($B$ - 2.0 * $A$ + ($A$ - $B$) * 3.0 * $X$) / pow($Spline_x_vals$[$k$+1] - $Spline_x_vals$[$k$], 2);",
-        "{[0]: k < $Spline_length$}",
+        "{[0]: $k$ < $Spline_length$}",
         "{[0]->["+std::to_string(newTuplePos+5)+"]}",
         {
+            {"$k$","{[0]->[0]}"},
             {"$A$", "{[0]->[0]}"},
             {"$B$", "{[0]->[0]}"},
             {"$X$", "{[0]->[0]}"},
@@ -3675,8 +3689,8 @@ Computation* Find_Segment_Computation(){
         "{[i]->[0, i, 0]}", //Execution schedule - scheduling statement to be first (scheduling function)
         {
             {"$x$","{[0]->[0]}"},
-            {"$x_vals$","{[i]->[i]}"},
-            {"$x_vals$","{[i]->[ip1]: ip1 = i+1}"}}, //Reads
+            {"$x_vals$","{[0]->[i]}"},
+            {"$x_vals$","{[0]->[ip1]: ip1 = i+1}"}}, //Reads
         {{"$prev$","{[0]->[0]}"}}   //writes
         ); 
     cout << "Source statement : " << s0->getStmtSourceCode() << "\n\t"
