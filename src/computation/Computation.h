@@ -81,27 +81,19 @@ class Computation {
     //! Get the new name for a data space that has the given prefix applied
     static std::string getPrefixedDataSpaceName(const std::string& originalName, const std::string& prefix);
 
-    //! For each write in the new statement, rename the written dataspace in all
-    //  statements from the last statement to the last write to that data space.
-    void updateDataSpaceVersions(Stmt* stmt);
-    //! TODO: Description
-    void locatePhiNodes(Stmt* stmt);
-    void locatePhiNode(std::string dataSpace, Stmt* srcStmt);
-    void addPhiNode(std::pair<int, std::string> &first, std::pair<int, std::string> &guaranteed, Stmt* srcStmt);
-
     //! Takes in an iteration space set and removes all "$"
     //  all trimmed data spaces are stored in dataSpaces if passed in 
     //  returns the new trimmed set, which must be deallocated by the caller
-    Set* trimISDataSpaces(Set* set);
-    Set* trimISDataSpaces(Set* set, std::set<std::string> &trimmedNames);
+    static Set* trimISDataSpaces(Set* set);
+    static Set* trimISDataSpaces(Set* set, std::set<std::string> &trimmedNames);
 
     //! Returns true if stmt1 is guaranteed to have executed by
     //  the time stmt2 is reached, false otherwise
-    bool isGuaranteedExecute(Stmt* stmt1, Stmt* stmt2);
+    static bool isGuaranteedExecute(Stmt* stmt1, Stmt* stmt2);
 
     //! Returns a list of all the constraints of the given set
     //  Note only inequalities count as constraints
-    std::vector<std::string> getSetConstraints(Set* set);
+    static std::vector<std::string> getSetConstraints(Set* set);
 
     //! add stmt
     void addStmt(Stmt* stmt);
@@ -114,8 +106,7 @@ class Computation {
     void addDataSpace(std::string dataSpaceName, std::string dataSpaceType);
     //! Get data spaces
     std::map<std::string, std::string> getDataSpaces() const;
-    
-    
+    //! Get data space's type    
     std::string getDataSpaceType(std::string) const;
     //! Check if a given string is a name of a data space of this Computation
     bool isDataSpace(std::string name) const;
@@ -288,10 +279,16 @@ class Computation {
     void fuse (int s1, int s2, int fuseLevel);
    
     private:
-/*    struct ScopeData {
-        std::vector<std::string> conditions;
-        std::vector<std::pair<std::string, int>> domain;
-    };*/
+    //! For each write in the new statement, rename the written dataspace in all
+    //  statements from the last statement to the last write to that data space.
+    void updateDataSpaceVersions(Stmt* stmt);
+    
+    //! Locates phi nodes for a given statement. These occur when a data space
+    //  which is being read can take multiple values based on the control flow
+    void locatePhiNodes(Stmt* stmt);
+    void locatePhiNode(std::string dataSpace, Stmt* srcStmt);
+    //! Adds in a phi node
+    void addPhiNode(std::pair<int, std::string> &first, std::pair<int, std::string> &guaranteed, Stmt* srcStmt);
 
     //! Information on all statements in the Computation
     std::vector<Stmt*> stmts;
