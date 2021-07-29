@@ -18,9 +18,11 @@ namespace iegenlib {
 #define PARAM_RETURN_COLOR "darkorchid"
 // Color of the source node when creating a graph from a single statement
 #define SOURCE_COLOR "goldenrod"
+// Color of unread data space
+#define UNREAD_COLOR "orangered"
 
 enum NodeTypes {
-    debug = 0, stmt, data, readParam, param,
+    debug = 0, stmt, data, unread, readParam, param,
     returnVal, readReturnedParam, returnedParam,
     source, hidden
 };
@@ -207,7 +209,8 @@ class CompGraph {
     // Nodes to generate in the legend
     std::set<NodeTypes> legend = {
         NodeTypes::stmt, NodeTypes::data, NodeTypes::readParam, NodeTypes::param,
-        NodeTypes::returnVal, NodeTypes::readReturnedParam, NodeTypes::returnedParam
+        NodeTypes::returnVal, NodeTypes::unread,
+        NodeTypes::readReturnedParam, NodeTypes::returnedParam
     };
 
     static std::string getDotColor(std::string color1, std::string color2);

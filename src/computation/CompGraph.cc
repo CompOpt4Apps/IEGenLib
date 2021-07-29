@@ -23,6 +23,7 @@ const std::pair<const char*, NodeType> nodeTypes[] = {
     std::make_pair("Debug Statements are Enabled", NodeType {"box", "", "white"}),
     std::make_pair("Statement", NodeType {"Mrecord", "bold", DEFAULT_COLOR}),
     std::make_pair("Data Space", NodeType {"box", "bold", DEFAULT_COLOR}),
+    std::make_pair("Unread Data Space", NodeType {"box", "filled", UNREAD_COLOR}),
     std::make_pair("Read-only Parameter", NodeType {"box", "bold", PARAM_COLOR}),
     std::make_pair("Parameter", NodeType {"box", "filled", PARAM_COLOR}),
     std::make_pair("Returned Data Space", NodeType {"box", "bold", RETURN_COLOR}),
@@ -268,7 +269,7 @@ void CompGraph::create(Computation* comp) {
         pair.second->setLabel(pair.first);
     }
 
-    // Generate parameter/return colors
+    // Mark parameters
     for (std::string param : comp->getParameters()) {
         auto it = dataNodes.find(comp->trimDataSpaceName(param));
         if (it == dataNodes.end()) { continue; }
@@ -278,18 +279,36 @@ void CompGraph::create(Computation* comp) {
             ptr->setColor(getDotColor(ptr->getColor(), PARAM_COLOR));
         }
     }
-    for (std::string ret : comp->getReturnValues()) {
+    // Mark returns
+    for (std::string ret : comp->getActiveOutValues()) {
         auto it = dataNodes.find(comp->trimDataSpaceName(ret));
         if (it == dataNodes.end()) { continue; }
-        if (it->second->getType() == NodeTypes::data) {
-            it->second->setType(NodeTypes::returnVal);
-        } else if (it->second->getType() == NodeTypes::readParam) {
-            it->second->setType(NodeTypes::readReturnedParam);
-        } else {
-            it->second->setType(NodeTypes::returnedParam);
+        switch (it->second->getType()) {
+            case NodeTypes::param:
+                it->second->setType(NodeTypes::returnedParam);
+                break;
+            case NodeTypes::readParam:
+                it->second->setType(NodeTypes::readReturnedParam);
+                break;
+            default:
+                it->second->setType(NodeTypes::returnVal);
+                break;
         }
         for (EdgePtr ptr : it->second->getInEdges()) {
             ptr->setColor(getDotColor(ptr->getColor(), RETURN_COLOR));
+        }
+    }
+    // Mark unread data spaces except for returns
+    for (auto pair : dataNodes) {
+        if (pair.second->numOutEdges() == 0) {
+            switch (pair.second->getType()) {
+                case NodeTypes::returnVal:
+                case NodeTypes::returnedParam:
+                case NodeTypes::readReturnedParam:
+                    break;
+                default:
+                    pair.second->setType(NodeTypes::unread);
+            }
         }
     }
 
@@ -323,8 +342,6 @@ Subgraph CompGraph::generateSubgraph(std::vector<std::pair<NodePtr, Set*>> &acti
     Subgraph subgraph(level);
 
     if (activeStmts.size() == 0) { return subgraph; }
-
- // std::vector<std::vector<std::pair<int, Set*>>> bins = split(level, activeStmts);
 
     Set* set = activeStmts[0].second;
     if (level > 0) {
@@ -364,11 +381,7 @@ Subgraph CompGraph::generateSubgraph(std::vector<std::pair<NodePtr, Set*>> &acti
             }
         }
         for(auto &pair : stmtGroups) {
-//            if (pair.second.size() > 1) {
-                subgraph.addSubgraph(generateSubgraph(pair.second, level+2));
-//            } else if (pair.second.size() == 1){
-//                subgraph.addStmt(pair.second.begin()->first);
-//            }
+            subgraph.addSubgraph(generateSubgraph(pair.second, level+2));
         }
     }
 #ifdef DEBUG
