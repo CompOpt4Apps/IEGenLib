@@ -703,7 +703,6 @@ int main(int argc, char **argv){
          }
          );
     updateSources->addStmt(s01a);
-    s01a->setDebugStr("example of using the debug string");
 
     updateSources->addDataSpace("$theta$", "double");
     Stmt* s01b = new Stmt("$theta$=$current_values$[1];",
@@ -744,6 +743,7 @@ int main(int argc, char **argv){
          {{"$nu$", "{[0]->[3]}"}}
          );
     updateSources->addStmt(s02);
+    s02->setDebugStr("line number 735 this statement originates from");
 
     //Args to the c_Computation
     vector<std::string> cCompArgs;
@@ -2113,10 +2113,16 @@ int main(int argc, char **argv){
     dotFileStream << dotString;
     dotFileStream.close();
 
+    //Writing header file for codegen
+    ofstream headStream;
+    headStream.open("codegen.h");
+    headStream << updateSources->codeGenMemoryManagementString();
+    headStream.close();
+ 
     //Write codegen to a file
     ofstream outStream;
     outStream.open("codegen.c");
-//    outStream << updateSources->codeGen();
+    outStream << updateSources->codeGen();
     outStream.close();
 
     return 0;

@@ -171,6 +171,9 @@ class Computation {
     //! including that of the Stmts it contains
     bool isComplete() const;
 
+    //Returns a string declaring all data spaces in the computation
+    std::string codeGenMemoryManagementString();
+
     //! Clear all data from this Computation
     void clear();
 
