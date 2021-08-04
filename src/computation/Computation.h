@@ -196,7 +196,7 @@ class Computation {
 
     //! Pads each statement's execution schedule with 0's such the all
     //  execution schedules have the same arity
-    void padExecutionSchedules();
+    std::vector<Relation*> padExecutionSchedules() const;
 
     //! Returns true if all input sets have the same arity, false otherwise
     bool consistentSetArity(const std::vector<Set*>& sets);

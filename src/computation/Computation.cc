@@ -1528,7 +1528,7 @@ void Computation::fuse (int s1, int s2, int fuseLevel){
     }
 }
 
-void Computation::padExecutionSchedules() {
+std::vector<Relation*> Computation::padExecutionSchedules() const {
     // Get the max arity
     int maxArity = 0;
     for (int j = 0; j < getNumStmts(); j++) {
@@ -1565,15 +1565,14 @@ void Computation::padExecutionSchedules() {
 //                  << compositions.back()->getString() << std::endl;
     }
 
+    std::vector<Relation*> result;
     // Apply composition to generate new execution schedule for each statement
     for (int i = 0; i < getNumStmts(); i++) {
         Stmt* stmt = getStmt(i);
         Relation* sched = stmt->getExecutionSchedule();
-        Relation* newSched = compositions[sched->outArity() - 1]->Compose(sched);
-//        std::cerr << "New Execution Schedule " << i << ": "
-//                  << newSched->getString() << std::endl;
-        stmt->setExecutionSchedule(newSched);
+        result.push_back(compositions[sched->outArity() - 1]->Compose(sched));
     }
+    return result;
 }
 
 bool Computation::consistentSetArity(const std::vector<Set*>& sets) {
@@ -1667,8 +1666,6 @@ std::string Computation::toDotString() {
 std::string Computation::toDotStringOld(){
     //TODO: Deal with disjunction of cunjunctions later.
     
-    padExecutionSchedules();
-
     // newIS is a list of pairs of statement id
     // to their transformed spaces.
     std::vector<std::pair<int,Set*> > newIS;
@@ -1903,10 +1900,11 @@ void Computation::addTransformation(unsigned int stmtIndex, Relation* rel) {
 }
 
 std::vector<Set*> Computation::applyTransformations() const {
+    std::vector<Relation*> executionSchedules = padExecutionSchedules();
     std::vector<Set*> transformedSchedules;
     for (int stmtNum = 0; stmtNum < this->getNumStmts(); ++stmtNum) {
         Stmt* currentStmt = getStmt(stmtNum);
-        Set* schedule = currentStmt->getExecutionSchedule()->Apply(currentStmt->getIterationSpace());
+        Set* schedule = executionSchedules.at(stmtNum)->Apply(currentStmt->getIterationSpace());
         // apply transformations in order, chaining together outputs and inputs
         for (Relation* transformation : transformationLists.at(stmtNum)) {
             std::cerr << "Transformation " << transformation->getString() << std::endl;
@@ -1916,12 +1914,12 @@ std::vector<Set*> Computation::applyTransformations() const {
         }
         transformedSchedules.push_back(schedule);
     }
+    for (Relation* r : executionSchedules) { delete r; }
+    executionSchedules.clear();
     return transformedSchedules;
 }
 
 std::vector<std::pair<int, Set*>> Computation::getIterSpaces() {
-    padExecutionSchedules();
-
     std::vector<Set*> transformedSpaces = applyTransformations();
     if (!consistentSetArity(transformedSpaces)) {
         std::cerr << "Iteration spaces do not have a consistent arity" << std::endl;
