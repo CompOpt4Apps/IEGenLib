@@ -698,7 +698,7 @@ bool Computation::isComplete() const {
 
 std::string Computation::codeGenMemoryManagementString() {
   
-    std::string outputString = ""; 
+    std::ostringstream outputString; 
     std::map<std::string, std::string> dataSpaces = this->getDataSpaces();
     std::map<std::string, std::string>::iterator it = dataSpaces.begin();
 
@@ -707,12 +707,11 @@ std::string Computation::codeGenMemoryManagementString() {
 
         std::string type = it->second;
 
-        std::string combinedString = type + " " + name + ";\n";
-        outputString += combinedString;
+        outputString << type << " " << name << ";\n";
         it++;
     }
     
-    return outputString;
+    return outputString.str();
 }
 
 void Computation::clear() {
@@ -1949,8 +1948,7 @@ std::vector<std::pair<int, Set*>> Computation::getIterSpaces() {
 
 std::string Computation::codeGen(Set* knownConstraints) {
     std::ostringstream generatedCode;
-    //adding header file with declerations
-    generatedCode << "#include codegen.h" << std::endl;
+    generatedCode << std::endl;
     std::vector<std::string> iterSpaces;
     std::vector<int> arity;
 
@@ -1982,7 +1980,6 @@ std::string Computation::codeGen(Set* knownConstraints) {
         stmtMacroUndefs << "#undef s" << stmtCount << "\n";
         stmtMacroDefs << "#define s" << stmtCount << "(" << tupleString
                       << ")   "
-                      << getDataSpaceType(stmt->getWriteDataSpace(0)) << " "  
                       << iegenlib::replaceInString(stmt->getStmtSourceCode(), DATA_SPACE_DELIMITER,
                                                "")
                       << " \n";
