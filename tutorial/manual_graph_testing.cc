@@ -106,10 +106,13 @@ int main(int argc, char** argv) {
     dotFileStream1.close();
     //Write codegen to a file
     ofstream outStream1;
-    outStream1.open("dense_matrix_multipy.c");
+    outStream1.open("dense_matrix_multiply.c");
     outStream1 << dsComp->codeGen();
     outStream1.close();
-  
+     outStream1.open("dense_matrix_multiply.h");
+    outStream1 << dsComp->codeGenMemoryManagementString();
+    outStream1.close();
+ 
     //for (i = 0; i < N; i++) {
     //  for (k=rowptr[i]; k<rowptr[i+1]; k++) {
     //      j = col[k];

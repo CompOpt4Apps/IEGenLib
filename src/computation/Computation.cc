@@ -707,7 +707,7 @@ std::string Computation::codeGenMemoryManagementString() {
 
         std::string type = it->second;
 
-        outputString << type << " " << name << ";\n";
+        outputString << type << " " << trimDataSpaceName(name) << ";\n";
         it++;
     }
     
