@@ -174,6 +174,7 @@ class Computation {
     //Returns a string declaring all data spaces in the computation
     std::string codeGenMemoryManagementString();
 
+
     //! Clear all data from this Computation
     void clear();
 
@@ -240,6 +241,7 @@ class Computation {
     //! Returns a list of iteration spaces after padding and applying transformations
     std::vector<std::pair<int, Set*>> getIterSpaces();
 
+    static std::vector<Exp*> getEqualities(Set* s);
     //! Method generates c code.
     //! Known constraints are constraints that can be considered already
     //! enforced/are known to be true without need for checking in generated

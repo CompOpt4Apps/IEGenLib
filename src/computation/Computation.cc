@@ -1946,6 +1946,16 @@ std::vector<std::pair<int, Set*>> Computation::getIterSpaces() {
     return newIS;  
 }
 
+std::vector<Exp*> Computation::getEqualities(Set* s){
+    std::vector<Exp*> outputExp;
+    for (auto it = s->conjunctionBegin(); it != s->conjunctionEnd(); it++) {
+        for (Exp* e : (*it)->equalities()) {
+            outputExp.push_back(e);
+        }
+    }
+    return outputExp;
+}   
+
 std::string Computation::codeGen(Set* knownConstraints) {
     std::ostringstream generatedCode;
     generatedCode << std::endl;
