@@ -17,7 +17,7 @@ using iegenlib::Computation;
 using namespace std;
 
 int main(int argc, char** argv) {
-/*
+
     // Basic for loop with 2 statements 
     // for (i = 0; i < N; i++) /loop over rows
     //     s0:tmp = f[i];
@@ -64,8 +64,8 @@ int main(int argc, char** argv) {
     //Making toDot, took example from geoac_codegen_driver
     ofstream dotFileStream("for_loop_comp_dot.txt");
     cout << "Entering toDot()" << "\n";
-    string dotString = forLoopComp->toDotString(); //name of computation
-    dotFileStream << dotString;
+   // string dotString = forLoopComp->toDotString(); //name of computation
+   // dotFileStream << dotString;
     dotFileStream.close();
     //Write codegen to a file
     ofstream outStream;
@@ -101,8 +101,8 @@ int main(int argc, char** argv) {
     //Making toDot, took example from geoac_codegen_driver
     ofstream dotFileStream1("dense_matrix_multiply_dot.txt"); 
     cout << "Entering toDot()" << "\n";
-    string dotString1 = dsComp->toDotString(); //name of computation
-    dotFileStream1 << dotString;
+  //  string dotString1 = dsComp->toDotString(); //name of computation
+  //  dotFileStream1 << dotString;
     dotFileStream1.close();
     //Write codegen to a file
     ofstream outStream1;
@@ -142,15 +142,15 @@ int main(int argc, char** argv) {
     //Making toDot, took example from geoac_codegen_driver
     ofstream dotFileStream2("sparse_matrix_multiply_dot.txt");
     cout << "Entering toDot()" << "\n";
-    string dotString2 = spsComp->toDotString(); //name of computation
-    dotFileStream2 << dotString2;
+//    string dotString2 = spsComp->toDotString(); //name of computation
+//    dotFileStream2 << dotString2;
     dotFileStream2.close();
     //Write codegen to a file
     ofstream outStream2;
     outStream2.open("sparse_matrix_multiply.c");
     outStream2 << spsComp->codeGen();
     outStream2.close();
-*/
+
     //Phi Node Computations
     //CODE
     /* 
@@ -166,6 +166,7 @@ int main(int argc, char** argv) {
     }
     int bar = foo;
     */
+/*
     Computation* test1Computation = new Computation();
     // add stmts
     test1Computation->addDataSpace("$j$", "int");
@@ -240,14 +241,14 @@ int main(int argc, char** argv) {
     outStream3 << test1Computation->codeGen();
     outStream3.close();
     
-    /*
- *  int bar = 3;
+    
+   int bar = 3;
     int foo = 1;
     for(int i = 0; i < 0; i++){
         foo += 2;
     }
     if(foo < 1){ foo = bar; }
-   */
+   
        
     Computation* test2Computation = new Computation();
 
@@ -288,6 +289,6 @@ int main(int argc, char** argv) {
     outStream4.open("phi_test2.c");
     outStream4 << test2Computation->codeGen();
     outStream4.close();
-   
+*/   
     return 0; 
 }

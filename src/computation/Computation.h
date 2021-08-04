@@ -241,7 +241,11 @@ class Computation {
     //! Returns a list of iteration spaces after padding and applying transformations
     std::vector<std::pair<int, Set*>> getIterSpaces();
 
+    //!Gets the equality constraints from a set
     static std::vector<Exp*> getEqualities(Set* s);
+    //Creates a mapping from the tuple variables in a to tuple variables in b
+    static std::string getSetMapping(Set* a, Set* b);
+
     //! Method generates c code.
     //! Known constraints are constraints that can be considered already
     //! enforced/are known to be true without need for checking in generated

@@ -1954,11 +1954,35 @@ std::vector<Exp*> Computation::getEqualities(Set* s){
         }
     }
     return outputExp;
-}   
+}  
+
+std::string Computation::getSetMapping(Set* a, Set* b){
+    //New is a old is b
+    std::ostringstream output;
+    TupleDecl declA = a->getTupleDecl();
+    TupleDecl declB = b->getTupleDecl();
+    // decl.toString() gives the list of elements in the tuple (used for #define parameter list)
+    for (int i=0; i < declA.getSize(); i++) {
+        if (i != 0) { output << ", "; }
+        if (declB.elemIsConst(i)) { output << declB.elemToString(i); }
+    
+        bool found = false;
+        for (Exp* e : getEqualities(b)) {
+            Exp* mapping = e->solveForFactor(new VarTerm(declA.elemToString(i))); // Attempt to solve for var
+            if (mapping) {
+                found = true;
+                output << mapping->toString();
+                break;
+            }
+        }
+        if (!found) { output << declB.elemToString(i); }
+    }
+    std::cerr << output.str() << std::endl;
+    return output.str();
+}
 
 std::string Computation::codeGen(Set* knownConstraints) {
     std::ostringstream generatedCode;
-    generatedCode << std::endl;
     std::vector<std::string> iterSpaces;
     std::vector<int> arity;
 
@@ -1968,31 +1992,38 @@ std::string Computation::codeGen(Set* knownConstraints) {
     std::ostringstream stmtMacroUndefs;
     std::ostringstream stmtMacroDefs;
     int stmtCount = 0;
-    std::vector<Set*> newIS = applyTransformations();
-    if (!consistentSetArity(newIS)) {
-        std::cerr << "Iteration spaces do not have a consistent arity" << std::endl;
+    std::vector<std::pair<int, Set*>> newIS = getIterSpaces();
+    if (newIS.empty()) {
         std::cerr << "Aborting codeGen()" << std::endl;
         return "";
     }
 
     //Create a string for each statements iteration space
-    for (const auto& stmt : stmts) {
-
+    for (const auto& pair : newIS) {
+        Stmt* stmt = getStmt(pair.first);
+        
+        Set * oldIterSpace = stmt->getExecutionSchedule()->Apply(stmt->getIterationSpace());
+        std::string oldTupleString = 
+            oldIterSpace->getTupleDecl().toString();
 	    // new Codegen would require an application
 	    // be performed first before the set is sent
 	    // to omega. This is a temporary solution to
 	    // circumvent Omega's schedulling bug.
-        Set * iterSpace = newIS[stmtCount];
+        Set * iterSpace = pair.second;
 	    iterSpace->acceptVisitor(vOmegaReplacer);
 	    std::string tupleString =
             iterSpace->getTupleDecl().toString();
         // Stmt Macro:
-        stmtMacroUndefs << "#undef s" << stmtCount << "\n";
-        stmtMacroDefs << "#define s" << stmtCount << "(" << tupleString
+        stmtMacroUndefs << "#undef s" << stmtCount << "\n"
+                        << "#undef s_" << stmtCount << "\n";
+        stmtMacroDefs << "#define s_" << stmtCount << "(" << oldTupleString
                       << ")   "
                       << iegenlib::replaceInString(stmt->getStmtSourceCode(), DATA_SPACE_DELIMITER,
                                                "")
                       << " \n";
+        stmtMacroDefs << "#define s" << stmtCount << "(" << tupleString
+                      << ")   s_" << stmtCount << "("
+                      << getSetMapping(oldIterSpace, iterSpace) << ");\n";
         stmtCount++;
 
         std::string omegaIterString =
