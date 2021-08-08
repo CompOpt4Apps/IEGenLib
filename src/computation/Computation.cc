@@ -577,7 +577,8 @@ std::vector<std::string> Computation::getReturnValues() const {
 std::vector<std::string> Computation::getActiveOutValues() const {
     std::vector<std::string> names = getReturnValues();
     for (std::string name : parameters) {
-        if (getDataSpaceType(name).find('&') != std::string::npos) {
+        if (getDataSpaceType(name).find('&') != std::string::npos ||
+            getDataSpaceType(name).find('*') != std::string::npos) {
             names.push_back(name);
         }
     }
