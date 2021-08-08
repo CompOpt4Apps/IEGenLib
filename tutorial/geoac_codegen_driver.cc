@@ -628,65 +628,65 @@ int main(int argc, char **argv){
     //SplineStruct
     updateSources->addParameter("$sources_r_cnt$", "int&");
     updateSources->addParameter("$sources_accel$", "int&");
-    updateSources->addParameter("$sources_r_vals$", "double*&");
-    updateSources->addParameter("$sources_T_vals$", "double*&");
-    updateSources->addParameter("$sources_u_vals$", "double*&");
-    updateSources->addParameter("$sources_v_vals$", "double*&");
-    updateSources->addParameter("$sources_rho_vals$", "double*&");
+    updateSources->addParameter("$sources_r_vals$", "double*");
+    updateSources->addParameter("$sources_T_vals$", "double*");
+    updateSources->addParameter("$sources_u_vals$", "double*");
+    updateSources->addParameter("$sources_v_vals$", "double*");
+    updateSources->addParameter("$sources_rho_vals$", "double*");
 
     //SplineStruct.Temp_Spline
     updateSources->addParameter("$spl_Temp_Spline_length$", "int&");
     updateSources->addParameter("$spl_Temp_Spline_accel$", "int&");
-    updateSources->addParameter("$spl_Temp_Spline_x_vals$", "double*&");
-    updateSources->addParameter("$spl_Temp_Spline_f_vals$", "double*&");
-    updateSources->addParameter("$spl_Temp_Spline_slopes$", "double*&");
+    updateSources->addParameter("$spl_Temp_Spline_x_vals$", "double*");
+    updateSources->addParameter("$spl_Temp_Spline_f_vals$", "double*");
+    updateSources->addParameter("$spl_Temp_Spline_slopes$", "double*");
 
     //SplineStruct.Windu_Spline
     updateSources->addParameter("$spl_Windu_Spline_length$", "int&");
     updateSources->addParameter("$spl_Windu_Spline_accel$", "int&");
-    updateSources->addParameter("$spl_Windu_Spline_x_vals$", "double*&");
-    updateSources->addParameter("$spl_Windu_Spline_f_vals$", "double*&");
-    updateSources->addParameter("$spl_Windu_Spline_slopes$", "double*&");
+    updateSources->addParameter("$spl_Windu_Spline_x_vals$", "double*");
+    updateSources->addParameter("$spl_Windu_Spline_f_vals$", "double*");
+    updateSources->addParameter("$spl_Windu_Spline_slopes$", "double*");
 
     //SplineStruct.Windv_Spline
     updateSources->addParameter("$spl_Windv_Spline_length$", "int&");
     updateSources->addParameter("$spl_Windv_Spline_accel$", "int&");
-    updateSources->addParameter("$spl_Windv_Spline_x_vals$", "double*&");
-    updateSources->addParameter("$spl_Windv_Spline_f_vals$", "double*&");
-    updateSources->addParameter("$spl_Windv_Spline_slopes$", "double*&");
+    updateSources->addParameter("$spl_Windv_Spline_x_vals$", "double*");
+    updateSources->addParameter("$spl_Windv_Spline_f_vals$", "double*");
+    updateSources->addParameter("$spl_Windv_Spline_slopes$", "double*");
 
     //SplineStruct.Density_Spline
     updateSources->addParameter("$spl_Density_Spline_length$", "int&");
     updateSources->addParameter("$spl_Density_Spline_accel$", "int&");
-    updateSources->addParameter("$spl_Density_Spline_x_vals$", "double*&");
-    updateSources->addParameter("$spl_Density_Spline_f_vals$", "double*&");
-    updateSources->addParameter("$spl_Density_Spline_slopes$", "double*&");
+    updateSources->addParameter("$spl_Density_Spline_x_vals$", "double*");
+    updateSources->addParameter("$spl_Density_Spline_f_vals$", "double*");
+    updateSources->addParameter("$spl_Density_Spline_slopes$", "double*");
 
     //GeoAc_Sources_Struct
-    updateSources->addParameter("$sources_src_loc$", "double*&");
+    updateSources->addParameter("$sources_src_loc$", "double*");
     updateSources->addParameter("$sources_c0$", "double&");
     updateSources->addParameter("$sources_c$", "double&");
-    updateSources->addParameter("$sources_dc$", "double*&");
+    updateSources->addParameter("$sources_dc$", "double*");
     updateSources->addParameter("$sources_ddc$", "double (*)[2]&");
     updateSources->addParameter("$sources_w$", "double&");
-    updateSources->addParameter("$sources_dw$", "double*&");
+    updateSources->addParameter("$sources_dw$", "double*");
     updateSources->addParameter("$sources_ddw$", "double (*)[2]&");
     updateSources->addParameter("$sources_v$", "double&");
-    updateSources->addParameter("$sources_dv$", "double*&");
+    updateSources->addParameter("$sources_dv$", "double*");
     updateSources->addParameter("$sources_ddv$", "double (*)[2]&");
     updateSources->addParameter("$sources_u$", "double&");
-    updateSources->addParameter("$sources_du$", "double*&");
+    updateSources->addParameter("$sources_du$", "double*");
     updateSources->addParameter("$sources_ddu$", "double (*)[2]&");
     updateSources->addParameter("$sources_nu0$", "double&");
     updateSources->addParameter("$sources_nu_mag$", "double&");
-    updateSources->addParameter("$sources_dnu_mag$", "double*&");
-    updateSources->addParameter("$sources_c_gr$", "double*&");
+    updateSources->addParameter("$sources_dnu_mag$", "double*");
+    updateSources->addParameter("$sources_c_gr$", "double*");
     updateSources->addParameter("$sources_c_gr_mag$", "double&");
     updateSources->addParameter("$sources_dc_gr$", "double (*)[2]&");
-    updateSources->addParameter("$sources_dc_gr_mag$", "double*&");
-    updateSources->addParameter("$sources_GeoCoeff$", "double*&");
+    updateSources->addParameter("$sources_dc_gr_mag$", "double*");
+    updateSources->addParameter("$sources_GeoCoeff$", "double*");
     updateSources->addParameter("$sources_d_GeoCoeff$", "double (*)[2]&");
-    updateSources->addParameter("$sources_GeoTerms$", "double*&");
+    updateSources->addParameter("$sources_GeoTerms$", "double*");
     updateSources->addParameter("$sources_d_GeoTerms$", "double (*)[2]&");
 
 
@@ -2114,7 +2114,7 @@ int main(int argc, char **argv){
     dotFileStream.close();
 
     //Writing header file for codegen
-    ofstream headStream;
+/*    ofstream headStream;
     headStream.open("codegen.h");
     headStream << updateSources->codeGenMemoryManagementString();
     headStream.close();
@@ -2123,7 +2123,7 @@ int main(int argc, char **argv){
     ofstream outStream;
     outStream.open("codegen.c");
     outStream << updateSources->codeGen();
-    outStream.close();
+    outStream.close();*/
 
     return 0;
 }
@@ -2147,9 +2147,9 @@ Computation* u_ddiff_Computation(){
     //uDdiffComputation->addParameter("$Windu_Spline$", "NaturalCubicSpline_1D &");
     uDdiffComputation->addParameter("$Windu_Spline_length$", "int&");
     uDdiffComputation->addParameter("$Windu_Spline_accel$", "int&");
-    uDdiffComputation->addParameter("$Windu_Spline_x_vals$", "double*&");
-    uDdiffComputation->addParameter("$Windu_Spline_f_vals$", "double*&");
-    uDdiffComputation->addParameter("$Windu_Spline_slopes$", "double*&");
+    uDdiffComputation->addParameter("$Windu_Spline_x_vals$", "double*");
+    uDdiffComputation->addParameter("$Windu_Spline_f_vals$", "double*");
+    uDdiffComputation->addParameter("$Windu_Spline_slopes$", "double*");
 
 
     //Creating statement0
@@ -2264,9 +2264,9 @@ Computation* v_ddiff_Computation(){
     //vDdiffComputation->addParameter("$Windv_Spline$", "NaturalCubicSpline_1D &");
     vDdiffComputation->addParameter("$Windv_Spline_length$", "int&");
     vDdiffComputation->addParameter("$Windv_Spline_accel$", "int&");
-    vDdiffComputation->addParameter("$Windv_Spline_x_vals$", "double*&");
-    vDdiffComputation->addParameter("$Windv_Spline_f_vals$", "double*&");
-    vDdiffComputation->addParameter("$Windv_Spline_slopes$", "double*&");
+    vDdiffComputation->addParameter("$Windv_Spline_x_vals$", "double*");
+    vDdiffComputation->addParameter("$Windv_Spline_f_vals$", "double*");
+    vDdiffComputation->addParameter("$Windv_Spline_slopes$", "double*");
 
     //Creating statement0
     //double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);
@@ -2388,9 +2388,9 @@ Computation* c_ddiff_Computation(){
     //cDdiffComputation->addParameter("$Temp_Spline$","NaturalCubicSpline_1D &");
     cDdiffComputation->addParameter("$Temp_Spline_length$", "int&");
     cDdiffComputation->addParameter("$Temp_Spline_accel$", "int&");
-    cDdiffComputation->addParameter("$Temp_Spline_x_vals$", "double*&");
-    cDdiffComputation->addParameter("$Temp_Spline_f_vals$", "double*&");
-    cDdiffComputation->addParameter("$Temp_Spline_slopes$", "double*&");
+    cDdiffComputation->addParameter("$Temp_Spline_x_vals$", "double*");
+    cDdiffComputation->addParameter("$Temp_Spline_f_vals$", "double*");
+    cDdiffComputation->addParameter("$Temp_Spline_slopes$", "double*");
 
     //Creating statement s0
     //double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);
@@ -2564,9 +2564,9 @@ Computation* u_diff_Computation(){
     //uDiffComputation->addParameter("$Windu_Spline$", "NaturalCubicSpline_1D &");
     uDiffComputation->addParameter("$Windu_Spline_length$", "int&");
     uDiffComputation->addParameter("$Windu_Spline_accel$", "int&");
-    uDiffComputation->addParameter("$Windu_Spline_x_vals$", "double*&");
-    uDiffComputation->addParameter("$Windu_Spline_f_vals$", "double*&");
-    uDiffComputation->addParameter("$Windu_Spline_slopes$", "double*&");
+    uDiffComputation->addParameter("$Windu_Spline_x_vals$", "double*");
+    uDiffComputation->addParameter("$Windu_Spline_f_vals$", "double*");
+    uDiffComputation->addParameter("$Windu_Spline_slopes$", "double*");
 
     //Creating statement1
     //double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);
@@ -2693,9 +2693,9 @@ Computation* v_diff_Computation(){
     //vDiffComputation->addParameter("$Windv_Spline$", "NaturalCubicSpline_1D &");
     vDiffComputation->addParameter("$Windv_Spline_length$", "int&");
     vDiffComputation->addParameter("$Windv_Spline_accel$", "int&");
-    vDiffComputation->addParameter("$Windv_Spline_x_vals$", "double*&");
-    vDiffComputation->addParameter("$Windv_Spline_f_vals$", "double*&");
-    vDiffComputation->addParameter("$Windv_Spline_slopes$", "double*&");
+    vDiffComputation->addParameter("$Windv_Spline_x_vals$", "double*");
+    vDiffComputation->addParameter("$Windv_Spline_f_vals$", "double*");
+    vDiffComputation->addParameter("$Windv_Spline_slopes$", "double*");
 
     //Creating statement0
     //double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);
@@ -2815,9 +2815,9 @@ Computation* c_diff_Computation(){
     //cDiffComputation->addParameter("$Temp_Spline$","NaturalCubicSpline_1D &");
     cDiffComputation->addParameter("$Temp_Spline_length$", "int&");
     cDiffComputation->addParameter("$Temp_Spline_accel$", "int&");
-    cDiffComputation->addParameter("$Temp_Spline_x_vals$", "double*&");
-    cDiffComputation->addParameter("$Temp_Spline_f_vals$", "double*&");
-    cDiffComputation->addParameter("$Temp_Spline_slopes$", "double*&");
+    cDiffComputation->addParameter("$Temp_Spline_x_vals$", "double*");
+    cDiffComputation->addParameter("$Temp_Spline_f_vals$", "double*");
+    cDiffComputation->addParameter("$Temp_Spline_slopes$", "double*");
 
     //Creating statement1
     //double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);
@@ -2855,7 +2855,7 @@ Computation* c_diff_Computation(){
     );
     cDiffComputation->addStmt(s0b);
 
-    cDiffComputation->addDataSpace("$c_diff_return$", "duoble");
+    cDiffComputation->addDataSpace("$c_diff_return$", "double");
     //double c_diff_return = 0.0;
     Stmt* s1 = new Stmt("$c_diff_return$ = 0.0",
         "{[0]}",
@@ -2961,9 +2961,9 @@ Computation* u_Computation(){
     //uComputation->addParameter("$Windu_Spline$","NaturalCubicSpline_1D &");
     uComputation->addParameter("$Windu_Spline_length$", "int&");
     uComputation->addParameter("$Windu_Spline_accel$", "int&");
-    uComputation->addParameter("$Windu_Spline_x_vals$", "double*&");
-    uComputation->addParameter("$Windu_Spline_f_vals$", "double*&");
-    uComputation->addParameter("$Windu_Spline_slopes$", "double*&");
+    uComputation->addParameter("$Windu_Spline_x_vals$", "double*");
+    uComputation->addParameter("$Windu_Spline_f_vals$", "double*");
+    uComputation->addParameter("$Windu_Spline_slopes$", "double*");
 
     //Creating statement1
     //double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);
@@ -3042,9 +3042,9 @@ Computation* v_Computation(){
     //vComputation->addParameter("$Windv_Spline$","NaturalCubicSpline_1D &");
     vComputation->addParameter("$Windv_Spline_length$", "int&");
     vComputation->addParameter("$Windv_Spline_accel$", "int&");
-    vComputation->addParameter("$Windv_Spline_x_vals$", "double*&");
-    vComputation->addParameter("$Windv_Spline_f_vals$", "double*&");
-    vComputation->addParameter("$Windv_Spline_slopes$", "double*&");
+    vComputation->addParameter("$Windv_Spline_x_vals$", "double*");
+    vComputation->addParameter("$Windv_Spline_f_vals$", "double*");
+    vComputation->addParameter("$Windv_Spline_slopes$", "double*");
 
     //Creating statement1
     //double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);
@@ -3138,9 +3138,9 @@ Computation* c_Computation(){
     //cComputation->addParameter("$Temp_Spline$","NaturalCubicSpline_1D &");
     cComputation->addParameter("$Temp_Spline_length$", "int&");
     cComputation->addParameter("$Temp_Spline_accel$", "int&");
-    cComputation->addParameter("$Temp_Spline_x_vals$", "double*&");
-    cComputation->addParameter("$Temp_Spline_f_vals$", "double*&");
-    cComputation->addParameter("$Temp_Spline_slopes$", "double*&");
+    cComputation->addParameter("$Temp_Spline_x_vals$", "double*");
+    cComputation->addParameter("$Temp_Spline_f_vals$", "double*");
+    cComputation->addParameter("$Temp_Spline_slopes$", "double*");
 
     //Creating statement1
     //double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);
@@ -3244,9 +3244,9 @@ Computation* Eval_Spline_f_Computation(){
     //evalSplineFComputation->addParameter("$Spline$", "struct NaturalCubicSpline_1D &");
     evalSplineFComputation->addParameter("$Spline_length$", "int&");
     evalSplineFComputation->addParameter("$Spline_accel$", "int&");
-    evalSplineFComputation->addParameter("$Spline_x_vals$", "double*&");
-    evalSplineFComputation->addParameter("$Spline_f_vals$", "double*&");
-    evalSplineFComputation->addParameter("$Spline_slopes$", "double*&");
+    evalSplineFComputation->addParameter("$Spline_x_vals$", "double*");
+    evalSplineFComputation->addParameter("$Spline_f_vals$", "double*");
+    evalSplineFComputation->addParameter("$Spline_slopes$", "double*");
 
     Computation* FindSegmentComputation= Find_Segment_Computation();
 
@@ -3399,9 +3399,9 @@ Computation* Eval_Spline_df_Computation(){
     //evalSplineDfComputation->addParameter("$Spline$", "NaturalCubicSpline_1D &");
     evalSplineDfComputation->addParameter("$Spline_length$", "int&");
     evalSplineDfComputation->addParameter("$Spline_accel$", "int&");
-    evalSplineDfComputation->addParameter("$Spline_x_vals$", "double*&");
-    evalSplineDfComputation->addParameter("$Spline_f_vals$", "double*&");
-    evalSplineDfComputation->addParameter("$Spline_slopes$", "double*&");
+    evalSplineDfComputation->addParameter("$Spline_x_vals$", "double*");
+    evalSplineDfComputation->addParameter("$Spline_f_vals$", "double*");
+    evalSplineDfComputation->addParameter("$Spline_slopes$", "double*");
 
     Computation* findSegmentComputation= Find_Segment_Computation();
 
@@ -3549,9 +3549,9 @@ Computation* Eval_Spline_ddf_Computation(){
     //evalSplineDdfComputation->addParameter("$Spline$", "struct NaturalCubicSpline_1D &");
     evalSplineDdfComputation->addParameter("$Spline_length$", "int&");
     evalSplineDdfComputation->addParameter("$Spline_accel$", "int&");
-    evalSplineDdfComputation->addParameter("$Spline_x_vals$", "double*&");
-    evalSplineDdfComputation->addParameter("$Spline_f_vals$", "double*&");
-    evalSplineDdfComputation->addParameter("$Spline_slopes$", "double*&");
+    evalSplineDdfComputation->addParameter("$Spline_x_vals$", "double*");
+    evalSplineDdfComputation->addParameter("$Spline_f_vals$", "double*");
+    evalSplineDdfComputation->addParameter("$Spline_slopes$", "double*");
 
     Computation* findSegmentComputation= Find_Segment_Computation();
 
