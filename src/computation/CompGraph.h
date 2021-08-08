@@ -95,14 +95,18 @@ class Node {
     std::vector<EdgePtr> getInEdges() { return inEdges; }
     EdgePtr getInEdge(int idx) { return idx < inEdges.size() ? inEdges[idx] : nullptr; }
     int numInEdges() { return inEdges.size(); }
-    void addInEdge(EdgePtr ptr) { inEdges.push_back(ptr); }
+    void addInEdge(EdgePtr ptr);
+//    void addInEdge(EdgePtr ptr) { inEdges.push_back(ptr); }
     void removeInEdge(EdgePtr ptr);
- 
+    bool inEdgeExists(EdgePtr ptr);
+
     std::vector<EdgePtr> getOutEdges() { return outEdges; }
     EdgePtr getOutEdge(int idx) { return idx < outEdges.size() ? outEdges[idx] : nullptr; }
     int numOutEdges() { return outEdges.size(); }
-    void addOutEdge(EdgePtr ptr) { outEdges.push_back(ptr); }
+    void addOutEdge(EdgePtr ptr);
+//    void addOutEdge(EdgePtr ptr) { outEdges.push_back(ptr); }
     void removeOutEdge(EdgePtr ptr);
+    bool outEdgeExists(EdgePtr ptr);
 
     // Getter/Setters
     void setType(NodeTypes newType) { type = newType; }

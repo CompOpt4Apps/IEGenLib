@@ -125,14 +125,44 @@ bool Edge::isConst() {
     node.color = color;
 }*/
 
+void Node::addInEdge(EdgePtr ptr) {
+    if (!inEdgeExists(ptr)) { inEdges.push_back(ptr); }
+}
+
 void Node::removeInEdge(EdgePtr ptr) {
     auto it = std::find(inEdges.begin(), inEdges.end(), ptr);
     if (it != inEdges.end()) { inEdges.erase(it); }
 }
 
+bool Node::inEdgeExists(EdgePtr ptr) {
+    for (EdgePtr& mPtr : inEdges) {
+        if (mPtr->getStmtNode() == ptr->getStmtNode() &&
+            mPtr->getDataNode() == ptr->getDataNode() &&
+            mPtr->isWrite() == ptr->isWrite()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void Node::addOutEdge(EdgePtr ptr) {
+    if (!outEdgeExists(ptr)) { outEdges.push_back(ptr); }
+}
+
 void Node::removeOutEdge(EdgePtr ptr) {
     auto it = std::find(outEdges.begin(), outEdges.end(), ptr);
     if (it != outEdges.end()) { outEdges.erase(it); }
+}
+
+bool Node::outEdgeExists(EdgePtr ptr) {
+    for (EdgePtr& mPtr : outEdges) {
+        if (mPtr->getStmtNode() == ptr->getStmtNode() &&
+            mPtr->getDataNode() == ptr->getDataNode() &&
+            mPtr->isWrite() == ptr->isWrite()) {
+            return true;
+        }
+    }
+    return false;
 }
 
 void Node::generateDotString(std::ostringstream &ss) {
@@ -575,7 +605,11 @@ void CompGraph::fusePCRelations() {
         // Connect it to and update all of writeNode's reads
         for (EdgePtr ptr : writeNode->getInEdges()) {
             ptr->setStmtNode(readNode);
-            readNode->addInEdge(ptr);
+            if (readNode->inEdgeExists(ptr)) {
+                writeNode->removeInEdge(ptr);
+            } else {
+                readNode->addInEdge(ptr);
+            }
         }
 
         // Remove dataNode
