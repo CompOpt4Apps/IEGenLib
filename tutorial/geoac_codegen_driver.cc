@@ -2699,7 +2699,7 @@ Computation* v_diff_Computation(){
 
     //Creating statement0
     //double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);
-    vDiffComputation->addDataSpace("$r_eval$", "duoble");
+    vDiffComputation->addDataSpace("$r_eval$", "double");
     /*
     Stmt* s0 = new Stmt("double $r_eval$ = min($r$, r_max); $r_eval$ = max($r_eval$, r_min);",
         "{[0]}",  //Iteration schedule - Only happening one time (not iterating)
@@ -3048,7 +3048,7 @@ Computation* v_Computation(){
 
     //Creating statement1
     //double r_eval = min(r, r_max);  r_eval = max(r_eval, r_min);
-    vComputation->addDataSpace("$r_eval$", "duoble");
+    vComputation->addDataSpace("$r_eval$", "double");
     /*
     Stmt* s1 = new Stmt("double $r_eval$ = min($r$, r_max); $r_eval$ = max($r_eval$, r_min)",
         "{[0]}",  //Iteration schedule - Only happening one time (not iterating)
