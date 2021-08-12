@@ -23,8 +23,14 @@ add_dependencies(manual_graph_testing iegenlib)
 target_link_libraries(manual_graph_testing iegenlib isl codegen omega gmp)
 target_include_directories(manual_graph_testing PUBLIC ${CMAKE_SOURCE_DIR}/src)
 
+file(GLOB_RECURSE macro_testing_SOURCES macro_testing.cc)
+add_executable(macro_testing EXCLUDE_FROM_ALL ${macro_testing_SOURCES})
+add_dependencies(macro_testing iegenlib)
+target_link_libraries(macro_testing iegenlib isl codegen omega gmp)
+target_include_directories(macro_testing PUBLIC ${CMAKE_SOURCE_DIR}/src)
+
 # Set binary output directory for examples
-set_target_properties(sparse_format_example computation_example geoac_codegen_driver manual_graph_testing
+set_target_properties(sparse_format_example computation_example geoac_codegen_driver manual_graph_testing macro_testing
     PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/tutorial"
 )
@@ -35,5 +41,6 @@ add_custom_target(tutorial
             computation_example
             geoac_codegen_driver
             manual_graph_testing
+            macro_testing
     COMMENT "Building tutorial examples"
 )
