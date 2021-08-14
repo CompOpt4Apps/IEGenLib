@@ -119,8 +119,8 @@ std::string Computation::getPrefixedDataSpaceName(const std::string& originalNam
 void Computation::enforceArraySSA(Stmt* stmt) {
     // We don't want to do any array SSA enforcing for array accesses
     if (stmt->isArrayAccess()) {
-        std::cerr << "Skipped Array SSA {\n"
-                  << stmt->prettyPrintString() << "}" << std::endl;
+//        std::cerr << "Skipped Array SSA {\n"
+//                  << stmt->prettyPrintString() << "}" << std::endl;
         return;
     }
     for (int i = 0; i < stmt->getNumReads(); i++) {
@@ -191,7 +191,11 @@ bool Computation::enforceArraySSA(Stmt* stmt, int dataIdx, bool isRead) {
         // This array has not been accessed in this way before
         if (!isDataSpace(newDataSpace)) {
             // Add the rename as a data space
-            addDataSpace(newDataSpace, getDataSpaceType(dataSpace));
+            if (isParameter(dataSpace)) {
+                addParameter(newDataSpace, "TODO: get array type");
+            } else {
+                addDataSpace(newDataSpace, getDataSpaceType(dataSpace));
+            }
             // Access was read before being written, so we need to initialize it
             if (isRead) {
                 // Assign the array access to the new data space 
@@ -202,10 +206,10 @@ bool Computation::enforceArraySSA(Stmt* stmt, int dataIdx, bool isRead) {
                     {{dataSpace, "{[0]->" + tuple.str() + "}"}},
                     {{newDataSpace, "{[0]->[0]}"}}
                 );
-                arrAccessStmt->setArrayAccess();
+                arrAccessStmt->setArrayAccess(true);
                 addStmt(arrAccessStmt);
-                std::cerr << "Added Array Access Statement {\n"
-                          << arrAccessStmt->prettyPrintString() << "}" << std::endl;
+//                std::cerr << "Added Array Access Statement {\n"
+//                          << arrAccessStmt->prettyPrintString() << "}" << std::endl;
             }
         }
         // Update our current statement
@@ -246,7 +250,7 @@ void Computation::enforceSSA(Stmt* stmt) {
         std::string newWrite = getDataSpaceRename(write);
         writes.push_back({write, newWrite});
 
-        addDataSpace(newWrite, "string");
+        addDataSpace(newWrite, getDataSpaceType(write));
 
         // Rename in the reads of the new statement
         stmt->replaceDataSpaceReads(write, newWrite);
@@ -315,9 +319,9 @@ void Computation::addPhiNode(std::pair<int, std::string> &first, std::pair<int, 
     pad.setTupleElem(0, 0);
 
     // Test constraint to check for true/false constraints in firstIS
-    // If it is eliminated, 1+ other constraint(s) = false
-    // If it is the last constraint, all other constraints = true
-    // Otherwise, ignore
+    // If it is eliminated, 1+ other constraints were false
+    // If it is the last constraint, all other constraints were true
+    // Otherwise, ignore as there are other valid constraints
     Conjunction* testConstr = new Conjunction(1);
     Exp* testExp = new Exp();
     testExp->addTerm(new VarTerm(CONSTR_TEST));
@@ -360,12 +364,12 @@ void Computation::addPhiNode(std::pair<int, std::string> &first, std::pair<int, 
 
     // Get all conditions for the source read
     std::vector<std::string> sourceConstr = getSetConstraints(sourceIS);
-//    std::cerr << "Source Read Constraints: ";
+/*    std::cerr << "Source Read Constraints: ";
     for (std::string str : sourceConstr) {
         if (str != sourceConstr.at(0)) { std::cerr << " && "; }
-//        std::cerr << str;
+        std::cerr << str;
     }
-//    std::cerr << std::endl;
+    std::cerr << std::endl;*/
 
     // Get all conditions for the first write that aren't
     // used by the source read
@@ -376,12 +380,12 @@ void Computation::addPhiNode(std::pair<int, std::string> &first, std::pair<int, 
             constrs.push_back(constr);
         }
     }
-//    std::cerr << "First Write Constraints: ";
+/*    std::cerr << "First Write Constraints: ";
     for (std::string str : constrs) {
         if (str != constrs.at(0)) { std::cerr << " && "; }
-//        std::cerr << str;
+        std::cerr << str;
     }
-//    std::cerr << std::endl;
+    std::cerr << std::endl;*/
 
     // Stmt source code
     std::ostringstream code;
@@ -430,17 +434,13 @@ void Computation::addPhiNode(std::pair<int, std::string> &first, std::pair<int, 
         code << first.second << " = " << codeStr << " ? "
              << first.second << " : " << guaranteed.second << ";";
     }
-    // TODO: better way to identify phi nodes
-    // Extra semicolon to identify phi nodes
-    code << ";";
 
     // Create phi node
     Stmt* phiStmt = new Stmt(code.str(), sourceIS->prettyPrintString(),
                              srcStmt->getExecutionSchedule()->prettyPrintString(),
                              reads, writes);
-    phiStmt->setPhiNode();
+    phiStmt->setPhiNode(true);
 //    std::cerr << "New Phi Node {\n" << phiStmt->prettyPrintString() << "}" << std::endl;
-
     // Add the statement
     addStmt(phiStmt);
 
@@ -448,7 +448,7 @@ void Computation::addPhiNode(std::pair<int, std::string> &first, std::pair<int, 
     delete sourceIS;
     delete firstIS;
 
-    std::cerr << "Phi Node Added {\n" << phiStmt->prettyPrintString() << "}" << std::endl;
+//    std::cerr << "Phi Node Added {\n" << phiStmt->prettyPrintString() << "}" << std::endl;
 }
 
 bool Computation::isGuaranteedExecute(Stmt* stmt1, Stmt* stmt2) {
@@ -781,49 +781,42 @@ AppendComputationResult Computation::appendComputation(
     int numStmts = toAppend->getNumStmts();
     for (int i = ((signed int)numArgs) - 1; i >= 0; --i) {
         std::string param = toAppend->getParameterName(i);
-        // Get the first write to the parameter
-        int firstWrite = toAppend->isWrittenTo(param);
-        // Only rename the parameter if there is a first write
-        std::string newParam = param;
-        if (firstWrite != -1) {
-            newParam = getDataSpaceRename(param);
-            toAppend->addDataSpace(newParam,"string");
-        }
+        std::string paramType = toAppend->getParameterType(i);
+        if (paramType.find("&") != std::string::npos ||
+            paramType.find("*") != std::string::npos) {
+            toAppend->replaceDataSpaceName(param, arguments[i]);
+        } else {
+            // Get the first write to the parameter
+            int firstWrite = toAppend->isWrittenTo(param);
+            // Only rename the parameter if there is a first write
+            std::string newParam = param;
+            if (firstWrite != -1) {
+                newParam = getDataSpaceRename(param);
+                toAppend->addDataSpace(newParam, paramType);
+            }
 
-        Stmt* paramDeclStmt = new Stmt();
+            Stmt* paramDeclStmt = new Stmt();
 
-        paramDeclStmt->setStmtSourceCode(newParam + " = " + arguments[i] + ";");
-        paramDeclStmt->setIterationSpace("{[0]}");
-        paramDeclStmt->setExecutionSchedule("{[0]->[" + std::to_string(idx++) +
-                                            "]}");
-        // If passed-in argument is a data space, mark it as being read
-        // (otherwise it is a literal)
-        if (this->isDataSpace(arguments[i])) {
-            paramDeclStmt->addRead(arguments[i], "{[0]->[0]}");
-        }
-        paramDeclStmt->addWrite(newParam, "{[0]->[0]}");
+            paramDeclStmt->setStmtSourceCode(newParam + " = " + arguments[i] + ";");
+            paramDeclStmt->setIterationSpace("{[0]}");
+            paramDeclStmt->setExecutionSchedule("{[0]->[" + std::to_string(idx++) +
+                                                "]}");
+            // If passed-in argument is a data space, mark it as being read
+            // (otherwise it is a literal)
+            if (this->isDataSpace(arguments[i])) {
+                paramDeclStmt->addRead(arguments[i], "{[0]->[0]}");
+            }
+            paramDeclStmt->addWrite(newParam, "{[0]->[0]}");
 
-        // Rename the parameter up to its first write in toAppend
-        for (int j = 0; j < firstWrite; j++) {
-            toAppend->getStmt(j)->replaceDataSpace(param, newParam);
-        }
-        // Rename in the reads of the first write
-        if (firstWrite != -1) { toAppend->getStmt(firstWrite)->replaceDataSpaceReads(param, newParam); }
+            // Rename the parameter up to its first write in toAppend
+            for (int j = 0; j < firstWrite; j++) {
+                toAppend->getStmt(j)->replaceDataSpace(param, newParam);
+            }
+            // Rename in the reads of the first write
+            if (firstWrite != -1) { toAppend->getStmt(firstWrite)->replaceDataSpaceReads(param, newParam); }
 
-        // Add the statement
-        toAppend->stmts.insert(toAppend->stmts.begin(), paramDeclStmt);
-
-        // If the argument is active out, reassign the toAssign parameter to it
-        if (toAppend->getParameterType(i).find("&") != std::string::npos ||
-            toAppend->getParameterType(i).find("*") != std::string::npos) {
-            Stmt* paramReassignStmt = new Stmt(
-                arguments[i] + " = " + param + ";",
-                "{[0]}",
-                "{[0]->["+std::to_string(numStmts++)+"]}",
-                {{param, "{[0]->[0]}"}},
-                {{arguments[i], "{[0]->[0]}"}}
-            );
-            toAppend->addStmt(paramReassignStmt);
+            // Add the statement
+            toAppend->stmts.insert(toAppend->stmts.begin(), paramDeclStmt);
         }
     }
 
@@ -861,6 +854,9 @@ AppendComputationResult Computation::appendComputation(
         Stmt* appendeeStmt = toAppend->getStmt(stmtNum);
         // new statement built up from appendee which will be inserted
         Stmt* newStmt = new Stmt();
+        // Copy phiNode and arrayAccess status
+        newStmt->setPhiNode(appendeeStmt->isPhiNode());
+        newStmt->setArrayAccess(appendeeStmt->isArrayAccess());
 
         /* Source code */
         newStmt->setStmtSourceCode(appendeeStmt->getStmtSourceCode());
@@ -1583,70 +1579,6 @@ bool Computation::consistentSetArity(const std::vector<Set*>& sets) {
     return true;
 }
 
-/*std::vector<int> Computation::compressPCNodes() {
-    // Because this process uses a graph structure,
-    // statements are often refered to as nodes
-    int numStmts = getNumStmts();
-
-    bool visited[numStmts];
-    for (int i  = 0; i < numStmts; i++) { visited[i] = false; } 
-
-    std::queue<int> toVisit;
-    for (int i = 0; i < numStmts; i++) {
-        if (getStmt(i)->numOutDependencies() == 0) { toVisit.push(i); }
-    }
-    std::vector<int> results;
-
-    while (!toVisit.empty()) {
-        int i = toVisit.front();
-        toVisit.pop();
-        if (getStmt(i)->numOutDependencies() == 1) { std::cerr << "Bad: " << i << std::endl; }
-        if (visited[i]) { continue; }
-
-        Stmt* stmt = getStmt(i);
-
-        // Backtrack and compress all in-dependencies
-        std::queue<std::pair<int, int>> depQueue;
-        for (int dep : stmt->getInDependencies()) {
-            depQueue.push(std::make_pair(dep, i));
-        }
-        stmt->clearInDependencies();
-        while (!depQueue.empty()) {
-            auto pair = depQueue.front();
-            depQueue.pop();
-            Stmt* depStmt = getStmt(pair.first);
-            // If the dependency is not P-C, update the out-dependencies
-            // to point to stmt
-            if (depStmt->numOutDependencies() != 1) {
-                depStmt->removeOutDependency(pair.second);
-                // If depStmt already points to stmt, depStmt may now
-                // only have 1 out dependency, making it P-C
-                depStmt->addOutDependency(i);
-            }
-            // If it only has one write (is P-C), ignore it and keep going back
-            if (depStmt->numOutDependencies() == 1) {
-                for (int dep : depStmt->getInDependencies()) {
-                    depQueue.push(std::make_pair(dep, pair.first));
-                }
-            // By this point, depStmt is guaranteed not P-C.
-            } else {
-                // Recognize it as an in-dependency
-                stmt->addInDependency(pair.first);
-                toVisit.push(pair.first);       
-            }
-        }
-
-        visited[i] = true;
-        results.push_back(i);
-    }
-
-    results.clear();
-    for (int i = 0; i < numStmts; i++) {
-        if (getStmt(i)->numOutDependencies() != 1) { results.push_back(i); }
-    }
-    return results; 
-}*/
-
 std::string Computation::toDotString() {
     //TODO: Deal with disjunction of conjunctions later.
 
@@ -1657,233 +1589,6 @@ std::string Computation::toDotString() {
 //    graph.addDebugStmts(getStmtDebugStrings());
 //    return graph.toDotString(546, true, true);
     return graph.toDotString();
-}
-
-//! Function returns a dot string representing nesting
-//  and loop carrie dependency. Internally it uses
-//  a lite version of polyhedral scanning to generate
-//  subgraphs in the dot file.
-//
-std::string Computation::toDotStringOld(){
-    //TODO: Deal with disjunction of cunjunctions later.
-    
-    // newIS is a list of pairs of statement id
-    // to their transformed spaces.
-    std::vector<std::pair<int,Set*> > newIS;
-
-    int i = 0;
-    std::vector<Set*> transformedSpaces = applyTransformations();
-    if (!consistentSetArity(transformedSpaces)) {
-        std::cerr << "Iteration spaces do not have a consistent arity" << std::endl;
-        std::cerr << "Aborting toDotString()" << std::endl;
-        return "";
-    }
-    for(Set* set : transformedSpaces){
-	newIS.push_back(std::make_pair(i,set));
-        i++;
-    }
-
-    // Sort by lexicographical order
-    std::sort(newIS.begin(),newIS.end(),
-		    Computation::activeStatementComparator);
-    
-    int maxLevel = newIS[0].second->arity();
-//    std::cerr << "Max Level: " << maxLevel << std::endl;
-    std::vector<std::vector<Set*> > projectedIS(maxLevel);
-    
-    for(int i = 0 ; i < maxLevel; i++ ){
-        projectedIS[i] = std::vector<Set*>(newIS.size());
-    }
-    //TODO: Move deletiing of active statement's set pointersto
-    //      toDotScan. This is because overlapping 
-    //      statements might result to new disjoint
-    //      active iteration spaces of the same statement.
-    //      and these disjoint active statements cannot
-    //      be seen at this point. Or use unique pointers
-    //      to help delete when sets get out of scope. 
-    //      Easier way. :) 
-    for(int i = 0; i < stmts.size(); i++){
-        if (maxLevel > 0)
-            // Replace all '$' because iegenlib throw a fit TODO: why does iegenlib throw a fit? (it didn't previously)
-            projectedIS[maxLevel-1][i] = new Set(replaceInString(newIS[i].second->getString(), "$", ""));
-	//Perform projections for each column
-	for (int j = maxLevel -1; j >= 1 ; j --) {
-	    projectedIS[j -1][i] = projectedIS[j][i]->projectOut(j);   
-       	}
-    }
-    std::ostringstream ss;
-    ss << "digraph dataFlowGraph_1{ \n";
-    toDotScan(newIS,0,ss,projectedIS);
-    // Cleanup.
-    /*
-    for (int i = 0; i < stmts.size(); i++){
-        delete newIS[i].second;
-	for(int j = 0 ; j < maxLevel; j++)
-            delete projectedIS[j][i];
-    }*/
-    // Code section from shivani for adding 
-    // data nodes
-    std::vector<string>
-        data_spaces;  // Maintains the list of dataspaces already created
-
-    // Adding the participating dataspaces for each statement and mapping out
-    // the read and write access.
-    for (int i = 0; i < getNumStmts(); i++) {
-        // Iterates over the read-DataSpaces
-        for (int data_read_index = 0;
-             data_read_index < getStmt(i)->getNumReads(); data_read_index++) {
-            string readDataSpace =
-                getStmt(i)->getReadDataSpace(data_read_index);
-            // Set node color from data space type
-            std::string color = isParameter(readDataSpace) ? "purple" :
-                                isReturnValue(readDataSpace) ? "red" :
-                                "grey";
-            // Check to make sure the data space is not created if it already
-            // exists
-            if (!(std::count(data_spaces.begin(), data_spaces.end(),
-                             readDataSpace))) {
-                // Creates data space
-                ss
-                    << "\"" << readDataSpace << "\"["
-                    << generateDotLabel(readDataSpace)
-                    << "] [shape=box][style=bold][color=" << color << "];\n";
-
-                data_spaces.push_back(readDataSpace);
-            }
-
-            size_t start_pos = getStmt(i)
-                                   ->getReadRelation(data_read_index)
-                                   ->getString()
-                                   .rfind("[");
-            size_t end_pos = getStmt(i)
-                                 ->getReadRelation(data_read_index)
-                                 ->getString()
-                                 .rfind("]");
-	
-            ss << "\t\t\"" << readDataSpace << "\"->"
-                    << "S" << i << "["
-                    << generateDotLabel(
-                           getStmt(i)
-                           ->getReadRelation(data_read_index)
-                           ->getString()
-                           .substr(start_pos + 1, end_pos - start_pos - 1))
-                    << "][color=" << color << "]"
-                    << "\n";
-        }
-
-        // Iterates over the write-DataSpaces
-        for (int data_write_index = 0;
-             data_write_index < getStmt(i)->getNumWrites();
-             data_write_index++) {
-            string writeDataSpace =
-                getStmt(i)->getWriteDataSpace(data_write_index);
-            // Set node color from data space type
-            std::string color = isParameter(writeDataSpace) ? "purple" :
-                                isReturnValue(writeDataSpace) ? "red" :
-                                "grey";
-            // Check to make sure the data space is not created if it already
-            // exists
-            if (!(std::count(data_spaces.begin(), data_spaces.end(),
-                             writeDataSpace))) {
-                ss
-                    << "\"" << writeDataSpace << "\"["
-                    << generateDotLabel(writeDataSpace)
-                    << "] [shape=box][style=bold][color=" << color << "];\n";
-
-                data_spaces.push_back(writeDataSpace);
-            }
-
-            size_t start_pos = getStmt(i)
-                                   ->getWriteRelation(data_write_index)
-                                   ->getString()
-                                   .rfind("[");
-            size_t end_pos = getStmt(i)
-                                 ->getWriteRelation(data_write_index)
-                                 ->getString()
-                                 .rfind("]");
-
-            ss << "\t\t"
-                    << "S" << i << "->\"" << writeDataSpace << "\"["
-                    << generateDotLabel(
-                           getStmt(i)
-                           ->getWriteRelation(data_write_index)
-                           ->getString()
-                           .substr(start_pos + 1, end_pos - start_pos - 1))
-                    << "][color=" << color << "]"
-                    << "\n";
-        }
-    }
-
-    ss << "}"; 
-    // Clean up memory.
-    for(int j = 0 ; j < maxLevel ; j++)
-	for (int k = 0 ; k <  stmts.size(); k++)
-	    delete projectedIS[j][k];
-    for(Set* set : transformedSpaces){
-        delete set;
-    }
-    return ss.str();
-}
-
-//! Lite version of polyhedra scanning to generate 
-//! toDot Clusters
-void Computation::toDotScan(std::vector<std::pair<int,Set*>> &activeStmts, int level,
-	       std::ostringstream& ss ,
-	       std::vector<std::vector<Set*> >&projectedIS){
-    if(activeStmts.size() == 1){
-	std::string stmIter = activeStmts[0].second->prettyPrintString();
-
-        ss << "S" << activeStmts[0].first
-                << "[" << generateDotLabel({stmIter, "\\n ",
-                   //getStmt(activeStmts[0].first)->getStmtSourceCode()})
-                   "S", std::to_string(activeStmts[0].first)})
-                << "][shape=Mrecord][style=bold]  [color=grey];\n";
-        return;
-    }
-    std::vector<std::vector< std::pair <int, Set*> > > bins=
-	    split(level,activeStmts);
-    if(bins.size() > 1 && level > 0 && level <= projectedIS.size() ){
-	std::string domainIter = projectedIS[level-1]
-		[activeStmts[0].first]->prettyPrintString();
-
-        ss << "subgraph cluster"<< level << " {\n"
-           << "style = filled;\n"
-           << " color = \"\";\n"
-           << generateDotLabel({"Domain :", domainIter})
-           << " \n";
-    }
-
-    for(auto active : bins){
-        toDotScan(active,level+1,ss,projectedIS);
-    }
-    if(bins.size() > 1 && level > 0 && level <= projectedIS.size() ){
-        ss << "}\n"; 
-    }
-}
-
-
-//! param  activeStmt is assumed to be sorted lexicographically
-std::vector<std::vector<std::pair<int,Set*> > > Computation::split
-	(int level, std::vector<std::pair<int,Set*> >& activeStmt){
-    std::map<std::string,std::vector<std::pair<int,Set*> > > grouping;
-    
-    for(std::pair<int,Set*> s : activeStmt){
-       if(s.second->getTupleDecl().elemIsConst(level)){
-           grouping[std::to_string(
- 			  s.second->getTupleDecl().elemConstVal(level))].push_back(s); 
- 	     	  
-       } else {
- 	  // This will be expanded further to use constraints;
-           grouping["t"].push_back(s);
-       }  
-    }
-    std::vector<std::vector <std::pair<int,Set*> > > res;
-    for( auto k : grouping){
-        //Next iteration of the algorithm will be
-        //focused on this section. 
-        res.push_back(k.second);
-    }
-    return res;
 }
 
 std::vector<std::pair<int, std::string>> Computation::getStmtDebugStrings() {
@@ -1901,22 +1606,32 @@ void Computation::addTransformation(unsigned int stmtIndex, Relation* rel) {
 }
 
 std::vector<Set*> Computation::applyTransformations() const {
-    std::vector<Relation*> executionSchedules = padExecutionSchedules();
+    std::vector<Relation*> transformations = getTransformations();
     std::vector<Set*> transformedSchedules;
+    for (int stmtNum = 0; stmtNum < getNumStmts(); ++stmtNum) {
+        Set* schedule = transformations[stmtNum]->Apply(
+            getStmt(stmtNum)->getIterationSpace());
+        transformedSchedules.push_back(schedule);
+        delete transformations[stmtNum];
+    }
+    transformations.clear();
+    return transformedSchedules;
+}
+
+std::vector<Relation*> Computation::getTransformations() const {
+    std::vector<Relation*> transformedSchedules = padExecutionSchedules();
     for (int stmtNum = 0; stmtNum < this->getNumStmts(); ++stmtNum) {
-        Stmt* currentStmt = getStmt(stmtNum);
-        Set* schedule = executionSchedules.at(stmtNum)->Apply(currentStmt->getIterationSpace());
-        // apply transformations in order, chaining together outputs and inputs
         for (Relation* transformation : transformationLists.at(stmtNum)) {
             std::cerr << "Transformation " << transformation->getString() << std::endl;
-            Set* scheduleAfterTransformation = transformation->Apply(schedule);
-            delete schedule;
-            schedule = scheduleAfterTransformation;
+            Relation* curr = transformedSchedules[stmtNum];
+            if( curr->outArity() != transformation->inArity()){
+                std::cerr<<"Mismatched Arities: cannot apply transformation" << std::endl;
+                continue;
+            }
+            transformedSchedules[stmtNum] =  transformation->Compose(curr);
+            delete curr;
         }
-        transformedSchedules.push_back(schedule);
     }
-    for (Relation* r : executionSchedules) { delete r; }
-    executionSchedules.clear();
     return transformedSchedules;
 }
 
@@ -1945,41 +1660,6 @@ std::vector<std::pair<int, Set*>> Computation::getIterSpaces() {
     return newIS;  
 }
 
-std::vector<Exp*> Computation::getEqualities(Set* s){
-    std::vector<Exp*> outputExp;
-    for (auto it = s->conjunctionBegin(); it != s->conjunctionEnd(); it++) {
-        for (Exp* e : (*it)->equalities()) {
-            outputExp.push_back(e);
-        }
-    }
-    return outputExp;
-}  
-
-std::string Computation::getSetMapping(Set* a, Set* b){
-    //New is a old is b
-    std::ostringstream output;
-    TupleDecl declA = a->getTupleDecl();
-    TupleDecl declB = b->getTupleDecl();
-    // decl.toString() gives the list of elements in the tuple (used for #define parameter list)
-    for (int i=0; i < declA.getSize(); i++) {
-        if (i != 0) { output << ", "; }
-        if (declB.elemIsConst(i)) { output << declB.elemToString(i); }
-    
-        bool found = false;
-        for (Exp* e : getEqualities(b)) {
-            Exp* mapping = e->solveForFactor(new VarTerm(declA.elemToString(i))); // Attempt to solve for var
-            if (mapping) {
-                found = true;
-                output << mapping->toString();
-                break;
-            }
-        }
-        if (!found) { output << declB.elemToString(i); }
-    }
-    std::cerr << output.str() << std::endl;
-    return output.str();
-}
-
 std::string Computation::codeGen(Set* knownConstraints) {
     std::ostringstream generatedCode;
     std::vector<std::string> iterSpaces;
@@ -1991,51 +1671,74 @@ std::string Computation::codeGen(Set* knownConstraints) {
     std::ostringstream stmtMacroUndefs;
     std::ostringstream stmtMacroDefs;
     int stmtCount = 0;
-    std::vector<std::pair<int, Set*>> newIS = getIterSpaces();
-    if (newIS.empty()) {
-        std::cerr << "Aborting codeGen()" << std::endl;
-        return "";
-    }
+    std::vector<Relation*> transformations = getTransformations();
 
     //Create a string for each statements iteration space
-    for (const auto& pair : newIS) {
-        Stmt* stmt = getStmt(pair.first);
-        
-        Set * oldIterSpace = stmt->getExecutionSchedule()->Apply(stmt->getIterationSpace());
-        std::string oldTupleString = 
-            oldIterSpace->getTupleDecl().toString();
-	    // new Codegen would require an application
-	    // be performed first before the set is sent
-	    // to omega. This is a temporary solution to
-	    // circumvent Omega's schedulling bug.
-        Set * iterSpace = pair.second;
-	    iterSpace->acceptVisitor(vOmegaReplacer);
-	    std::string tupleString =
-            iterSpace->getTupleDecl().toString();
-        // Stmt Macro:
+    for (Relation* rel : transformations) {
+        Stmt* stmt = getStmt(stmtCount);
+
         stmtMacroUndefs << "#undef s" << stmtCount << "\n"
                         << "#undef s_" << stmtCount << "\n";
-        stmtMacroDefs << "#define s_" << stmtCount << "(" << oldTupleString
-                      << ")   "
-                      << iegenlib::replaceInString(stmt->getStmtSourceCode(), DATA_SPACE_DELIMITER,
-                                               "")
+              
+        // Generate the first macro based on the original iteration space
+        Set* iterSpace = stmt->getIterationSpace();
+        // This is required to generate correct tuple variable names
+        iterSpace->acceptVisitor(vOmegaReplacer);
+
+        stmtMacroDefs << "#define s_" << stmtCount << "("
+                      << iterSpace->getTupleDecl().toString() << ")   "
+                      << iegenlib::replaceInString(stmt->getStmtSourceCode(),
+                             DATA_SPACE_DELIMITER, "")
                       << " \n";
-        stmtMacroDefs << "#define s" << stmtCount << "(" << tupleString
-                      << ")   s_" << stmtCount << "("
-                      << getSetMapping(oldIterSpace, iterSpace) << ");\n";
+
+        // Get the new iteration space set
+        Set* newIterSpace = rel->Apply(stmt->getIterationSpace());
+        // This is required to generate correct tuple variable names
+        newIterSpace->acceptVisitor(vOmegaReplacer); 
+
+        // Generate the second macro based on the new iteration space
+        // Generate a mapping between the two iteration spaces using
+        // the transformation relation
+        stmtMacroDefs << "#define s" << stmtCount << "("
+                      << newIterSpace->getTupleDecl().toString()
+                      << ")   s_" << stmtCount << "(";
+        // Generate mapping from out tuple -> in tuple
+        bool first = true;
+        TupleDecl decl = rel->getTupleDecl();
+        for (int i = 0; i < rel->inArity(); i++) {
+            // Handle commas
+            if (!first) { stmtMacroDefs << ", "; }
+
+            // Get the expression
+            Exp* e = rel->findFunction(i, rel->inArity(), rel->arity());
+            // Print the expression
+            // If e->equalZero = true, the expression may have no terms
+            // and prettyPrintString will print '', not '0'
+            stmtMacroDefs << (e && !e->equalsZero() ?
+                e->prettyPrintString(decl) : "0");
+            if (e) { delete e; }
+
+            first = false;
+        }
+        stmtMacroDefs << ");\n";
         stmtCount++;
 
+        // new Codegen would require an application
+	// be performed first before the set is sent
+	// to omega. This is a temporary solution to
+	// circumvent Omega's schedulling bug.
         std::string omegaIterString =
-            iterSpace->toOmegaString(vOmegaReplacer->getUFCallDecls());
+            newIterSpace->toOmegaString(vOmegaReplacer->getUFCallDecls());
         std::cout << "\nOmegaIterString: " << omegaIterString << std::endl;
 
         iterSpaces.push_back(omegaIterString);
         
         // Use identity transformation instead.
         //transforms.push_back(omega::Identity(iterSpace->arity()));
-        arity.push_back(iterSpace->arity());
+        arity.push_back(newIterSpace->arity());
         
-    	delete iterSpace;
+        delete newIterSpace;
+    	delete rel;
     }
 
     // define necessary macros collected from statements
@@ -2203,9 +1906,11 @@ void Computation::replaceDataSpaceName(std::string original, std::string newStri
     }
 
     //Rename return values as well
-    for(auto it = returnValues.begin(); it != returnValues.end(); it++){
-        std::string origReturnValue = (*it).first; 
-        (*it).first = iegenlib::replaceInString(origReturnValue, original, newString);
+    for (auto it = returnValues.begin(); it != returnValues.end(); it++){
+        if (it->first == original) { it->first = newString; }
+    }
+    for (auto it = parameters.begin(); it != parameters.end(); it++) { 
+        if (*it == original) { *it = newString; } 
     }
 }
 
@@ -2251,73 +1956,102 @@ Stmt::~Stmt() {
     dataWrites.clear();
 }
 
-bool Stmt::replaceDataSpaceReads(std::string searchString, std::string replacedString) {
+bool Stmt::replaceDataSpaceReads(std::string searchString, std::string replaceString) {
     if (searchString == "") { return false; }
     if (searchString[0] != '$') { searchString = "$" + searchString + "$"; }
-    if (replacedString != "" && replacedString[0] != '$') { replacedString = "$" + replacedString + "$"; }
-   
-    std::string oldSourceCode = getStmtSourceCode();
-    std::stringstream newSourceCode;
-    size_t eqPos = oldSourceCode.find("="), semiPos = oldSourceCode.find(";");
-    while (eqPos != std::string::npos) {
-        if (semiPos == std::string::npos) { semiPos = oldSourceCode.length() - 1; }
-        newSourceCode << oldSourceCode.substr(0, eqPos)
-                      << iegenlib::replaceInString(oldSourceCode.substr(eqPos, semiPos - eqPos + 1),
-                                                   searchString, replacedString);
-        oldSourceCode = oldSourceCode.substr(semiPos + 1);
-        eqPos = oldSourceCode.find("=");
-        semiPos = oldSourceCode.find(";");
-    }
-    newSourceCode << oldSourceCode;
-    setStmtSourceCode(newSourceCode.str());
+    if (replaceString != "" && replaceString[0] != '$') { replaceString = "$" + replaceString + "$"; }
 
-    for(auto& read: dataReads){
-       if (read.first.compare(searchString) == 0) { read.first = replacedString; }
+    bool isRead = false, isWrite = false;
+    for (auto& read : dataReads) {
+        if (read.first == searchString) {
+            read.first = replaceString;
+            isRead = true;
+            break;
+        }
+    }
+    for (auto& write : dataWrites) {
+        if (write.first == searchString) {
+            isWrite = true;
+            break;
+        }
     }
 
-    return getStmtSourceCode().compare(newSourceCode.str()) != 0;
+    if (!isRead) { return false; }
+    else if (!isWrite) {
+        replaceDataSpace(searchString, replaceString);
+    } else {
+        // Replace all but the first instance
+        // TODO: will not work if there's an if statement that
+        // reads from searchString
+        std::string oldSourceCode = getStmtSourceCode();
+        std::stringstream newSourceCode;
+        size_t pos = oldSourceCode.find(searchString);
+        newSourceCode << oldSourceCode.substr(0, pos + searchString.length());
+        newSourceCode << iegenlib::replaceInString(
+            oldSourceCode.substr(pos + searchString.length()),
+            searchString, replaceString);
+        setStmtSourceCode(newSourceCode.str());
+    }
+    return true; 
 }
 
-bool Stmt::replaceDataSpaceWrites(std::string searchString, std::string replacedString) {
+bool Stmt::replaceDataSpaceWrites(std::string searchString, std::string replaceString) {
     if (searchString == "") { return false; }
     if (searchString[0] != '$') { searchString = "$" + searchString + "$"; }
-    if (replacedString != "" && replacedString[0] != '$') { replacedString = "$" + replacedString + "$"; }
+    if (replaceString != "" && replaceString[0] != '$') { replaceString = "$" + replaceString + "$"; }
 
-    std::string oldSourceCode = getStmtSourceCode();
-    std::stringstream newSourceCode;
-    size_t eqPos = oldSourceCode.find("="), semiPos = oldSourceCode.find(";");
-    while (eqPos != std::string::npos) {
-        if (semiPos == std::string::npos) { semiPos = oldSourceCode.length() - 1; }
-        newSourceCode << iegenlib::replaceInString(oldSourceCode.substr(0, eqPos),
-                                                   searchString, replacedString)
-                      << oldSourceCode.substr(eqPos, semiPos - eqPos + 1);
-        oldSourceCode = oldSourceCode.substr(semiPos + 1);
-        eqPos = oldSourceCode.find("=");
-        semiPos = oldSourceCode.find(";");
+    bool isRead = false, isWrite = false;
+    for (auto& read : dataReads) {
+        if (read.first == searchString) {
+            isRead = true;
+            break;
+        }
     }
-    newSourceCode << oldSourceCode;
-    setStmtSourceCode(newSourceCode.str());
-
-    for(auto& write: dataWrites){
-        if (write.first.compare(searchString) == 0) { write.first = replacedString; }
+    for (auto& write : dataWrites) {
+        if (write.first == searchString) {
+            write.first = replaceString;
+            isWrite = true;
+            break;
+        }
     }
 
-    return getStmtSourceCode().compare(newSourceCode.str()) != 0;
+    if (!isWrite) { return false; }
+    else if (!isRead) {
+        replaceDataSpace(searchString, replaceString);
+    } else {
+        // Replace the first instance
+        // TODO: will not work if there's an if statement that
+        // reads from searchString
+        std::string oldSourceCode = getStmtSourceCode();
+        std::string newSourceCode;
+        newSourceCode.resize(oldSourceCode.length() -
+            searchString.length() + replaceString.length());
+        size_t pos = oldSourceCode.find(searchString);
+        if (pos == std::string::npos) { return false; }
+        newSourceCode.insert(0, oldSourceCode, 0, pos);
+        newSourceCode.insert(pos, replaceString);
+        newSourceCode.insert(pos + replaceString.length(),
+            oldSourceCode,
+            pos + searchString.length(),
+            oldSourceCode.length() - (pos + searchString.length()));
+        setStmtSourceCode(newSourceCode);
+    }
+    return true; 
 }
 
-void Stmt::replaceDataSpace(std::string searchString, std::string replacedString){
+void Stmt::replaceDataSpace(std::string searchString, std::string replaceString){
     if (searchString == "") { return; } 
 
     std::string oldSourceCode = getStmtSourceCode();
     std::string newSourceCode;
-    newSourceCode = iegenlib::replaceInString(oldSourceCode, searchString, replacedString);
+    newSourceCode = iegenlib::replaceInString(oldSourceCode, searchString, replaceString);
     setStmtSourceCode(newSourceCode);
 
     for(auto& write: dataWrites){
-       write.first = iegenlib::replaceInString(write.first, searchString, replacedString);
+       write.first = iegenlib::replaceInString(write.first, searchString, replaceString);
     }
     for(auto& read: dataReads){
-       read.first = iegenlib::replaceInString(read.first, searchString, replacedString);
+       read.first = iegenlib::replaceInString(read.first, searchString, replaceString);
     }
 }
 
@@ -2357,6 +2091,8 @@ Stmt& Stmt::operator=(const Stmt& other) {
             {writeInfo.first,
              std::unique_ptr<Relation>(new Relation(*writeInfo.second))});
     }
+    this->phiNode = other.phiNode;
+    this->arrayAccess = other.arrayAccess;
     return *this;
 }
 

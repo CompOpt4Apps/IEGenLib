@@ -92,7 +92,6 @@ class Computation {
     static bool isGuaranteedExecute(Stmt* stmt1, Stmt* stmt2);
 
     //! Returns a list of all the constraints of the given set
-    //  Note only inequalities count as constraints
     static std::vector<std::string> getSetConstraints(Set* set);
 
     //! add stmt
@@ -196,34 +195,18 @@ class Computation {
 
     //! Pads each statement's execution schedule with 0's such the all
     //  execution schedules have the same arity
+    //  Caller is responsible for deallocating Relation*
     std::vector<Relation*> padExecutionSchedules() const;
 
     //! Returns true if all input sets have the same arity, false otherwise
     bool consistentSetArity(const std::vector<Set*>& sets);
 
-    //! Compresses producer-consumer statements and returns a vector
-    //  of indices corresponding to all the remaining statements
-    //std::vector<int> compressPCNodes();
-
     //! Function returns a dot string representing nesting
     //  and loop carrie dependency. Internally it uses
     //  a lite version of polyhedral scanning to generate
     //  subgraphs in the dot file.
-    //  param compressPCNodes: if true, data spaces which are read only once
-    //      will be removed and their reads mapped to their single use instance
-    //  param mergeStmts: if true, data spaces and statements will not generate
-    //      separate nodes
+    //  TODO: Add graph options as parameters
     std::string toDotString();
-    std::string toDotStringOld();
-    void toDotScan(std::vector<std::pair<int,Set*>> &activeStmts, int level,
-	       std::ostringstream& ss, std::vector<std::vector<Set*> >&projectedIS);
-
-    //! Function splits an active statement to disjoint
-    //! list of statements.
-    //  \param   level
-    //  \param   activeStmt current active statements.
-    std::vector<std::vector<std::pair<int,Set*> > > split
-	    (int level, std::vector<std::pair<int,Set*> >& activeStmt);
 
     //! Compiles each statement's debug string into a list
     std::vector<std::pair<int, std::string>> getStmtDebugStrings();
@@ -238,13 +221,16 @@ class Computation {
     //! Returns a list of final statement schedules after transformation.
     std::vector<Set*> applyTransformations() const;
 
+    //! Sequentially composes addes transfomations onto each statement's
+    //  execution schedule (scheduling function)
+    //  Caller is responsible for deallocating Relation*
+    std::vector<Relation*> getTransformations() const;
+
     //! Returns a list of iteration spaces after padding and applying transformations
     std::vector<std::pair<int, Set*>> getIterSpaces();
 
-    //!Gets the equality constraints from a set
-    static std::vector<Exp*> getEqualities(Set* s);
-    //Creates a mapping from the tuple variables in a to tuple variables in b
-    static std::string getSetMapping(Set* a, Set* b);
+    //Creates a mapping from the variables of the in tuple to those of the out tuple
+    static std::string getRelationMapping(Relation* r);
 
     //! Method generates c code.
     //! Known constraints are constraints that can be considered already
@@ -380,14 +366,14 @@ class Stmt {
 
     //! Replace data space name only where read from
     //! Returns true if such a read is found, false otherwise
-    bool replaceDataSpaceReads(std::string searchString, std::string replacedString);
+    bool replaceDataSpaceReads(std::string searchString, std::string replaceString);
 
     //! Replace data space name only where written to
     //! Returns true if such a write is found, false otherwise
-    bool replaceDataSpaceWrites(std::string searchString, std::string replacedString);
+    bool replaceDataSpaceWrites(std::string searchString, std::string replaceString);
 
     //! Replace data space name
-    void replaceDataSpace(std::string searchString, std::string replacedString); 
+    void replaceDataSpace(std::string searchString, std::string replaceString); 
 
     //! Assignment operator (copy)
     Stmt& operator=(const Stmt& other);
@@ -465,9 +451,9 @@ class Stmt {
 
     // Getter/setters for Stmt booleans
     bool isPhiNode() const { return phiNode; }
-    void setPhiNode() { phiNode = true; };
+    void setPhiNode(bool val) { phiNode = val; };
     bool isArrayAccess() const { return arrayAccess; }
-    void setArrayAccess() { arrayAccess = true; };
+    void setArrayAccess(bool val) { arrayAccess = val; };
 
    private:
     //! Is the statement a phi node or array access
