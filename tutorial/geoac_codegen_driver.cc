@@ -2109,12 +2109,12 @@ int main(int argc, char **argv){
     //Calling toDot() on the Computation structure
     ofstream dotFileStream("codegen_dot.txt");
     cout << "Entering toDot()" << "\n";
-    string dotString = updateSources->toDotString();
-    dotFileStream << dotString;
+//    string dotString = updateSources->toDotString();
+//    dotFileStream << dotString;
     dotFileStream.close();
 
     //Writing header file for codegen
-/*    ofstream headStream;
+    ofstream headStream;
     headStream.open("codegen.h");
     headStream << updateSources->codeGenMemoryManagementString();
     headStream.close();
@@ -2123,7 +2123,7 @@ int main(int argc, char **argv){
     ofstream outStream;
     outStream.open("codegen.c");
     outStream << updateSources->codeGen();
-    outStream.close();*/
+    outStream.close();
 
     return 0;
 }
@@ -3279,7 +3279,7 @@ Computation* Eval_Spline_f_Computation(){
 
     //Creating s2
     evalSplineFComputation->addDataSpace("$eval_spline_f_return$", "double");
-    Stmt* s2 = new Stmt("$eval_spline_f_reurn$ = 0.0;",
+    Stmt* s2 = new Stmt("$eval_spline_f_return$ = 0.0;",
         "{[0]}",  //Iteration schedule - Only happening one time (not iterating)
         "{[0]->["+std::to_string(newTuplePos+1)+"]}", //Execution schedule - scheduling statement to be first (scheduling function)
         {},
@@ -3302,8 +3302,8 @@ Computation* Eval_Spline_f_Computation(){
         {
             {"$k$","{[0]->[0]}"},
             {"$x$","{[0]->[0]}"},
-            {"$Spline_x_vals$","{[0]->[k1]: k1 = $k$}"},
-            {"$Spline_x_vals$","{[0]->[kp1]: kp1 = $k$+1}"}
+            {"$Spline_x_vals$","{[k]->[k1]: k1 = $k$}"},
+            {"$Spline_x_vals$","{[k]->[kp1]: kp1 = $k$+1}"}
         },
         {
             {"$X$", "{[0]->[0]}"}
@@ -3319,10 +3319,10 @@ Computation* Eval_Spline_f_Computation(){
         {
             {"$k$","{[0]->[0]}"},
             {"$Spline_slopes$","{[0]->[x1]: x1 = $k$}"},
-            {"$Spline_x_vals$","{[0]->[kp1]: kp1 = $k$+1}"},
-            {"$Spline_x_vals$","{[0]->[k1]: k1 = $k$}"},
-            {"$Spline_f_vals$","{[0]->[kp1]: kp1 = $k$+1}"},
-            {"$Spline_f_vals$","{[0]->[k1]: k1 = $k$}"}
+            {"$Spline_x_vals$","{[k]->[kp1]: kp1 = $k$+1}"},
+            {"$Spline_x_vals$","{[k]->[k1]: k1 = $k$}"},
+            {"$Spline_f_vals$","{[k]->[kp1]: kp1 = $k$+1}"},
+            {"$Spline_f_vals$","{[k]->[k1]: k1 = $k$}"}
         },
         {
             {"$A$", "{[0]->[0]}"}
@@ -3337,11 +3337,11 @@ Computation* Eval_Spline_f_Computation(){
         "{[0]->["+std::to_string(newTuplePos+4)+"]}",
         {
             {"$k$","{[0]->[0]}"},
-            {"$Spline_slopes$","{[0]->[kp1]: kp1 = $k$+1}"},
-            {"$Spline_x_vals$","{[0]->[kp1]: kp1 = $k$+1}"},
-            {"$Spline_x_vals$","{[0]->[k1]: k1 = $k$}"},
-            {"$Spline_f_vals$","{[0]->[kp1]: kp1 = $k$+1}"},
-            {"$Spline_f_vals$","{[0]->[k1]: k1 = $k$}"}
+            {"$Spline_slopes$","{[k]->[kp1]: kp1 = $k$+1}"},
+            {"$Spline_x_vals$","{[k]->[kp1]: kp1 = $k$+1}"},
+            {"$Spline_x_vals$","{[k]->[k1]: k1 = $k$}"},
+            {"$Spline_f_vals$","{[k]->[kp1]: kp1 = $k$+1}"},
+            {"$Spline_f_vals$","{[k]->[k1]: k1 = $k$}"}
         },
         {
             {"$B$", "{[0]->[0]}"}
@@ -3357,8 +3357,8 @@ Computation* Eval_Spline_f_Computation(){
         {
             {"$k$","{[0]->[0]}"},
             {"$X$","{[0]->[0]}"},
-            {"$Spline_f_vals$","{[0]->[kp1]: kp1 = $k$+1}"},
-            {"$Spline_f_vals$","{[0]->[k1]: k1 = $k$}"},
+            {"$Spline_f_vals$","{[k]->[kp1]: kp1 = $k$+1}"},
+            {"$Spline_f_vals$","{[k]->[k1]: k1 = $k$}"},
             {"$A$","{[0]->[0]}"},
             {"$B$","{[0]->[0]}"}
         },
@@ -3457,8 +3457,8 @@ Computation* Eval_Spline_df_Computation(){
         {
             {"$k$","{[0]->[0]}"},
             {"$x$","{[0]->[0]}"},
-            {"$Spline_x_vals$","{[0]->[k1]: k1 = $k$}"},
-            {"$Spline_x_vals$","{[0]->[kp1]: kp1 = $k$+1}"}
+            {"$Spline_x_vals$","{[k]->[k1]: k1 = $k$}"},
+            {"$Spline_x_vals$","{[k]->[kp1]: kp1 = $k$+1}"}
         },//Data reads
         {
             {"$X$", "{[0]->[0]}"}
@@ -3472,11 +3472,11 @@ Computation* Eval_Spline_df_Computation(){
         "{[0]->["+std::to_string(newTuplePos+3)+"]}",
         {
             {"$k$","{[0]->[0]}"},
-            {"$Spline_slopes$","{[0]->[k1]: k1 = $k$}"},
-            {"$Spline_x_vals$","{[0]->[kp1]: kp1 = $k$+1}"},
-            {"$Spline_x_vals$","{[0]->[k1]: k1 = $k$}"},
-            {"$Spline_f_vals$","{[0]->[kp1]: kp1 = $k$+1}"},
-            {"$Spline_f_vals$","{[0]->[k1]: k1 = $k$}"}
+            {"$Spline_slopes$","{[k]->[k1]: k1 = $k$}"},
+            {"$Spline_x_vals$","{[k]->[kp1]: kp1 = $k$+1}"},
+            {"$Spline_x_vals$","{[k]->[k1]: k1 = $k$}"},
+            {"$Spline_f_vals$","{[k]->[kp1]: kp1 = $k$+1}"},
+            {"$Spline_f_vals$","{[k]->[k1]: k1 = $k$}"}
         },
         {
             {"$A$", "{[0]->[0]}"}
@@ -3490,11 +3490,11 @@ Computation* Eval_Spline_df_Computation(){
         "{[0]->["+std::to_string(newTuplePos+4)+"]}",
         {
             {"$k$","{[0]->[0]}"},
-            {"$Spline_slopes$","{[0]->[kp1]: kp1 = $k$+1}"},
-            {"$Spline_x_vals$","{[0]->[kp1]: kp1 = $k$+1}"},
-            {"$Spline_x_vals$","{[0]->[k1]: k1 = $k$}"},
-            {"$Spline_f_vals$","{[0]->[kp1]: kp1 = $k$+1}"},
-            {"$Spline_f_vals$","{[0]->[k1]: k1 = $k$}"}
+            {"$Spline_slopes$","{[k]->[kp1]: kp1 = $k$+1}"},
+            {"$Spline_x_vals$","{[k]->[kp1]: kp1 = $k$+1}"},
+            {"$Spline_x_vals$","{[k]->[k1]: k1 = $k$}"},
+            {"$Spline_f_vals$","{[k]->[kp1]: kp1 = $k$+1}"},
+            {"$Spline_f_vals$","{[k]->[k1]: k1 = $k$}"}
         },
         {
             {"$B$", "{[0]->[0]}"}
@@ -3508,10 +3508,10 @@ Computation* Eval_Spline_df_Computation(){
         "{[0]->["+std::to_string(newTuplePos+5)+"]}",
         {
             {"$k$","{[0]->[0]}"},
-            {"$Spline_f_vals$","{[0]->[kp1]: kp1 = $k$+1}"},
-            {"$Spline_f_vals$","{[0]->[k1]: k1 = $k$}"},
-            {"$Spline_x_vals$","{[0]->[kp1]: kp1 = $k$+1}"},
-            {"$Spline_x_vals$","{[0]->[k1]: k1 = $k$}"},
+            {"$Spline_f_vals$","{[k]->[kp1]: kp1 = $k$+1}"},
+            {"$Spline_f_vals$","{[k]->[k1]: k1 = $k$}"},
+            {"$Spline_x_vals$","{[k]->[kp1]: kp1 = $k$+1}"},
+            {"$Spline_x_vals$","{[k]->[k1]: k1 = $k$}"},
             {"$X$", "{[0]->[0]}"},
             {"$A$", "{[0]->[0]}"},
             {"$B$", "{[0]->[0]}"}
@@ -3601,8 +3601,8 @@ Computation* Eval_Spline_ddf_Computation(){
         {
             {"$k$","{[0]->[0]}"},
             {"$x$","{[0]->[0]}"},
-            {"$Spline_x_vals$","{[0]->[k1]: k1 = $k$}"},
-            {"$Spline_x_vals$","{[0]->[kp1]: kp1 = $k$+1}"}
+            {"$Spline_x_vals$","{[k]->[k1]: k1 = $k$}"},
+            {"$Spline_x_vals$","{[k]->[kp1]: kp1 = $k$+1}"}
         },//Data reads
         {
             {"$X$", "{[0]->[0]}"}
@@ -3616,11 +3616,11 @@ Computation* Eval_Spline_ddf_Computation(){
         "{[0]->["+std::to_string(newTuplePos+3)+"]}",
         {
             {"$k$","{[0]->[0]}"},
-            {"$Spline_slopes$","{[0]->[k1]: k1 = $k$}"},
-            {"$Spline_x_vals$","{[0]->[kp1]: kp1 = $k$+1}"},
-            {"$Spline_x_vals$","{[0]->[k1]: k1 = $k$}"},
-            {"$Spline_f_vals$","{[0]->[kp1]: kp1 = $k$+1}"},
-            {"$Spline_f_vals$","{[0]->[k1]: k1 = $k$}"}
+            {"$Spline_slopes$","{[k]->[k1]: k1 = $k$}"},
+            {"$Spline_x_vals$","{[k]->[kp1]: kp1 = $k$+1}"},
+            {"$Spline_x_vals$","{[k]->[k1]: k1 = $k$}"},
+            {"$Spline_f_vals$","{[k]->[kp1]: kp1 = $k$+1}"},
+            {"$Spline_f_vals$","{[k]->[k1]: k1 = $k$}"}
         },
         {
             {"$A$", "{[0]->[0]}"}
@@ -3634,11 +3634,11 @@ Computation* Eval_Spline_ddf_Computation(){
         "{[0]->["+std::to_string(newTuplePos+4)+"]}",
         {
             {"$k$","{[0]->[0]}"},
-            {"$Spline_slopes$","{[0]->[kp1]: kp1 = $k$+1}"},
-            {"$Spline_x_vals$","{[0]->[kp1]: kp1 = $k$+1}"},
-            {"$Spline_x_vals$","{[0]->[k1]: k1 = $k$}"},
-            {"$Spline_f_vals$","{[0]->[kp1]: kp1 = $k$+1}"},
-            {"$Spline_f_vals$","{[0]->[k1]: k1 = $k$}"}
+            {"$Spline_slopes$","{[k]->[kp1]: kp1 = $k$+1}"},
+            {"$Spline_x_vals$","{[k]->[kp1]: kp1 = $k$+1}"},
+            {"$Spline_x_vals$","{[k]->[k1]: k1 = $k$}"},
+            {"$Spline_f_vals$","{[k]->[kp1]: kp1 = $k$+1}"},
+            {"$Spline_f_vals$","{[k]->[k1]: k1 = $k$}"}
         },
         {
             {"$B$", "{[0]->[0]}"}
@@ -3655,8 +3655,8 @@ Computation* Eval_Spline_ddf_Computation(){
             {"$A$", "{[0]->[0]}"},
             {"$B$", "{[0]->[0]}"},
             {"$X$", "{[0]->[0]}"},
-            {"$Spline_x_vals$","{[0]->[kp1]: kp1 = $k$+1}"},
-            {"$Spline_x_vals$","{[0]->[k1]: k1 = $k$}"}
+            {"$Spline_x_vals$","{[k]->[kp1]: kp1 = $k$+1}"},
+            {"$Spline_x_vals$","{[k]->[k1]: k1 = $k$}"}
         },
         {
             {"$eval_spline_ddf_return$", "{[0]->[0]}"}
@@ -3695,8 +3695,8 @@ Computation* Find_Segment_Computation(){
         "{[i]->[0, i, 0]}", //Execution schedule - scheduling statement to be first (scheduling function)
         {
             {"$x$","{[0]->[0]}"},
-            {"$x_vals$","{[0]->[i]}"},
-            {"$x_vals$","{[0]->[ip1]: ip1 = i+1}"}}, //Reads
+            {"$x_vals$","{[i]->[i]}"},
+            {"$x_vals$","{[i]->[ip1]: ip1 = i+1}"}}, //Reads
         {{"$prev$","{[0]->[0]}"}}   //writes
         ); 
     cout << "Source statement : " << s0->getStmtSourceCode() << "\n\t"
