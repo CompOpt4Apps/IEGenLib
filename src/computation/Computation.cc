@@ -1985,11 +1985,10 @@ bool Stmt::replaceDataSpaceReads(std::string searchString, std::string replaceSt
         // reads from searchString
         std::string oldSourceCode = getStmtSourceCode();
         std::stringstream newSourceCode;
-        size_t pos = oldSourceCode.find(searchString);
-        newSourceCode << oldSourceCode.substr(0, pos + searchString.length());
+        size_t pos = oldSourceCode.find(searchString) + searchString.length();
+        newSourceCode << oldSourceCode.substr(0, pos);
         newSourceCode << iegenlib::replaceInString(
-            oldSourceCode.substr(pos + searchString.length()),
-            searchString, replaceString);
+            oldSourceCode.substr(pos), searchString, replaceString);
         setStmtSourceCode(newSourceCode.str());
     }
     return true; 
@@ -2047,11 +2046,11 @@ void Stmt::replaceDataSpace(std::string searchString, std::string replaceString)
     newSourceCode = iegenlib::replaceInString(oldSourceCode, searchString, replaceString);
     setStmtSourceCode(newSourceCode);
 
-    for(auto& write: dataWrites){
-       write.first = iegenlib::replaceInString(write.first, searchString, replaceString);
+    for(auto& write : dataWrites){
+        if (write.first == searchString) { write.first = replaceString; }
     }
-    for(auto& read: dataReads){
-       read.first = iegenlib::replaceInString(read.first, searchString, replaceString);
+    for(auto& read : dataReads){
+        if (read.first == searchString) { read.first = replaceString; }
     }
 }
 
