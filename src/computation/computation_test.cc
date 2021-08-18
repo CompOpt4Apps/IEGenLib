@@ -1091,6 +1091,7 @@ TEST_F(ComputationTest, TupleAssignmentUnitTest) {
     checkTupleAssignments("{[i,j]: i = 3 && j = row(i)}", { "3","0"});
 }
 
+/*
 #pragma mark PolyhedralSplit
 TEST_F(ComputationTest, PolyhedralSplit){
     Computation c;
@@ -1140,7 +1141,7 @@ TEST_F(ComputationTest, PolyhedralSplit){
     delete s0;
     delete s1;
     delete s2;
-}
+}*/
 
 // TODO: This needs to be updated for the new toDotString() function
 TEST_F(ComputationTest, ToDotUnitTest){
