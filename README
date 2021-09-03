@@ -34,7 +34,8 @@ are being added. You can get the latest source code from this git repository:
 
 ---- A. Building IEGenLib ----------
 
-If you want to do a quick build, just run:
+If you want to do a quick build, first check that you have required packages
+installed (see Requirements section below), then run:
     make
     make test
     make install
@@ -78,22 +79,31 @@ output; graphviz is needed to visualize the dot output.
 
 
     Requirements
+        * make: version 4.2.1 known to work
+
+        * automake: version 1.16.1 known to work
+
+        * m4: 1.4.18 known to work
+
+        * libtool: version 2.4.6 known to work
+
+        * texinfo: version 6.7 known to work
+
         * cmake 2.6 or newer
 
         * C++ compiler, the below versions are known to work
             Mac i686-apple-darwin10-g++-4.2.1,
             GCC 4.6.3 20120306 (Red Hat 4.6.3-2)
 
-        * If re-generating parser files BISON 2.4 and FLEX 2.5 or newer
+        * Flex: version 2.5.35 known to work
+
+        * Bison: version 2.4.1 known to work
 
         * If re-generating docs
             * doxygen (http://www.stack.nl/~dimitri/doxygen/index.html,
                        known to work with 1.5.6 and 1.7.5)
             * dot (http://www.graphviz.org)
 
-        * If you plan to change the grammar for the sets or relations:
-            * Flex: version 2.5.35 known to work
-            * Bison: version 2.4.1 known to work
 
 Please notify us if you find that other versions of these tools that
 work or do not work for you.
