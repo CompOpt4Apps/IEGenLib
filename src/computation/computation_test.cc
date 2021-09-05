@@ -506,20 +506,36 @@ TEST_F(ComputationTest, IsParameterOrReturn) {
 }
 
 TEST_F(ComputationTest, SSARenaming) {
-    Computation* test = new Computation();
+    
+    Computation* computation = new Computation();
 
-    test->addParameter("$foo$", "int");
-    test->addDataSpace("$bar$", "int");
+    computation->addParameter("$foo$", "int");
+    computation->addDataSpace("$bar$", "int");
    
-    test->addStmt(new Stmt(
-        "$bar$ = $foo$;", "[0]", "[0]->[0]", {{"$foo$", "{[0]->[0]}"}}, {{"$bar$", "{[0]->[0]}"}}
-    ));
-    test->addStmt(new Stmt(
-        "$foo$ = $bar$ + 1", "[0]", "[0]->[1]", {{"$bar$", "{[0]->[0]}"}}, {{"$foo$", "{[0]->[0]}"}}
-    ));
-    std::cerr << test->codeGen() << std::endl;
+    Stmt* s1 = new Stmt("$bar$ = $foo$;",
+             "{[0]}", 
+             "{[0]->[0]}",
+             {{"$foo$", "{[0]->[0]}"}},
+             {{"$bar$", "{[0]->[0]}"}}
+         );
+    computation->addStmt(s1);
+    
+    Stmt* s2 =new Stmt("$foo$ = $bar$ + 1",
+             "{[0]}", "{[0]->[1]}", 
+             {{"$bar$", "{[0]->[0]}"}},
+             {{"$foo$", "{[0]->[0]}"}}
+         );
+    computation->addStmt(s2);
+    
+    std::string codeGen = computation->codeGen();
+    
+    EXPECT_EQ("#undef s0\n#undef s_0\n#undef s1\n#undef s_1\n#define s_0(__x0) "
+    "  bar = foo; \n#define s0(__x0)   s_0(0);\n#define s_1(__x0)   foo = bar +"
+    " 1 \n#define s1(__x0)   s_1(0);\n\n\nt1 = 0; \n\ns0(0);\ns1(1);\n\n#undef "
+    "s0\n#undef s_0\n#undef s1\n#undef s_1\n",codeGen);
 
-    delete test;
+    
+    delete computation;
 }
 
 TEST_F(ComputationTest, AppendComputationSSA) {
