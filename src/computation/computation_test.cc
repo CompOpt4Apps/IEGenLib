@@ -352,13 +352,21 @@ TEST_F(ComputationTest, BasicForLoop) {
     
     forLoopComp->addStmt(s0);
     forLoopComp->addStmt(s1);
-    
+   
     std::string omegString= forLoopComp->toOmegaString();
     std::string codegen = forLoopComp->codeGen();
 
-    EXPECT_EQ("",omegString);
-    EXPECT_EQ("",codegen);
+    EXPECT_EQ("s0\n$tmp$ = $f$[i];\nDomain\nsymbolic N; { [__x0, i, __x2] : __"
+    "x0 = 0 && __x2 = 0 && i >= 0 && -i + N - 1 >= 0 };\ns1\n$tmp1$ = $f1$[i];"
+    "\nDomain\nsymbolic N; { [__x0, i, __x2] : __x0 = 0 && __x2 - 1 = 0 && i >"
+    "= 0 && -i + N - 1 >= 0 };\n",omegString);
 
+    EXPECT_EQ("#undef s0\n#undef s_0\n#undef s1\n#undef s_1\n#define s_0(i)   "
+    "tmp = f[i]; \n#define s0(__x0, a1, __x2)   s_0(a1);\n#define s_1(i)   tmp"
+    "1 = f1[i]; \n#define s1(__x0, a1, __x2)   s_1(a1);\n\n\nt1 = 0; \nt2 = 0;"
+    " \nt3 = 0; \n\nfor(t2 = 0; t2 <= N-1; t2++) {\n  s0(0,t2,0);\n  s1(0,t2,1"
+    ");\n}\n\n#undef s0\n#undef s_0\n#undef s1\n#undef s_1\n", codegen);
+ 
     delete forLoopComp;
 }
 
