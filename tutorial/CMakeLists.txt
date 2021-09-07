@@ -35,8 +35,14 @@ add_dependencies(append_computation_example iegenlib)
 target_link_libraries(append_computation_example iegenlib isl codegen omega gmp)
 target_include_directories(append_computation_example PUBLIC ${CMAKE_SOURCE_DIR}/src)
 
+file(GLOB_RECURSE miniFluxDiv_codegen_driver_SOURCES miniFluxDiv_codegen_driver.cc)
+add_executable(miniFluxDiv_codegen_driver EXCLUDE_FROM_ALL ${miniFluxDiv_codegen_driver_SOURCES})
+add_dependencies(miniFluxDiv_codegen_driver iegenlib)
+target_link_libraries(miniFluxDiv_codegen_driver iegenlib isl codegen omega gmp)
+target_include_directories(miniFluxDiv_codegen_driver PUBLIC ${CMAKE_SOURCE_DIR}/src)
+
 # Set binary output directory for examples
-set_target_properties(sparse_format_example computation_example geoac_codegen_driver manual_graph_testing macro_testing append_computation_example
+set_target_properties(sparse_format_example computation_example geoac_codegen_driver manual_graph_testing macro_testing append_computation_example miniFluxDiv_codegen_driver
     PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/tutorial"
 )
@@ -49,5 +55,6 @@ add_custom_target(tutorial
             manual_graph_testing
             macro_testing
             append_computation_example
+            miniFluxDiv_codegen_driver
     COMMENT "Building tutorial examples"
 )
