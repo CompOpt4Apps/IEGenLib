@@ -1579,15 +1579,29 @@ bool Computation::consistentSetArity(const std::vector<Set*>& sets) {
     return true;
 }
 
-std::string Computation::toDotString() {
+std::string Computation::toDotString(bool fusePCRelations,
+		bool reduceNormalNodes, bool addDebugStmts, 
+		int stmtIdx, bool stmtReads,bool stmtWrites) {
     //TODO: Deal with disjunction of conjunctions later.
 
     CompGraph graph = CompGraph();
     graph.create(this);
-//    graph.fusePCRelations();
-//    graph.reduceNormalNodes();
-//    graph.addDebugStmts(getStmtDebugStrings());
-//    return graph.toDotString(546, true, true);
+    if (fusePCRelations) {
+        graph.fusePCRelations();
+    }
+    if(reduceNormalNodes){
+        graph.reduceNormalNodes();
+    }
+
+    if(addDebugStmts){
+        graph.addDebugStmts(getStmtDebugStrings()); 
+    }
+    
+    if(stmtIdx != -1){
+        return graph.toDotString(stmtIdx,stmtReads,stmtWrites);
+    }
+
+//  return graph.toDotString(546, true, true);
     return graph.toDotString();
 }
 

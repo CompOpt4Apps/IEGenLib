@@ -3,7 +3,7 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
-
+#include <string.h>
 using iegenlib::Computation;
 using namespace std;
 
@@ -620,6 +620,61 @@ int forComp1(Computation* c, int i, int idx) {
  */
 int main(int argc, char **argv){
 
+    // Parsing to dot command line options
+    bool fusePCRelations = false;
+    bool reduceNormalNodes = false;
+    bool addDebugStmts = false; 
+    int  stmtIdx = -1;
+    bool stmtReads = false;
+    bool stmtWrites = false;
+    int currIndex = 1;
+    bool showHelp = false;
+    while(currIndex < argc){
+	std::string argString (argv[currIndex]);
+        if (argString == "-fuse"){
+           fusePCRelations = true;
+	   currIndex++;
+	}else if (argString == "-reduce"){
+	   reduceNormalNodes = true;
+	   currIndex++;
+	}else if (argString == "-debug"){
+           addDebugStmts= true;
+	   currIndex++;
+	} else if (argString == "-stmtid"){
+	   if (currIndex + 1 >= argc ){
+              cout << "Statement Id -stmtid <IDNumber> \n";
+	      showHelp = true;
+	      break;
+	   }
+	   stmtIdx = stoi(argv[currIndex+1]);
+	   currIndex+=2;
+	} else if (argString == "-stmt-reads"){
+           stmtReads = true;
+	   currIndex++;
+	}else if (argString == "-stmt-writes"){
+	   stmtWrites = true;
+	   currIndex++;
+	}else if (argString == "-h"){
+	   showHelp = true;
+	   break;
+	}else {
+           showHelp = true;
+           currIndex++;
+	   break;
+	}
+    }
+    if (showHelp){
+       cout << "<app> [-fuse] [-debug] [-reduce]"
+	    << " [-stmtid <IdNumber>] [-stmt-reads] [-stmt-writes]\n";
+       return 0;
+    }
+
+    cout << "fuse: " << fusePCRelations 
+	   << " reduce: " << reduceNormalNodes
+	  << " addDebugStmts: " <<addDebugStmts 
+	 << " stmtIdx: "<< stmtIdx
+	<< " stmtReads: "  << stmtReads
+	<< " stmtWrites:" << stmtWrites << "\n";
     Computation* updateSources = new Computation();
 
     updateSources->addParameter("$ray_length$", "double");
@@ -2109,9 +2164,9 @@ int main(int argc, char **argv){
     //Calling toDot() on the Computation structure
     ofstream dotFileStream("codegen_dot.txt");
     cout << "Entering toDot()" << "\n";
-    dotFileStream << updateSources->toDotString();
+    dotFileStream << updateSources->toDotString(fusePCRelations,
+		reduceNormalNodes,addDebugStmts,stmtIdx,stmtReads,stmtWrites);
     dotFileStream.close();
-
     //Writing header file for codegen
     ofstream headStream;
     headStream.open("codegen.h");

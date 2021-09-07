@@ -202,11 +202,14 @@ class Computation {
     bool consistentSetArity(const std::vector<Set*>& sets);
 
     //! Function returns a dot string representing nesting
-    //  and loop carrie dependency. Internally it uses
-    //  a lite version of polyhedral scanning to generate
-    //  subgraphs in the dot file.
+    //  and loop carrie dependency. 
     //  TODO: Add graph options as parameters
-    std::string toDotString();
+    std::string toDotString(bool fusePCRelations = false,
+		    bool reduceNormalNodes = false,
+		    bool addDebugStmts = false, 
+		    int stmtIdx = -1,
+		    bool stmtReads = false,
+		    bool stmtWrites = false);
 
     //! Compiles each statement's debug string into a list
     std::vector<std::pair<int, std::string>> getStmtDebugStrings();
