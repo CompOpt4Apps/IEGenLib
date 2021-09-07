@@ -6,7 +6,7 @@
 
 /*
  *This is a file represnting a portion of miniFluxdiv, the
- *mini_flux_div_lc function within miniFluxdiv-explain-baseline.cpp
+ *mini_flux_div_lc function within miniFluxdiv-explain-serial.cpp
  *using calls to the computation api.
  */
 using iegenlib::Computation;
