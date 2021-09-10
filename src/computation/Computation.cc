@@ -58,7 +58,9 @@ namespace iegenlib {
 unsigned int Computation::numRenames = 0;
 unsigned int Computation::dataRenameCnt = 0;
 
-Computation::Computation() {}
+Computation::Computation(std::string& name) {
+  setName(name);
+}
 
 Computation::~Computation() {
     clear();
@@ -82,6 +84,14 @@ bool Computation::operator==(const Computation& other) const {
             this->parameters == other.parameters &&
             this->returnValues == other.returnValues &&
             this->transformationLists == other.transformationLists);
+}
+
+std::string Computation::getName() const {
+  return name;
+}
+
+void Computation::setName(std::string newName) {
+  this->name = newName;
 }
 
 Computation* Computation::getUniquelyNamedClone() const {
@@ -1956,6 +1966,8 @@ bool Computation::areEquivalentRenames(std::string a, std::string b) {
 }
 
 void Computation::expectEqualTo(const Computation *other) const {
+  ASSERT_EQ(other->getName(), this->getName());
+
   ASSERT_EQ(other->isComplete(), this->isComplete());
 
   EXPECT_EQ(other->getTransformations(), this->getTransformations());

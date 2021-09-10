@@ -55,7 +55,10 @@ class AppendComputationResult;
 class Computation {
    public:
     //! Construct an empty Computation
-    Computation();
+    Computation() = default;
+
+    //! Construct an empty Computation with the given name
+    explicit Computation(std::string& name);
 
     //! Destructor
     ~Computation();
@@ -68,6 +71,11 @@ class Computation {
 
     //! Equality operator
     bool operator==(const Computation& other) const;
+
+	//! Get the name of this Computation
+	std::string getName() const;
+	//! Set the name of this Computation
+	void setName(std::string newName);
 
     //! Get a copy of this Computation with uniquely-prefixed data spaces
     //! Uses string find-and-replace to change data space names, with the
@@ -285,6 +293,9 @@ class Computation {
 	void expectEqualTo(const Computation* other) const;
 
     private:
+
+  	//! Human-readable name of Computation
+  	std::string name;
 
     //! maps array name : true - has constant accesses at all dimensions
     std::map<std::string, bool> arrays;
