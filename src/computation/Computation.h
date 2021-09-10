@@ -82,7 +82,7 @@ class Computation {
     static std::string getPrefixedDataSpaceName(const std::string& originalName, const std::string& prefix);
 
     //! Takes in an iteration space set and removes all "$"
-    //  all trimmed data spaces are stored in dataSpaces if passed in 
+    //  all trimmed data spaces are stored in dataSpaces if passed in
     //  returns the new trimmed set, which must be deallocated by the caller
     static Set* trimISDataSpaces(Set* set);
     static Set* trimISDataSpaces(Set* set, std::set<std::string> &trimmedNames);
@@ -105,7 +105,7 @@ class Computation {
     void addDataSpace(std::string dataSpaceName, std::string dataSpaceType);
     //! Get data spaces
     std::map<std::string, std::string> getDataSpaces() const;
-    //! Get data space's type    
+    //! Get data space's type
     std::string getDataSpaceType(std::string) const;
     //! Check if a given string is a name of a data space of this Computation
     bool isDataSpace(std::string name) const;
@@ -202,11 +202,11 @@ class Computation {
     bool consistentSetArity(const std::vector<Set*>& sets);
 
     //! Function returns a dot string representing nesting
-    //  and loop carrie dependency. 
+    //  and loop carrie dependency.
     //  TODO: Add graph options as parameters
     std::string toDotString(bool fusePCRelations = false,
 		    bool reduceNormalNodes = false,
-		    bool addDebugStmts = false, 
+		    bool addDebugStmts = false,
 		    int stmtIdx = -1,
 		    bool stmtReads = false,
 		    bool stmtWrites = false);
@@ -243,42 +243,47 @@ class Computation {
 
     //!! Generates code from an omega string
     std::string omegaCodeGenFromString(
-            std::vector<int> relationArity, 
+            std::vector<int> relationArity,
             std::vector<std::string> iterSpacesStr, std::string known);
 
     //! Method returns omega strings for each statement
-    std::string toOmegaString(); 
+    std::string toOmegaString();
 
-    //! Function compares two statement pair 
-    //  and returns the true if a is lexicographically 
-    //  lower in order to b. 
-    static bool activeStatementComparator(const std::pair<int,Set*>& a, 
+    //! Function compares two statement pair
+    //  and returns the true if a is lexicographically
+    //  lower in order to b.
+    static bool activeStatementComparator(const std::pair<int,Set*>& a,
 		   const std::pair<int,Set*>& b);
-   
-    //! Function reschudles statment s1 to come before 
+
+    //! Function reschudles statment s1 to come before
     //  statement s2
     //  \param s1 First statement Id
     //  \param s2 Second statement Id.
     void reschedule(int s1, int s2);
-   
 
-    //! Function fuses two statements at some level 
-    //  in their execution schedule. In the resulting 
+
+    //! Function fuses two statements at some level
+    //  in their execution schedule. In the resulting
     //  computation after fusion, S1 will be ordered before
     //  S2, other statements at that level will be adjusted accordingly
     //  so reflect the new changes.
     //
     //  \param s1        first statement id
     //  \param s2        second statement id
-    //  \param fuseLevel Level at which to fuse S1 and S2 
-    //  
+    //  \param fuseLevel Level at which to fuse S1 and S2
+    //
     //
     //  Example S0: {[0,i,0,j,0] | stuff}; S1:{[1,i,0,j,0] | stuff}
     //  fuse(S0,S1,2);
     //  Result
     //  S0: {[0,i,0,j,0] | stuff}; S1:{[0,i,1,j,0] | stuff}
     void fuse (int s1, int s2, int fuseLevel);
-   
+
+
+	//! EXPECT with gTest this Computation equals the given one, component by component.
+	//! This method is for testing with gTest only.
+	void expectEqualTo(const Computation* other) const;
+
     private:
 
     //! maps array name : true - has constant accesses at all dimensions
@@ -290,7 +295,7 @@ class Computation {
     //  at the specified read/write index in stmt
     //  returns true if successful, false otherwise
     bool enforceArraySSA(Stmt* stmt, int dataIdx, bool isRead);
- 
+
     //! Locates phi nodes for a given statement. These occur when a data space
     //  which is being read can take multiple values based on the control flow
     void locatePhiNodes(Stmt* stmt);
@@ -301,10 +306,10 @@ class Computation {
     //! For each write in the new statement, rename the written dataspace in all
     //  statements from the last statement to the last write to that data space.
     void enforceSSA(Stmt* stmt);
- 
+
     //! Information on all statements in the Computation
     std::vector<Stmt*> stmts;
-    
+
     //! Data spaces available in the Computation, pairs of name : type
     std::map<std::string, std::string> dataSpaces;
 
@@ -322,7 +327,7 @@ class Computation {
     //! Assert that a given string would be a valid data space name, that is, it is properly delimited by $'s
     static bool assertValidDataSpaceName(const std::string& name);
 
-    //! Number of times *any* Computation has been appended into
+  //! Number of times *any* Computation has been appended into
     //! others, for creating unique name prefixes.
     static unsigned int numRenames;
 
@@ -376,7 +381,7 @@ class Stmt {
     bool replaceDataSpaceWrites(std::string searchString, std::string replaceString);
 
     //! Replace data space name
-    void replaceDataSpace(std::string searchString, std::string replaceString); 
+    void replaceDataSpace(std::string searchString, std::string replaceString);
 
     //! Assignment operator (copy)
     Stmt& operator=(const Stmt& other);
@@ -457,6 +462,10 @@ class Stmt {
     void setPhiNode(bool val) { phiNode = val; };
     bool isArrayAccess() const { return arrayAccess; }
     void setArrayAccess(bool val) { arrayAccess = val; };
+
+	//! EXPECT with gTest this Stmt equals the given one, component by component.
+	//! This method is for testing with gTest only.
+	void expectEqualTo(const Stmt* other) const;
 
    private:
     //! Is the statement a phi node or array access
