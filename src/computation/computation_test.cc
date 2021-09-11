@@ -150,58 +150,11 @@ class ComputationTest : public ::testing::Test {
 
         EXPECT_EQ(expectedTuplePosition, result.tuplePosition);
         EXPECT_EQ(expectedReturnValues, result.returnValues);
-        expectComputationsEqual(expectedComp, appendedTo);
+		appendedTo->expectEqualTo(expectedComp);
     }
     
     void checkToDotString(Computation* comp, std::string expectedDot){
         EXPECT_EQ(expectedDot, comp->toDotString());
-    }
-
-    //! EXPECT with gTest that two Computations are equal, component by component.
-    void expectComputationsEqual(Computation* expectedComp, Computation* actualComp) {
-        ASSERT_EQ(expectedComp->getNumStmts(), actualComp->getNumStmts());
-
-        for (unsigned int i = 0; i < expectedComp->getNumStmts(); ++i) {
-            SCOPED_TRACE("Statement " + std::to_string(i));
-
-            Stmt* expectedStmt = expectedComp->getStmt(i);
-            Stmt* actualStmt = actualComp->getStmt(i);
-
-            EXPECT_EQ(expectedStmt->getStmtSourceCode(), actualStmt->getStmtSourceCode());
-
-            EXPECT_EQ(expectedStmt->getIterationSpace()->prettyPrintString(),
-                      actualStmt->getIterationSpace()->prettyPrintString());
-
-            EXPECT_EQ(expectedStmt->getExecutionSchedule()->prettyPrintString(),
-                      actualStmt->getExecutionSchedule()->prettyPrintString());
-
-            ASSERT_EQ(expectedStmt->getNumReads(), actualStmt->getNumReads());
-            for (unsigned int j = 0; j < expectedStmt->getNumReads(); ++j) {
-                EXPECT_EQ(expectedStmt->getReadDataSpace(j),
-                          actualStmt->getReadDataSpace(j));
-                EXPECT_EQ(expectedStmt->getReadRelation(j)->prettyPrintString(),
-                          actualStmt->getReadRelation(j)->prettyPrintString());
-            }
-
-            ASSERT_EQ(expectedStmt->getNumWrites(), actualStmt->getNumWrites());
-            for (unsigned int j = 0; j < expectedStmt->getNumWrites(); ++j) {
-                EXPECT_EQ(expectedStmt->getWriteDataSpace(j),
-                          actualStmt->getWriteDataSpace(j));
-                EXPECT_EQ(expectedStmt->getWriteRelation(j)->prettyPrintString(),
-                          actualStmt->getWriteRelation(j)->prettyPrintString());
-            }
-        }
-
-        EXPECT_EQ(expectedComp->getDataSpaces(), actualComp->getDataSpaces());
-
-        ASSERT_EQ(expectedComp->getNumParams(), actualComp->getNumParams());
-        for (unsigned int i = 0; i < expectedComp->getNumParams(); ++i) {
-            SCOPED_TRACE("Parameter " + std::to_string(i));
-            EXPECT_EQ(expectedComp->getParameterName(i), actualComp->getParameterName(i));
-            EXPECT_EQ(expectedComp->getParameterType(i), actualComp->getParameterType(i));
-        }
-
-        EXPECT_EQ(expectedComp->getReturnValues(), actualComp->getReturnValues());
     }
 };
 
