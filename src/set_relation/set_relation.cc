@@ -1321,6 +1321,55 @@ Conjunction* Conjunction::Intersect(const Conjunction* rhs) const {
     return retval;
 }
 
+
+/*!
+ * Returns true if term in conjunction is bounded.
+ * A term is bounded if it has an upper and lower 
+ * bound.
+ */
+bool Conjunction::isConstBounded (TupleVarTerm* tuple_var){
+   if ( tuple_var->tvloc()>=arity()){
+       throw assert_exception("conjunction::isConstBounded tuple_var arity "
+                        "does not match that of conjunction");
+   }	   
+   bool upperBoundFound = false;
+   bool lowerBoundFound = false;
+   // Search for lower  and upper bounds
+   for (Exp* exp : mInequalities){
+      //Find expression with negative factor
+      //which will mean an upper bound
+      bool foundUF = false;
+      TupleVarTerm* foundTupleVar ;
+      for (Term* t : exp->getTermList()){
+         if (t->isUFCall()){
+            foundUF = true;
+	 }
+	 if (t->type() == "TupleVarTerm" &&
+	     ((TupleVarTerm*)t)->tvloc() == tuple_var->tvloc()){
+	    foundTupleVar = (TupleVarTerm*)t;
+	 }
+      }
+      if(!foundTupleVar){
+         continue;
+      }
+      
+      if (!upperBoundFound) {
+         upperBoundFound = 
+		 !foundUF && foundTupleVar->coefficient() < 0;
+      } 
+     
+      if (!lowerBoundFound) {
+        lowerBoundFound = 
+		 !foundUF && foundTupleVar->coefficient() > 0;
+      } 
+   }
+
+   return upperBoundFound&& lowerBoundFound;
+}
+
+
+
+
 /*! Treating this Conjunction like a domain or range.  Creates
 ** a new set where passed in tuple expression is
 ** bound assuming this domain, or range.
@@ -1334,8 +1383,8 @@ Conjunction* Conjunction::Intersect(const Conjunction* rhs) const {
 Conjunction* Conjunction::boundTupleExp(const TupleExpTerm& tuple_exp) const {
     // Check that arities match.
     if (tuple_exp.size()!=(unsigned)arity()) {
-        throw assert_exception("Conjunction::boundTupleExp tuple_exp arity "
-                               "does not match that of Conjunction");
+        throw assert_exception("conjunction::boundtupleexp tuple_exp arity "
+                               "does not match that of conjunction");
     }
 
     // Create a zero arity conjunction.

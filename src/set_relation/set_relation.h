@@ -278,6 +278,15 @@ public:
     // returns the number of all terms (unique and replicates)
     // inside the conjuction.
     int termCount();
+    
+    /*!
+     * Returns true if term in conjunction is bounded.
+     * A term is bounded if it has an upper and lower 
+     * bound.
+     */
+    bool isConstBounded (TupleVarTerm* t);
+    
+
 
     void setUnsat(){ unsat = true;}
     bool isUnsat(){return unsat;}

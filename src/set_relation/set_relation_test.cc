@@ -2868,6 +2868,18 @@ TEST_F(SetRelationTest,SetLessThan) {
     EXPECT_TRUE(*s3 < *s4);
     EXPECT_FALSE(*s4 < *s3);
 
+    // TESTING ONTO
+
+    //Set *s100 = new Set("{ [i] : i >= 0 && i <= NR }");
+    //Set *s101 = new Set("{ [i] : i >= 0 && i < NR }");
+
+    // s5 = { [a,b] : __tv0 = 0 && tv1 >= 0 }
+    // s6 = { [a,b] : __tv0 = 0 }
+    // Given: ([a,b] : __tv0 = 0 && tv1 >= 0) > ([a,b] : __tv0 = 0)
+    //EXPECT_TRUE(*s101 < *s100);
+
+
+
     Set *s5 = new Set("{ [a,b] : a = 0 && b >= 0 }");
     Set *s6 = new Set("{ [a,b] : a = 0 }");
 

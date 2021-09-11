@@ -180,7 +180,7 @@ class CompGraph {
     CompGraph() = default;
     ~CompGraph() = default;
 
-//    CompGraph copy();
+//  CompGraph copy();
 
     void create(Computation* comp);
     void addDebugStmts(std::vector<std::pair<int, std::string>> debugStmts);
@@ -192,7 +192,10 @@ class CompGraph {
     void reduceNormalNodes();
 
     void fusePCRelations();
-
+    
+    void removeDeadNodes( std::vector<int>& stmtIds, 
+        std::vector<std::string>&dataSpaces);
+    
     std::string toDotString();
     std::string toDotString(int stmtIdx, bool reads, bool writes);
 

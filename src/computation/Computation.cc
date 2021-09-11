@@ -1579,6 +1579,38 @@ bool Computation::consistentSetArity(const std::vector<Set*>& sets) {
     return true;
 }
 
+
+void Computation::deleteDeadStatements(){
+    CompGraph graph;
+    graph.create(this);
+    std::vector<int> deadStmts;
+    std::vector<std::string> deadDataSpaces;
+    graph.removeDeadNodes(deadStmts,deadDataSpaces);
+    
+
+    for(std::string data: deadDataSpaces){
+        
+	auto it = dataSpaces.find(data);
+        if(it != dataSpaces.end()){
+	    dataSpaces.erase(it);
+	}
+    }
+
+    // Delete statements.
+    std::vector<Stmt*> toDelete;
+    for(int stmtId : deadStmts){ 
+        toDelete.push_back(getStmt(stmtId));
+    }
+
+    for(Stmt* st: toDelete){
+        auto it = std::find(stmts.begin(),stmts.end(),st);
+	if (it != stmts.end()){
+	    stmts.erase(it);
+	}
+	delete st;
+    }
+}
+
 std::string Computation::toDotString(bool fusePCRelations,
 		bool reduceNormalNodes, bool addDebugStmts, 
 		int stmtIdx, bool stmtReads,bool stmtWrites) {

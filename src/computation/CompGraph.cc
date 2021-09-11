@@ -3,7 +3,7 @@
 #include "util.h"
 #include "Computation.h"
 
-//#define DEBUG
+#define DEBUG
 
 namespace iegenlib {
 
@@ -538,6 +538,66 @@ void CompGraph::reduceStmts() {
 
 void CompGraph::reduceStmts(int toLevel) {
     subgraph.reduceStmts(toLevel);
+}
+
+
+
+void CompGraph::removeDeadNodes( std::vector<int>& stmtIds, 
+        std::vector<std::string>&dataSpaces){
+    stmtIds.clear();
+    dataSpaces.clear();
+    for (auto& pair: dataNodes){
+        if (pair.second->getType() == NodeTypes::unread){
+	    std::queue<NodePtr> q;
+	    q.push(pair.second);
+	    while(!q.empty()){
+                NodePtr dataNode = q.front();
+		q.pop();
+		
+	        if (dataNode->numOutEdges() != 0){
+	           continue;
+		}
+                auto it= std::find_if(dataNodes.begin(),dataNodes.end(),
+		    [dataNode] (const std::pair<std::string,NodePtr>& data)
+		    {return data.second == dataNode;});
+                if(it!=dataNodes.end()){
+		    dataSpaces.push_back(it->first);
+		}
+		for(auto& edge:dataNode->getInEdges()){
+		    NodePtr stmtNode =  edge->getStmtNode();
+		    // Find StatementID change this to use
+		    // an Id stored in the Node DS
+		    auto it = std::find_if(stmtNodes.begin(),stmtNodes.end(),
+		        [stmtNode] (const std::pair<int,NodePtr> stmt) 
+			{return stmt.second == stmtNode;});
+		    if (it != stmtNodes.end()){
+	                stmtIds.push_back(it->first);
+		    }
+		    // Add all the data nodes that
+		    // statement node reads from
+		    for(auto &e : stmtNode->getInEdges()){
+	                NodePtr dN = e->getDataNode();
+			stmtNode->removeInEdge(e);
+			dN->removeOutEdge(e);
+			// Only consider data nodes.
+			if (dN->getType() == NodeTypes::data){
+		            q.push(dN);	
+			}
+
+		    }
+		}
+	        // Remove all InEdges to this node
+		for (auto& edge: dataNode->getInEdges()){
+		    dataNode->removeInEdge(edge);	
+		}
+	    }
+	}	
+    }
+#ifdef DEBUG
+    std::cerr << "Total Data Nodes To be Removed: " << dataSpaces.size()
+	   << "\n Total Stmt Nodes to be removed: " << stmtIds.size()
+	  << "\n"; 
+#endif
 }
 
 void CompGraph::reduceDataSpaces() {

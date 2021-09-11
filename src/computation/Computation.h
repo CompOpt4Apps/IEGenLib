@@ -93,6 +93,12 @@ class Computation {
 
     //! Returns a list of all the constraints of the given set
     static std::vector<std::string> getSetConstraints(Set* set);
+    
+    
+    //! Deletes statements that writes 
+    //! to nodes that are never read from 
+    //! in the computation.
+    void deleteDeadStatements();
 
     //! add stmt
     void addStmt(Stmt* stmt);
@@ -403,6 +409,8 @@ class Stmt {
     void setIterationSpace(std::string newIterationSpaceStr);
     //! Set the iteration space (adopted)
     void setIterationSpace(Set* newIterationSpace);
+
+
 
     //! Get the execution schedule Relation
     Relation* getExecutionSchedule() const;

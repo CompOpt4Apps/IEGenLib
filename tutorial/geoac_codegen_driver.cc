@@ -629,6 +629,7 @@ int main(int argc, char **argv){
     bool stmtWrites = false;
     int currIndex = 1;
     bool showHelp = false;
+    bool deleteDeadNodes = false;
     while(currIndex < argc){
 	std::string argString (argv[currIndex]);
         if (argString == "-fuse"){
@@ -636,6 +637,9 @@ int main(int argc, char **argv){
 	   currIndex++;
 	}else if (argString == "-reduce"){
 	   reduceNormalNodes = true;
+	   currIndex++;
+	}else if (argString == "-delete-dead"){
+	   deleteDeadNodes = true;
 	   currIndex++;
 	}else if (argString == "-debug"){
            addDebugStmts= true;
@@ -664,17 +668,11 @@ int main(int argc, char **argv){
 	}
     }
     if (showHelp){
-       cout << "<app> [-fuse] [-debug] [-reduce]"
+       cout << "<app> [-delete-dead] [-fuse] [-debug] [-reduce]"
 	    << " [-stmtid <IdNumber>] [-stmt-reads] [-stmt-writes]\n";
        return 0;
     }
 
-    cout << "fuse: " << fusePCRelations 
-	   << " reduce: " << reduceNormalNodes
-	  << " addDebugStmts: " <<addDebugStmts 
-	 << " stmtIdx: "<< stmtIdx
-	<< " stmtReads: "  << stmtReads
-	<< " stmtWrites:" << stmtWrites << "\n";
     Computation* updateSources = new Computation();
 
     updateSources->addParameter("$ray_length$", "double");
@@ -2164,6 +2162,11 @@ int main(int argc, char **argv){
     //Calling toDot() on the Computation structure
     ofstream dotFileStream("codegen_dot.txt");
     cout << "Entering toDot()" << "\n";
+    if (deleteDeadNodes){
+        cout << "Deleting Dead Nodes\n";
+	updateSources->deleteDeadStatements();
+    }
+
     dotFileStream << updateSources->toDotString(fusePCRelations,
 		reduceNormalNodes,addDebugStmts,stmtIdx,stmtReads,stmtWrites);
     dotFileStream.close();
