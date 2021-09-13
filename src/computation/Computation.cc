@@ -202,7 +202,7 @@ bool Computation::enforceArraySSA(Stmt* stmt, int dataIdx, bool isRead) {
         if (!isDataSpace(newDataSpace)) {
             // Add the rename as a data space
             if (isParameter(dataSpace)) {
-                addParameter(newDataSpace, "TODO: get array type");
+                addParameter(newDataSpace, getDataSpaceType(dataSpace));
             } else {
                 addDataSpace(newDataSpace, getDataSpaceType(dataSpace));
             }
