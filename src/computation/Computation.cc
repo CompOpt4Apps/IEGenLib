@@ -78,11 +78,15 @@ Computation& Computation::operator=(const Computation& other) {
 }
 
 bool Computation::operator==(const Computation& other) const {
-    return (this->stmts == other.stmts &&
-            this->dataSpaces == other.dataSpaces &&
-            this->parameters == other.parameters &&
-            this->returnValues == other.returnValues &&
-            this->transformationLists == other.transformationLists);
+    return (
+        this->name == other.name &&
+        this->arrays == other.arrays &&
+        this->stmts == other.stmts &&
+        this->dataSpaces == other.dataSpaces &&
+        this->parameters == other.parameters &&
+        this->returnValues == other.returnValues &&
+        this->transformationLists == other.transformationLists
+        );
 }
 
 std::string Computation::getName() const {
@@ -2152,32 +2156,16 @@ Stmt& Stmt::operator=(const Stmt& other) {
 }
 
 bool Stmt::operator==(const Stmt& other) const {
-    // compare source code, iter space and exec schedule
-    if (!(this->stmtSourceCode == other.stmtSourceCode &&
-          *this->iterationSpace == *other.iterationSpace &&
-          *this->executionSchedule == *other.executionSchedule)) {
-        return false;
-    }
-
-    // compare data accesses, first by number then contents
-    if (this->dataReads.size() != other.dataReads.size() ||
-        this->dataWrites.size() != other.dataWrites.size()) {
-        return false;
-    }
-    for (auto i = 0; i < this->dataReads.size(); ++i) {
-        if (!(this->dataReads[i].first == other.dataReads[i].first &&
-              *this->dataReads[i].second == *other.dataReads[i].second)) {
-            return false;
-        }
-    }
-    for (auto i = 0; i < this->dataWrites.size(); ++i) {
-        if (!(this->dataWrites[i].first == other.dataWrites[i].first &&
-              *this->dataWrites[i].second == *other.dataWrites[i].second)) {
-            return false;
-        }
-    }
-
-    return true;
+    return (
+        this->phiNode == other.phiNode &&
+        this->arrayAccess == other.arrayAccess &&
+        this->debug == other.debug &&
+        this->stmtSourceCode == other.stmtSourceCode &&
+        this->iterationSpace == other.iterationSpace &&
+        this->executionSchedule == other.executionSchedule &&
+        this->dataReads == other.dataReads &&
+        this->dataWrites == other.dataWrites
+        );
 }
 
 Stmt* Stmt::getUniquelyNamedClone(const std::string& prefix, const std::map<std::string, std::string>& dataSpaces) const {
