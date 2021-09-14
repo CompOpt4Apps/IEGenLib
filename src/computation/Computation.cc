@@ -24,7 +24,6 @@
 
 #include <code_gen/parser/parser.h>
 #include <codegen.h>
-#include <gtest/gtest.h>
 
 #include <algorithm>
 #include <set>
@@ -1997,33 +1996,6 @@ bool Computation::areEquivalentRenames(std::string a, std::string b) {
     return getOriginalDataSpaceName(a).compare(getOriginalDataSpaceName(b)) == 0;
 }
 
-void Computation::expectEqualTo(const Computation *other) const {
-  ASSERT_EQ(other->getName(), this->getName());
-
-  ASSERT_EQ(other->isComplete(), this->isComplete());
-
-  EXPECT_EQ(other->getTransformations(), this->getTransformations());
-
-  ASSERT_EQ(other->getNumStmts(), this->getNumStmts());
-  for (unsigned int i = 0; i < this->getNumStmts(); ++i) {
-	SCOPED_TRACE("Statement " + std::to_string(i));
-	this->getStmt(i)->expectEqualTo(other->getStmt(i));
-  }
-
-  EXPECT_EQ(other->getDataSpaces(), this->getDataSpaces());
-
-  ASSERT_EQ(other->getNumParams(), this->getNumParams());
-  for (unsigned int i = 0; i < this->getNumParams(); ++i) {
-	SCOPED_TRACE("Parameter " + std::to_string(i));
-	EXPECT_EQ(other->getParameterName(i), this->getParameterName(i));
-	EXPECT_EQ(other->getParameterType(i), this->getParameterType(i));
-  }
-
-  EXPECT_EQ(other->getReturnValues(), this->getReturnValues());
-  EXPECT_EQ(other->getActiveOutValues(), this->getActiveOutValues());
-
-  EXPECT_TRUE(*this == *other);
-}
 
 /* Stmt */
 
@@ -2633,40 +2605,6 @@ void VisitorChangeUFsForOmega::postVisitUFCallTerm(UFCallTerm* callTerm) {
 
     // restore coefficient, which was changed temporarily for printing
     callTerm->setCoefficient(originalCoefficient);
-}
-
-void Stmt::expectEqualTo(const Stmt *other) const {
-  ASSERT_EQ(other->isComplete(), this->isComplete());
-
-  EXPECT_EQ(other->getStmtSourceCode(), this->getStmtSourceCode());
-
-  EXPECT_EQ(other->getIterationSpace()->prettyPrintString(),
-			this->getIterationSpace()->prettyPrintString());
-
-  EXPECT_EQ(other->getExecutionSchedule()->prettyPrintString(),
-			this->getExecutionSchedule()->prettyPrintString());
-
-  ASSERT_EQ(other->getNumReads(), this->getNumReads());
-  for (unsigned int j = 0; j < this->getNumReads(); ++j) {
-	EXPECT_EQ(other->getReadDataSpace(j),
-			  this->getReadDataSpace(j));
-	EXPECT_EQ(other->getReadRelation(j)->prettyPrintString(),
-			  this->getReadRelation(j)->prettyPrintString());
-  }
-
-  ASSERT_EQ(other->getNumWrites(), this->getNumWrites());
-  for (unsigned int j = 0; j < this->getNumWrites(); ++j) {
-	EXPECT_EQ(other->getWriteDataSpace(j),
-			  this->getWriteDataSpace(j));
-	EXPECT_EQ(other->getWriteRelation(j)->prettyPrintString(),
-			  this->getWriteRelation(j)->prettyPrintString());
-  }
-
-  EXPECT_EQ(other->getAllDebugStr(), this->getAllDebugStr());
-  EXPECT_EQ(other->isPhiNode(), this->isPhiNode());
-  EXPECT_EQ(other->isArrayAccess(), this->isArrayAccess());
-
-  EXPECT_TRUE(*this == *other);
 }
 
 }  // namespace iegenlib

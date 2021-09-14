@@ -293,11 +293,6 @@ class Computation {
     //  S0: {[0,i,0,j,0] | stuff}; S1:{[0,i,1,j,0] | stuff}
     void fuse (int s1, int s2, int fuseLevel);
 
-
-	//! EXPECT with gTest this Computation equals the given one, component by component.
-	//! This method is for testing with gTest only.
-	void expectEqualTo(const Computation* other) const;
-
     private:
 
   	//! Human-readable name of Computation

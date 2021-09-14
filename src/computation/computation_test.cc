@@ -71,9 +71,9 @@ class ComputationTest : public ::testing::Test {
     //                     zero to N-1 where N is the number of statements.
     //                     Transformation affect statemennts in a computation
     //                     This paramter is the expected result of an applied
-    //                     transformation on each statement. Each set in the 
-    //                     vector represent the corresponding result of 
-    //                     transformation on a statement id. 
+    //                     transformation on each statement. Each set in the
+    //                     vector represent the corresponding result of
+    //                     transformation on a statement id.
     void checkTransformation(Computation*comp,
 		                  std::vector<std::string> expectedSet){
         std::vector<Set*> transforms=  comp->applyTransformations();
@@ -85,7 +85,7 @@ class ComputationTest : public ::testing::Test {
 	    EXPECT_TRUE(*expected==*s);
 	    delete s;
 	    delete expected;
-	}	
+	}
     }
 
     //! attempt to convert the given Relation to Omega format,
@@ -150,11 +150,76 @@ class ComputationTest : public ::testing::Test {
 
         EXPECT_EQ(expectedTuplePosition, result.tuplePosition);
         EXPECT_EQ(expectedReturnValues, result.returnValues);
-		appendedTo->expectEqualTo(expectedComp);
+        expectComputationsEqual(appendedTo, expectedComp);
     }
-    
+
     void checkToDotString(Computation* comp, std::string expectedDot){
         EXPECT_EQ(expectedDot, comp->toDotString());
+    }
+
+    //! EXPECT with gTest that two Computations are equal, component by component.
+	void expectComputationsEqual(const Computation* actual, const Computation* expected) {
+        ASSERT_EQ(expected->getName(), actual->getName());
+        SCOPED_TRACE("Computation '" + actual->getName() + "'");
+
+        ASSERT_EQ(expected->isComplete(), actual->isComplete());
+
+        EXPECT_EQ(expected->getTransformations(), actual->getTransformations());
+
+        ASSERT_EQ(expected->getNumStmts(), actual->getNumStmts());
+        for (unsigned int i = 0; i < actual->getNumStmts(); ++i) {
+          SCOPED_TRACE("Statement " + std::to_string(i));
+          actual->getStmt(i)->expectEqualTo(expected->getStmt(i));
+        }
+
+        EXPECT_EQ(expected->getDataSpaces(), actual->getDataSpaces());
+
+        ASSERT_EQ(expected->getNumParams(), actual->getNumParams());
+        for (unsigned int i = 0; i < actual->getNumParams(); ++i) {
+          SCOPED_TRACE("Parameter " + std::to_string(i));
+          EXPECT_EQ(expected->getParameterName(i), actual->getParameterName(i));
+          EXPECT_EQ(expected->getParameterType(i), actual->getParameterType(i));
+        }
+
+        EXPECT_EQ(expected->getReturnValues(), actual->getReturnValues());
+        EXPECT_EQ(expected->getActiveOutValues(), actual->getActiveOutValues());
+
+        EXPECT_TRUE(*actual == *expected);
+	}
+
+    //! EXPECT with gTest that two Stmts are equal, component by component.
+    void expectStmtsEqual(const Stmt* actual, const Stmt* expected) {
+        ASSERT_EQ(expected->isComplete(), actual->isComplete());
+
+        EXPECT_EQ(expected->getStmtSourceCode(), actual->getStmtSourceCode());
+
+        EXPECT_EQ(expected->getIterationSpace()->prettyPrintString(),
+                  actual->getIterationSpace()->prettyPrintString());
+
+        EXPECT_EQ(expected->getExecutionSchedule()->prettyPrintString(),
+                  actual->getExecutionSchedule()->prettyPrintString());
+
+        ASSERT_EQ(expected->getNumReads(), actual->getNumReads());
+        for (unsigned int j = 0; j < actual->getNumReads(); ++j) {
+          EXPECT_EQ(expected->getReadDataSpace(j),
+                    actual->getReadDataSpace(j));
+          EXPECT_EQ(expected->getReadRelation(j)->prettyPrintString(),
+                    actual->getReadRelation(j)->prettyPrintString());
+        }
+
+        ASSERT_EQ(expected->getNumWrites(), actual->getNumWrites());
+        for (unsigned int j = 0; j < actual->getNumWrites(); ++j) {
+          EXPECT_EQ(expected->getWriteDataSpace(j),
+                    actual->getWriteDataSpace(j));
+          EXPECT_EQ(expected->getWriteRelation(j)->prettyPrintString(),
+                    actual->getWriteRelation(j)->prettyPrintString());
+        }
+
+        EXPECT_EQ(expected->getAllDebugStr(), actual->getAllDebugStr());
+        EXPECT_EQ(expected->isPhiNode(), actual->isPhiNode());
+        EXPECT_EQ(expected->isArrayAccess(), actual->isArrayAccess());
+
+        EXPECT_TRUE(*actual == *expected);
     }
 };
 
@@ -270,7 +335,7 @@ TEST_F(ComputationTest, ForwardTriangularSolve) {
 }
 
 TEST_F(ComputationTest, BasicForLoop) {
-    // Basic for loop with 2 statements 
+    // Basic for loop with 2 statements
     // for (i = 0; i < N; i++) /loop over rows
     //     s0:tmp = f[i];
     //     s1:tmp1 = f1[i];
@@ -278,34 +343,34 @@ TEST_F(ComputationTest, BasicForLoop) {
 
     std::vector<std::pair<std::string, std::string> > dataReads;
     std::vector<std::pair<std::string, std::string> > dataWrites;
-    
+
     Computation* forLoopComp = new Computation();
-    
+
     forLoopComp->addDataSpace("$tmp$", "int");
     forLoopComp->addDataSpace("$f$", "int");
     forLoopComp->addDataSpace("$tmp1$", "int");
     forLoopComp->addDataSpace("$f1$", "int");
     forLoopComp->addDataSpace("$N$", "int");
-    
+
     dataWrites.push_back(make_pair("$tmp$", "{[i]->[0]}"));
     dataReads.push_back(make_pair("$f$", "{[i]->[i]}"));
     Stmt* s0 = new Stmt("$tmp$ = $f$[i];", "{[i]: 0 <= i < N}", "{[i] ->[0,i,0]}",
              dataReads, dataWrites);
-    
+
     dataReads.clear();
     dataWrites.clear();
-    
+
     dataWrites.push_back(make_pair("$tmp1$", "{[i]->[0]}"));
     dataReads.push_back(make_pair("$f1$", "{[i]->[i]}"));
     Stmt* s1 = new Stmt("$tmp1$ = $f1$[i];", "{[i]: 0 <= i < N}", "{[i] ->[0,i,1]}",
              dataReads, dataWrites);
-    
+
     dataReads.clear();
     dataWrites.clear();
-    
+
     forLoopComp->addStmt(s0);
     forLoopComp->addStmt(s1);
-   
+
     std::string omegString= forLoopComp->toOmegaString();
     std::string codegen = forLoopComp->codeGen();
 
@@ -319,7 +384,7 @@ TEST_F(ComputationTest, BasicForLoop) {
     "1 = f1[i]; \n#define s1(__x0, a1, __x2)   s_1(a1);\n\n\nt1 = 0; \nt2 = 0;"
     " \nt3 = 0; \n\nfor(t2 = 0; t2 <= N-1; t2++) {\n  s0(0,t2,0);\n  s1(0,t2,1"
     ");\n}\n\n#undef s0\n#undef s_0\n#undef s1\n#undef s_1\n", codegen);
- 
+
     delete forLoopComp;
 }
 
@@ -328,21 +393,21 @@ TEST_F(ComputationTest, BasicForLoop) {
 TEST_F(ComputationTest, OmegaCodeGenFromString){
     std::vector<int> arity;
     std::vector<std::string> omegaIterationSpaces;
-	
+
     arity.push_back(3);
     arity.push_back(3);
     omegaIterationSpaces.push_back("symbolic N; { [__x0, i, __x2] : __x0 = 0 && __x2 = 0 && i >= 0 && -i + N - 1 >= 0 };");
     omegaIterationSpaces.push_back("symbolic N; { [__x0, i, __x2] : __x0 = 0 && __x2 - 1 = 0 && i >= 0 && -i + N - 1 >= 0 };");
-	
+
     Computation* myComp =  new Computation();
     std::string codegen = myComp->omegaCodeGenFromString(arity, omegaIterationSpaces,"{ [] }");
     EXPECT_EQ("",codegen);
- 
+
     delete myComp;
 }
 
 TEST_F(ComputationTest, IsWrittenTo) {
-    // Basic for loop with 2 statements 
+    // Basic for loop with 2 statements
     // for (i = 0; i < N; i++) /loop over rows
     //     s0:tmp = f[i];
     //     s1:tmp1 = f1[i];
@@ -350,31 +415,31 @@ TEST_F(ComputationTest, IsWrittenTo) {
 
     std::vector<std::pair<std::string, std::string> > dataReads;
     std::vector<std::pair<std::string, std::string> > dataWrites;
-    
+
     Computation* forLoopComp = new Computation();
-    
+
     forLoopComp->addDataSpace("$tmp$", "int");
     forLoopComp->addDataSpace("$f$", "int");
     forLoopComp->addDataSpace("$tmp1$", "int");
     forLoopComp->addDataSpace("$f1$", "int");
     forLoopComp->addDataSpace("$N$", "int");
-    
+
     dataWrites.push_back(make_pair("$tmp$", "{[i]->[0]}"));
     dataReads.push_back(make_pair("$f$", "{[i]->[i]}"));
     Stmt* s0 = new Stmt("$tmp$ = $f$[i];", "{[i]: 0 <= i < N}", "{[i] ->[0,i,0]}",
              dataReads, dataWrites);
-    
+
     dataReads.clear();
     dataWrites.clear();
-    
+
     dataWrites.push_back(make_pair("$tmp1$", "{[i]->[0]}"));
     dataReads.push_back(make_pair("$f1$", "{[i]->[i]}"));
     Stmt* s1 = new Stmt("$tmp1$ = $f1$[i];", "{[i]: 0 <= i < N}", "{[i] ->[0,i,1]}",
              dataReads, dataWrites);
-    
+
     dataReads.clear();
     dataWrites.clear();
-    
+
     forLoopComp->addStmt(s0);
     forLoopComp->addStmt(s1);
 
@@ -383,13 +448,13 @@ TEST_F(ComputationTest, IsWrittenTo) {
     EXPECT_FALSE(forLoopComp->isWrittenTo("tmp1"));
     EXPECT_TRUE(forLoopComp->isWrittenTo("$tmp1$"));
     EXPECT_FALSE(forLoopComp->isWrittenTo("unknown"));
-    
+
 
     delete forLoopComp;
 }
 
 TEST_F(ComputationTest, ReplaceDataSpaceName) {
-    // Basic for loop with 2 statements 
+    // Basic for loop with 2 statements
     // for (i = 0; i < N; i++) /loop over rows
     //     s0:tmp = f[i];
     //     s1:tmp1 = f1[i];
@@ -397,31 +462,31 @@ TEST_F(ComputationTest, ReplaceDataSpaceName) {
 
     std::vector<std::pair<std::string, std::string> > dataReads;
     std::vector<std::pair<std::string, std::string> > dataWrites;
-    
+
     Computation* forLoopComp = new Computation();
-    
+
     forLoopComp->addDataSpace("$tmp$", "int");
     forLoopComp->addDataSpace("$f$", "int");
     forLoopComp->addDataSpace("$tmp1$", "int");
     forLoopComp->addDataSpace("$f1$", "int");
     forLoopComp->addDataSpace("$N$", "int");
-    
+
     dataWrites.push_back(make_pair("$tmp$", "{[i]->[0]}"));
     dataReads.push_back(make_pair("$f$", "{[i]->[i]}"));
     Stmt* s0 = new Stmt("$tmp$ = $f$[i];", "{[i]: 0 <= i < N}", "{[i] ->[0,i,0]}",
              dataReads, dataWrites);
-    
+
     dataReads.clear();
     dataWrites.clear();
-    
+
     dataWrites.push_back(make_pair("$tmp1$", "{[i]->[0]}"));
     dataReads.push_back(make_pair("$f1$", "{[i]->[i]}"));
     Stmt* s1 = new Stmt("$tmp1$ = $f1$[i];", "{[i]: 0 <= i < N}", "{[i] ->[0,i,1]}",
              dataReads, dataWrites);
-    
+
     dataReads.clear();
     dataWrites.clear();
-    
+
     forLoopComp->addStmt(s0);
     forLoopComp->addStmt(s1);
 
@@ -459,35 +524,35 @@ TEST_F(ComputationTest, IsParameterOrReturn) {
 }
 
 TEST_F(ComputationTest, SSARenaming) {
-    
+
     Computation* computation = new Computation();
 
     computation->addParameter("$foo$", "int");
     computation->addDataSpace("$bar$", "int");
-   
+
     Stmt* s1 = new Stmt("$bar$ = $foo$;",
-             "{[0]}", 
+             "{[0]}",
              "{[0]->[0]}",
              {{"$foo$", "{[0]->[0]}"}},
              {{"$bar$", "{[0]->[0]}"}}
          );
     computation->addStmt(s1);
-    
+
     Stmt* s2 =new Stmt("$foo$ = $bar$ + 1",
-             "{[0]}", "{[0]->[1]}", 
+             "{[0]}", "{[0]->[1]}",
              {{"$bar$", "{[0]->[0]}"}},
              {{"$foo$", "{[0]->[0]}"}}
          );
     computation->addStmt(s2);
-    
+
     std::string codeGen = computation->codeGen();
-    
+
     EXPECT_EQ("#undef s0\n#undef s_0\n#undef s1\n#undef s_1\n#define s_0(__x0) "
     "  bar = foo; \n#define s0(__x0)   s_0(0);\n#define s_1(__x0)   foo = bar +"
     " 1 \n#define s1(__x0)   s_1(0);\n\n\nt1 = 0; \n\ns0(0);\ns1(1);\n\n#undef "
     "s0\n#undef s_0\n#undef s1\n#undef s_1\n",codeGen);
 
-    
+
     delete computation;
 }
 
@@ -522,11 +587,11 @@ TEST_F(ComputationTest, AppendComputationSSA) {
 
     comp1->addDataSpace("$input$", "int");
     comp1->addDataSpace("$useMe$", "int");
-   
+
     comp1->addStmt(new Stmt (
         "$useMe$ = 80;", "{[0]}", "{[0]->[0]}", {}, {{"$useMe$", "{[0]->[0]}"}}
     ));
- 
+
     comp1->addStmt(new Stmt (
         "$input$ = $useMe$ * 8;", "{[0]}", "{[0]->[1]}", {{"$useMe$", "{[0]->[0]}"}}, {{"$input$", "{[0]->[0]}"}}
     ));
@@ -550,7 +615,7 @@ TEST_F(ComputationTest, AppendComputationSSA) {
     ));
 
     Computation* comp3 = new Computation();
-    
+
     comp3->addParameter("$foo$", "int");
     comp3->addReturnValue("$foo$");
 
@@ -607,7 +672,7 @@ TEST_F(ComputationTest, AppendComputationSSA) {
     comp1 = new Computation();
 
     comp1->addDataSpace("$input$", "int");
-    
+
     comp1->addStmt(new Stmt (
         "$input$ = 4 * 8;", "{[0]}", "{[0]->[0]}", {}, {{"$input$", "{[0]->[0]}"}}
     ));
@@ -633,7 +698,7 @@ TEST_F(ComputationTest, AppendComputationSSA) {
         {{res.returnValues.back(), "{[0]->[0]}"}},
         {{"$input$", "{[0]->[0]}"}}
     ));
- 
+
     ss.str("");
     ss << "#undef s0\n#undef s1\n#undef s2\n#undef s3\n";
     ss << "#define s0(__x0)   input__w__8 = 4 * 8; \n" << "#define s1(__x0)   int _iegen_2foo = input__w__8; \n";
@@ -646,7 +711,7 @@ TEST_F(ComputationTest, AppendComputationSSA) {
 }
 
 TEST_F(ComputationTest, Colors) {
-    // Basic for loop with 2 statements 
+    // Basic for loop with 2 statements
     // for (i = 0; i < N; i++) /loop over rows
     //     s0:tmp = f[i];
     //     s1:tmp1 = f1[i];
@@ -654,31 +719,31 @@ TEST_F(ComputationTest, Colors) {
 
     std::vector<std::pair<std::string, std::string> > dataReads;
     std::vector<std::pair<std::string, std::string> > dataWrites;
-    
+
     Computation* forLoopComp = new Computation();
-    
+
     forLoopComp->addReturnValue("$tmp$", true);
     forLoopComp->addParameter("$f$", "int");
     forLoopComp->addDataSpace("$tmp1$", "int");
     forLoopComp->addParameter("$f1$", "int");
     forLoopComp->addDataSpace("$N$", "int");
-    
+
     dataWrites.push_back(make_pair("$tmp$", "{[i]->[0]}"));
     dataReads.push_back(make_pair("$f$", "{[i]->[i]}"));
     Stmt* s0 = new Stmt("$tmp$ = $f$[i];", "{[i]: 0 <= i < N}", "{[i] ->[0,i,0]}",
              dataReads, dataWrites);
-    
+
     dataReads.clear();
     dataWrites.clear();
-    
+
     dataWrites.push_back(make_pair("$tmp1$", "{[i]->[0]}"));
     dataReads.push_back(make_pair("$f1$", "{[i]->[i]}"));
     Stmt* s1 = new Stmt("$tmp1$ = $f1$[i];", "{[i]: 0 <= i < N}", "{[i] ->[0,i,1]}",
              dataReads, dataWrites);
-    
+
     dataReads.clear();
     dataWrites.clear();
-    
+
     forLoopComp->addStmt(s0);
     forLoopComp->addStmt(s1);
 
@@ -1127,27 +1192,27 @@ TEST_F(ComputationTest, ToDotUnitTest){
                   "{[i] -> [0,i,0,0,0]}",
                   { {"f","{[i]->[i]}"}},
                   { {"tmp","{[i]->[i]}"}}));
-    
-    comp->addStmt(new Stmt("S1: tmp(i) -= A(i,j) * u(j)", 
+
+    comp->addStmt(new Stmt("S1: tmp(i) -= A(i,j) * u(j)",
                   "{[i,j]: 0 <= i and i < N and 0 <= j and  j < i }",
                   "{[i,j] -> [0,i,1,j,0]}",
-                  { 
+                  {
                      {"A"  ,"{[i,j]->[i,j]}"},
 		     {"tmp","{[i,j]->[i]}"},
 		     {"u"  ,"{[i,j]->[j]}"},
                   },
                  { {"tmp","{[i,j]->[i]}"}}));
-    
-    comp->addStmt(new Stmt("S2: u(i) = tmp(i)/A(i,i)", 
+
+    comp->addStmt(new Stmt("S2: u(i) = tmp(i)/A(i,i)",
                   "{[i]: 0 <= i and i < N }",
                   "{[i] -> [0,i,2,0,0]}",
-                  { 
+                  {
                      {"A"  ,"{[i]->[i,i]}"},
 		     {"tmp","{[i]->[i]}"},
 		     {"u"  ,"{[i]->[i]}"},
                   },
                   { {"u"  ,"{[i]->[i]}"}}));
-    
+
     EXPECT_EQ(comp->toDotString(),
               "digraph dataFlowGraph_1{"
               " \nsubgraph cluster2"
@@ -1219,24 +1284,24 @@ TEST_F(ComputationTest, RescheduleUnitTest){
     EXPECT_ANY_THROW(comp1->reschedule(-5,10));
     // Test equal size
     EXPECT_ANY_THROW(comp1->reschedule(0,0));
-    
+
     // Reschedule statement S0 to come just before S2
     comp1->reschedule(0,2);
-    checkTransformation(comp1, 
+    checkTransformation(comp1,
 		    {"{[1,t1,0,0,0]:0 <= t1 && t1 < NR}",
 		    "{[0,t1,0,0,0]:0 <= t1 && t1 < NR}",
 		    "{[2,t1,0,0,0]:0 <= t1 && t1 < NR}"});
 
     // Reschedule statement S1 to come just before S2
     comp1->reschedule(1,2);
-    checkTransformation(comp1, 
+    checkTransformation(comp1,
 		   {"{[0,t1,0,0,0]:0 <= t1 && t1 < NR}",
 		    "{[1,t1,0,0,0]:0 <= t1 && t1 < NR}",
 		    "{[2,t1,0,0,0]:0 <= t1 && t1 < NR}"});
-    
+
     // Reschedule statement S1 to come just before S0
     comp1->reschedule(1,0);
-    checkTransformation(comp1, 
+    checkTransformation(comp1,
 		   {"{[1,t1,0,0,0]:0 <= t1 && t1 < NR}",
 		    "{[0,t1,0,0,0]:0 <= t1 && t1 < NR}",
 		    "{[2,t1,0,0,0]:0 <= t1 && t1 < NR}"});
@@ -1254,7 +1319,7 @@ TEST_F(ComputationTest, RescheduleUnitTest){
            {"{[2,t1,0,0,0]:0 <= t1 && t1 < NR}",
 		    "{[1,t1,0,0,0]:0 <= t1 && t1 < NR}",
 		    "{[0,t1,0,0,0]:0 <= t1 && t1 < NR}"});
-    
+
     // Second Computation Test
     Computation * comp2 = new Computation();
     //S0
@@ -1305,7 +1370,7 @@ TEST_F(ComputationTest, RescheduleUnitTest){
 	    	   {"{[1,t1,0]:0 <= t1 && t1 < NR}",
 		    "{[2,t1,0]:0 <= t1 && t1 < NR}",
 		    "{[0,t1,0]:0 <= t1 && t1 < NR}"});
-   
+
     //Third computation test
     Computation * comp3 = new Computation();
     //S0
@@ -1428,7 +1493,7 @@ TEST_F(ComputationTest, FusionUnitTest){
 		{}));
     // Fise statements S0 and S1 at level 2.
     comp->fuse(0,1,2);
-    checkTransformation(comp, 
+    checkTransformation(comp,
 		    {"{[0,t1,0,t2,0]:0 <= t1 && t1 < NR && 0 <= t2 && t2 < NC}",
 		    "{[0,t1,1,t2,0]:0 <= t1 && t1 < NR && 0 <= t2 && t2 < NQ}",
 		    "{[1,t1,0,t2,0]:0 <= t1 && t1 < NR && 0 <= t2 && t2 < NP}",
@@ -1436,7 +1501,7 @@ TEST_F(ComputationTest, FusionUnitTest){
 		    });
     // Fuse statements S2 and S3 at level 4
     comp->fuse(2,3,4);
-    checkTransformation(comp, 
+    checkTransformation(comp,
 		    {"{[0,t1,0,t2,0]:0 <= t1 && t1 < NR && 0 <= t2 && t2 < NC}",
 		    "{[0,t1,1,t2,0]:0 <= t1 && t1 < NR && 0 <= t2 && t2 < NQ}",
 		    "{[1,t1,0,t2,0]:0 <= t1 && t1 < NR && 0 <= t2 && t2 < NP}",
@@ -1445,14 +1510,14 @@ TEST_F(ComputationTest, FusionUnitTest){
     // Fuse statements S3 and S1 at level 4
 
     comp->fuse(3,1,4);
-    
 
-    checkTransformation(comp, 
+
+    checkTransformation(comp,
 		    {"{[0,t1,0,t2,0]:0 <= t1 && t1 < NR && 0 <= t2 && t2 < NC}",
 		    "{[1,t1,0,t2,2]:0 <= t1 && t1 < NR && 0 <= t2 && t2 < NQ}",
 		    "{[1,t1,0,t2,0]:0 <= t1 && t1 < NR && 0 <= t2 && t2 < NP}",
 		    "{[1,t1,0,t2,1]:0 <= t1 && t1 < NR && 0 <= t2 && t2 < NT}"
 		    });
-      
+
     delete comp;
 }
