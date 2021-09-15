@@ -1640,6 +1640,7 @@ Conjunction*  Conjunction::TransitiveClosure(){
         g->addEdge(lhsNode,rhsNode,EdgeType::GREATER_OR_EQUAL_TO);
     }
     g->simplifyGreaterOrEqual();
+    g->findAddMonotonicity ();
     g->transitiveClosure();
 
     // Delete all expressions in the retVal conjunction.

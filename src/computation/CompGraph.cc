@@ -565,11 +565,19 @@ void CompGraph::removeDeadNodes( std::vector<int>& stmtIds,
 		}
 		for(auto& edge:dataNode->getInEdges()){
 		    NodePtr stmtNode =  edge->getStmtNode();
+                     // Making sure that we dont remove 
+		    // statements that have multiple writes.
+		    if (stmtNode->numOutEdges() > 1){
+	                continue;
+		    }
+
 		    // Find StatementID change this to use
 		    // an Id stored in the Node DS
 		    auto it = std::find_if(stmtNodes.begin(),stmtNodes.end(),
 		        [stmtNode] (const std::pair<int,NodePtr> stmt) 
 			{return stmt.second == stmtNode;});
+                                       
+
 		    if (it != stmtNodes.end()){
 	                stmtIds.push_back(it->first);
 		    }

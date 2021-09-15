@@ -22,6 +22,7 @@
 #include <string>
 #include <list>
 #include <ostream>
+#include <memory>
 #include "expression.h"
 namespace iegenlib{
 
@@ -34,6 +35,11 @@ namespace iegenlib{
  *
  */
 enum class EdgeType {GREATER_THAN=0 , GREATER_OR_EQUAL_TO, EQUAL,NONE };
+class Vertex;
+
+// TODO: Change the type specificatiction for 
+// vertices in the graph for better data control
+typedef std::unique_ptr<Vertex> VertexPtr;
 
 /*!
  *  \struct Vertex
@@ -109,13 +115,13 @@ public:
     
     ~DiGraph();
     
-    /*!
-     * Function looks for monotonic vertices
-     * and appropriates monotonicity to enclosing
-     * vertices.
-     * rowptr(i) <= col(i,j) < rowptr(i+1)
-     * col(i,j) < col(i+1,j)
-     */
+/*!
+ * Function looks for monotonic vertices
+ * and appropriates monotonicity to enclosing
+ * vertices.
+ * rowptr(i+1) >= col(i,j) > rowptr(i)
+ * col(i+1,j) > col(i,j)
+*/
     void findAddMonotonicity () ;
 
     /*! Adds an edge to the graph.

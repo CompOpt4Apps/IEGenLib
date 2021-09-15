@@ -282,37 +282,8 @@ void DiGraph::simplifyGreaterOrEqual(){
 	    }  
        }
     }
-   /*
-    *This code was taken out cos merging vertices is 
-    * no more needed. 
-    // Apply merging. 
-    // Vertices aliasing, this data structure helps
-    // to store already merged vertices to where they
-    // point to after merging.
-    
-    std::vector<int> aliasMap (vertices.size());
-    // Intialize indices in aliasMap to map back to 
-    // its index value.
-    for(int i  = 0 ; i < aliasMap.size() ;i++){
-        aliasMap[i] = i;
-    }
-
-    for(auto vertex :possibleMerge){
-        int length = vertices.size();
-        for(int i = 0 ; i < length; i++){
-	    // Check if there is an alias for the current vertex.
-            int aliasVertex = aliasMap[vertex];
-	     
-	    // if a current vertex is the same as the vertex for possible 
-	    // merge, go ahead to merge. 
-	    if( i != aliasVertex && vertices[i] == vertices[aliasVertex]){
-		mergeVertices(aliasMap,i,aliasVertex);
-	        break;
-	    }
-        } 
-    }
-*/
 }
+
 void DiGraph::dumpGraph(std::ostream& os) const{
     os << "\nVertices:\n";
     int i = 0;
@@ -416,44 +387,110 @@ std::vector<Exp*> DiGraph::getExpressions() {
  * Function looks for monotonic vertices
  * and appropriates monotonicity to enclosing
  * vertices.
- * rowptr(i) <= col(i,j) < rowptr(i+1)
- * col(i,j) < col(i+1,j)
+ * rowptr(i+1) >= col(i,j) > rowptr(i)
+ * col(i+1,j) > col(i,j)
 */
-/*
 void DiGraph::findAddMonotonicity (){
-    for( int i = 0 ;  i < vertices.size(); i ++ ){
+    int vertexSize = vertices.size();
+    for( int i = 0 ;  i < vertexSize; i ++ ){
         if (vertices[i].getTermList().size() == 1 && 
-			vertices[i].getTermList()[0].isUFCall()){
-	    for (int j = i+1; j < vertices.size(); j++){
-	        if(vertices[j].getTermList().size() == 1 && 
-			vertices[j].getTermList()[0].isUFCall()){
-		    UFCallTerm* u1 = vertices[i].getTermList()[0];
-		    UFCallTerm* u2 = vertices[j].getTermList()[0];
-		    if(u1->name()!=u2->name() || u1->numArgs() != u2->numArgs())
+            vertices[i].getTermList().front()->isUFCall()){
+	    UFCallTerm* currentUF = (UFCallTerm*) vertices[i].
+			   getTermList().front();
+ 
+	    std::vector<std::pair<int,EdgeType>> upperBounds;
+	    std::vector<std::pair<int,EdgeType>> lowerBounds;
+
+	    for(int j = 0 ; j < vertexSize; j++){
+	        if (vertices[j].getTermList().size() == 1 &&
+		    vertices[j].getTermList().front()->isUFCall()) {
+		    
+	            if ( adj[j][i] == EdgeType::GREATER_OR_EQUAL_TO||
+	                  adj[j][i] == EdgeType::GREATER_THAN){
+		        // This is some UF Call that upper bounds
+		        // current vertex
+		        upperBounds.push_back(std::make_pair(j,adj[j][i]));
+		    }
+                    if ( adj[i][j] == EdgeType::GREATER_OR_EQUAL_TO||
+	                  adj[i][j] == EdgeType::GREATER_THAN){
+		        // This is some UF Call that lower bounds
+		        // current vertex.
+		        lowerBounds.push_back(std::make_pair(j,adj[i][j]));
+		    }
+		}
+	    }
+
+	    //Iterate through upper and lowe bounds for 
+	    //current UF.
+
+	    for(auto& upperVertex : upperBounds){
+	        for (auto& lowerVertex: lowerBounds) {
+	            UFCallTerm* uV = (UFCallTerm*) vertices[upperVertex.first].
+			   getTermList().front();
+		    UFCallTerm* lV = (UFCallTerm*) vertices[lowerVertex.first].
+			   getTermList().front();
+                    // Right now only restrict to upper and lower bounds 
+		    // with the same uf & the same number of arguments
+		    // the upper and lower bound must be 
+		    if(lV->name()!=uV->name() || lV->numArgs() != uV ->numArgs())
 	                continue;
-                    bool isMonotonic = true;
-		    for(int q = 0 ;  q < u1->numArgs() ; q++ ){
-		        // Relationship in adjacency matrix must 
-			// be consitent with each param expression 
-			if(adj[i][j] == EdgeType::GREATER_THAN && 
-			   u1->getParamExp(q) < u2->getParamExp(q)){
-			    isMonotonic = false;
-			    break;
-			}else 
-			if(adj[j][i] == EdgeType::GREATER_THAN && 
-			   u2->getParamExp(q) < u1->getParamExp(q)){
-			    isMonotonic = false;
-			    break;
-			}
-                        
+
+		    bool isMonotonic = true;
+                    std::vector<Exp*> resExp; 
+		    for(int q = 0 ;  q < uV->numArgs() ; q++ ){
+
+			Exp* expL = lV->getParamExp(q);
+			Exp* expU = uV->getParamExp(q);
+			// This contradicts the upper bound and lower
+			// bound relationship thereby it is not monotnic
+			//if(*expL > *expU){
+			//    isMonotonic = false;
+			//    break;
+			//}
+			// Create a new expression 
+			// NewExp = upperBoundExp - lowerBoundExpression
+			// This will give a new expression that can 
+			// then be added to the UF bounded by 
+			// this monotonicity.
+			Exp* expTemp = expU->clone(); 
+			Exp* expTempLBound = expL->clone();
+			expTempLBound->multiplyBy(-1);
+			expTemp->addExp(expTempLBound);
+			resExp.push_back(expTemp);
+		        	
 		    }
 
+		    if(isMonotonic){
+		        UFCallTerm* currentClone =(UFCallTerm*) currentUF->clone();
+		        EdgeType strongerConst = edgeOp(upperVertex.second,
+			    lowerVertex.second);	
+                        // Create new relationship with 
+			// current vertex
+                       
+			// Iterate through each parameters 
+			// in current UF. See which tuple argument,
+			// has a term present in list of expressions 
+			// from upper and lower bounds.
+			for( int q = 0; q < currentUF->numArgs(); q++){
+			    Exp* exp = currentClone->getParamExp(q);
+			    for(auto term: exp->getTermList()){
+			       
+				auto it = std::find_if(resExp.begin(),resExp.end(),
+			           [term](Exp * e){ return e->dependsOn(*term);});
+			       if (it!=resExp.end()){
+			           exp->addExp((*it)->clone());
+			       }
+			    }
+			}
+                        Vertex newVertex;
+                        newVertex.addTerm(currentClone);
+                        addEdge(vertices[i],newVertex,EdgeType::GREATER_THAN);
+                        
 
-
+		    }
 		}
 	    }
 	}	
     }    
 }
-*/
 }
