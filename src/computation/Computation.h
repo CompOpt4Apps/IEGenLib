@@ -33,7 +33,6 @@
 
 #include "CompGraph.h"
 #include "set_relation/Visitor.h"
-#include "set_relation/environment.h"
 #include "set_relation/expression.h"
 #include "set_relation/set_relation.h"
 
@@ -227,9 +226,6 @@ class Computation {
 
     //! Compiles each statement's debug string into a list
     std::vector<std::pair<int, std::string>> getStmtDebugStrings();
-
-    //! Environment used by this Computation
-    Environment env;
 
     //! Add a transformation (adopted) to the specified Stmt
     void addTransformation(unsigned int stmtIndex, Relation* rel);

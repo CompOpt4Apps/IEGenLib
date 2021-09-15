@@ -557,12 +557,6 @@ void CompGraph::removeDeadNodes( std::vector<int>& stmtIds,
 	        if (dataNode->numOutEdges() != 0){
 	           continue;
 		}
-                auto it= std::find_if(dataNodes.begin(),dataNodes.end(),
-		    [dataNode] (const std::pair<std::string,NodePtr>& data)
-		    {return data.second == dataNode;});
-                if(it!=dataNodes.end()){
-		    dataSpaces.push_back(it->first);
-		}
 		for(auto& edge:dataNode->getInEdges()){
 		    NodePtr stmtNode =  edge->getStmtNode();
                      // Making sure that we dont remove 
@@ -594,7 +588,14 @@ void CompGraph::removeDeadNodes( std::vector<int>& stmtIds,
 
 		    }
 		}
-	        // Remove all InEdges to this node
+                auto it= std::find_if(dataNodes.begin(),dataNodes.end(),
+		    [dataNode] (const std::pair<std::string,NodePtr>& data)
+		    {return data.second == dataNode;});
+                if(it!=dataNodes.end()){
+		    dataSpaces.push_back(it->first);
+		}
+		
+		// Remove all InEdges to this node
 		for (auto& edge: dataNode->getInEdges()){
 		    dataNode->removeInEdge(edge);	
 		}
@@ -655,10 +656,14 @@ void CompGraph::fusePCRelations() {
 
         // This is the edge between writeNode and dataNode
         EdgePtr write = writeNode->getOutEdge(0);
-        NodePtr dataNode = write->getDataNode();
+        NodePtr dataNode = write->getDataNode();		
+
+		// If the data node is never read from, ignore it
+        if (dataNode->numOutEdges() <= 0) { continue; }
+
         // Make sure the data space is written to and read from only one statement,
         // respectively
-        if (dataNode->numInEdges() != 1 || dataNode->numOutEdges() != 1) { continue; }
+//        if (dataNode->numInEdges() != 1 || dataNode->numOutEdges() != 1) { continue; }
 
         // This is the edge between dataNode and readNode
         EdgePtr read = dataNode->getOutEdge(0);
@@ -668,6 +673,14 @@ void CompGraph::fusePCRelations() {
 
         // Get the read statement's node
         NodePtr readNode = read->getStmtNode();
+
+		// Make sure both statements aren't in a subgraph
+		const std::set<NodePtr>& stmts = subgraph.getStmts();
+		if (stmts.find(writeNode) == stmts.end() ||
+			stmts.find(readNode) == stmts.end()) {
+			continue;
+		}
+
         // Remove its connection to dataNode
         readNode->removeInEdge(read);
         // Connect it to and update all of writeNode's reads
