@@ -150,7 +150,7 @@ class Subgraph {
     void generateDotString(std::ostringstream &ss, int &cnt);
 
     void addStmt(NodePtr node) { stmts.insert(node); }
-    std::set<NodePtr> getStmts() { return stmts; }
+    const std::set<NodePtr>& getStmts() { return stmts; }
     void addSubgraph(Subgraph graph) { subgraphs.push_back(graph); }
     
     void reduceStmts(int toLevel);
