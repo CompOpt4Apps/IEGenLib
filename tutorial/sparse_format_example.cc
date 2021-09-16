@@ -21,6 +21,23 @@ using iegenlib::Relation;
 using iegenlib::Set;
 
 int main(int ac, char **av) {
+    //We can only multiply by INT
+    // 5 = BR
+    // 5 = BC 
+    Relation * rel200 = new Relation(
+	     "{[ii,kk,jj,i,j,hr,hc,p] -> [k]: 0 <= ii  and ii < 5 "
+	     " and browptr(ii) <= kk and kk < browptr(ii+1)  "
+	     " and jj = bcol(kk) and 0 <= hr and hr < 5 and 0 <= hc and hc < 5 "
+	     " and p = kk * 25 + hr * 5 + hc and i = ii * 5 + hr "
+	     " and j= jj * 5 + hc and rowptr(i) <= k "
+	     " and k < rowptr(i+ 1) and  col_inv(i,j) = k and col(k) =j and 0 <= i"
+	     " and i < NR and 0 <= j and j < NC}");
+
+
+    Relation * closure200 = rel200->TransitiveClosure() ;
+
+    std::cout<< closure200->prettyPrintString() << "\n"; 
+    delete closure200;
     // Test COO WRT DENSE
     std::cout << "=> Starting example COO_WRT_DENSE\n\n";
 

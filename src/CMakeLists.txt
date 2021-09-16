@@ -104,7 +104,7 @@ include_directories(util)
 ## set the compile flags
 SET_SOURCE_FILES_PROPERTIES(${iegenlib_SOURCES}
 	                    PROPERTIES
-			    COMPILE_FLAGS "-Wall -Wno-unknown-pragmas")
+			    COMPILE_FLAGS "-Wall -Wno-unknown-pragmas -g")
 SET_SOURCE_FILES_PROPERTIES(${iegenlib_t_SOURCES}
 	                    PROPERTIES
 			    COMPILE_FLAGS "-Wall -Wno-unknown-pragmas")

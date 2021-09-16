@@ -436,9 +436,19 @@ void DiGraph::findAddMonotonicity (){
 	                continue;
 
 		    bool isMonotonic = true;
-                    std::vector<Exp*> resExp; 
-		    for(int q = 0 ;  q < uV->numArgs() ; q++ ){
 
+		    // pair of upper bound and lower bound 
+		    // parameter expressions for each argument
+                    std::vector<std::pair<Exp*,Exp*>> paramExpPairs; 
+		    for(int q = 0 ;  q < uV->numArgs() ; q++ ){
+                        //TODO: Refactor this code once we can 
+			// compare two expressions.
+			//
+			// We need to ensure every index acess
+			// to the UF must be consistent
+			// with it's monotnicity. But we currently'
+			// do not have a way to prove that an expression
+			// is greater than another.
 			Exp* expL = lV->getParamExp(q);
 			Exp* expU = uV->getParamExp(q);
 			// This contradicts the upper bound and lower
@@ -452,11 +462,12 @@ void DiGraph::findAddMonotonicity (){
 			// This will give a new expression that can 
 			// then be added to the UF bounded by 
 			// this monotonicity.
-			Exp* expTemp = expU->clone(); 
-			Exp* expTempLBound = expL->clone();
-			expTempLBound->multiplyBy(-1);
-			expTemp->addExp(expTempLBound);
-			resExp.push_back(expTemp);
+			//Exp* expTemp = expU->clone(); 
+			//Exp* expTempLBound = expL->clone();
+			//expTempLBound->multiplyBy(-1);
+			//expTemp->addExp(expTempLBound);
+			//resExp.push_back(expTemp);
+			paramExpPairs.push_back({expL ,expU});
 		        	
 		    }
 
@@ -475,16 +486,26 @@ void DiGraph::findAddMonotonicity (){
 			    Exp* exp = currentClone->getParamExp(q);
 			    for(auto term: exp->getTermList()){
 			       
-				auto it = std::find_if(resExp.begin(),resExp.end(),
-			           [term](Exp * e){ return e->dependsOn(*term);});
-			       if (it!=resExp.end()){
-			           exp->addExp((*it)->clone());
+				auto it = std::find_if(paramExpPairs.begin(),
+				   paramExpPairs.end(),
+			           [term](
+			           std::pair<Exp*,Exp*>& e){ 
+				       return e.first->dependsOn(*term)
+				       || e.second->dependsOn(*term);
+				   });
+			       if (it!=paramExpPairs.end()){
+                                   
+			           Exp* expTemp = (*it).second->clone(); 
+			           Exp* expTempLBound = (*it).first->clone();
+			           expTempLBound->multiplyBy(-1);
+			           expTemp->addExp(expTempLBound);
+			           exp->addExp(expTemp);
 			       }
 			    }
 			}
                         Vertex newVertex;
                         newVertex.addTerm(currentClone);
-                        addEdge(vertices[i],newVertex,EdgeType::GREATER_THAN);
+                        addEdge(vertices[i],newVertex,strongerConst);
                         
 
 		    }

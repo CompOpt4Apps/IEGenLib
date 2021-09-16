@@ -4633,6 +4633,8 @@ TEST_F(SetRelationTest, SolveForOutputTuple){
 
 // Test transitive closure.
 TEST_F(SetRelationTest, TransitiveClosure){
+    
+	
     Relation * rel = new Relation(
 	     "{[i,j] -> [k]: A(i,j) > 0 and rowptr(i) <= k"
 	     " and k < rowptr(i+ 1) and col(k) =j and 0 <= i"
@@ -4687,15 +4689,17 @@ TEST_F(SetRelationTest, TransitiveClosure){
 	     " and row(n) < NR and 0 <= col1(n) and col1(n) < NC}");
 
     Set* clo5 = set->TransitiveClosure();
-    EXPECT_EQ("{ [n, k] : k - col2_inv(row(n), col1(n)) = 0 &&"
-	      " col1(n) - col2(k) = 0 && col1(n) >= 0 && col2(k)"
-	      " >= 0 && row(n) >= 0 && k - rowptr(row(n)) >= 0 &&"
-	      " NC - 1 >= 0 && NR - 1 >= 0 && A(row(n), col1(n))"
-	      " - 1 >= 0 && col2_inv(row(n), col1(n)) - rowptr(row(n))"
-	      " >= 0 && -k + rowptr(row(n) + 1) - 1 >= 0 && NC - col1(n)"
-	      " - 1 >= 0 && NC - col2(k) - 1 >= 0 && NR - row(n) - 1 >= 0"
-	      " && -col2_inv(row(n), col1(n)) + rowptr(row(n) + 1) - 1"
-	      " >= 0 && -rowptr(row(n)) + rowptr(row(n) + 1) - 1 >= 0 }"
+    EXPECT_EQ("{ [n, k] : k - col2_inv(row(n), col1(n)) = 0"
+	      " && col1(n) - col2(k) = 0 && col1(n) >= 0 &&"
+	      " col2(k) >= 0 && row(n) >= 0 && k - rowptr(row(n)) >= 0"
+	      " && NC - 1 >= 0 && NR - 1 >= 0 && A(row(n), col1(n)) - 1 >= 0"
+	      " && col2_inv(row(n), col1(n)) - rowptr(row(n)) >= 0 &&"
+	      " -k + rowptr(row(n) + 1) - 1 >= 0 && NC - col1(n) - 1 >= 0 &&"
+	      " NC - col2(k) - 1 >= 0 && NR - row(n) - 1 >= 0 &&"
+	      " -col2_inv(row(n) + 1, col1(n)) + col2_inv(row(n), col1(n))"
+	      " - 1 >= 0 && -col2_inv(row(n), col1(n))"
+	      " + rowptr(row(n) + 1) - 1 >= 0 && -rowptr(row(n))"
+	      " + rowptr(row(n) + 1) - 1 >= 0 }"
 	      ,clo5->prettyPrintString());
     
     delete clo5;

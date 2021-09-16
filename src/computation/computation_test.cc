@@ -169,7 +169,7 @@ class ComputationTest : public ::testing::Test {
         ASSERT_EQ(expected->getNumStmts(), actual->getNumStmts());
         for (unsigned int i = 0; i < actual->getNumStmts(); ++i) {
           SCOPED_TRACE("Statement " + std::to_string(i));
-          actual->getStmt(i)->expectEqualTo(expected->getStmt(i));
+          expectStmtsEqual(actual->getStmt(i), expected->getStmt(i));
         }
 
         EXPECT_EQ(expected->getDataSpaces(), actual->getDataSpaces());

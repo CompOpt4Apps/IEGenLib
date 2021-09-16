@@ -45,6 +45,7 @@ target_include_directories(miniFluxDiv_codegen_driver PUBLIC ${CMAKE_SOURCE_DIR}
 set_target_properties(sparse_format_example computation_example geoac_codegen_driver manual_graph_testing macro_testing append_computation_example miniFluxDiv_codegen_driver
     PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/tutorial"
+    COMPILE_FLAGS "-g"
 )
 
 # Create a 'tutorial' target to build all examples
