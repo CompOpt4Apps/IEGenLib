@@ -1635,7 +1635,9 @@ std::string Computation::toDotString(bool fusePCRelations,
         graph.fusePCRelations();
     }
     if(reduceNormalNodes){
-        graph.reduceNormalNodes();
+        graph.reduceStmts(0);
+        graph.reduceDataSpaces(0);
+        // graph.reduceNormalNodes();
     }
 
     if(addDebugStmts){

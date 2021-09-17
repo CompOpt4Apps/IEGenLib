@@ -174,7 +174,9 @@ void Node::generateDotString(std::ostringstream &ss) {
 void Subgraph::reduceStmts(int toLevel) {
     if (toLevel == -1 || level <= toLevel) {
         for (NodePtr stmtNode : stmts) {
-            stmtNode->setType(NodeTypes::hidden);
+            if (stmtNode->getType() == stmt){
+                stmtNode->setType(NodeTypes::hidden);
+            }
         }
         for (Subgraph& subgraph : subgraphs) {
             subgraph.reduceStmts(toLevel);
@@ -186,7 +188,10 @@ void Subgraph::reduceDataSpaces(int toLevel) {
     if (toLevel == -1 || level <= toLevel) {
         for (NodePtr stmtNode : stmts) {
             for (EdgePtr ptr : stmtNode->getOutEdges()) {
-                ptr->getDataNode()->setType(NodeTypes::hidden);
+                NodePtr dataNode = ptr->getDataNode();
+                if (dataNode->getType() == data){
+                    dataNode->setType(NodeTypes::hidden);
+                }
             }
         }
         for (Subgraph& subgraph : subgraphs) {
