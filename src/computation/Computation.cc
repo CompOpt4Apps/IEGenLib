@@ -1624,17 +1624,17 @@ void Computation::deleteDeadStatements(){
     }
 }
 
-std::string Computation::toDotString(bool fusePCRelations,
-		bool reduceNormalNodes, bool addDebugStmts,
+std::string Computation::toDotString(bool reducePCRelations,
+		bool toPoint, bool addDebugStmts,
 		int stmtIdx, bool stmtReads,bool stmtWrites) {
     //TODO: Deal with disjunction of conjunctions later.
 
     CompGraph graph = CompGraph();
     graph.create(this);
-    if (fusePCRelations) {
+    if (reducePCRelations) {
         graph.fusePCRelations();
     }
-    if(reduceNormalNodes){
+    if(toPoint){
         graph.reduceStmts(0);
         graph.reduceDataSpaces(0);
         // graph.reduceNormalNodes();

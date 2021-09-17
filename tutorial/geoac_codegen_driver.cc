@@ -621,8 +621,8 @@ int forComp1(Computation* c, int i, int idx) {
 int main(int argc, char **argv){
 
     // Parsing to dot command line options
-    bool fusePCRelations = false;
-    bool reduceNormalNodes = false;
+    bool reducePCRelations = false;
+    bool toPoint = false;
     bool addDebugStmts = false; 
     int  stmtIdx = -1;
     bool stmtReads = false;
@@ -632,11 +632,11 @@ int main(int argc, char **argv){
     bool deleteDeadNodes = false;
     while(currIndex < argc){
 	std::string argString (argv[currIndex]);
-        if (argString == "-fuse"){
-           fusePCRelations = true;
+        if (argString == "-reducePCRelations"){
+           reducePCRelations = true;
 	   currIndex++;
-	}else if (argString == "-reduce"){
-	   reduceNormalNodes = true;
+	}else if (argString == "-toPoint"){
+	   toPoint = true;
 	   currIndex++;
 	}else if (argString == "-delete-dead"){
 	   deleteDeadNodes = true;
@@ -668,7 +668,7 @@ int main(int argc, char **argv){
 	}
     }
     if (showHelp){
-       cout << "<app> [-delete-dead] [-fuse] [-debug] [-reduce]"
+       cout << "<app> [-delete-dead] [-reducePCRelations] [-debug] [-toPoint]"
 	    << " [-stmtid <IdNumber>] [-stmt-reads] [-stmt-writes]\n";
        return 0;
     }
@@ -2167,8 +2167,8 @@ int main(int argc, char **argv){
 	updateSources->deleteDeadStatements();
     }
 
-    dotFileStream << updateSources->toDotString(fusePCRelations,
-		reduceNormalNodes,addDebugStmts,stmtIdx,stmtReads,stmtWrites);
+    dotFileStream << updateSources->toDotString(reducePCRelations,
+		toPoint,addDebugStmts,stmtIdx,stmtReads,stmtWrites);
     dotFileStream.close();
     //Writing header file for codegen
     ofstream headStream;
