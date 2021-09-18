@@ -664,38 +664,34 @@ void CompGraph::fusePCRelations() {
         NodePtr dataNode = write->getDataNode();		
 
 		// If the data node is never read from, ignore it
-        if (dataNode->numOutEdges() <= 0) { continue; }
+        //if (dataNode->numOutEdges() != 1) { continue; } //changed from 0 to 1
 
         // Make sure the data space is written to and read from only one statement,
         // respectively
-//        if (dataNode->numInEdges() != 1 || dataNode->numOutEdges() != 1) { continue; }
+        if (dataNode->numInEdges() != 1 || dataNode->numOutEdges() != 1) { continue; }
 
-        // This is the edge between dataNode and readNode
-        EdgePtr read = dataNode->getOutEdge(0);
 
         // Make sure we are doing a scalar write (access space is constant)
-        if (!write->isConst() || !read->isConst()) { continue; }
+        //if (!write->isConst() || !read->isConst()) { continue; }
 
         // Get the read statement's node
+        EdgePtr read = dataNode->getOutEdge(0);
         NodePtr readNode = read->getStmtNode();
 
 		// Make sure both statements aren't in a subgraph
 		const std::set<NodePtr>& stmts = subgraph.getStmts();
-		if (stmts.find(writeNode) == stmts.end() ||
-			stmts.find(readNode) == stmts.end()) {
+		if (stmts.find(writeNode) == stmts.end()
+ 		//	||stmts.find(readNode) == stmts.end()
+            ) {
 			continue;
 		}
 
-        // Remove its connection to dataNode
+        // Remove edge between readNode and dataNode
         readNode->removeInEdge(read);
-        // Connect it to and update all of writeNode's reads
+        // Go through writeNode's in-edges and assign them to readNode
         for (EdgePtr ptr : writeNode->getInEdges()) {
             ptr->setStmtNode(readNode);
-            if (readNode->inEdgeExists(ptr)) {
-                writeNode->removeInEdge(ptr);
-            } else {
-                readNode->addInEdge(ptr);
-            }
+            readNode->addInEdge(ptr);
         }
 
         // Remove dataNode
