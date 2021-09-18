@@ -2114,6 +2114,15 @@ void Stmt::replaceDataSpace(std::string searchString, std::string replaceString)
     for(auto& read : dataReads){
         if (read.first == searchString) { read.first = replaceString; }
     }
+	//Rename data space in iteration space 
+    std::string iterStr = iterationSpace->getString();
+    iterStr = iegenlib::replaceInString(iterStr, searchString, replaceString);   
+    iterationSpace.reset(new Set(iterStr));
+
+	//Rename data space in execution schedule
+    std::string relStr = executionSchedule->getString();
+    relStr = iegenlib::replaceInString(relStr, searchString, replaceString);
+    executionSchedule.reset(new Relation(relStr));
 }
 
 Stmt::Stmt(std::string stmtSourceCode, std::string iterationSpaceStr,
