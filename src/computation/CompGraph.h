@@ -1,228 +1,178 @@
 #ifndef COMP_GRAPH_H_
 #define COMP_GRAPH_H_
 
+#include <climits>
 #include <iostream>
-#include <string>
-#include <vector>
 #include <map>
 #include <memory>
+#include <queue>
+#include <sstream>
+#include <string>
+#include <vector>
 
 #include "set_relation/set_relation.h"
 
 namespace iegenlib {
+	//! Colors used in dot nodes
+	constexpr auto DEFAULT_COLOR = "darkgray";
+	constexpr auto PARAM_COLOR = "deepskyblue";
+	constexpr auto RETURN_COLOR = "red";
+	constexpr auto PARAM_RETURN_COLOR = "darkorchid";
+	// Color of the source node when creating a graph from a single statement
+	constexpr auto SOURCE_COLOR = "goldenrod";
+	// Color of unread data space
+	constexpr auto UNREAD_COLOR = "orangered";
 
-//! Colors used in dot nodes
-#define DEFAULT_COLOR "darkgray"
-#define PARAM_COLOR "deepskyblue"
-#define RETURN_COLOR "red"
-#define PARAM_RETURN_COLOR "darkorchid"
-// Color of the source node when creating a graph from a single statement
-#define SOURCE_COLOR "goldenrod"
-// Color of unread data space
-#define UNREAD_COLOR "orangered"
+	// These could be turned into bytewise operations for optimization
+	enum NodeTypes {
+		debug = 0, stmt, data, unread, readParam, param,
+		activeOut, readActiveOutParam, activeOutParam,
+		srcStmt, srcData, hidden
+	};
 
-enum NodeTypes {
-    debug = 0, stmt, data, unread, readParam, param,
-    returnVal, readReturnedParam, returnedParam,
-    source, hidden
-};
+	// Generates a specific node in the legend
+	std::string generateLegendNode(NodeTypes type);
+	// Creates a legend from the inputted NodeTypes
+	std::string createLegend(const std::set<NodeTypes>& nodes);
 
-std::string generateNode(std::string name, std::string label, NodeTypes type);
-std::string generateLegendNode(NodeTypes type);
-std::string createLegend(const std::vector<NodeTypes> &nodes);
+    //Generate an edge label from the given relation
+    std::string getRelationLabel(Relation* rel);
 
-class Edge;
-typedef std::shared_ptr<Edge> EdgePtr;
-class Node;
-typedef std::shared_ptr<Node> NodePtr;
+	struct SubgraphNode {
+		int val = -1;
+		std::string label = "";
+		std::vector<SubgraphNode> children;
+	};
 
-class Edge {
-  public:
-    Edge() = default;
-    Edge(bool _write, NodePtr _stmtNode, NodePtr _dataNode)
-        : write(_write), stmtNode(_stmtNode), dataNode(_dataNode) {}
-    ~Edge() = default;
+	struct StmtNode;
+	struct DataNode;
 
-//    Edge copy();
+	struct StmtNode {
+		int id = -1;
+		int subgraph = 0;
+		std::string setStr = "", debugStr = "";
+		NodeTypes type = NodeTypes::stmt;
 
-    void generateLabel(Relation* dataRelation);
+		std::set<std::weak_ptr<DataNode>,
+			std::owner_less<std::weak_ptr<DataNode>>> in;
+		std::map<std::weak_ptr<DataNode>, std::string,
+			std::owner_less<std::weak_ptr<DataNode>>> out;
 
-    void generateDotString(std::ostringstream &ss);
+		uint8_t written = 0;
 
-    bool isConst();
-    bool isWrite() { return write; }
+		void removeInEdge(const std::weak_ptr<DataNode>& dataNode);
+		void removeOutEdge(const std::weak_ptr<DataNode>& dataNode);
+		void toDotString(std::ostringstream& os) const;
+		void outEdgeDotString(std::ostringstream& os) const;
+		void inEdgeDotString(std::ostringstream& os) const;
+		void edgeDotString(std::ostringstream& os,
+			const DataNode* toNode) const;
+	};
 
-    // Getter/Setters
-    // stmtNode
-    void setStmtNode(NodePtr ptr) { stmtNode = ptr; }
-    NodePtr getStmtNode() { return stmtNode; }
-    // dataNode
-    void setDataNode(NodePtr ptr) { dataNode = ptr; }
-    NodePtr getDataNode() { return dataNode; }
-    // label
-    void setLabel(std::string str) { label = str; }
-    void addLabel(std::string str) { label.append(str); }
-    std::string getLabel() { return label; }
-    // color
-    void setColor(std::string str) { color = str; }
-    std::string getColor() { return color; }
+	struct DataNode {
+		std::string id = "";
+		int subgraph = 0;
+		NodeTypes type = NodeTypes::data;
 
-    bool isWritten() { return written; }
-    void reset() { written = false; }
+		std::set<std::weak_ptr<StmtNode>,
+			std::owner_less<std::weak_ptr<StmtNode>>> in;
+		std::map<std::weak_ptr<StmtNode>, std::string,
+			std::owner_less<std::weak_ptr<StmtNode>>> out;
 
-  private:
-    // is the edge a write (stmt->dataSpace)
-    // or a read (dataSpace->stmt)
-    bool write;
+		uint8_t written = 0;
 
-    NodePtr stmtNode, dataNode;
-    
-    std::string label, accessStr;
-    std::string color = DEFAULT_COLOR;
+		void removeInEdge(const std::weak_ptr<StmtNode>& stmtNode);
+		void removeOutEdge(const std::weak_ptr<StmtNode>& stmtNode);
+		void toDotString(std::ostringstream& os) const;
+		void outEdgeDotString(std::ostringstream& os) const;
+		void inEdgeDotString(std::ostringstream& os) const;
+		void edgeDotString(std::ostringstream& os,
+			const StmtNode* toNode) const;
+	};
 
-    bool written = false;
-};
+    class Computation;
 
-class Node {
-  public:
-    Node() = default;
-    ~Node() = default;
+	class CompGraph {
+	public:
+		CompGraph() = default;
+		~CompGraph() = default;
 
-//    Node copy();
+		// Constructs the graph from the given Computation object
+		void create(Computation* comp);
 
-    void generateDotString(std::ostringstream &ss);
+		// Adds debug statements from the inputted (stmtId : debugString) pairs
+		void addDebugStmts(std::vector<std::pair<int, std::string>> debugStmts);
 
-    std::vector<EdgePtr> getInEdges() { return inEdges; }
-    EdgePtr getInEdge(int idx) { return idx < inEdges.size() ? inEdges[idx] : nullptr; }
-    int numInEdges() { return inEdges.size(); }
-    void addInEdge(EdgePtr ptr);
-//    void addInEdge(EdgePtr ptr) { inEdges.push_back(ptr); }
-    void removeInEdge(EdgePtr ptr);
-    bool inEdgeExists(EdgePtr ptr);
+		// Reduces all nodes up through subgraph level = toLevel
+		// stmts and dataSpaces specify whether to reduce those nodes
+		void reduceNodes(bool stmts, bool dataSpaces, int toLevel = INT_MAX);
+		// Removes all nodes up through subgraph level = toLevel
+		void removeNodes(int toLevel = INT_MAX);
 
-    std::vector<EdgePtr> getOutEdges() { return outEdges; }
-    EdgePtr getOutEdge(int idx) { return idx < outEdges.size() ? outEdges[idx] : nullptr; }
-    int numOutEdges() { return outEdges.size(); }
-    void addOutEdge(EdgePtr ptr);
-//    void addOutEdge(EdgePtr ptr) { outEdges.push_back(ptr); }
-    void removeOutEdge(EdgePtr ptr);
-    bool outEdgeExists(EdgePtr ptr);
+		// Reduces all producer-consumer node relationships
+		void reducePCRelations();
 
-    // Getter/Setters
-    void setType(NodeTypes newType) { type = newType; }
-    NodeTypes getType() { return type; }
-    // name
-    void setName(std::string str) { name = str; }
-    std::string getName() { return name; }
-    // label
-    void setLabel(std::string str) { label = str; }
-    void addLabel(std::string str) { label.append(str); }
-    std::string getLabel() { return label; }
-/*    // shape
-    void setShape(std::string str) { shape = str; }
-    std::string getShape() { return shape; }
-    // color
-    void setColor(std::string str) { color = str; }
-    std::string getColor() { return color; }
-    // filled
-    void setFilled(bool b) { filled = b; }
-    bool isFilled() { return filled; }*/
+		// Removes nodes marked unread (no reads and not active-out)
+		void removeDeadNodes(std::vector<int>& stmtIds,
+			std::vector<std::string>& dataSpaces);
 
-    bool isWritten() { return written; }
-    void reset() { written = false; }
+		// Converts the graph to the dot file format
+		std::string toDotString();
+		// Converts the graph to the dot file format
+		// Only includes nodes which are connected to stmtIdx through
+		//     only reads (reads = true) or only writes (writes = true)
+		std::string toDotString(int stmtIdx, bool reads, bool writes);
+		std::string toDotString(std::string dataIdx, bool reads, bool writes);
 
-  private:
-    std::vector<EdgePtr> inEdges, outEdges;
+	private:
+		// Resets the "written" boolean in all nodes
+		void resetWritten();
 
-    std::string name, label;
-    NodeTypes type;
+        std::string partialDotString(std::shared_ptr<StmtNode> stmtNode,
+            std::shared_ptr<DataNode> dataNode, bool reads, bool writes);
 
-    bool written = false;
-};
+		// Removes a statement node. Also removes all write data nodes
+		void removeNode(int stmtId);
 
-class Subgraph {
-  public:
-    Subgraph() = default;
-    Subgraph(int _level) : level(_level) {}
-    ~Subgraph() = default;
+		// Generates subgraphs
+		void generateSubgraphs(std::vector<std::pair<
+			std::shared_ptr<StmtNode>, Set*>>&activeStmts);
+		SubgraphNode generateSubgraph(std::vector<std::pair<
+			std::shared_ptr<StmtNode>, Set*>>& activeStmts,
+			int level, int& sgCnt);
 
-    void generateDotString(std::ostringstream &ss);
-    void generateDotString(std::ostringstream &ss, int &cnt);
+		// Writes subgraphs to os
+		// Gets subgraphs in dot fromat from sgos
+		void subgraphDotString(std::ostringstream& os,
+			std::vector<std::ostringstream>& sgos);
+		// Checks for empty subgraphs (children must be empty as well)
+		// Uses subgraph string empty status
+		void checkEmptySubgraphs(std::vector<bool>& result,
+			std::vector<std::ostringstream>& sgos,
+			const SubgraphNode& sgNode);
+		// Gets order of subgraph traversal
+		// Inserts -1 after leaving a subgraph
+		void getSubgraphOrder(std::vector<SubgraphNode*>& order,
+			SubgraphNode& sgNode);
 
-    void addStmt(NodePtr node) { stmts.insert(node); }
-    const std::set<NodePtr>& getStmts() { return stmts; }
-    void addSubgraph(Subgraph graph) { subgraphs.push_back(graph); }
-    
-    void reduceStmts(int toLevel);
-    void reduceDataSpaces(int toLevel);
+		// Head node of the subgraph tree
+		SubgraphNode subgraphs;
+		int subgraphCnt;
 
-    bool removeStmt(NodePtr stmt);
+		// All statement and data space nodes
+		std::map<int, std::shared_ptr<StmtNode>> stmtNodes;
+		std::map<std::string, std::shared_ptr<DataNode>> dataNodes;
 
-    // Getter/Setters
-    // level
-    int getLevel() { return level; }
-    // label
-    void setLabel(std::string str) { label = str; }
-    void addLabel(std::string str) { label.append(str); }
-    std::string getLabel() { return label; }
-
-  private:
-    int level;
-    std::string label;
-    std::set<NodePtr> stmts;
-    std::vector<Subgraph> subgraphs;
-};
-
-class Computation;
-
-class CompGraph {
-  public:
-    CompGraph() = default;
-    ~CompGraph() = default;
-
-//  CompGraph copy();
-
-    void create(Computation* comp);
-    void addDebugStmts(std::vector<std::pair<int, std::string>> debugStmts);
-
-    void reduceStmts();
-    void reduceStmts(int toLevel);
-    void reduceDataSpaces();
-    void reduceDataSpaces(int toLevel);
-    void reduceNormalNodes();
-
-    void fusePCRelations();
-    
-    void removeDeadNodes( std::vector<int>& stmtIds, 
-        std::vector<std::string>&dataSpaces);
-    
-    std::string toDotString();
-    std::string toDotString(int stmtIdx, bool reads, bool writes);
-
-  private:
-//    Subgraph copySubgraph(CompGrpah &toGraph, subgraph &fromSG);
-
-    Subgraph generateSubgraph(std::vector<std::pair<NodePtr ,Set*>>& activeStmt, int level);
-
-    void resetWritten();
-
-    void generateDotWrites(Subgraph &subgraph, std::ostringstream &ss);
-    void generateDotReads(std::ostringstream &ss);
-
-    std::map<int, NodePtr> stmtNodes;
-    std::map<std::string, NodePtr> dataNodes;
-    Subgraph subgraph;
-
-    // Nodes to generate in the legend
-    std::set<NodeTypes> legend = {
-        NodeTypes::stmt, NodeTypes::data, NodeTypes::readParam, NodeTypes::param,
-        NodeTypes::returnVal, NodeTypes::unread,
-        NodeTypes::readReturnedParam, NodeTypes::returnedParam
-    };
-
-    static std::string getDotColor(std::string color1, std::string color2);
-};
-
+		// Nodes to generate in the legend
+		std::set<NodeTypes> legend = {
+			NodeTypes::stmt, NodeTypes::data, NodeTypes::readParam, NodeTypes::param,
+			NodeTypes::activeOut, NodeTypes::unread,
+			NodeTypes::readActiveOutParam, NodeTypes::activeOutParam
+		};
+	};
 }
 
 #endif
+
+
+

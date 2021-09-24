@@ -3,7 +3,7 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
-#include <string.h>
+#include <string>
 using iegenlib::Computation;
 using namespace std;
 
@@ -623,10 +623,11 @@ int main(int argc, char **argv){
     // Parsing to dot command line options
     bool reducePCRelations = false;
     bool toPoint = false;
+    bool onlyLoopLevels = false;
     bool addDebugStmts = false; 
-    int  stmtIdx = -1;
-    bool stmtReads = false;
-    bool stmtWrites = false;
+    std::string subgraphSrc = "";
+    bool subgraphReads = false;
+    bool subgraphWrites = false;
     int currIndex = 1;
     bool showHelp = false;
     bool deleteDeadNodes = false;
@@ -634,29 +635,33 @@ int main(int argc, char **argv){
 	std::string argString (argv[currIndex]);
         if (argString == "-reducePCRelations"){
            reducePCRelations = true;
-	   currIndex++;
+	        currIndex++;
 	}else if (argString == "-toPoint"){
 	   toPoint = true;
 	   currIndex++;
+    }else if (argString == "-onlyLoopLevels"){
+        onlyLoopLevels = true;
+        currIndex++;
 	}else if (argString == "-delete-dead"){
 	   deleteDeadNodes = true;
 	   currIndex++;
 	}else if (argString == "-debug"){
            addDebugStmts= true;
 	   currIndex++;
-	} else if (argString == "-stmtid"){
-	   if (currIndex + 1 >= argc ){
-              cout << "Statement Id -stmtid <IDNumber> \n";
-	      showHelp = true;
-	      break;
-	   }
-	   stmtIdx = stoi(argv[currIndex+1]);
-	   currIndex+=2;
-	} else if (argString == "-stmt-reads"){
-           stmtReads = true;
+    } else if (argString == "-subgraph") {
+        if (currIndex + 1 >= argc) {
+            cout << "Subgraph Source Id -subgraph "
+                 << "<Statement number OR Dataspace name> \n";
+            showHelp = true;
+            break;
+        }
+        subgraphSrc = argv[currIndex + 1];
+        currIndex += 2;
+	} else if (argString == "-subgraph-reads"){
+       subgraphReads = true;
 	   currIndex++;
-	}else if (argString == "-stmt-writes"){
-	   stmtWrites = true;
+	}else if (argString == "-subgraph-writes"){
+	   subgraphWrites = true;
 	   currIndex++;
 	}else if (argString == "-h"){
 	   showHelp = true;
@@ -669,7 +674,8 @@ int main(int argc, char **argv){
     }
     if (showHelp){
        cout << "<app> [-delete-dead] [-reducePCRelations] [-debug] [-toPoint]"
-	    << " [-stmtid <IdNumber>] [-stmt-reads] [-stmt-writes]\n";
+	        << " [-onlyLoopLevels] [-subgraph <Statement number OR Dataspace name>]"
+            << " [-subgraph-reads] [-subgraph-writes]\n";
        return 0;
     }
 
@@ -2168,7 +2174,7 @@ int main(int argc, char **argv){
     }
 
     dotFileStream << updateSources->toDotString(reducePCRelations,
-		toPoint,addDebugStmts,stmtIdx,stmtReads,stmtWrites);
+		toPoint,onlyLoopLevels,addDebugStmts,subgraphSrc,subgraphReads,subgraphWrites);
     dotFileStream.close();
     //Writing header file for codegen
     ofstream headStream;
@@ -3788,4 +3794,5 @@ Computation* Find_Segment_Computation(){
 
     return findSegmentComputation;
 }
+
 

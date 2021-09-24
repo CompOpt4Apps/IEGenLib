@@ -217,12 +217,13 @@ class Computation {
     //! Function returns a dot string representing nesting
     //  and loop carrie dependency.
     //  TODO: Add graph options as parameters
-    std::string toDotString(bool fusePCRelations = false,
-		    bool reduceNormalNodes = false,
+    std::string toDotString(bool reducePCRelations = false,
+		    bool toPoint = false,
+            bool onlyLoopLevels = false,
 		    bool addDebugStmts = false,
-		    int stmtIdx = -1,
-		    bool stmtReads = false,
-		    bool stmtWrites = false);
+		    std::string subgraphSrc = "",
+		    bool subgraphReads = false,
+		    bool subgraphWrites = false);
 
     //! Compiles each statement's debug string into a list
     std::vector<std::pair<int, std::string>> getStmtDebugStrings();
@@ -562,3 +563,5 @@ class VisitorChangeUFsForOmega : public Visitor {
 }  // namespace iegenlib
 
 #endif
+
+

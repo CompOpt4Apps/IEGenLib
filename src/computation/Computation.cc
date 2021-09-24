@@ -1625,30 +1625,35 @@ void Computation::deleteDeadStatements(){
 }
 
 std::string Computation::toDotString(bool reducePCRelations,
-		bool toPoint, bool addDebugStmts,
-		int stmtIdx, bool stmtReads,bool stmtWrites) {
+		bool toPoint, bool onlyLoopLevels, bool addDebugStmts,
+		std::string subgraphSrc, bool subgraphReads,bool subgraphWrites) {
     //TODO: Deal with disjunction of conjunctions later.
 
     CompGraph graph = CompGraph();
     graph.create(this);
     if (reducePCRelations) {
-        graph.fusePCRelations();
+        graph.reducePCRelations();
     }
     if(toPoint){
-        graph.reduceStmts(0);
-        graph.reduceDataSpaces(0);
-        // graph.reduceNormalNodes();
+        graph.reduceNodes(true, true, 0);
+    }
+    if(onlyLoopLevels){
+        graph.removeNodes(0);
     }
 
     if(addDebugStmts){
         graph.addDebugStmts(getStmtDebugStrings());
     }
 
-    if(stmtIdx != -1){
-        return graph.toDotString(stmtIdx,stmtReads,stmtWrites);
+    if(!subgraphSrc.empty()){
+        try {
+            int stmtIdx = std::stoi(subgraphSrc);
+            return graph.toDotString(stmtIdx, subgraphReads, subgraphWrites);
+        } catch (const std::invalid_argument& ia) {
+            return graph.toDotString(subgraphSrc, subgraphReads, subgraphWrites);
+        }
     }
 
-//  return graph.toDotString(546, true, true);
     return graph.toDotString();
 }
 
@@ -2606,3 +2611,4 @@ void VisitorChangeUFsForOmega::postVisitUFCallTerm(UFCallTerm* callTerm) {
 }
 
 }  // namespace iegenlib
+
