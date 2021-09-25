@@ -98,10 +98,19 @@ namespace iegenlib {
 	}
 
 	void StmtNode::toDotString(std::ostringstream& os) const {
+		std::ostringstream label;
+		label << setStr << "\\nS" << id; 
+        if (!eatenStmts.empty()) {
+            label << "\\nEaten: ";
+		    for (auto it = eatenStmts.begin(); it != eatenStmts.end(); it++) {
+			    if (it != eatenStmts.begin()) { label << ", "; }
+			    label << "S" << *it;
+		    }
+        }
+		label << "\\n" << debugStr;
 		// Node
 		os << "S" << id
-			<< "[" << generateDotLabel({ setStr, "\\nS", std::to_string(id),
-				"\\n", debugStr }) << "]"
+			<< "[" << generateDotLabel(label.str()) << "]"
 			<< nodeTypes[type].second.generate() << ";\n";
 	}
 
@@ -131,7 +140,7 @@ namespace iegenlib {
 			});
 		if (it != out.end()) {
 			auto dataNode = it->first.lock();
-			os << "\t" << "S" << id << "->" << dataNode->id
+			os << "S" << id << "->" << dataNode->id
 				<< "[" << generateDotLabel(it->second)
 				<< "][style=bold][color=";
 			// Special color for writing to active out data space
@@ -189,7 +198,7 @@ namespace iegenlib {
 			});
 		if (it != out.end()) {
 			auto stmtNode = it->first.lock();
-			os << "\t" << id << "->S" << stmtNode->id
+			os << id << "->S" << stmtNode->id
 				<< "[" << generateDotLabel(it->second)
 				<< "][style=bold][color=";
 			// Special color for reading from parameter
@@ -507,6 +516,12 @@ namespace iegenlib {
 			// Make sure s1, d are not in subgraphs
 			if (s1->subgraph != 0 || d->subgraph != 0) { continue; }
 
+			// Get s2
+			auto s2 = d->out.begin()->first.lock();
+
+			s2->eatenStmts.push_back(s1->id);
+			s2->eatenStmts.insert(s2->eatenStmts.end(), s1->eatenStmts.begin(), s1->eatenStmts.end());
+
 			// Remove s1
 			removeNode(s1->id);
 
@@ -684,7 +699,7 @@ namespace iegenlib {
 		}
 		for (auto& pair : dataNodes) {
 			auto dataNode = pair.second;
-			if (!dataNode->written == 0 &&
+			if (dataNode->written == 0 &&
 				dataNode->subgraph >= 0 && dataNode->subgraph < subgraphCnt) {
 				dataNode->toDotString(sgos[dataNode->subgraph]);
 				dataNode->outEdgeDotString(edges);
@@ -905,6 +920,7 @@ namespace iegenlib {
 		order.push_back(NULL);
 	}
 }
+
 
 
 

@@ -6,6 +6,7 @@
 #include <map>
 #include <memory>
 #include <queue>
+#include <set>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -51,6 +52,7 @@ namespace iegenlib {
 		int id = -1;
 		int subgraph = 0;
 		std::string setStr = "", debugStr = "";
+		std::list<int> eatenStmts;
 		NodeTypes type = NodeTypes::stmt;
 
 		std::set<std::weak_ptr<DataNode>,
@@ -173,6 +175,7 @@ namespace iegenlib {
 }
 
 #endif
+
 
 
 
