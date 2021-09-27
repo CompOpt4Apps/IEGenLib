@@ -100,15 +100,9 @@ class Computation {
 
     //! Returns a list of all the constraints of the given set
     static std::vector<std::string> getSetConstraints(Set* set);
-    
-    
-    //! Deletes statements that writes 
-    //! to nodes that are never read from 
-    //! in the computation.
-    void deleteDeadStatements();
 
     //! add stmt
-    void addStmt(Stmt* stmt);
+    void addStmt(Stmt* stmt, int stmtIdx = -1);
     //! Get a statement by index
     Stmt* getStmt(unsigned int index) const;
     //! Get the number of statements in this Computation
@@ -128,8 +122,13 @@ class Computation {
     void replaceDataSpaceName(std::string original, std::string newString);
     //! Produces a rename for the inputted data space, incrementing dataRenameCnt
     std::string getDataSpaceRename(std::string dataSpaceName);
+    //! unroll  - $arrName__ati1__ati2...__atiN$
+    //  access  - $arrName$[i1][i2]...[iN]
+    //  tuple   - [i1,i2,...,iN]
+    static void getArrayAccessStrs(std::string& unroll, std::string& access,
+        std::string& tuple, std::string arrName, const std::list<int>& idxs);
     //! Checks if the given data space is an array with only constant accesses
-    bool isConstArray(std::string dataSpaceName);
+    //bool isConstArray(std::string dataSpaceName);
 
     //! Trims dollar signs off of data space
     static std::string trimDataSpaceName(std::string dataSpaceName);
@@ -206,13 +205,25 @@ class Computation {
         std::string surroundingExecScheduleStr,
         const std::vector<std::string>& arguments = {});
 
+    //! Performs operations with the assumption that no more statements will be added
+    void finalize(bool deleteDeadNodes = false);
+
+    //! Returns true if all input sets have the same arity, false otherwise
+    bool consistentSetArity(const std::vector<Set*>& sets);
+
     //! Pads each statement's execution schedule with 0's such the all
     //  execution schedules have the same arity
     //  Caller is responsible for deallocating Relation*
     std::vector<Relation*> padExecutionSchedules() const;
 
-    //! Returns true if all input sets have the same arity, false otherwise
-    bool consistentSetArity(const std::vector<Set*>& sets);
+    //! Performs special SSA renaming for constant access arrays
+    //  on all statements
+    void enforceArraySSA();
+
+    //! Deletes statements that writes 
+    //! to nodes that are never read from 
+    //! in the computation.
+    void deleteDeadStatements();
 
     //! Function returns a dot string representing nesting
     //  and loop carrie dependency.
@@ -296,25 +307,28 @@ class Computation {
   	std::string name;
 
     //! maps array name : true - has constant accesses at all dimensions
-    std::map<std::string, bool> arrays;
+    //std::map<std::string, bool> arrays;
     //! Performs special SSA renaming on arrays
     //  splits constant-access arrays into separate data spaces
-    void enforceArraySSA(Stmt* stmt);
+    //void enforceArraySSA(Stmt* stmt);
     //! Performs special SSA renaming for the data space
     //  at the specified read/write index in stmt
     //  returns true if successful, false otherwise
-    bool enforceArraySSA(Stmt* stmt, int dataIdx, bool isRead);
+    //bool enforceArraySSA(Stmt* stmt, int dataIdx, bool isRead);
 
     //! Locates phi nodes for a given statement. These occur when a data space
     //  which is being read can take multiple values based on the control flow
-    void locatePhiNodes(Stmt* stmt);
-    void locatePhiNode(std::string dataSpace, Stmt* srcStmt);
+    int locatePhiNodes(int stmtIdx);
+    //! Returns true if a phi nodes is created, false otherwise
+    bool locatePhiNode(int stmtIdx, std::string dataSpace);
     //! Adds in a phi node
-    void addPhiNode(std::pair<int, std::string> &first, std::pair<int, std::string> &guaranteed, Stmt* srcStmt);
+    //! Returns true if a phi nodes is created, false otherwise
+    bool addPhiNode(int stmtIdx, std::pair<int, std::string>& first,
+        std::pair<int, std::string>& guaranteed);
 
     //! For each write in the new statement, rename the written dataspace in all
     //  statements from the last statement to the last write to that data space.
-    void enforceSSA(Stmt* stmt);
+    void enforceSSA(int stmtIdx);
 
     //! Information on all statements in the Computation
     std::vector<Stmt*> stmts;
@@ -381,15 +395,21 @@ class Stmt {
     //! Copy constructor
     Stmt(const Stmt& other);
 
-    //! Replace data space name only where read from
-    //! Returns true if such a read is found, false otherwise
-    bool replaceDataSpaceReads(std::string searchString, std::string replaceString);
+    //! Replaces read everywhere in the Stmt
+    void replaceRead(std::string searchStr, std::string replaceStr);
+    //! Replaces read data space
+    void replaceReadDataSpace(std::string searchStr, std::string replaceStr);
+    //! Replaces searchStr in the read portion of the source code
+    void replaceReadSourceCode(std::string searchStr, std::string replaceStr);
 
-    //! Replace data space name only where written to
-    //! Returns true if such a write is found, false otherwise
-    bool replaceDataSpaceWrites(std::string searchString, std::string replaceString);
+    //! Replaces write everywhere in the Stmt
+    void replaceWrite(std::string searchStr, std::string replaceStr);
+    //! Replaces write data space
+    void replaceWriteDataSpace(std::string searchStr, std::string replaceStr);
+    //! Replaces searchStr in the write portion of the source code
+    void replaceWriteSourceCode(std::string searchStr, std::string replaceStr);
 
-    //! Replace data space name
+    //! Replace data space everywhere in the Stmt
     void replaceDataSpace(std::string searchString, std::string replaceString);
 
     //! Assignment operator (copy)
@@ -458,6 +478,9 @@ class Stmt {
     Relation* getWriteRelation(unsigned int index) const;
     //! Get a data write's relation by name
     Relation* getWriteRelation(std::string name) const;
+
+    //! Checks if a data read/write is a constant access array
+    std::list<int> getConstArrayAccesses(unsigned int index, bool read) const;
 
     //Set debug string for the statement
     void setDebugStr(std::string str);
@@ -563,5 +586,6 @@ class VisitorChangeUFsForOmega : public Visitor {
 }  // namespace iegenlib
 
 #endif
+
 
 

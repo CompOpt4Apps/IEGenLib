@@ -791,7 +791,7 @@ int main(int argc, char **argv){
 
     //double nu[3] = {current_values[3], current_values[4], current_values[5]};
     updateSources->addDataSpace("$nu$", "double");
-    Stmt* s02 = new Stmt("$nu$[3] = {$current_values$[3], $current_values$[4], $current_values$[5]};",
+    Stmt* s02 = new Stmt("$nu$[] = {$current_values$[3], $current_values$[4], $current_values$[5]};",
          "{[0]}",
          "{[0]->[3]}",
          {
@@ -799,7 +799,7 @@ int main(int argc, char **argv){
             {"$current_values$","{[0]->[4]}"},
             {"$current_values$","{[0]->[5]}"}
          },
-         {{"$nu$", "{[0]->[3]}"}}
+         {{"$nu$", "{[0]->[0]}"}}
          );
     updateSources->addStmt(s02);
     s02->setDebugStr("line number 735 this statement originates from");
@@ -1850,7 +1850,7 @@ int main(int argc, char **argv){
             {"$sources_dc_gr$", "{[0]->[2,1]}"},
             {"$sources_c_gr_mag$", "{[0]->[1]}"}
         },
-        {{"$sources_dc_gr_mag$", "{[0]->[0]}"}}
+        {{"$sources_dc_gr_mag$", "{[0]->[1]}"}}
         );
     updateSources->addStmt(s73);
 
@@ -2165,17 +2165,15 @@ int main(int argc, char **argv){
     );
     updateSources->addStmt(s91);
 
+    updateSources->finalize(deleteDeadNodes);
+
     //Calling toDot() on the Computation structure
     ofstream dotFileStream("codegen_dot.txt");
     cout << "Entering toDot()" << "\n";
-    if (deleteDeadNodes){
-        cout << "Deleting Dead Nodes\n";
-	updateSources->deleteDeadStatements();
-    }
-
     dotFileStream << updateSources->toDotString(reducePCRelations,
 		toPoint,onlyLoopLevels,addDebugStmts,subgraphSrc,subgraphReads,subgraphWrites);
     dotFileStream.close();
+
     //Writing header file for codegen
     ofstream headStream;
     headStream.open("codegen.h");
@@ -3794,5 +3792,6 @@ Computation* Find_Segment_Computation(){
 
     return findSegmentComputation;
 }
+
 
 
