@@ -51,7 +51,7 @@ int main(int argc, char** argv) {
     Stmt* mc1 = new Stmt(
       "a[i] = i;",
       "{[i,j]: i >= 0 && i<5 && j >= 0 && j<5}",
-      "{[i,j]->[0,i,0,j,0]}",
+      "{[i,j]->[0,i,0,j,1]}",
         {
           {"$i$", "{[i,j]->[i]}"},
         },
@@ -60,6 +60,8 @@ int main(int argc, char** argv) {
         }
     );
     macroComp->addStmt(mc1);
+    
+    macroComp->finalize();
     
     ofstream outStream;
     outStream.open("macro_test.c");

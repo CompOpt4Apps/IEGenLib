@@ -213,12 +213,16 @@ class Computation {
 
     //! Pads each statement's execution schedule with 0's such the all
     //  execution schedules have the same arity
-    //  Caller is responsible for deallocating Relation*
-    std::vector<Relation*> padExecutionSchedules() const;
+    void padExecutionSchedules();
 
     //! Performs special SSA renaming for constant access arrays
     //  on all statements
     void enforceArraySSA();
+
+    //! Adjusts all statement execution schedules to accouunt for 
+    //  dynamically added statements.
+    //  Ordering of inputted statements is maintained.
+    void adjustExecutionSchedules();
 
     //! Deletes statements that writes 
     //! to nodes that are never read from 
@@ -244,12 +248,12 @@ class Computation {
 
     //! Sequentially apply added transformations to all statements.
     //! Returns a list of final statement schedules after transformation.
-    std::vector<Set*> applyTransformations() const;
+    std::vector<Set*> applyTransformations();
 
     //! Sequentially composes addes transfomations onto each statement's
     //  execution schedule (scheduling function)
     //  Caller is responsible for deallocating Relation*
-    std::vector<Relation*> getTransformations() const;
+    std::vector<Relation*> getTransformations();
 
     //! Returns a list of iteration spaces after padding and applying transformations
     std::vector<std::pair<int, Set*>> getIterSpaces();
@@ -586,6 +590,7 @@ class VisitorChangeUFsForOmega : public Visitor {
 }  // namespace iegenlib
 
 #endif
+
 
 
 

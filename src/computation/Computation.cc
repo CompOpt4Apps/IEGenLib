@@ -1550,6 +1550,8 @@ void Computation::fuse (int s1, int s2, int fuseLevel){
 
 void Computation::finalize(bool deleteDeadNodes) {
     enforceArraySSA();
+    adjustExecutionSchedules();
+	padExecutionSchedules();
 
     if (deleteDeadNodes) {
         std::cerr << "Deleting Dead Nodes" << std::endl;
@@ -1564,14 +1566,14 @@ bool Computation::consistentSetArity(const std::vector<Set*>& sets) {
     return true;
 }
 
-std::vector<Relation*> Computation::padExecutionSchedules() const {
+void Computation::padExecutionSchedules() {
     // Get the max arity
     int maxArity = 0;
     for (int j = 0; j < getNumStmts(); j++) {
         int tmp = getStmt(j)->getExecutionSchedule()->outArity();
         if (tmp > maxArity) { maxArity = tmp; }
     }
-
+    
     // Pads iteration spaces by padding the execution schedule
     // The execution schedule is applied during applyTransformations()
     // Generate composition relation of the form
@@ -1601,14 +1603,15 @@ std::vector<Relation*> Computation::padExecutionSchedules() const {
 //                  << compositions.back()->getString() << std::endl;
     }
 
-    std::vector<Relation*> result;
     // Apply composition to generate new execution schedule for each statement
     for (int i = 0; i < getNumStmts(); i++) {
         Stmt* stmt = getStmt(i);
         Relation* sched = stmt->getExecutionSchedule();
-        result.push_back(compositions[sched->outArity() - 1]->Compose(sched));
+        stmt->setExecutionSchedule(
+            compositions[sched->outArity() - 1]->Compose(sched));
     }
-    return result;
+
+    for (Relation* rel : compositions) { delete rel; }
 }
 
 void Computation::enforceArraySSA() {
@@ -1698,8 +1701,85 @@ void Computation::enforceArraySSA() {
                 { {unroll, "{[0]->[0]}"} },
                 { {pair.first, "{[0]->" + tuple + "}"} }
             );
+            rerollStmt->setArrayAccess(true);
             addStmt(rerollStmt);
         }
+    }
+}
+
+void Computation::adjustExecutionSchedules() {
+    if (getNumStmts() <= 0) { return; }
+    int maxArity = 0;
+    for (int j = 0; j < getNumStmts(); j++) {
+        int tmp = getStmt(j)->getExecutionSchedule()->outArity();
+        if (tmp > maxArity) { maxArity = tmp; }
+    }
+    // Create tuples filled with 0's
+    TupleDecl oldTuple(maxArity), lastTuple(maxArity);
+    for (int i = 0; i < maxArity; i++) {
+        oldTuple.setTupleElem(i, 0);
+        lastTuple.setTupleElem(i, 0);
+    }
+    int idx = 0;
+    for (int i = 0; i < getNumStmts(); i++) {
+        Stmt* stmt = getStmt(i);
+        // Skip dynamically inserted nodes
+        if (!stmt->isPhiNode() && !stmt->isArrayAccess()) {
+            TupleDecl currTuple = stmt->getExecutionSchedule()->getTupleDecl();
+            int inArity = stmt->getExecutionSchedule()->inArity();
+            int outArity = stmt->getExecutionSchedule()->outArity();
+            int arity = inArity + outArity;
+            // Compute currTuple - oldTuple
+            int level = 0, diff = 0;
+            while (level < outArity && diff == 0) {
+                if (currTuple.elemIsConst(level + inArity) 
+                    && oldTuple.elemIsConst(level)) {
+                    diff = currTuple.elemConstVal(level + inArity)
+                        - oldTuple.elemConstVal(level);
+                }
+                level += 2;
+            }
+            if (diff != 0) { level -= 2; }
+            // Update oldTuple
+            for( int j = 0; j < outArity; j++) {
+                oldTuple.setTupleElem(j, 
+                    currTuple.elemConstVal(j + inArity));
+            }
+            for (int j = outArity; j < maxArity; j++) {
+                oldTuple.setTupleElem(j, 0);
+            }
+            // Compute lastTuple + (currTuple - oldTuple)
+            if (level < outArity && lastTuple.elemIsConst(level)) {
+                currTuple.setTupleElem(level + inArity,
+                    lastTuple.elemConstVal(level) + diff);
+            }
+            // Update dynamically inserted statements
+            for (idx; idx < i; idx++) {
+				getStmt(idx)->setExecutionSchedule(new Relation(
+                    "{" + currTuple.toString(true, inArity) + "}"));
+                currTuple.setTupleElem(arity - 1,
+                    currTuple.elemConstVal(arity - 1) + 1);
+            }
+            // Update the current statement
+			stmt->setExecutionSchedule(new Relation(
+               "{" + currTuple.toString(true, inArity) + "}"));
+            idx++;
+            // Update last tuple
+            for( int j = 0; j < outArity; j++) {
+                lastTuple.setTupleElem(j, 
+                    currTuple.elemConstVal(j + inArity));
+            }
+            for (int j = outArity; j < maxArity; j++) {
+                lastTuple.setTupleElem(j, 0);
+            }
+        }
+    }
+     
+    // Handle any remaining dynamically added statements
+	int stmtNum = lastTuple.elemConstVal(0);
+    for (idx; idx < getNumStmts(); idx++) {
+		getStmt(idx)->setExecutionSchedule(new Relation(
+            "{[0]->[" + std::to_string(++stmtNum) + "]}"));
     }
 }
 
@@ -1781,7 +1861,7 @@ void Computation::addTransformation(unsigned int stmtIndex, Relation* rel) {
     transformationLists.at(stmtIndex).emplace_back(rel);
 }
 
-std::vector<Set*> Computation::applyTransformations() const {
+std::vector<Set*> Computation::applyTransformations() {
     std::vector<Relation*> transformations = getTransformations();
     std::vector<Set*> transformedSchedules;
     for (int stmtNum = 0; stmtNum < getNumStmts(); ++stmtNum) {
@@ -1794,17 +1874,19 @@ std::vector<Set*> Computation::applyTransformations() const {
     return transformedSchedules;
 }
 
-std::vector<Relation*> Computation::getTransformations() const {
-    std::vector<Relation*> transformedSchedules = padExecutionSchedules();
+std::vector<Relation*> Computation::getTransformations() {
+    std::vector<Relation*> transformedSchedules(getNumStmts(), NULL);
     for (int stmtNum = 0; stmtNum < this->getNumStmts(); ++stmtNum) {
+        transformedSchedules[stmtNum] = new Relation(
+            *getStmt(stmtNum)->getExecutionSchedule());
         for (Relation* transformation : transformationLists.at(stmtNum)) {
             std::cerr << "Transformation " << transformation->getString() << std::endl;
             Relation* curr = transformedSchedules[stmtNum];
-            if( curr->outArity() != transformation->inArity()){
-                std::cerr<<"Mismatched Arities: cannot apply transformation" << std::endl;
+            if (curr->outArity() != transformation->inArity()) {
+                std::cerr << "Mismatched Arities: cannot apply transformation" << std::endl;
                 continue;
             }
-            transformedSchedules[stmtNum] =  transformation->Compose(curr);
+            transformedSchedules[stmtNum] = transformation->Compose(curr);
             delete curr;
         }
     }
@@ -1958,7 +2040,6 @@ std::string Computation::codeGen(Set* knownConstraints) {
     return generatedCode.str();
 }
 
-//
 std::string Computation::omegaCodeGenFromString(std::vector<int> relationArity, std::vector<std::string> iterSpacesStr, std::string known){
     std::ostringstream generatedCode;
     std::vector<omega::Relation> iterSpaces;
@@ -1994,7 +2075,6 @@ std::string Computation::omegaCodeGenFromString(std::vector<int> relationArity, 
 
     return generatedCode.str();
 }
-
 
 std::string Computation::toOmegaString() {
     std::ostringstream omegaString;
@@ -2810,5 +2890,6 @@ void VisitorChangeUFsForOmega::postVisitUFCallTerm(UFCallTerm* callTerm) {
 }
 
 }  // namespace iegenlib
+
 
 

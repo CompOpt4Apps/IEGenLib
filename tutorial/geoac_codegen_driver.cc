@@ -521,7 +521,7 @@ int forComp1(Computation* c, int i, int idx) {
     //sources.ddc[n][0] = 0.0;
     Stmt* s40 = new Stmt("$sources_ddc$["+n+"][0] = 0.0;",
         "{[0]: GeoAc_CalcAmp = 1}",
-        "{[0]->["+n+"]}",
+        "{[0]->["+ std::to_string(i++) +"]}",
         {},
         {{"$sources_ddc$", "{[0]->["+n+",0]}"}}
         );
@@ -533,7 +533,7 @@ int forComp1(Computation* c, int i, int idx) {
     //updateSources->addDataSpace("$sources_ddw$");
     Stmt* s41 = new Stmt("$sources_ddw$["+n+"][0] = 0.0;",
         "{[0]: GeoAc_CalcAmp = 1}",
-	"{[0]->["+n+"]}",
+	"{[0]->["+ std::to_string(i++) +"]}",
 	{},
         {{"$sources_ddw$", "{[0]->["+n+",0]}"}}
         );
@@ -545,7 +545,7 @@ int forComp1(Computation* c, int i, int idx) {
     //updateSources->addDataSpace("$sources_ddv$");
     Stmt* s42 = new Stmt("$sources_ddv$["+n+"][0] = 0.0;",
         "{[0]: GeoAc_CalcAmp = 1}",
-        "{[0]->["+n+"]}",
+        "{[0]->["+ std::to_string(i++) +"]}",
         {},
         {{"$sources_ddv$", "{[0]->["+n+",0]}"}}
         );
@@ -557,7 +557,7 @@ int forComp1(Computation* c, int i, int idx) {
     //sources.ddu[n][0] = 0.0;
     Stmt* s43 = new Stmt("$sources_ddu$["+n+"][0] = 0.0;",
         "{[0]: GeoAc_CalcAmp = 1}",
-        "{[0]->["+n+"]}",
+        "{[0]->["+ std::to_string(i++) +"]}",
         {},
         {{"$sources_ddu$", "{[0]->["+n+",0]}"}}
         );
@@ -568,7 +568,7 @@ int forComp1(Computation* c, int i, int idx) {
     //sources.ddc[n][1] = 0.0;
     Stmt* s44 = new Stmt("$sources_ddc$["+n+"][1] = 0.0;",
         "{[0]: GeoAc_CalcAmp = 1}",
-        "{[0]->["+n+"]}",
+        "{[0]->["+ std::to_string(i++) +"]}",
          {},
           {
               {"$sources_ddc$", "{[0]->["+n+",1]}"}
@@ -580,7 +580,7 @@ int forComp1(Computation* c, int i, int idx) {
     //sources.ddw[n][1] = 0.0;
     Stmt* s45 = new Stmt("$sources_ddw$["+n+"][1] = 0.0;",
         "{[0]: GeoAc_CalcAmp = 1}",
-        "{[0]->["+n+"]}",
+        "{[0]->["+ std::to_string(i++) +"]}",
          {},
           {
               {"$sources_ddw$", "{[0]->["+n+",1]}"}
@@ -592,7 +592,7 @@ int forComp1(Computation* c, int i, int idx) {
     //sources.ddv[n][1] = 0.0;
     Stmt* s46 = new Stmt("$sources_ddv$["+n+"][1] = 0.0;",
         "{[0]: GeoAc_CalcAmp = 1}",
-        "{[0]->["+n+"]}",
+        "{[0]->["+ std::to_string(i++) +"]}",
           {},
           {
               {"$sources_ddv$", "{[0]->["+n+",1]}"}
@@ -604,7 +604,7 @@ int forComp1(Computation* c, int i, int idx) {
     //sources.ddu[n][1] = 0.0;
     Stmt* s47 = new Stmt("$sources_ddu$["+n+"][1] = 0.0;",
         "{[0]: GeoAc_CalcAmp = 1}",
-        "{[0]->["+n+"]}",
+        "{[0]->["+ std::to_string(i++) +"]}",
           {},
           {
               {"$sources_ddu$", "{[0]->["+n+",1]}"}
