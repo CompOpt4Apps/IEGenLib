@@ -812,13 +812,13 @@ AppendComputationResult Computation::appendComputation(
     // Insertion is done by prepending statements one at a time in reverse
     // order.
 
-    // Keep track of the number of writes.
+    // Get the number of writes.
     // Need this for the correct execution order
-    int idx = 0;
+    int numWrites = 0;
     // Used to track number of statements not including parameter
     // declarations. Used for paramter reassignments
     int numStmts = toAppend->getNumStmts();
-    for (int i = ((signed int)numArgs) - 1; i >= 0; --i) {
+    for (int i = 0;  i < ((signed int)numArgs); ++i) {
         std::string param = toAppend->getParameterName(i);
         std::string paramType = toAppend->getParameterType(i);
         if (paramType.find("&") != std::string::npos ||
@@ -829,7 +829,7 @@ AppendComputationResult Computation::appendComputation(
 
             paramDeclStmt->setStmtSourceCode(param + " = " + arguments[i] + ";");
             paramDeclStmt->setIterationSpace("{[0]}");
-            paramDeclStmt->setExecutionSchedule("{[0]->[" + std::to_string(idx++) +
+            paramDeclStmt->setExecutionSchedule("{[0]->[" + std::to_string(numWrites) +
                                                 "]}");
             // If passed-in argument is a data space, mark it as being read
             // (otherwise it is a literal)
@@ -839,7 +839,8 @@ AppendComputationResult Computation::appendComputation(
             paramDeclStmt->addWrite(param, "{[0]->[0]}");
 
             // Add the statement
-            toAppend->stmts.insert(toAppend->stmts.begin(), paramDeclStmt);
+            toAppend->stmts.insert(toAppend->stmts.begin() + numWrites, paramDeclStmt);
+            numWrites++;
         }
     }
 
@@ -857,7 +858,7 @@ AppendComputationResult Computation::appendComputation(
 
     // construct and insert an adjusted version of each statement of appendee,
     // including parameter declaration statements
-    unsigned int remainingParamDeclStmts = idx;
+    unsigned int remainingParamDeclStmts = numWrites;
     bool processingOriginalStmts = false;
     for (unsigned int stmtNum = 0; stmtNum < toAppend->getNumStmts();
          ++stmtNum) {
@@ -866,7 +867,7 @@ AppendComputationResult Computation::appendComputation(
         // by the number of prepended statements
         if (!processingOriginalStmts) {
             if (remainingParamDeclStmts == 0) {
-                offsetValue += idx;
+                offsetValue += numWrites;
                 processingOriginalStmts = true;
             } else {
                 remainingParamDeclStmts--;
