@@ -253,7 +253,7 @@ class Computation {
     //! Sequentially composes addes transfomations onto each statement's
     //  execution schedule (scheduling function)
     //  Caller is responsible for deallocating Relation*
-    std::vector<Relation*> getTransformations();
+    std::vector<Relation*> getTransformations() const;
 
     //! Returns a list of iteration spaces after padding and applying transformations
     std::vector<std::pair<int, Set*>> getIterSpaces();

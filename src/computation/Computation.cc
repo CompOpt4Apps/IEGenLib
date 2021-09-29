@@ -1875,7 +1875,7 @@ std::vector<Set*> Computation::applyTransformations() {
     return transformedSchedules;
 }
 
-std::vector<Relation*> Computation::getTransformations() {
+std::vector<Relation*> Computation::getTransformations() const {
     std::vector<Relation*> transformedSchedules(getNumStmts(), NULL);
     for (int stmtNum = 0; stmtNum < this->getNumStmts(); ++stmtNum) {
         transformedSchedules[stmtNum] = new Relation(
