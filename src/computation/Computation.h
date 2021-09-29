@@ -305,6 +305,12 @@ class Computation {
     //  S0: {[0,i,0,j,0] | stuff}; S1:{[0,i,1,j,0] | stuff}
     void fuse (int s1, int s2, int fuseLevel);
 
+    //! Wrap the given data space name in delimiters
+    static string delimitDataSpaceName(std::string dataSpaceName);
+
+    //! Get a new string with all instances of the data space delimiter removed from the original string
+    static string stripDataSpaceDelimiterFromString(std::string delimitedStr);
+
     private:
 
   	//! Human-readable name of Computation

@@ -40,7 +40,8 @@
 #define NAME_PREFIX_BASE "_iegen_"
 
 //! String delimiter expected on either side of data space names
-#define DATA_SPACE_DELIMITER "$"
+//! Must be something that will not appear in normal strings containing data spaces, so that it can be naively found/replaced.
+#define DATA_SPACE_DELIMITER '$'
 
 //! String appended to dataspaces to avoid name conflicts when SSA renaming
 #define DATA_RENAME_STR "__w__"
@@ -198,7 +199,7 @@ bool Computation::enforceArraySSA(Stmt* stmt, int dataIdx, bool isRead) {
     if (!accessVals.empty()) {
         // Get the new data space name and the access string for the array
         std::ostringstream name, access, tuple;
-        name << "$" << trimDataSpaceName(dataSpace);
+        name << trimDataSpaceName(dataSpace);
         tuple << "[";
         for (auto it = accessVals.begin(); it != accessVals.end(); it++) {
             name << ARR_ACCESS_STR << *it;
@@ -206,11 +207,10 @@ bool Computation::enforceArraySSA(Stmt* stmt, int dataIdx, bool isRead) {
             if (it != accessVals.begin()) { tuple << ", "; }
             tuple << *it;
         }
-        name << "$";
         tuple << "]";
 //        std::cerr << "Array Access: " << access.str() << std::endl;
 //        std::cerr << "Access Tuple: " << tuple.str() << std::endl;
-        std::string newDataSpace = name.str();
+        std::string newDataSpace = Computation::delimitDataSpaceName(name.str());
 //        std::cerr << "New Name: " << newDataSpace << std::endl;
         // This array has not been accessed in this way before
         if (!isDataSpace(newDataSpace)) {
@@ -276,8 +276,6 @@ void Computation::enforceSSA(int stmtIdx) {
     std::vector<SSAWrite> writes;
     for (int i = 0; i < stmt->getNumWrites(); i++) {
         std::string write = stmt->getWriteDataSpace(i);
-        // Empty write or missing "$"
-        if (write == "" || write[0] != '$') { continue; }
         // Is a constant access array
         if (!stmt->getConstArrayAccesses(i, false).empty()) { continue; }
         // Is not written to or is written to at or after stmtIdx
@@ -459,10 +457,10 @@ bool Computation::addPhiNode(int stmtIdx,
             if (i != 0) { code << " && "; }
             code << constrs.at(i);
         }
-        // Re-add "$" to data spaces
+        // Re-add delimiter to data spaces
         std::string codeStr = code.str();
         for (std::string str : trimmedNames) {
-            std::string newStr = "$" + str + "$";
+            std::string newStr = Computation::delimitDataSpaceName(str);
             std::string old = codeStr;
             codeStr = iegenlib::replaceInString(codeStr, str, newStr);
             if (codeStr != old) {
@@ -524,24 +522,24 @@ std::vector<std::string> Computation::getSetConstraints(Set* set) {
 }
 
 Set* Computation::trimISDataSpaces(Set* set) {
-    Set* s = new Set(iegenlib::replaceInString(set->getString(), "$", ""));
+    Set* s = new Set(stripDataSpaceDelimiterFromString(set->getString()));
     return s;
 }
 
 Set* Computation::trimISDataSpaces(Set* set, std::set<std::string> &trimmedNames) {
     std::string setStr = set->getString();
-    int pos = setStr.find('$');
+    int pos = setStr.find(DATA_SPACE_DELIMITER);
     while (pos != std::string::npos) {
         std::string begin = setStr.substr(0, pos);
         std::string end = setStr.substr(pos + 1);
-        pos = end.find('$');
+        pos = end.find(DATA_SPACE_DELIMITER);
         if (pos == std::string::npos) {
             setStr = begin + end;
             break;
         }
         trimmedNames.insert(end.substr(0, pos));
         setStr = begin + end.substr(0, pos) + end.substr(pos + 1);
-        pos = setStr.find('$');
+        pos = setStr.find(DATA_SPACE_DELIMITER);
     }
     return new Set(setStr);
 }
@@ -1567,6 +1565,16 @@ bool Computation::consistentSetArity(const std::vector<Set*>& sets) {
     return true;
 }
 
+
+std::string Computation::delimitDataSpaceName(std::string dataSpaceName) {
+    return DATA_SPACE_DELIMITER + dataSpaceName + DATA_SPACE_DELIMITER;
+}
+
+std::string Computation::stripDataSpaceDelimiterFromString(std::string delimitedStr) {
+    static const std::string delimiterAsStr = std::string(1, DATA_SPACE_DELIMITER);
+    return iegenlib::replaceInString(delimitedStr, delimiterAsStr, "");
+}
+
 void Computation::padExecutionSchedules() {
     // Get the max arity
     int maxArity = 0;
@@ -1946,8 +1954,7 @@ std::string Computation::codeGen(Set* knownConstraints) {
 
         stmtMacroDefs << "#define s_" << stmtCount << "("
                       << iterSpace->getTupleDecl().toString() << ")   "
-                      << iegenlib::replaceInString(stmt->getStmtSourceCode(),
-                             DATA_SPACE_DELIMITER, "")
+                      << Computation::stripDataSpaceDelimiterFromString(stmt->getStmtSourceCode())
                       << " \n";
 
         // Get the new iteration space set
@@ -2047,7 +2054,7 @@ std::string Computation::omegaCodeGenFromString(std::vector<int> relationArity, 
     for(int i=0; i<iterSpacesStr.size(); i++){
         std::string omegaIterString = iterSpacesStr[i];
         omega::Relation* omegaIterSpace =
-            omega::parser::ParseRelation(iegenlib::replaceInString(omegaIterString, DATA_SPACE_DELIMITER, ""));
+            omega::parser::ParseRelation(Computation::stripDataSpaceDelimiterFromString(omegaIterString));
 
         iterSpaces.push_back(omega::copy(*omegaIterSpace));
         transforms.push_back(omega::Identity(relationArity[i]));
@@ -2109,8 +2116,8 @@ std::string Computation::toOmegaString() {
 }
 
 bool Computation::assertValidDataSpaceName(const std::string& name) {
-    if (!(name.length() >= 3 && std::string(1, name.front()) == DATA_SPACE_DELIMITER
-            && std::string(1, name.back()) == DATA_SPACE_DELIMITER)){// || name.find('.') != std::string::npos) {
+    if (!(name.length() >= 3 && name.front() == DATA_SPACE_DELIMITER
+            && name.back() == DATA_SPACE_DELIMITER)){// || name.find('.') != std::string::npos) {
         std::stringstream msg;
         msg << "Data space names must be nonempty, surrounded in " << DATA_SPACE_DELIMITER
             << ", and not contain '.'\nError triggered for data space: " << name;
@@ -2142,13 +2149,13 @@ void Computation::replaceDataSpaceName(std::string original, std::string newStri
 
     std::string searchString;
     std::string replacedString;
-    if(original.at(0) == '$'){
+    if(original.at(0) == DATA_SPACE_DELIMITER){
         searchString = original;
         replacedString = newString;
     }
     else{
-        searchString = "$"+original+"$";
-        replacedString = "$"+newString+"$";
+        searchString = Computation::delimitDataSpaceName(original);
+        replacedString = Computation::delimitDataSpaceName(newString);
     }
     for(int i = 0; i < getNumStmts(); i++) {
         getStmt(i)->replaceDataSpace(searchString, replacedString);
@@ -2173,7 +2180,7 @@ void Computation::replaceDataSpaceName(std::string original, std::string newStri
 std::string Computation::getDataSpaceRename(std::string dataSpaceName) {
     if (dataSpaceName == "") { return ""; }
     dataSpaceName = trimDataSpaceName(dataSpaceName);
-    return "$" + dataSpaceName + DATA_RENAME_STR + std::to_string(dataRenameCnt++) + "$";
+    return Computation::delimitDataSpaceName(dataSpaceName + DATA_RENAME_STR + std::to_string(dataRenameCnt++));
 }
 
 void Computation::getArrayAccessStrs(std::string& unroll, std::string& access,
@@ -2205,14 +2212,14 @@ bool Computation::isConstArray(std::string dataSpaceName) {
 
 
 std::string Computation::trimDataSpaceName(std::string dataSpaceName) {
-    return dataSpaceName == "" || dataSpaceName[0] != '$' ? dataSpaceName :
+    return dataSpaceName == "" || dataSpaceName[0] != DATA_SPACE_DELIMITER ? dataSpaceName :
            dataSpaceName.substr(1, dataSpaceName.length() - 2);
 }
 
 std::string Computation::getOriginalDataSpaceName(std::string dataSpaceName) {
     if (dataSpaceName == "") { return ""; }
     dataSpaceName = trimDataSpaceName(dataSpaceName);
-    return "$" + dataSpaceName.substr(0, dataSpaceName.rfind(DATA_RENAME_STR)) + "$";
+    return Computation::delimitDataSpaceName(dataSpaceName.substr(0, dataSpaceName.rfind(DATA_RENAME_STR)));
 }
 
 bool Computation::areEquivalentRenames(std::string a, std::string b) {
