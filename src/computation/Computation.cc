@@ -31,6 +31,7 @@
 #include <string>
 #include <unordered_set>
 #include <utility>
+#include <regex>
 #include <vector>
 #include <map>
 
@@ -87,7 +88,7 @@ bool Computation::operator==(const Computation& other) const {
         this->parameters == other.parameters &&
         this->returnValues == other.returnValues &&
         this->transformationLists == other.transformationLists
-        );
+    );
 }
 
 std::string Computation::getName() const {
@@ -522,7 +523,7 @@ std::vector<std::string> Computation::getSetConstraints(Set* set) {
 }
 
 Set* Computation::trimISDataSpaces(Set* set) {
-    Set* s = new Set(stripDataSpaceDelimiterFromString(set->getString()));
+    Set* s = new Set(stripDataSpaceDelimiter(set->getString()));
     return s;
 }
 
@@ -549,8 +550,15 @@ Stmt* Computation::getStmt(unsigned int index) const { return stmts.at(index); }
 unsigned int Computation::getNumStmts() const { return stmts.size(); }
 
 void Computation::addDataSpace(std::string dataSpaceName, std::string dataSpaceType) {
-    assertValidDataSpaceName(dataSpaceName);
-    dataSpaces[dataSpaceName] = dataSpaceType;
+    bool alreadyDelimited = nameIsDelimited(dataSpaceName);
+    assertValidDataSpaceName(dataSpaceName, alreadyDelimited);
+    if (alreadyDelimited) {
+        originalDataSpaceNames.emplace(stripDataSpaceDelimiter(dataSpaceName));
+        dataSpaces[dataSpaceName] = dataSpaceType;
+    } else {
+        originalDataSpaceNames.emplace(dataSpaceName);
+        dataSpaces[delimitDataSpaceName(dataSpaceName)] = dataSpaceType;
+    }
 }
 
 std::map<std::string, std::string> Computation::getDataSpaces() const {
@@ -558,10 +566,7 @@ std::map<std::string, std::string> Computation::getDataSpaces() const {
 }
 
 std::string Computation::getDataSpaceType(std::string dataSpaceName) const{
-    if(isDataSpace(dataSpaceName)){
-        return dataSpaces.at(dataSpaceName);
-    }
-    return "";
+    return dataSpaces.at(dataSpaceName);
 }
 
 bool Computation::isDataSpace(std::string name) const {
@@ -569,8 +574,9 @@ bool Computation::isDataSpace(std::string name) const {
 }
 
 void Computation::addParameter(std::string paramName, std::string paramType) {
-    assertValidDataSpaceName(paramName);
-    parameters.push_back(paramName);
+    bool alreadyDelimited = nameIsDelimited(paramName);
+    assertValidDataSpaceName(paramName, alreadyDelimited);
+    parameters.push_back(alreadyDelimited ? paramName : delimitDataSpaceName(paramName));
     // parameters are automatically available as data spaces to the Computation
     addDataSpace(paramName, paramType);
 }
@@ -1565,14 +1571,89 @@ bool Computation::consistentSetArity(const std::vector<Set*>& sets) {
     return true;
 }
 
+std::string Computation::delimitDataSpacesInString(std::string originalString) {
+    std::ostringstream delimitedString;
+
+    static std::regex potentialVariableRegex("[a-zA-Z_][a-zA-Z_0-9]*");
+    static std::string quote = "\"";
+
+    std::vector<std::string> quoteSplitStringSegments;
+
+    std::size_t start = 0;
+    std::size_t end = originalString.find(quote);
+    std::size_t lastQuotePos = 0;
+    while (end != std::string::npos)
+    {
+        lastQuotePos = end;
+        // create a new segment on a non-escaped quote
+        if (end == 0 || originalString.at(end - 1) != '\\') {
+            quoteSplitStringSegments.emplace_back(originalString.substr(start, end - start));
+            start = end + quote.length();
+        }
+        end = originalString.find(quote, end + quote.length());
+    }
+    // add remainder of string after last quote
+    if (end != originalString.length() - 1) {
+        quoteSplitStringSegments.emplace_back(originalString.substr(lastQuotePos));
+    }
+
+    for (unsigned int i = 0; i < quoteSplitStringSegments.size(); ++i) {
+        // rewrite alternate sections, beginning from the first that is unquoted
+        if (i % 2 == 0) {
+            std::string& originalSegment = quoteSplitStringSegments[i];
+            std::ostringstream rewrittenSegment;
+            std::size_t  currentPosInOriginalSegment = 0;
+            for (auto match_it = std::sregex_iterator(originalSegment.begin(), originalSegment.end(), potentialVariableRegex);
+                 match_it != std::sregex_iterator(); ++match_it) {
+                // only replace potential identifiers that actually match existing data spaces
+                if (this->originalDataSpaceNames.count((*match_it).str())) {
+                    // grab everything between the last match and the beginning of this one, then add the delimited version
+                    // of this one
+                    rewrittenSegment << originalSegment.substr(currentPosInOriginalSegment,
+                                                              (*match_it).position() - currentPosInOriginalSegment)
+                                     << delimitDataSpaceName((*match_it).str());
+                    currentPosInOriginalSegment = (*match_it).position() + (*match_it).length();
+                }
+            }
+            // add the remainder of the original string
+            rewrittenSegment << originalSegment.substr(currentPosInOriginalSegment);
+
+            delimitedString << rewrittenSegment.str();
+        } else {
+            // quoted sections (string literals) are left as-is
+            delimitedString << quote << quoteSplitStringSegments[i];
+        }
+    }
+
+    return delimitedString.str();
+}
 
 std::string Computation::delimitDataSpaceName(std::string dataSpaceName) {
     return DATA_SPACE_DELIMITER + dataSpaceName + DATA_SPACE_DELIMITER;
 }
 
-std::string Computation::stripDataSpaceDelimiterFromString(std::string delimitedStr) {
+std::string Computation::stripDataSpaceDelimiter(std::string delimitedStr) {
     static const std::string delimiterAsStr = std::string(1, DATA_SPACE_DELIMITER);
     return iegenlib::replaceInString(delimitedStr, delimiterAsStr, "");
+}
+
+bool Computation::nameIsDelimited(std::string name) {
+    bool improperlyDelimited = false;
+    if (name.front() == DATA_SPACE_DELIMITER) {
+        if (name.back() == DATA_SPACE_DELIMITER) {
+            return true;
+        } else {
+            improperlyDelimited = true;
+        }
+    } else if (name.back() == DATA_SPACE_DELIMITER) {
+        improperlyDelimited = true;
+    }
+
+    if (improperlyDelimited) {
+        throw assert_exception("Data space name '" + name + "' is improperly delimited.");
+    } else {
+        return false;
+    }
 }
 
 void Computation::padExecutionSchedules() {
@@ -1954,7 +2035,7 @@ std::string Computation::codeGen(Set* knownConstraints) {
 
         stmtMacroDefs << "#define s_" << stmtCount << "("
                       << iterSpace->getTupleDecl().toString() << ")   "
-                      << Computation::stripDataSpaceDelimiterFromString(stmt->getStmtSourceCode())
+                      << Computation::stripDataSpaceDelimiter(stmt->getStmtSourceCode())
                       << " \n";
 
         // Get the new iteration space set
@@ -2054,7 +2135,7 @@ std::string Computation::omegaCodeGenFromString(std::vector<int> relationArity, 
     for(int i=0; i<iterSpacesStr.size(); i++){
         std::string omegaIterString = iterSpacesStr[i];
         omega::Relation* omegaIterSpace =
-            omega::parser::ParseRelation(Computation::stripDataSpaceDelimiterFromString(omegaIterString));
+            omega::parser::ParseRelation(Computation::stripDataSpaceDelimiter(omegaIterString));
 
         iterSpaces.push_back(omega::copy(*omegaIterSpace));
         transforms.push_back(omega::Identity(relationArity[i]));
@@ -2115,13 +2196,17 @@ std::string Computation::toOmegaString() {
     return omegaString.str();
 }
 
-bool Computation::assertValidDataSpaceName(const std::string& name) {
-    if (!(name.length() >= 3 && name.front() == DATA_SPACE_DELIMITER
-            && name.back() == DATA_SPACE_DELIMITER)){// || name.find('.') != std::string::npos) {
-        std::stringstream msg;
-        msg << "Data space names must be nonempty, surrounded in " << DATA_SPACE_DELIMITER
-            << ", and not contain '.'\nError triggered for data space: " << name;
-        throw assert_exception(msg.str());
+bool Computation::assertValidDataSpaceName(const std::string &name, bool alreadyDelimited) {
+    std::string errorMsg;
+    if (name.empty() || (alreadyDelimited && name.length() < 3)) {
+        errorMsg = "Data space names must be nonempty.";
+    } else if (alreadyDelimited &&
+        (name.at(1) == DATA_SPACE_DELIMITER || name.at(name.length() - 2) == DATA_SPACE_DELIMITER)) {
+        errorMsg = "Data space appears to be delimited twice. This is a bug.";
+    }
+
+    if (!errorMsg.empty()) {
+        throw assert_exception(errorMsg + " Error triggered for data space '" + name + "'.");
     }
     return true;
 }
@@ -2149,7 +2234,7 @@ void Computation::replaceDataSpaceName(std::string original, std::string newStri
 
     std::string searchString;
     std::string replacedString;
-    if(original.at(0) == DATA_SPACE_DELIMITER){
+    if(nameIsDelimited(original)){
         searchString = original;
         replacedString = newString;
     }
@@ -2246,17 +2331,17 @@ Stmt::Stmt(std::string stmtSourceCode, std::string iterationSpaceStr,
            std::string executionScheduleStr,
            std::vector<std::pair<std::string, std::string>> dataReadsStrs,
            std::vector<std::pair<std::string, std::string>> dataWritesStrs) {
-    setStmtSourceCode(stmtSourceCode);
-    setIterationSpace(iterationSpaceStr);
-    setExecutionSchedule(executionScheduleStr);
+    setStmtSourceCode(Computation::delimitDataSpacesInString(stmtSourceCode));
+    setIterationSpace(Computation::delimitDataSpacesInString(iterationSpaceStr));
+    setExecutionSchedule(Computation::delimitDataSpacesInString(executionScheduleStr));
     for (const auto& readInfo : dataReadsStrs) {
         dataReads.push_back(
-            {readInfo.first,
+            {Computation::delimitDataSpaceName(readInfo.first),
              std::unique_ptr<Relation>(new Relation(readInfo.second))});
     }
     for (const auto& writeInfo : dataWritesStrs) {
         dataWrites.push_back(
-            {writeInfo.first,
+            {Computation::delimitDataSpaceName(writeInfo.first),
              std::unique_ptr<Relation>(new Relation(writeInfo.second))});
     }
 };
@@ -2292,7 +2377,7 @@ bool Stmt::operator==(const Stmt& other) const {
         this->executionSchedule == other.executionSchedule &&
         this->dataReads == other.dataReads &&
         this->dataWrites == other.dataWrites
-        );
+    );
 }
 
 void Stmt::replaceRead(std::string searchStr, std::string replaceStr) {

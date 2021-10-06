@@ -305,11 +305,16 @@ class Computation {
     //  S0: {[0,i,0,j,0] | stuff}; S1:{[0,i,1,j,0] | stuff}
     void fuse (int s1, int s2, int fuseLevel);
 
+    std::string delimitDataSpacesInString(std::string originalString);
+
     //! Wrap the given data space name in delimiters
-    static string delimitDataSpaceName(std::string dataSpaceName);
+    static std::string delimitDataSpaceName(std::string dataSpaceName);
 
     //! Get a new string with all instances of the data space delimiter removed from the original string
-    static string stripDataSpaceDelimiterFromString(std::string delimitedStr);
+    static std::string stripDataSpaceDelimiter(std::string delimitedStr);
+
+    //! Check if a data space name is delimited, excepting if it is only delimited on one side.
+    static bool nameIsDelimited(std::string name);
 
     private:
 
@@ -345,9 +350,13 @@ class Computation {
 
     //! Data spaces available in the Computation, pairs of name : type
     std::map<std::string, std::string> dataSpaces;
+    //! Non-delimited data space names
+    std::unordered_set<std::string> originalDataSpaceNames;
 
     //! Parameters of the computation. All parameters should also be data spaces.
     std::vector<std::string> parameters;
+    //! Non-delimited parameter names
+    std::vector<std::string> originalParameterNames;
     //! Names of values that are returned if this Computation is called. May be
     //! data space names or literals. This is an ordered list because some
     //! languages allow multiple returns.
@@ -357,8 +366,8 @@ class Computation {
     //! List of statement transformation lists
     std::vector<std::vector<Relation*>> transformationLists;
 
-    //! Assert that a given string would be a valid data space name, that is, it is properly delimited by $'s
-    static bool assertValidDataSpaceName(const std::string& name);
+    //! Assert that a given string would be a valid data space name
+    static bool assertValidDataSpaceName(const std::string& name, bool alreadyDelimited);
 
   //! Number of times *any* Computation has been appended into
     //! others, for creating unique name prefixes.
@@ -396,7 +405,8 @@ class Stmt {
     ~Stmt();
 
     //! Construct a complete Stmt, given strings that will be used to
-    //! construct each set/relation.
+    //! construct each set/relation. Data spaces in the incoming strings
+    //! will be delimited automatically.
     Stmt(std::string stmtSourceCode, std::string iterationSpaceStr,
          std::string executionScheduleStr,
          std::vector<std::pair<std::string, std::string>> dataReadsStrs,

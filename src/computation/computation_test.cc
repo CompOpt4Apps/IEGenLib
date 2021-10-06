@@ -346,23 +346,23 @@ TEST_F(ComputationTest, BasicForLoop) {
 
     Computation* forLoopComp = new Computation();
 
-    forLoopComp->addDataSpace("$tmp$", "int");
-    forLoopComp->addDataSpace("$f$", "int");
-    forLoopComp->addDataSpace("$tmp1$", "int");
-    forLoopComp->addDataSpace("$f1$", "int");
-    forLoopComp->addDataSpace("$N$", "int");
+    forLoopComp->addDataSpace("tmp", "int");
+    forLoopComp->addDataSpace("f", "int");
+    forLoopComp->addDataSpace("tmp1", "int");
+    forLoopComp->addDataSpace("f1", "int");
+    forLoopComp->addDataSpace("N", "int");
 
-    dataWrites.push_back(make_pair("$tmp$", "{[i]->[0]}"));
-    dataReads.push_back(make_pair("$f$", "{[i]->[i]}"));
-    Stmt* s0 = new Stmt("$tmp$ = $f$[i];", "{[i]: 0 <= i < N}", "{[i] ->[0,i,0]}",
+    dataWrites.push_back(make_pair("tmp", "{[i]->[0]}"));
+    dataReads.push_back(make_pair("f", "{[i]->[i]}"));
+    Stmt* s0 = new Stmt("tmp = f[i];", "{[i]: 0 <= i < N}", "{[i] ->[0,i,0]}",
              dataReads, dataWrites);
 
     dataReads.clear();
     dataWrites.clear();
 
-    dataWrites.push_back(make_pair("$tmp1$", "{[i]->[0]}"));
-    dataReads.push_back(make_pair("$f1$", "{[i]->[i]}"));
-    Stmt* s1 = new Stmt("$tmp1$ = $f1$[i];", "{[i]: 0 <= i < N}", "{[i] ->[0,i,1]}",
+    dataWrites.push_back(make_pair("tmp1", "{[i]->[0]}"));
+    dataReads.push_back(make_pair("f1", "{[i]->[i]}"));
+    Stmt* s1 = new Stmt("tmp1 = f1[i];", "{[i]: 0 <= i < N}", "{[i] ->[0,i,1]}",
              dataReads, dataWrites);
 
     dataReads.clear();
@@ -418,23 +418,23 @@ TEST_F(ComputationTest, IsWrittenTo) {
 
     Computation* forLoopComp = new Computation();
 
-    forLoopComp->addDataSpace("$tmp$", "int");
-    forLoopComp->addDataSpace("$f$", "int");
-    forLoopComp->addDataSpace("$tmp1$", "int");
-    forLoopComp->addDataSpace("$f1$", "int");
-    forLoopComp->addDataSpace("$N$", "int");
+    forLoopComp->addDataSpace("tmp", "int");
+    forLoopComp->addDataSpace("f", "int");
+    forLoopComp->addDataSpace("tmp1", "int");
+    forLoopComp->addDataSpace("f1", "int");
+    forLoopComp->addDataSpace("N", "int");
 
-    dataWrites.push_back(make_pair("$tmp$", "{[i]->[0]}"));
-    dataReads.push_back(make_pair("$f$", "{[i]->[i]}"));
-    Stmt* s0 = new Stmt("$tmp$ = $f$[i];", "{[i]: 0 <= i < N}", "{[i] ->[0,i,0]}",
+    dataWrites.push_back(make_pair("tmp", "{[i]->[0]}"));
+    dataReads.push_back(make_pair("f", "{[i]->[i]}"));
+    Stmt* s0 = new Stmt("tmp = f[i];", "{[i]: 0 <= i < N}", "{[i] ->[0,i,0]}",
              dataReads, dataWrites);
 
     dataReads.clear();
     dataWrites.clear();
 
-    dataWrites.push_back(make_pair("$tmp1$", "{[i]->[0]}"));
-    dataReads.push_back(make_pair("$f1$", "{[i]->[i]}"));
-    Stmt* s1 = new Stmt("$tmp1$ = $f1$[i];", "{[i]: 0 <= i < N}", "{[i] ->[0,i,1]}",
+    dataWrites.push_back(make_pair("tmp1", "{[i]->[0]}"));
+    dataReads.push_back(make_pair("f1", "{[i]->[i]}"));
+    Stmt* s1 = new Stmt("tmp1 = f1[i];", "{[i]: 0 <= i < N}", "{[i] ->[0,i,1]}",
              dataReads, dataWrites);
 
     dataReads.clear();
@@ -465,23 +465,23 @@ TEST_F(ComputationTest, ReplaceDataSpaceName) {
 
     Computation* forLoopComp = new Computation();
 
-    forLoopComp->addDataSpace("$tmp$", "int");
-    forLoopComp->addDataSpace("$f$", "int");
-    forLoopComp->addDataSpace("$tmp1$", "int");
-    forLoopComp->addDataSpace("$f1$", "int");
-    forLoopComp->addDataSpace("$N$", "int");
+    forLoopComp->addDataSpace("tmp", "int");
+    forLoopComp->addDataSpace("f", "int");
+    forLoopComp->addDataSpace("tmp1", "int");
+    forLoopComp->addDataSpace("f1", "int");
+    forLoopComp->addDataSpace("N", "int");
 
-    dataWrites.push_back(make_pair("$tmp$", "{[i]->[0]}"));
-    dataReads.push_back(make_pair("$f$", "{[i]->[i]}"));
-    Stmt* s0 = new Stmt("$tmp$ = $f$[i];", "{[i]: 0 <= i < N}", "{[i] ->[0,i,0]}",
+    dataWrites.push_back(make_pair("tmp", "{[i]->[0]}"));
+    dataReads.push_back(make_pair("f", "{[i]->[i]}"));
+    Stmt* s0 = new Stmt("tmp = f[i];", "{[i]: 0 <= i < N}", "{[i] ->[0,i,0]}",
              dataReads, dataWrites);
 
     dataReads.clear();
     dataWrites.clear();
 
-    dataWrites.push_back(make_pair("$tmp1$", "{[i]->[0]}"));
-    dataReads.push_back(make_pair("$f1$", "{[i]->[i]}"));
-    Stmt* s1 = new Stmt("$tmp1$ = $f1$[i];", "{[i]: 0 <= i < N}", "{[i] ->[0,i,1]}",
+    dataWrites.push_back(make_pair("tmp1", "{[i]->[0]}"));
+    dataReads.push_back(make_pair("f1", "{[i]->[i]}"));
+    Stmt* s1 = new Stmt("tmp1 = f1[i];", "{[i]: 0 <= i < N}", "{[i] ->[0,i,1]}",
              dataReads, dataWrites);
 
     dataReads.clear();
@@ -507,10 +507,10 @@ TEST_F(ComputationTest, ReplaceDataSpaceName) {
 TEST_F(ComputationTest, IsParameterOrReturn) {
     Computation* testComp = new Computation();
 
-    testComp->addParameter("$Hi$", "int");
-    testComp->addDataSpace("$how$", "int");
-    testComp->addDataSpace("$are$", "int");
-    testComp->addReturnValue("$you$", true);
+    testComp->addParameter("Hi", "int");
+    testComp->addDataSpace("how", "int");
+    testComp->addDataSpace("are", "int");
+    testComp->addReturnValue("you", true);
 
     EXPECT_TRUE(testComp->isParameter("$Hi$"));
     EXPECT_FALSE(testComp->isParameter("$you$"));
@@ -527,21 +527,21 @@ TEST_F(ComputationTest, SSARenaming) {
 
     Computation* computation = new Computation();
 
-    computation->addParameter("$foo$", "int");
-    computation->addDataSpace("$bar$", "int");
+    computation->addParameter("foo", "int");
+    computation->addDataSpace("bar", "int");
 
-    Stmt* s1 = new Stmt("$bar$ = $foo$;",
+    Stmt* s1 = new Stmt("bar = foo;",
              "{[0]}",
              "{[0]->[0]}",
-             {{"$foo$", "{[0]->[0]}"}},
-             {{"$bar$", "{[0]->[0]}"}}
+             {{"foo", "{[0]->[0]}"}},
+             {{"bar", "{[0]->[0]}"}}
          );
     computation->addStmt(s1);
 
-    Stmt* s2 =new Stmt("$foo$ = $bar$ + 1",
+    Stmt* s2 =new Stmt("foo = bar + 1",
              "{[0]}", "{[0]->[1]}",
-             {{"$bar$", "{[0]->[0]}"}},
-             {{"$foo$", "{[0]->[0]}"}}
+             {{"bar", "{[0]->[0]}"}},
+             {{"foo", "{[0]->[0]}"}}
          );
     computation->addStmt(s2);
 
@@ -585,72 +585,72 @@ TEST_F(ComputationTest, AppendComputationSSA) {
 
     Computation* comp1 = new Computation();
 
-    comp1->addDataSpace("$input$", "int");
-    comp1->addDataSpace("$useMe$", "int");
+    comp1->addDataSpace("input", "int");
+    comp1->addDataSpace("useMe", "int");
 
     comp1->addStmt(new Stmt (
-        "$useMe$ = 80;", "{[0]}", "{[0]->[0]}", {}, {{"$useMe$", "{[0]->[0]}"}}
+        "useMe = 80;", "{[0]}", "{[0]->[0]}", {}, {{"useMe", "{[0]->[0]}"}}
     ));
 
     comp1->addStmt(new Stmt (
-        "$input$ = $useMe$ * 8;", "{[0]}", "{[0]->[1]}", {{"$useMe$", "{[0]->[0]}"}}, {{"$input$", "{[0]->[0]}"}}
+        "input = useMe * 8;", "{[0]}", "{[0]->[1]}", {{"useMe", "{[0]->[0]}"}}, {{"input", "{[0]->[0]}"}}
     ));
 
     comp1->addStmt(new Stmt (
-        "$useMe$ = $useMe$ + $input$;", "{[0]}", "{[0]->[2]}", {{"$useMe$", "{[0]->[0]}"}, {"$input$", "{[0]->[0]}"}}, {{"$useMe$", "{[0]->[0]}"}}
+        "useMe = useMe + input;", "{[0]}", "{[0]->[2]}", {{"useMe", "{[0]->[0]}"}, {"input", "{[0]->[0]}"}}, {{"useMe", "{[0]->[0]}"}}
     ));
 
 
     Computation* comp2 = new Computation();
 
-    comp2->addParameter("$foo$", "int");
-    comp2->addReturnValue("$foo$");
-    comp2->addDataSpace("$bar$", "int");
+    comp2->addParameter("foo", "int");
+    comp2->addReturnValue("foo");
+    comp2->addDataSpace("bar", "int");
 
     comp2->addStmt(new Stmt(
-        "$bar$ = $foo$;", "{[0]}", "{[0]->[0]}", {{"$foo$", "{[0]->[0]}"}}, {{"$bar$", "{[0]->[0]}"}}
+        "bar = foo;", "{[0]}", "{[0]->[0]}", {{"foo", "{[0]->[0]}"}}, {{"bar", "{[0]->[0]}"}}
     ));
     comp2->addStmt(new Stmt(
-        "$foo$ = $bar$ + 1;", "{[0]}", "{[0]->[1]}", {{"$bar$", "{[0]->[0]}"}}, {{"$foo$", "{[0]->[0]}"}}
+        "foo = bar + 1;", "{[0]}", "{[0]->[1]}", {{"bar", "{[0]->[0]}"}}, {{"foo", "{[0]->[0]}"}}
     ));
 
     Computation* comp3 = new Computation();
 
-    comp3->addParameter("$foo$", "int");
-    comp3->addReturnValue("$foo$");
+    comp3->addParameter("foo", "int");
+    comp3->addReturnValue("foo");
 
     comp3->addStmt(new Stmt(
-        "$foo$ = 3 * 21;", "{[0]}", "{[0]->[0]}", {}, {{"$foo$", "{[0]->[0]}"}}
+        "foo = 3 * 21;", "{[0]}", "{[0]->[0]}", {}, {{"foo", "{[0]->[0]}"}}
     ));
     comp3->addStmt(new Stmt(
-        "$foo$ = $foo$ + 1;", "{[0]}", "{[0]->[1]}", {{"$foo$", "{[0]->[0]}"}}, {{"$foo$", "{[0]->[0]}"}}
+        "foo = foo + 1;", "{[0]}", "{[0]->[1]}", {{"foo", "{[0]->[0]}"}}, {{"foo", "{[0]->[0]}"}}
     ));
 
-    args = {"$foo$"};
+    args = {"foo"};
     res = comp2->appendComputation(comp3, "{[0]}", "{[0]->[2]}", args);
     pos = res.tuplePosition + 1;
 
     comp2->addStmt(new Stmt(
-        "$bar$ = $foo$ + "+res.returnValues.back()+";", "{[0]}", "{[0]->["+std::to_string(pos++)+"]}",
-        {{"$foo$", "{[0]->[0]}"},{res.returnValues.back(), "{[0]->[0]}"}}, {{"$bar$", "{[0]->[0]}"}}
+        "bar = foo + "+res.returnValues.back()+";", "{[0]}", "{[0]->["+std::to_string(pos++)+"]}",
+        {{"foo", "{[0]->[0]}"},{res.returnValues.back(), "{[0]->[0]}"}}, {{"bar", "{[0]->[0]}"}}
     ));
     comp2->addStmt(new Stmt(
-        "$foo$ = $foo$ - 1;", "{[0]}", "{[0]->["+std::to_string(pos++)+"]}", {{"$foo$", "{[0]->[0]}"}}, {{"$foo$", "{[0]->[0]}"}}
+        "foo = foo - 1;", "{[0]}", "{[0]->["+std::to_string(pos++)+"]}", {{"foo", "{[0]->[0]}"}}, {{"foo", "{[0]->[0]}"}}
     ));
 
-    args = {"$input$"};
+    args = {"input"};
     res = comp1->appendComputation(comp2, "{[0]}", "{[0]->[3]}", args);
     pos = res.tuplePosition + 1;
 
-    comp1->addStmt(new Stmt("$input$ = "+res.returnValues.back()+";",
+    comp1->addStmt(new Stmt("input = "+res.returnValues.back()+";",
         "{[0]}",
         "{[0]->["+std::to_string(pos++)+"]}",
         {{res.returnValues.back(), "{[0]->[0]}"}},
-        {{"$input$", "{[0]->[0]}"}}
+        {{"input", "{[0]->[0]}"}}
     ));
 
     comp1->addStmt(new Stmt (
-        "$useMe$ = $useMe$ + $input$;", "{[0]}", "{[0]->["+std::to_string(pos++)+"]}", {{"$useMe$", "{[0]->[0]}"}, {"$input$", "{[0]->[0]}"}}, {{"$useMe$", "{[0]->[0]}"}}
+        "useMe = useMe + input;", "{[0]}", "{[0]->["+std::to_string(pos++)+"]}", {{"useMe", "{[0]->[0]}"}, {"input", "{[0]->[0]}"}}, {{"useMe", "{[0]->[0]}"}}
     ));
 
     std::stringstream ss;
@@ -671,32 +671,32 @@ TEST_F(ComputationTest, AppendComputationSSA) {
 
     comp1 = new Computation();
 
-    comp1->addDataSpace("$input$", "int");
+    comp1->addDataSpace("input", "int");
 
     comp1->addStmt(new Stmt (
-        "$input$ = 4 * 8;", "{[0]}", "{[0]->[0]}", {}, {{"$input$", "{[0]->[0]}"}}
+        "input = 4 * 8;", "{[0]}", "{[0]->[0]}", {}, {{"input", "{[0]->[0]}"}}
     ));
 
 
     comp2 = new Computation();
 
-    comp2->addParameter("$foo$", "int");
-    comp2->addReturnValue("$foo$");
-    comp2->addDataSpace("$bar$", "int");
+    comp2->addParameter("foo", "int");
+    comp2->addReturnValue("foo");
+    comp2->addDataSpace("bar", "int");
 
     comp2->addStmt(new Stmt(
-        "$bar$ = $foo$;", "{[0]}", "{[0]->[0]}", {{"$foo$", "{[0]->[0]}"}}, {{"$bar$", "{[0]->[0]}"}}
+        "bar = foo;", "{[0]}", "{[0]->[0]}", {{"foo", "{[0]->[0]}"}}, {{"bar", "{[0]->[0]}"}}
     ));
 
-    args = {"$input$"};
+    args = {"input"};
     res = comp1->appendComputation(comp2, "{[0]}", "{[0]->[1]}", args);
     pos = res.tuplePosition + 1;
 
-    comp1->addStmt(new Stmt("$input$ = "+res.returnValues.back()+";",
+    comp1->addStmt(new Stmt("input = "+res.returnValues.back()+";",
         "{[0]}",
         "{[0]->["+std::to_string(pos++)+"]}",
         {{res.returnValues.back(), "{[0]->[0]}"}},
-        {{"$input$", "{[0]->[0]}"}}
+        {{"input", "{[0]->[0]}"}}
     ));
 
     ss.str("");
@@ -722,23 +722,23 @@ TEST_F(ComputationTest, Colors) {
 
     Computation* forLoopComp = new Computation();
 
-    forLoopComp->addReturnValue("$tmp$", true);
-    forLoopComp->addParameter("$f$", "int");
-    forLoopComp->addDataSpace("$tmp1$", "int");
-    forLoopComp->addParameter("$f1$", "int");
-    forLoopComp->addDataSpace("$N$", "int");
+    forLoopComp->addReturnValue("tmp", true);
+    forLoopComp->addParameter("f", "int");
+    forLoopComp->addDataSpace("tmp1", "int");
+    forLoopComp->addParameter("f1", "int");
+    forLoopComp->addDataSpace("N", "int");
 
-    dataWrites.push_back(make_pair("$tmp$", "{[i]->[0]}"));
-    dataReads.push_back(make_pair("$f$", "{[i]->[i]}"));
-    Stmt* s0 = new Stmt("$tmp$ = $f$[i];", "{[i]: 0 <= i < N}", "{[i] ->[0,i,0]}",
+    dataWrites.push_back(make_pair("tmp", "{[i]->[0]}"));
+    dataReads.push_back(make_pair("f", "{[i]->[i]}"));
+    Stmt* s0 = new Stmt("tmp = f[i];", "{[i]: 0 <= i < N}", "{[i] ->[0,i,0]}",
              dataReads, dataWrites);
 
     dataReads.clear();
     dataWrites.clear();
 
-    dataWrites.push_back(make_pair("$tmp1$", "{[i]->[0]}"));
-    dataReads.push_back(make_pair("$f1$", "{[i]->[i]}"));
-    Stmt* s1 = new Stmt("$tmp1$ = $f1$[i];", "{[i]: 0 <= i < N}", "{[i] ->[0,i,1]}",
+    dataWrites.push_back(make_pair("tmp1", "{[i]->[0]}"));
+    dataReads.push_back(make_pair("f1", "{[i]->[i]}"));
+    Stmt* s1 = new Stmt("tmp1 = f1[i];", "{[i]: 0 <= i < N}", "{[i] ->[0,i,1]}",
              dataReads, dataWrites);
 
     dataReads.clear();
@@ -841,15 +841,15 @@ TEST_F(ComputationTest, AppendComputationBasic) {
 #pragma mark AppendComputationArgumentPassing
 TEST_F(ComputationTest, AppendComputationArgumentPassing) {
     Computation* comp1 = new Computation();
-    comp1->addDataSpace("$myInt$", "int");
-    comp1->addDataSpace("$myDouble$", "double");
+    comp1->addDataSpace("myInt", "int");
+    comp1->addDataSpace("myDouble", "double");
 
     Computation* comp2 = new Computation();
     Stmt* s2 = new Stmt("s2;", "{[k]}", "{[k] -> [0,k,1]}", {}, {});
     comp2->addStmt(s2);
-    comp2->addParameter("$a$", "int");
-    comp2->addParameter("$b$", "double");
-    comp2->addParameter("$c$", "float");
+    comp2->addParameter("a", "int");
+    comp2->addParameter("b", "double");
+    comp2->addParameter("c", "float");
 
     Computation* ecomp = new Computation();
     ecomp->addDataSpace("$myInt$", "int");
@@ -891,11 +891,11 @@ TEST_F(ComputationTest, AppendComputationEmpty) {
 
     // with params
     comp1 = new Computation();
-    comp1->addDataSpace("$myInt$", "int");
+    comp1->addDataSpace("myInt", "int");
 
     comp2 = new Computation();
-    comp2->addParameter("$a$", "int");
-    comp2->addParameter("$b$", "double");
+    comp2->addParameter("a", "int");
+    comp2->addParameter("b", "double");
 
     ecomp = new Computation();
     ecomp->addDataSpace("$myInt$", "int");
@@ -921,8 +921,8 @@ TEST_F(ComputationTest, AppendComputationReturnValues) {
     Computation* comp2 = new Computation();
     Stmt* s1 = new Stmt("s2;", "{[k]}", "{[k] -> [0,k,1]}", {}, {});
     comp2->addStmt(s1);
-    comp2->addDataSpace("$res$", "int");
-    comp2->addReturnValue("$res$");
+    comp2->addDataSpace("res", "int");
+    comp2->addReturnValue("res");
     comp2->addReturnValue("0");
 
     Computation* ecomp = new Computation();
@@ -944,36 +944,36 @@ TEST_F(ComputationTest, AppendComputationComplex) {
     // want are ironed out yet so it will change.
     // comp3 is appended onto comp2, which is then appended on to comp1.
     Computation* comp1 = new Computation();
-    comp1->addDataSpace("$index$", "int");
-    comp1->addDataSpace("$N$", "int");
-    comp1->addDataSpace("$tmp$", "int");
-    Stmt* s1 = new Stmt("$tmp$ = $index$[0] + 1;", "{[0]}", "{[0]->[0]}",
-                        {{"$index$", "{[0]->[0]}"}}, {{"$tmp$", "{[0]->[0]}"}});
+    comp1->addDataSpace("index", "int");
+    comp1->addDataSpace("N", "int");
+    comp1->addDataSpace("tmp", "int");
+    Stmt* s1 = new Stmt("tmp = index[0] + 1;", "{[0]}", "{[0]->[0]}",
+                        {{"index", "{[0]->[0]}"}}, {{"tmp", "{[0]->[0]}"}});
     Stmt* s2 =
-        new Stmt("$index$[i+1] = i;", "{[i]: 0 <= i < $N$}", "{[i]->[1,i,0]}",
-                 {}, {{"$index$", "{[i]->[r]: r=i+1}"}});
+        new Stmt("index[i+1] = i;", "{[i]: 0 <= i < N}", "{[i]->[1,i,0]}",
+                 {}, {{"index", "{[i]->[r]: r=i+1}"}});
     comp1->addStmt(s1);
     comp1->addStmt(s2);
 
     Computation* comp2 = new Computation();
-    comp2->addDataSpace("$A$", "int");
-    comp2->addDataSpace("$tmp$", "int");
-    comp2->addParameter("$someInteger$", "int");
-    comp2->addReturnValue("$tmp$");
+    comp2->addDataSpace("A", "int");
+    comp2->addDataSpace("tmp", "int");
+    comp2->addParameter("someInteger", "int");
+    comp2->addReturnValue("tmp");
     Stmt* s3 =
-        new Stmt("$A$[k] += $A$[k+1];", "{[k]: 0 <= k < 5}", "{[k]->[0,k,0]}",
-                 {{"$A$", "{[k]->[k]}"}, {"$A$", "{[k]->[r]: r=k+1}"}},
-                 {{"$A$", "{[k]->[k]}"}});
+        new Stmt("A[k] += A[k+1];", "{[k]: 0 <= k < 5}", "{[k]->[0,k,0]}",
+                 {{"A", "{[k]->[k]}"}, {"A", "{[k]->[r]: r=k+1}"}},
+                 {{"A", "{[k]->[k]}"}});
     Stmt* s4 =
-        new Stmt("$tmp$ = $A$[2] + $someInteger$;", "{[0]}", "{[0]->[1]}",
-                 {{"$A$", "{[0]->[2]}"}, {"$someInteger$", "{[0]->[0]}"}},
-                 {{"$tmp$", "{[0]->[0]}"}});
+        new Stmt("tmp = A[2] + someInteger;", "{[0]}", "{[0]->[1]}",
+                 {{"A", "{[0]->[2]}"}, {"someInteger", "{[0]->[0]}"}},
+                 {{"tmp", "{[0]->[0]}"}});
     comp2->addStmt(s3);
     comp2->addStmt(s4);
 
     Computation* comp3 = new Computation();
-    comp3->addDataSpace("$asdf$", "int");
-    Stmt* s5 = new Stmt("$asdf$ = 2;", "{[0]}", "{[0]->[0]}", {}, {{"$asdf$", "{[0]->[0]}"}});
+    comp3->addDataSpace("asdf", "int");
+    Stmt* s5 = new Stmt("asdf = 2;", "{[0]}", "{[0]->[0]}", {}, {{"asdf", "{[0]->[0]}"}});
     comp3->addStmt(s5);
 
     Computation* ecomp2 = new Computation();
@@ -1034,16 +1034,16 @@ TEST_F(ComputationTest, AppendComputationComplex) {
 // Check creating a copy of a Computation with prefixed names works properly
 TEST_F(ComputationTest, ComputationNamePrefixing) {
     Computation* comp1 = new Computation();
-    comp1->addDataSpace("$product$", "int");
-    comp1->addDataSpace("$x$", "int");
-    comp1->addDataSpace("$y$", "int");
-    Stmt* s0 = new Stmt("$product$[i] += $x$[i][j] * $y$[j];",
+    comp1->addDataSpace("product", "int");
+    comp1->addDataSpace("x", "int");
+    comp1->addDataSpace("y", "int");
+    Stmt* s0 = new Stmt("product[i] += x[i][j] * y[j];",
                         "{[i,j]: i >= 0 && i < a && j >= 0 && j < b}",
                         "{[i,j]->[2,i,1,j,0]}",
-                        {{"$product$", "{[i,j]->[i]}"},
-                         {"$x$", "{[i,j]->[i,j]}"},
-                         {"$y$", "{[i,j]->[j]}"}},
-                        {{"$product$", "{[i,j]->[i]}"}});
+                        {{"product", "{[i,j]->[i]}"},
+                         {"x", "{[i,j]->[i,j]}"},
+                         {"y", "{[i,j]->[j]}"}},
+                        {{"product", "{[i,j]->[i]}"}});
     comp1->addStmt(s0);
     Set* iterSpace = new Set("{[i,j]: i >= 0 && i < a && j >= 0 && j < b}");
     iegenlib::Relation* execSchedule = new iegenlib::Relation("{[i,j]->[2,i,1,j,0]}");
@@ -1140,27 +1140,27 @@ TEST_F(ComputationTest, PolyhedralSplit){
     Set * s0 = new Set("{[0,i,0]: 0 <= i && i < N}");
     Set * s1 = new Set("{[0,i,1]:  0 <= i && i < N}");
     Set * s2 = new Set("{[0,i,2]:   0 <= i && i < N}");
-    std::vector< std::pair<int,Set*> > PS 
+    std::vector< std::pair<int,Set*> > PS
 	    = {
 		    std::make_pair(0,s0),
 		    std::make_pair(1,s1),
 		    std::make_pair(2,s2)
 	    };
-  
+
     std::vector<std::vector<std::pair<int,Set*> > > res =
 	    c.split(2,PS);
     EXPECT_EQ(res.size(),3);
-    
+
     res = c.split(0,PS);
-    EXPECT_EQ(res.size(),1); 
-    
+    EXPECT_EQ(res.size(),1);
+
     res = c.split(1,PS);
-    EXPECT_EQ(res.size(),1); 
-    
+    EXPECT_EQ(res.size(),1);
+
     delete s0;
     delete s1;
     delete s2;
-    
+
     s0 = new Set("{[0,i,1]: 0 <= i && i < N}");
     s1 = new Set("{[0,i,1]:  0 <= i && i < N}");
     s2 = new Set("{[0,i,2]:   0 <= i && i < N}");
@@ -1169,17 +1169,17 @@ TEST_F(ComputationTest, PolyhedralSplit){
 		    std::make_pair(1,s1),
 		    std::make_pair(2,s2),
 	    };
- 
-  
+
+
     res = c.split(2,PS);
     EXPECT_EQ(res.size(),2);
-    
+
     res = c.split(0,PS);
-    EXPECT_EQ(res.size(),1); 
-    
+    EXPECT_EQ(res.size(),1);
+
     res = c.split(1,PS);
-    EXPECT_EQ(res.size(),1); 
-    
+    EXPECT_EQ(res.size(),1);
+
     delete s0;
     delete s1;
     delete s2;
@@ -1518,6 +1518,27 @@ TEST_F(ComputationTest, FusionUnitTest){
 		    "{[1,t1,0,t2,0]:0 <= t1 && t1 < NR && 0 <= t2 && t2 < NP}",
 		    "{[1,t1,0,t2,1]:0 <= t1 && t1 < NR && 0 <= t2 && t2 < NT}"
 		    });
+
+    delete comp;
+}
+
+TEST_F(ComputationTest, DelimitDataSpacesTest) {
+    auto *comp = new Computation();
+    comp->addDataSpace("asdf", "int");
+    comp->addDataSpace("x", "int");
+    comp->addDataSpace("z", "string");
+
+    EXPECT_EQ("int $asdf$ = 3;", comp->delimitDataSpacesInString("int asdf = 3;"));
+    EXPECT_EQ("int $asdf$ = 3*$x$;", comp->delimitDataSpacesInString("int asdf = 3*x;"));
+    EXPECT_EQ("string $z$ = \"asdf\";", comp->delimitDataSpacesInString("string z = \"asdf\";"));
+    EXPECT_EQ("string $z$ = \"\\\"asdf\";", comp->delimitDataSpacesInString("string z = \"\\\"asdf\";"));
+    EXPECT_EQ("string $z$ = \"\\\"asdf\\\"\";", comp->delimitDataSpacesInString("string z = \"\\\"asdf\\\"\";"));
+    EXPECT_EQ("\"asdf\" == $z$;", comp->delimitDataSpacesInString("\"asdf\" == z;"));
+    EXPECT_EQ("if ($z$ == \"\\\"asdf\") {\
+    $asdf$ = 5;\
+}", comp->delimitDataSpacesInString("if (z == \"\\\"asdf\") {\
+    asdf = 5;\
+}"));
 
     delete comp;
 }
