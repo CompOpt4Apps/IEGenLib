@@ -131,11 +131,15 @@ std::string Computation::getPrefixedDataSpaceName(const std::string& originalNam
     return DATA_SPACE_DELIMITER + prefix + originalName.substr(1);
 }
 
+void Computation::addStmt(Stmt* stmt) {
+    addStmt(stmt, stmts.size());
+}
+
 void Computation::addStmt(Stmt* stmt, int stmtIdx) {
-    if (stmtIdx < 0) { stmtIdx = stmts.size(); }
+    transformationLists.push_back({});
+    delimitDataSpacesInStmt(stmt);
     // TODO: if stmtIdx < stmts.size(), update later execution schedules
     stmts.insert(stmts.begin() + stmtIdx, stmt);
-    transformationLists.push_back({});
     //enforceArraySSA(stmt);
     stmtIdx = locatePhiNodes(stmtIdx);
     enforceSSA(stmtIdx);
@@ -1571,6 +1575,20 @@ bool Computation::consistentSetArity(const std::vector<Set*>& sets) {
     return true;
 }
 
+void Computation::delimitDataSpacesInStmt(Stmt *stmt) {
+    stmt->setStmtSourceCode(delimitDataSpacesInString(stmt->getStmtSourceCode()));
+    stmt->setIterationSpace(delimitDataSpacesInString(stmt->getIterationSpace()->prettyPrintString()));
+    stmt->setExecutionSchedule(delimitDataSpacesInString(stmt->getExecutionSchedule()->prettyPrintString()));
+    for (unsigned int i = 0; i < stmt->getNumReads(); ++i) {
+        stmt->updateRead(i, delimitDataSpacesInString(stmt->getReadDataSpace(i)),
+                         stmt->getReadRelation(i)->prettyPrintString());
+    }
+    for (unsigned int i = 0; i < stmt->getNumWrites(); ++i) {
+        stmt->updateWrite(i, delimitDataSpacesInString(stmt->getWriteDataSpace(i)),
+                          stmt->getWriteRelation(i)->prettyPrintString());
+    }
+}
+
 std::string Computation::delimitDataSpacesInString(std::string originalString) {
     std::ostringstream delimitedString;
 
@@ -1598,7 +1616,7 @@ std::string Computation::delimitDataSpacesInString(std::string originalString) {
     }
 
     for (unsigned int i = 0; i < quoteSplitStringSegments.size(); ++i) {
-        // rewrite alternate sections, beginning from the first that is unquoted
+        // rewrite alternate sections, beginning from the first which is unquoted
         if (i % 2 == 0) {
             std::string& originalSegment = quoteSplitStringSegments[i];
             std::ostringstream rewrittenSegment;
@@ -2331,17 +2349,17 @@ Stmt::Stmt(std::string stmtSourceCode, std::string iterationSpaceStr,
            std::string executionScheduleStr,
            std::vector<std::pair<std::string, std::string>> dataReadsStrs,
            std::vector<std::pair<std::string, std::string>> dataWritesStrs) {
-    setStmtSourceCode(Computation::delimitDataSpacesInString(stmtSourceCode));
-    setIterationSpace(Computation::delimitDataSpacesInString(iterationSpaceStr));
-    setExecutionSchedule(Computation::delimitDataSpacesInString(executionScheduleStr));
+    setStmtSourceCode(stmtSourceCode);
+    setIterationSpace(iterationSpaceStr);
+    setExecutionSchedule(executionScheduleStr);
     for (const auto& readInfo : dataReadsStrs) {
         dataReads.push_back(
-            {Computation::delimitDataSpaceName(readInfo.first),
+            {readInfo.first,
              std::unique_ptr<Relation>(new Relation(readInfo.second))});
     }
     for (const auto& writeInfo : dataWritesStrs) {
         dataWrites.push_back(
-            {Computation::delimitDataSpaceName(writeInfo.first),
+            {writeInfo.first,
              std::unique_ptr<Relation>(new Relation(writeInfo.second))});
     }
 };

@@ -101,8 +101,12 @@ class Computation {
     //! Returns a list of all the constraints of the given set
     static std::vector<std::string> getSetConstraints(Set* set);
 
-    //! add stmt
-    void addStmt(Stmt* stmt, int stmtIdx = -1);
+    //! Add statement to the end of this Computation
+    void addStmt(Stmt* stmt);
+    //! Insert statement at given index.
+    //! This may modify the statement to fit the needs of the Computation.
+    void addStmt(Stmt* stmt, int stmtIdx);
+
     //! Get a statement by index
     Stmt* getStmt(unsigned int index) const;
     //! Get the number of statements in this Computation
@@ -305,14 +309,15 @@ class Computation {
     //  S0: {[0,i,0,j,0] | stuff}; S1:{[0,i,1,j,0] | stuff}
     void fuse (int s1, int s2, int fuseLevel);
 
+    //! Delimit data spaces in a statement so that it may be used properly in this Computation.
+    //! Modifies the given statement in-place.
+    void delimitDataSpacesInStmt(Stmt* stmt);
+    //! Go through the string, potentially consisting of C source code, and delimit all data space names.
     std::string delimitDataSpacesInString(std::string originalString);
-
     //! Wrap the given data space name in delimiters
     static std::string delimitDataSpaceName(std::string dataSpaceName);
-
     //! Get a new string with all instances of the data space delimiter removed from the original string
     static std::string stripDataSpaceDelimiter(std::string delimitedStr);
-
     //! Check if a data space name is delimited, excepting if it is only delimited on one side.
     static bool nameIsDelimited(std::string name);
 
@@ -355,8 +360,6 @@ class Computation {
 
     //! Parameters of the computation. All parameters should also be data spaces.
     std::vector<std::string> parameters;
-    //! Non-delimited parameter names
-    std::vector<std::string> originalParameterNames;
     //! Names of values that are returned if this Computation is called. May be
     //! data space names or literals. This is an ordered list because some
     //! languages allow multiple returns.

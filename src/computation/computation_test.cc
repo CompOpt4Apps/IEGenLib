@@ -239,8 +239,8 @@ for (i = 0; i < a; i++) { \
 return 0; \
 ";
 
-    Stmt* s0 = new Stmt("int i;", "{}", "{[]->[0,0,0,0,0]}", {}, {});
-    Stmt* s1 = new Stmt("int j;", "{}", "{[]->[1,0,0,0,0]}", {}, {});
+    Stmt* s0 = new Stmt("int i;", "{}", "{[0]->[0,0,0,0,0]}", {}, {});
+    Stmt* s1 = new Stmt("int j;", "{}", "{[0]->[1,0,0,0,0]}", {}, {});
     Stmt* s2 = new Stmt("product[i] = 0;", "{[i]: i >= 0 && i < a}",
                    "{[i]->[2,i,0,0,0]}", {}, {{"product", "{[i]->[i]}"}});
     Stmt* s3 = new Stmt("product[i] += x[i][j] * y[j];",
@@ -250,7 +250,7 @@ return 0; \
                     {"x", "{[i,j]->[i,j]}"},
                     {"y", "{[i,j]->[j]}"}},
                    {{"product", "{[i,j]->[i]}"}});
-    Stmt* s4 = new Stmt("return 0;", "{}", "{[]->[3,0,0,0,0]}", {}, {});
+    Stmt* s4 = new Stmt("return 0;", "{}", "{[0]->[3,0,0,0,0]}", {}, {});
 
     Computation* comp = new Computation();
     comp->addStmt(s0);
@@ -287,24 +287,24 @@ TEST_F(ComputationTest, ForwardTriangularSolve) {
 
     std::vector<std::pair<std::string, std::string> > dataReads;
     std::vector<std::pair<std::string, std::string> > dataWrites;
-    dataWrites.push_back(make_pair("tmp", "{[i]->[]}"));
+    dataWrites.push_back(make_pair("tmp", "{[i]->[0]}"));
     dataReads.push_back(make_pair("f", "{[i]->[i]}"));
     Computation* forwardSolve = new Computation();
     Stmt* ss0 = new Stmt("tmp = f[i];", "{[i]: 0 <= i < NR}", "{[i] ->[i,0,0,0]}",
              dataReads, dataWrites);
     dataReads.clear();
     dataWrites.clear();
-    dataReads.push_back(make_pair("tmp", "{[i,k]->[]}"));
+    dataReads.push_back(make_pair("tmp", "{[i,k]->[0]}"));
     dataReads.push_back(make_pair("val", "{[i,k]->[k]}"));
     dataReads.push_back(make_pair("u", "{[i,k]->[t]: t = col(k)}"));
-    dataWrites.push_back(make_pair("tmp", "{[i,k]->[]}"));
+    dataWrites.push_back(make_pair("tmp", "{[i,k]->[0]}"));
 
     Stmt* ss1 = new Stmt("tmp -= val[k] * u[col[k]];",
              "{[i,k]: 0 <= i && i < NR && rowptr(i) <= k && k < rowptr(i+1)-1}",
              "{[i,k] -> [i,1,k,0]}", dataReads, dataWrites);
     dataReads.clear();
 
-    dataReads.push_back(make_pair("tmp","{[i]->[]}"));
+    dataReads.push_back(make_pair("tmp","{[i]->[0]}"));
     dataReads.push_back(make_pair("val","{[i]->[t]: t = rowptr(i+1) - 1}"));
     dataWrites.push_back(make_pair("u","{[i]->[i]}"));
 
@@ -802,7 +802,7 @@ __x6 = 0 && B_0(__x0,i,__x2,j,__x4,k) = 0 && __x4 = 1 \
         "{[i]->[j]: 0 <= i && i < N && 0 <= j && j < N }",
         "{[i] -> [j] : 0 <= i < N && 0 <= j < N}");
     // empty relation
-    checkOmegaRelationConversion("{[]->[]}", "{ TRUE }");
+    checkOmegaRelationConversion("{[0]->[0]}", "{ TRUE }");
     // with simple UF constraints
     checkOmegaRelationConversion(
         "{[i,j]->[k]: 0 <= i && i < N && 0 <= j && j < M && i=foo(i+1)}",
@@ -1525,6 +1525,8 @@ TEST_F(ComputationTest, FusionUnitTest){
 TEST_F(ComputationTest, DelimitDataSpacesTest) {
     auto *comp = new Computation();
     comp->addDataSpace("asdf", "int");
+    comp->addDataSpace("a", "int");
+    comp->addDataSpace("sd", "int");
     comp->addDataSpace("x", "int");
     comp->addDataSpace("z", "string");
 
