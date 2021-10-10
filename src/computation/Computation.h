@@ -480,8 +480,6 @@ class Stmt {
     //std::string getReadDataSpaceType(unsigned int index) const;
     //! Get a data read's relation by index
     Relation* getReadRelation(unsigned int index) const;
-    //! Get a data read's relation by name
-    Relation* getReadRelation(std::string name) const;
 
     //! Add a data write
     void addWrite(std::string dataSpace, std::string relationStr);
@@ -496,8 +494,6 @@ class Stmt {
     //std::string getWriteDataSpaceType(unsigned int index) const;
     //! Get a data write's relation by index
     Relation* getWriteRelation(unsigned int index) const;
-    //! Get a data write's relation by name
-    Relation* getWriteRelation(std::string name) const;
 
     //! Checks if a data read/write is a constant access array
     std::list<int> getConstArrayAccesses(unsigned int index, bool read) const;

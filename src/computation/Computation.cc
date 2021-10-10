@@ -2595,9 +2595,8 @@ void Stmt::addRead(std::string dataSpace, Relation* relation) {
 }
 
 void Stmt::updateRead(int idx, std::string dataSpace, std::string relationStr) {
-    if (idx >= dataReads.size()) { return; }
-    dataReads[idx].first = dataSpace;
-    dataReads[idx].second = std::unique_ptr<Relation>(new Relation(relationStr));
+    dataReads.at(idx).first = dataSpace;
+    dataReads.at(idx).second = std::unique_ptr<Relation>(new Relation(relationStr));
 }
 
 unsigned int Stmt::getNumReads() const { return dataReads.size(); }
@@ -2608,18 +2607,6 @@ std::string Stmt::getReadDataSpace(unsigned int index) const {
 
 Relation* Stmt::getReadRelation(unsigned int index) const {
     return dataReads.at(index).second.get();
-}
-
-Relation* Stmt::getReadRelation(std::string name) const {
-    auto pos = std::find_if(dataReads.begin(), dataReads.end(),
-                            [&name](const std::pair<std::string, std::unique_ptr<Relation>> &p) {
-                                return name.compare(p.first) == 0;
-                            });
-    if (pos == dataReads.end()) {
-        std::cerr << "Read dataspace not found: " << name << std::endl;
-        return nullptr;
-    }
-    return pos->second.get();
 }
 
 void Stmt::addWrite(std::string dataSpace, std::string relationStr) {
@@ -2633,9 +2620,8 @@ void Stmt::addWrite(std::string dataSpace, Relation* relation) {
 }
 
 void Stmt::updateWrite(int idx, std::string dataSpace, std::string relationStr) {
-    if (idx >= dataWrites.size()) { return; }
-    dataWrites[idx].first = dataSpace;
-    dataWrites[idx].second = std::unique_ptr<Relation>(new Relation(relationStr));
+    dataWrites.at(idx).first = dataSpace;
+    dataWrites.at(idx).second = std::unique_ptr<Relation>(new Relation(relationStr));
 }
 
 unsigned int Stmt::getNumWrites() const { return dataWrites.size(); }
@@ -2646,18 +2632,6 @@ std::string Stmt::getWriteDataSpace(unsigned int index) const {
 
 Relation* Stmt::getWriteRelation(unsigned int index) const {
     return dataWrites.at(index).second.get();
-}
-
-Relation* Stmt::getWriteRelation(std::string name) const {
-    auto pos = std::find_if(dataWrites.begin(), dataWrites.end(),
-                            [&name](const std::pair<std::string, std::unique_ptr<Relation>> &p) {
-                                return name.compare(p.first) == 0;
-                            });
-    if (pos == dataWrites.end()) {
-        std::cerr << "Write dataspace not found: " << name << std::endl;
-        return nullptr;
-    }
-    return pos->second.get();
 }
 
 std::list<int> Stmt::getConstArrayAccesses(unsigned int index, bool read) const {
