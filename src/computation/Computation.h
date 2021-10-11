@@ -207,7 +207,7 @@ class Computation {
     AppendComputationResult appendComputation(
         const Computation* other, std::string surroundingIterDomainStr,
         std::string surroundingExecScheduleStr,
-        const std::vector<std::string>& arguments = {});
+        std::vector<std::string> arguments = {});
 
     //! Performs operations with the assumption that no more statements will be added
     void finalize(bool deleteDeadNodes = false);
@@ -356,7 +356,7 @@ class Computation {
     //! Data spaces available in the Computation, pairs of name : type
     std::map<std::string, std::string> dataSpaces;
     //! Non-delimited data space names
-    std::unordered_set<std::string> originalDataSpaceNames;
+    std::unordered_set<std::string> undelimitedDataSpaceNames;
 
     //! Parameters of the computation. All parameters should also be data spaces.
     std::vector<std::string> parameters;
@@ -516,6 +516,11 @@ class Stmt {
     bool isArrayAccess() const { return arrayAccess; }
     void setArrayAccess(bool val) { arrayAccess = val; };
 
+    //! Check if this Stmt has its data spaces delimited already
+    bool isDelimited() const { return delimited; }
+    //! Mark that this Stmt's data spaces have been delimited
+    void setDelimited() { delimited = true; }
+
 	//! EXPECT with gTest this Stmt equals the given one, component by component.
 	//! This method is for testing with gTest only.
 	void expectEqualTo(const Stmt* other) const;
@@ -535,6 +540,8 @@ class Stmt {
     std::vector<std::pair<std::string, std::unique_ptr<Relation>>> dataReads;
     //! Write dependences of a statement, pairing data space name to relation
     std::vector<std::pair<std::string, std::unique_ptr<Relation>>> dataWrites;
+    //! Whether this Stmt's references to data spaces are delimited
+    bool delimited = false;
 };
 
 /*!

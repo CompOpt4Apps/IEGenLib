@@ -53,6 +53,7 @@
 //! String appended to arrays to crerate data spaces for constant accesses
 #define ARR_ACCESS_STR "__at"
 
+
 namespace iegenlib {
 
 /* Computation */
@@ -137,7 +138,9 @@ void Computation::addStmt(Stmt* stmt) {
 
 void Computation::addStmt(Stmt* stmt, int stmtIdx) {
     transformationLists.push_back({});
-    delimitDataSpacesInStmt(stmt);
+    if (!stmt->isDelimited()) {
+        delimitDataSpacesInStmt(stmt);
+    }
     // TODO: if stmtIdx < stmts.size(), update later execution schedules
     stmts.insert(stmts.begin() + stmtIdx, stmt);
     //enforceArraySSA(stmt);
@@ -235,6 +238,7 @@ bool Computation::enforceArraySSA(Stmt* stmt, int dataIdx, bool isRead) {
                     {{dataSpace, "{[0]->" + tuple.str() + "}"}},
                     {{newDataSpace, "{[0]->[0]}"}}
                 );
+                arrAccessStmt->setDelimited();
                 arrAccessStmt->setArrayAccess(true);
                 addStmt(arrAccessStmt);
 //                std::cerr << "Added Array Access Statement {\n"
@@ -482,9 +486,9 @@ bool Computation::addPhiNode(int stmtIdx,
 
     // Create phi node
     Stmt* phiStmt = new Stmt(code.str(), sourceIS->prettyPrintString(),
-        getStmt(stmtIdx)->getExecutionSchedule()
-        ->prettyPrintString(),
+        getStmt(stmtIdx)->getExecutionSchedule()->prettyPrintString(),
         reads, writes);
+    phiStmt->setDelimited();
     phiStmt->setPhiNode(true);
 //    std::cerr << "New Phi Node {\n" << phiStmt->prettyPrintString() << "}" << std::endl;
     // Add the statement
@@ -557,10 +561,10 @@ void Computation::addDataSpace(std::string dataSpaceName, std::string dataSpaceT
     bool alreadyDelimited = nameIsDelimited(dataSpaceName);
     assertValidDataSpaceName(dataSpaceName, alreadyDelimited);
     if (alreadyDelimited) {
-        originalDataSpaceNames.emplace(stripDataSpaceDelimiter(dataSpaceName));
+        undelimitedDataSpaceNames.emplace(trimDataSpaceName(dataSpaceName));
         dataSpaces[dataSpaceName] = dataSpaceType;
     } else {
-        originalDataSpaceNames.emplace(dataSpaceName);
+        undelimitedDataSpaceNames.emplace(dataSpaceName);
         dataSpaces[delimitDataSpaceName(dataSpaceName)] = dataSpaceType;
     }
 }
@@ -574,7 +578,8 @@ std::string Computation::getDataSpaceType(std::string dataSpaceName) const{
 }
 
 bool Computation::isDataSpace(std::string name) const {
-    return dataSpaces.find(name) != dataSpaces.end();
+    return dataSpaces.find(name) != dataSpaces.end()
+           || undelimitedDataSpaceNames.find(name) != undelimitedDataSpaceNames.end();
 }
 
 void Computation::addParameter(std::string paramName, std::string paramType) {
@@ -603,11 +608,16 @@ unsigned int Computation::getNumParams() const {
 }
 
 void Computation::addReturnValue(std::string name) {
-    returnValues.push_back({name, this->isDataSpace(name)});
+    this->addReturnValue(name, this->isDataSpace(name));
 }
 
 void Computation::addReturnValue(std::string name, bool isDataSpace) {
-    returnValues.push_back({name, isDataSpace});
+    bool alreadyDelimited = nameIsDelimited(name);
+    if (isDataSpace) {
+        assertValidDataSpaceName(name, alreadyDelimited);
+    }
+    returnValues.emplace_back((alreadyDelimited || !isDataSpace) ? name : delimitDataSpaceName(name),
+                            isDataSpace);
 }
 
 std::vector<std::string> Computation::getReturnValues() const {
@@ -773,7 +783,7 @@ void Computation::clear() {
 AppendComputationResult Computation::appendComputation(
   const Computation* other, std::string surroundingIterDomainStr,
   std::string surroundingExecScheduleStr,
-  const std::vector<std::string>& arguments){
+  std::vector<std::string> arguments){
 
     Set* surroundingIterDomain = new Set(surroundingIterDomainStr);
     Relation* surroundingExecSchedule = new Relation(surroundingExecScheduleStr);
@@ -812,6 +822,12 @@ AppendComputationResult Computation::appendComputation(
             std::to_string(toAppend->getNumParams()) + ", got " +
             std::to_string(numArgs));
     }
+    // delimit arguments that are data space names
+    for (unsigned int i = 0; i < numArgs; ++i) {
+        if (isDataSpace(arguments[i])) {
+            arguments[i] = delimitDataSpaceName(arguments[i]);
+        }
+    }
 
     // Insert declarations+assignment of (would-have-been if not for inlining)
     // parameter values, at the beginning of the appendee.
@@ -823,9 +839,6 @@ AppendComputationResult Computation::appendComputation(
     // Get the number of writes.
     // Need this for the correct execution order
     int numWrites = 0;
-    // Used to track number of statements not including parameter
-    // declarations. Used for paramter reassignments
-    int numStmts = toAppend->getNumStmts();
     for (int i = 0;  i < ((signed int)numArgs); ++i) {
         std::string param = toAppend->getParameterName(i);
         std::string paramType = toAppend->getParameterType(i);
@@ -834,6 +847,7 @@ AppendComputationResult Computation::appendComputation(
             toAppend->replaceDataSpaceName(param, arguments[i]);
         } else {
             Stmt* paramDeclStmt = new Stmt();
+            paramDeclStmt->setDelimited();
 
             paramDeclStmt->setStmtSourceCode(param + " = " + arguments[i] + ";");
             paramDeclStmt->setIterationSpace("{[0]}");
@@ -886,6 +900,7 @@ AppendComputationResult Computation::appendComputation(
         Stmt* appendeeStmt = toAppend->getStmt(stmtNum);
         // new statement built up from appendee which will be inserted
         Stmt* newStmt = new Stmt();
+        newStmt->setDelimited();
         // Copy phiNode and arrayAccess status
         newStmt->setPhiNode(appendeeStmt->isPhiNode());
         newStmt->setArrayAccess(appendeeStmt->isArrayAccess());
@@ -1117,7 +1132,9 @@ AppendComputationResult Computation::appendComputation(
     // collect append result information to return
     AppendComputationResult result;
     result.tuplePosition = latestTupleValue;
-    result.returnValues = toAppend->getReturnValues();
+    for (const auto& retVal : toAppend->getReturnValues()) {
+        result.returnValues.emplace_back(trimDataSpaceName(retVal));
+    }
 
     delete surroundingIterDomain;
     delete surroundingExecSchedule;
@@ -1576,17 +1593,23 @@ bool Computation::consistentSetArity(const std::vector<Set*>& sets) {
 }
 
 void Computation::delimitDataSpacesInStmt(Stmt *stmt) {
+    if (stmt->isDelimited()) {
+        throw assert_exception("Attempted to delimit a Stmt already marked as delimited");
+    }
+
     stmt->setStmtSourceCode(delimitDataSpacesInString(stmt->getStmtSourceCode()));
     stmt->setIterationSpace(delimitDataSpacesInString(stmt->getIterationSpace()->prettyPrintString()));
     stmt->setExecutionSchedule(delimitDataSpacesInString(stmt->getExecutionSchedule()->prettyPrintString()));
     for (unsigned int i = 0; i < stmt->getNumReads(); ++i) {
-        stmt->updateRead(i, delimitDataSpacesInString(stmt->getReadDataSpace(i)),
+        stmt->updateRead(i, delimitDataSpaceName(stmt->getReadDataSpace(i)),
                          stmt->getReadRelation(i)->prettyPrintString());
     }
     for (unsigned int i = 0; i < stmt->getNumWrites(); ++i) {
-        stmt->updateWrite(i, delimitDataSpacesInString(stmt->getWriteDataSpace(i)),
+        stmt->updateWrite(i, delimitDataSpaceName(stmt->getWriteDataSpace(i)),
                           stmt->getWriteRelation(i)->prettyPrintString());
     }
+
+    stmt->setDelimited();
 }
 
 std::string Computation::delimitDataSpacesInString(std::string originalString) {
@@ -1624,7 +1647,7 @@ std::string Computation::delimitDataSpacesInString(std::string originalString) {
             for (auto match_it = std::sregex_iterator(originalSegment.begin(), originalSegment.end(), potentialVariableRegex);
                  match_it != std::sregex_iterator(); ++match_it) {
                 // only replace potential identifiers that actually match existing data spaces
-                if (this->originalDataSpaceNames.count((*match_it).str())) {
+                if (this->undelimitedDataSpaceNames.count((*match_it).str())) {
                     // grab everything between the last match and the beginning of this one, then add the delimited version
                     // of this one
                     rewrittenSegment << originalSegment.substr(currentPosInOriginalSegment,
@@ -1647,7 +1670,10 @@ std::string Computation::delimitDataSpacesInString(std::string originalString) {
 }
 
 std::string Computation::delimitDataSpaceName(std::string dataSpaceName) {
-    return DATA_SPACE_DELIMITER + dataSpaceName + DATA_SPACE_DELIMITER;
+    if (nameIsDelimited(dataSpaceName)) {
+        throw assert_exception("Attempted to double-delimit data space '" + dataSpaceName + "'");
+    }
+  return DATA_SPACE_DELIMITER + dataSpaceName + DATA_SPACE_DELIMITER;
 }
 
 std::string Computation::stripDataSpaceDelimiter(std::string delimitedStr) {
@@ -2230,16 +2256,13 @@ bool Computation::assertValidDataSpaceName(const std::string &name, bool already
 }
 
 int Computation::isWrittenTo(std::string dataSpace){
-    if (dataSpace == "") { return -1; }
-    if (dataSpace[0] != '$') { dataSpace = "$"+dataSpace+"$"; }
-
     for(int i = 0; i < getNumStmts(); i++) {
         for(int data_write_index = 0;
                 data_write_index < getStmt(i)->getNumWrites();
                 data_write_index++) {
 
             string writeDataSpace = getStmt(i)->getWriteDataSpace(data_write_index);
-            if(dataSpace.compare(writeDataSpace) == 0){
+            if(dataSpace == writeDataSpace){
                 return i;
             }
         }
@@ -2248,8 +2271,6 @@ int Computation::isWrittenTo(std::string dataSpace){
 }
 
 void Computation::replaceDataSpaceName(std::string original, std::string newString){
-    if (original == "") { return; }
-
     std::string searchString;
     std::string replacedString;
     if(nameIsDelimited(original)){
@@ -2270,6 +2291,10 @@ void Computation::replaceDataSpaceName(std::string original, std::string newStri
     if(iterator != dataSpaces.end()){
         dataSpaces.erase(iterator);
     }
+    auto original_iterator = undelimitedDataSpaceNames.find(trimDataSpaceName(original));
+    if (original_iterator != undelimitedDataSpaceNames.end()) {
+        undelimitedDataSpaceNames.erase(original_iterator);
+    }
 
     //Rename return values as well
     for (auto it = returnValues.begin(); it != returnValues.end(); it++){
@@ -2281,7 +2306,6 @@ void Computation::replaceDataSpaceName(std::string original, std::string newStri
 }
 
 std::string Computation::getDataSpaceRename(std::string dataSpaceName) {
-    if (dataSpaceName == "") { return ""; }
     dataSpaceName = trimDataSpaceName(dataSpaceName);
     return Computation::delimitDataSpaceName(dataSpaceName + DATA_RENAME_STR + std::to_string(dataRenameCnt++));
 }
@@ -2315,18 +2339,18 @@ bool Computation::isConstArray(std::string dataSpaceName) {
 
 
 std::string Computation::trimDataSpaceName(std::string dataSpaceName) {
-    return dataSpaceName == "" || dataSpaceName[0] != DATA_SPACE_DELIMITER ? dataSpaceName :
-           dataSpaceName.substr(1, dataSpaceName.length() - 2);
+    return nameIsDelimited(dataSpaceName) ?
+        dataSpaceName.substr(1, dataSpaceName.length() - 2)
+        : dataSpaceName;
 }
 
 std::string Computation::getOriginalDataSpaceName(std::string dataSpaceName) {
-    if (dataSpaceName == "") { return ""; }
     dataSpaceName = trimDataSpaceName(dataSpaceName);
     return Computation::delimitDataSpaceName(dataSpaceName.substr(0, dataSpaceName.rfind(DATA_RENAME_STR)));
 }
 
 bool Computation::areEquivalentRenames(std::string a, std::string b) {
-    return getOriginalDataSpaceName(a).compare(getOriginalDataSpaceName(b)) == 0;
+    return getOriginalDataSpaceName(a) == getOriginalDataSpaceName(b);
 }
 
 
@@ -2383,6 +2407,7 @@ Stmt& Stmt::operator=(const Stmt& other) {
     }
     this->phiNode = other.phiNode;
     this->arrayAccess = other.arrayAccess;
+    this->delimited = other.delimited;
     return *this;
 }
 
