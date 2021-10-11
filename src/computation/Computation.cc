@@ -1953,7 +1953,7 @@ std::string Computation::codeGen(Set* knownConstraints) {
         // Get the new iteration space set
         Set* newIterSpace = rel->Apply(stmt->getIterationSpace());
         // This is required to generate correct tuple variable names
-        newIterSpace->acceptVisitor(vOmegaReplacer);
+        //newIterSpace->acceptVisitor(vOmegaReplacer);
 
         // Generate the second macro based on the new iteration space
         // Generate a mapping between the two iteration spaces using
@@ -2832,29 +2832,52 @@ void VisitorChangeUFsForOmega::postVisitUFCallTerm(UFCallTerm* callTerm) {
         throw assert_exception(
             "Cannot make UF calls with only constant arguments");
     }
-    // Create a ufMacro uf Array access
-    std::string ufMacro = callTerm->name();
-    std::string ufArrayAccess = callTerm->name();
-    ufMacro+= "(";
-    bool isFirst = true;
-    for (int i = 0; i < callTerm->numArgs(); i++){
 
-	if(isFirst){
-            ufMacro+= "t"+ std::to_string(i);
-            isFirst = false;
-	}else{
-	    ufMacro += ",t"+std::to_string(i);
-	}
-        ufArrayAccess+="[t"+std::to_string(i)+"]";
-    }
-    ufMacro+=")";
-    // Map ufs as macros to actual array aaccess.
-    macros[ufMacro] = ufArrayAccess;
     // save original coefficient, then temporarily modify for printing
     int originalCoefficient = callTerm->coefficient();
     callTerm->setCoefficient(1);
+   
+   
+    // Original UFCall's to string will be used to 
+    // uniquely identify a UFCallTerm. This is because
+    // 2 uf calls can have the same name but different 
+    // expressions inside of it. A good example is 
+    // rowptr(i) and rowptr(i+1).
+
+    std::string originalUFString = callTerm->toString();
     std::string originalCall = callTerm->toString();
 
+    auto itArr = std::find(arrayAccessUFs.begin(),
+		    arrayAccessUFs.end(),originalCall);
+    
+    // Check if UF Call is a replacement.
+    auto itReplace= std::find_if(knownUFs.begin(),
+		    knownUFs.end(), [originalCall](std::pair<std::string,std::string> e){
+		        return originalCall == e.second;   
+		    });
+    
+    if (itArr == arrayAccessUFs.end() && itReplace == knownUFs.end()){
+        // Create a ufMacro uf Array access
+        std::string ufMacro = callTerm->name();
+        std::string ufArrayAccess = callTerm->name();
+        ufMacro+= "(";
+        bool isFirst = true;
+        for (int i = 0; i < callTerm->numArgs(); i++){
+
+	    if(isFirst){
+                ufMacro+= "t"+ std::to_string(i);
+                isFirst = false;
+	    }else{
+	        ufMacro += ",t"+std::to_string(i);
+	    }
+            ufArrayAccess+="[t"+std::to_string(i)+"]";
+        }
+        ufMacro+=")";
+        // Map ufs as macros to actual array aaccess.
+        macros[ufMacro] = ufArrayAccess;
+	arrayAccessUFs.push_back(originalCall);
+    }
+    
     // rewrite argument list as a prefix of input tuple
     callTerm->resetNumArgs(max_tvloc + 1);
     for (int i = 0; i < callTerm->numArgs(); ++i) {
@@ -2863,9 +2886,11 @@ void VisitorChangeUFsForOmega::postVisitUFCallTerm(UFCallTerm* callTerm) {
         newParamExp->addTerm(tupleVarParam);
         callTerm->setParamExp(i, newParamExp);
     }
+    
+
 
     std::string replacementName;
-    auto it = knownUFs.find(originalCall);
+    auto it = knownUFs.find(originalUFString);
     // check if this particular UF invocation has already been encountered
     if (it != knownUFs.end()) {
         // use the function name from the already-existing definition
@@ -2876,7 +2901,7 @@ void VisitorChangeUFsForOmega::postVisitUFCallTerm(UFCallTerm* callTerm) {
         replacementName =
             callTerm->name() + "_" + std::to_string(nextFuncReplacementNumber);
         nextFuncReplacementNumber++;
-        knownUFs.emplace(originalCall, replacementName);
+        knownUFs.emplace(originalUFString, replacementName);
 
         callTerm->setName(replacementName);
         // this is a new UF, so add a macro definition for it

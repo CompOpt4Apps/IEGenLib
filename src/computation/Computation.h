@@ -540,6 +540,9 @@ class VisitorChangeUFsForOmega : public Visitor {
     //! UF calls that we've seen before and do not need to rename if encountered
     //! again; mapping from call as string -> new assigned name
     std::map<std::string, std::string> knownUFs;
+
+    std::vector<std::string> arrayAccessUFs;
+
     //! next number to use in creating unique function names
     int nextFuncReplacementNumber;
     //! stored tuple decl for variable retrieval
