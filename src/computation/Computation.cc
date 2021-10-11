@@ -1952,8 +1952,6 @@ std::string Computation::codeGen(Set* knownConstraints) {
 
         // Get the new iteration space set
         Set* newIterSpace = rel->Apply(stmt->getIterationSpace());
-        // This is required to generate correct tuple variable names
-        //newIterSpace->acceptVisitor(vOmegaReplacer);
 
         // Generate the second macro based on the new iteration space
         // Generate a mapping between the two iteration spaces using
