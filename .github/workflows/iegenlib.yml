@@ -1,4 +1,4 @@
-name: build/test
+name: Build and test IEGenLib
 
 on: [push, pull_request]
 
@@ -6,24 +6,30 @@ jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         os: [ubuntu-20.04, ubuntu-18.04]
     defaults:
       run:
         shell: bash
+
     steps:
-    - name: Complete flex installation
-      run: sudo apt-get install libfl-dev
     - uses: actions/checkout@v2
-    - name: set TERM
-      run: echo "TERM=xterm-256color" >> $GITHUB_ENV
+
+    - name: setup flex
+      run: >
+        sudo apt-get install libfl-dev &&
+        echo "TERM=xterm-256color" >> $GITHUB_ENV
+
     - name: build main project
       run: make
-    - name: build tutorial examples
-      run: make tutorial
+
     - name: run tests
       run: make test
+
+    - name: build tutorial examples
+      run: make tutorial
+
     - run: ./build/bin/tutorial/append_computation_example
     - run: ./build/bin/tutorial/computation_example
     - run: ./build/bin/tutorial/geoac_codegen_driver
