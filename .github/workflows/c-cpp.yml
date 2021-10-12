@@ -24,3 +24,10 @@ jobs:
       run: make tutorial
     - name: run tests
       run: make test
+    - run: ./build/bin/tutorial/append_computation_example
+    - run: ./build/bin/tutorial/computation_example
+    - run: ./build/bin/tutorial/geoac_codegen_driver
+    - run: ./build/bin/tutorial/macro_testing
+    - run: ./build/bin/tutorial/manual_graph_testing
+    - run: ./build/bin/tutorial/miniFluxDiv_codegen_driver
+    - run: ./build/bin/tutorial/sparse_format_example
