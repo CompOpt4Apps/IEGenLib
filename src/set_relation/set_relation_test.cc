@@ -4731,6 +4731,21 @@ TEST_F(SetRelationTest, TransitiveClosure){
 }
 
 
+TEST_F(SetRelationTest,GetDomain){
+    Set * s = new Set(
+		    "{[i,j,k]: i >= 0 && i < NR &&"
+		    " j >= 0 and j < NC && k >=0 &&"
+		    " k < NZ and rowptr(i) >= j}");
+    Set * domain = s->GetDomain("rowptr");
+    EXPECT_EQ(domain->arity(),1);
+    EXPECT_EQ(domain->prettyPrintString(), 
+		    "{ [i] : i >= 0 && NC - 1 >= 0 &&" 
+		    " NZ - 1 >= 0 && -i + NR - 1 >= 0 } ");
+    
+
+
+}
+
 TEST_F(SetRelationTest,Complement){
            
 }

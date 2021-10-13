@@ -105,9 +105,13 @@ public:
     */
     void addInequality(Exp* inequality);
 
-    const std::list<Exp*> &equalities() const { return mEqualities; }
+    //TODO: Constants were removed so as to allow 
+    //for modification of constraints in a conjunction.
+    //Put the constants back and add a functionality to 
+    //remove constraint.
+    std::list<Exp*> &equalities() { return mEqualities; }
 
-    const std::list<Exp*> &inequalities() const { return mInequalities; }
+    std::list<Exp*> &inequalities() { return mInequalities; }
 
     /*! substituteTupleDecl -- substitute TupleVarTerms in for any
     **  VarTerms in the expressions whose names match the corresponding
@@ -217,7 +221,7 @@ public:
     //! Returns a new conjunction, which the user is responsible
     //  for deallocating.
     Conjunction* TransitiveClosure();
-
+     
 
     /*! Treating this Conjunction like a domain or range.  Creates
     ** a new set where passed in tuple expression is
@@ -674,6 +678,15 @@ public:
     //  for deallocating.
     Set* TransitiveClosure();
 
+
+    //! Gets the domain of an uninterpreted function 
+    //! in a set
+    //! \param ufName name of the UF
+    //! Returns a new set representing the domain of the UF
+    //! which the user is responsible
+    //! for deallocating.
+    Set* GetDomain(std::string ufName);
+    
     int getArity(){ return mArity;}
 
     Set* detectUnsatOrFindEqualities(bool *useRule=NULL);
