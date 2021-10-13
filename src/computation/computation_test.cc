@@ -1544,6 +1544,7 @@ TEST_F(ComputationTest, DelimitDataSpacesTest) {
     comp->addDataSpace("sd", "int");
     comp->addDataSpace("x", "int");
     comp->addDataSpace("z", "string");
+    comp->addDataSpace("N", "int");
 
     EXPECT_EQ("int $asdf$ = 3;", comp->delimitDataSpacesInString("int asdf = 3;"));
     EXPECT_EQ("int $asdf$ = 3*$x$;", comp->delimitDataSpacesInString("int asdf = 3*x;"));
@@ -1556,6 +1557,8 @@ TEST_F(ComputationTest, DelimitDataSpacesTest) {
 }", comp->delimitDataSpacesInString("if (z == \"\\\"asdf\") {\
     asdf = 5;\
 }"));
+    EXPECT_EQ("{[i,j]: 0 < i < j && 0 < j < 10}", comp->delimitDataSpacesInString("{[i,j]: 0 < i < j && 0 < j < 10}"));
+    EXPECT_EQ("{[i]: 0 < i < $N$}", comp->delimitDataSpacesInString("{[i]: 0 < i < N}"));
 
     delete comp;
 }
