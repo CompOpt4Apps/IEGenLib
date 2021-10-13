@@ -288,7 +288,7 @@ void Computation::enforceSSA(int stmtIdx) {
         // Is a constant access array
         if (!stmt->getConstArrayAccesses(i, false).empty()) { continue; }
         // Is not written to or is written to at or after stmtIdx
-        int writeIdx = isWrittenTo(write);
+        int writeIdx = firstWriteIndex(write);
         if (writeIdx < 0 || writeIdx >= stmtIdx) { continue; }
 
         std::string newWrite = getDataSpaceRename(write);
@@ -2255,7 +2255,7 @@ bool Computation::assertValidDataSpaceName(const std::string &name, bool already
     return true;
 }
 
-int Computation::isWrittenTo(std::string dataSpace){
+int Computation::firstWriteIndex(std::string dataSpace){
     for(int i = 0; i < getNumStmts(); i++) {
         for(int data_write_index = 0;
                 data_write_index < getStmt(i)->getNumWrites();

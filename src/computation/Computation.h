@@ -121,7 +121,7 @@ class Computation {
     //! Check if a given string is a name of a data space of this Computation
     bool isDataSpace(std::string name) const;
     //! Returns statement index of write if written to, else -1
-    int isWrittenTo(std::string dataSpace);
+    int firstWriteIndex(std::string dataSpace);
     //! Replace data space name if written to
     void replaceDataSpaceName(std::string original, std::string newString);
     //! Produces a rename for the inputted data space, incrementing dataRenameCnt

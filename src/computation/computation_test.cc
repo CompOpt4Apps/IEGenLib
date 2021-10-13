@@ -414,49 +414,32 @@ TEST_F(ComputationTest, OmegaCodeGenFromString){
     delete myComp;
 }
 
-TEST_F(ComputationTest, IsWrittenTo) {
+TEST_F(ComputationTest, FirstWriteIndex) {
     // Basic for loop with 2 statements
     // for (i = 0; i < N; i++) /loop over rows
     //     s0:tmp = f[i];
     //     s1:tmp1 = f1[i];
     //}
 
-    std::vector<std::pair<std::string, std::string> > dataReads;
-    std::vector<std::pair<std::string, std::string> > dataWrites;
-
     Computation* forLoopComp = new Computation();
-
     forLoopComp->addDataSpace("tmp", "int");
     forLoopComp->addDataSpace("f", "int");
     forLoopComp->addDataSpace("tmp1", "int");
     forLoopComp->addDataSpace("f1", "int");
     forLoopComp->addDataSpace("N", "int");
 
-    dataWrites.push_back(make_pair("tmp", "{[i]->[0]}"));
-    dataReads.push_back(make_pair("f", "{[i]->[i]}"));
     Stmt* s0 = new Stmt("tmp = f[i];", "{[i]: 0 <= i < N}", "{[i] ->[0,i,0]}",
-             dataReads, dataWrites);
-
-    dataReads.clear();
-    dataWrites.clear();
-
-    dataWrites.push_back(make_pair("tmp1", "{[i]->[0]}"));
-    dataReads.push_back(make_pair("f1", "{[i]->[i]}"));
-    Stmt* s1 = new Stmt("tmp1 = f1[i];", "{[i]: 0 <= i < N}", "{[i] ->[0,i,1]}",
-             dataReads, dataWrites);
-
-    dataReads.clear();
-    dataWrites.clear();
-
+                        {{"f", "{[i]->[i]}"}}, {{"tmp", "{[i]->[0]}"}});
     forLoopComp->addStmt(s0);
+
+    Stmt* s1 = new Stmt("tmp1 = f1[i];", "{[i]: 0 <= i < N}", "{[i] ->[0,i,1]}",
+                        {{"f1", "{[i]->[i]}"}}, {{"tmp1", "{[i]->[0]}"}});
     forLoopComp->addStmt(s1);
 
-    EXPECT_FALSE(forLoopComp->isWrittenTo("tmp"));
-    EXPECT_TRUE(forLoopComp->isWrittenTo("$tmp$"));
-    EXPECT_FALSE(forLoopComp->isWrittenTo("tmp1"));
-    EXPECT_TRUE(forLoopComp->isWrittenTo("$tmp1$"));
-    EXPECT_FALSE(forLoopComp->isWrittenTo("unknown"));
-
+    EXPECT_EQ(0, forLoopComp->firstWriteIndex("$tmp$"));
+    EXPECT_EQ(-1, forLoopComp->firstWriteIndex("tmp"));
+    EXPECT_EQ(1, forLoopComp->firstWriteIndex("$tmp1$"));
+    EXPECT_EQ(-1, forLoopComp->firstWriteIndex("unknown"));
 
     delete forLoopComp;
 }
