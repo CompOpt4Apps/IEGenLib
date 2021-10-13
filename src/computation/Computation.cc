@@ -784,8 +784,7 @@ AppendComputationResult Computation::appendComputation(
   const Computation* other, std::string surroundingIterDomainStr,
   std::string surroundingExecScheduleStr,
   std::vector<std::string> arguments){
-
-    Set* surroundingIterDomain = new Set(surroundingIterDomainStr);
+    Set* surroundingIterDomain = new Set(delimitDataSpacesInString(surroundingIterDomainStr));
     Relation* surroundingExecSchedule = new Relation(surroundingExecScheduleStr);
 
     // create a working copy of the appendee
@@ -1599,7 +1598,6 @@ void Computation::delimitDataSpacesInStmt(Stmt *stmt) {
 
     stmt->setStmtSourceCode(delimitDataSpacesInString(stmt->getStmtSourceCode()));
     stmt->setIterationSpace(delimitDataSpacesInString(stmt->getIterationSpace()->prettyPrintString()));
-    stmt->setExecutionSchedule(delimitDataSpacesInString(stmt->getExecutionSchedule()->prettyPrintString()));
     for (unsigned int i = 0; i < stmt->getNumReads(); ++i) {
         stmt->updateRead(i, delimitDataSpaceName(stmt->getReadDataSpace(i)),
                          stmt->getReadRelation(i)->prettyPrintString());
@@ -1782,6 +1780,7 @@ void Computation::enforceArraySSA() {
                         { {read, "{[0]->" + tuple + "}"} },
                         { {unroll, "{[0]->[0]}"} }
                     );
+                    unrollStmt->setDelimited();
                     unrollStmt->setArrayAccess(true);
                     int numStmts = getNumStmts();
                     addStmt(unrollStmt, i);
@@ -1835,6 +1834,7 @@ void Computation::enforceArraySSA() {
                 { {unroll, "{[0]->[0]}"} },
                 { {pair.first, "{[0]->" + tuple + "}"} }
             );
+            rerollStmt->setDelimited();
             rerollStmt->setArrayAccess(true);
             addStmt(rerollStmt);
         }
