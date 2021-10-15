@@ -141,6 +141,8 @@ int main(int argc, char** argv) {
     func1Res = comp->appendComputation(func1Comp, "{[0]}", "{[0]->["+std::to_string(i++)+"]}", args);
     delete func1Comp;
 
+    comp->finalize();
+
     ofstream outStream;
     outStream.open("append_test.c");
     outStream << comp->codeGen();

@@ -6,6 +6,7 @@
 #include <map>
 #include <memory>
 #include <queue>
+#include <set>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -17,7 +18,7 @@ namespace iegenlib {
 	constexpr auto DEFAULT_COLOR = "darkgray";
 	constexpr auto PARAM_COLOR = "deepskyblue";
 	constexpr auto RETURN_COLOR = "red";
-	constexpr auto PARAM_RETURN_COLOR = "darkorchid";
+	constexpr auto PARAM_RETURN_COLOR = "orchid";
 	// Color of the source node when creating a graph from a single statement
 	constexpr auto SOURCE_COLOR = "goldenrod";
 	// Color of unread data space
@@ -51,6 +52,7 @@ namespace iegenlib {
 		int id = -1;
 		int subgraph = 0;
 		std::string setStr = "", debugStr = "";
+		std::list<int> eatenStmts;
 		NodeTypes type = NodeTypes::stmt;
 
 		std::set<std::weak_ptr<DataNode>,
@@ -173,6 +175,7 @@ namespace iegenlib {
 }
 
 #endif
+
 
 
 

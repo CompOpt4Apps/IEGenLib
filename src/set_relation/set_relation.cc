@@ -2319,6 +2319,115 @@ Set* Set::TransitiveClosure(){
 }
 
 
+
+
+/******************************************************************************/
+#pragma mark -
+/*************** UFTermVisitor *****************************/
+/*! Vistor Class used for locating unique instances of UFterms . 
+**  This is used in get domain.
+*/
+class UFTermVisitor: public Visitor {
+  private:
+    std::list<UFCallTerm*> terms;
+    std::string ufTerm;
+  public:
+    explicit UFTermVisitor(std::string ufTerm):
+        ufTerm(ufTerm){}
+    void postVisitUFCallTerm (UFCallTerm* t) override;
+    std::list<UFCallTerm*> getTerms() { return terms; }
+};
+
+void UFTermVisitor::postVisitUFCallTerm(UFCallTerm* t){
+    if (t->name() == ufTerm){
+        auto it = std::find_if(terms.begin(),terms.end(),
+			[t](UFCallTerm* uf){ 
+			    return uf->toString() == t->toString();
+			});
+	if (it == terms.end()){ terms.push_back(t);}
+    }
+}
+
+/******************************************************************************/
+#pragma mark -
+/*************** TupleTermVisitor *****************************/
+/*! Visitor class used in locating tupleterm variables.
+*/
+class TupleTermVisitor: public Visitor {
+  private:
+    std::list<int> tupleLocs;
+  public:
+    void postVisitTupleVarTerm(TupleVarTerm * t) override; 
+    std::list<int> getTupleLocs(){return tupleLocs;}
+};
+
+void TupleTermVisitor::postVisitTupleVarTerm(TupleVarTerm* t){
+    auto it= std::find(tupleLocs.begin(), tupleLocs.end(), t->tvloc());
+    if (it == tupleLocs.end()) {tupleLocs.push_back(t->tvloc()); }
+}
+
+//! Gets the domain of an uninterpreted function 
+//! in a set
+//! \param ufName name of the UF
+//! Returns a new set representing the domain of the UF
+//! which the user is responsible
+//! for deallocating.
+Set* Set::GetDomain(std::string ufName){ 
+    std::vector<Set*> results;
+    UFTermVisitor ufVisitor(ufName);
+    this->acceptVisitor(&ufVisitor);
+    std::list<UFCallTerm*> terms = ufVisitor.getTerms();
+    for( auto term: terms){
+	TupleTermVisitor tVisitor;
+        term->acceptVisitor(&tVisitor);
+        std::list<int> tupleLocs = tVisitor.getTupleLocs();
+        auto maxIter = std::max_element(tupleLocs.begin(),tupleLocs.end());
+	int max = *maxIter;
+	Set * res = new Set(*this);
+        while(res->arity() - 1> max ){
+	    Set * temp = res->projectOut(res->arity() - 1);
+	    delete res;
+	    res = temp;
+	}
+        results.push_back(res);	
+    }
+    
+    Set* result = results[0];
+
+    for(int i = 1; i < results.size(); i++ ){ 
+        Set* temp = result->Union(results[i]);
+	delete result;
+	result = temp;
+    }
+    // Remove expressions containing uFTerm
+    for(auto term: terms){ 
+        UFCallTerm t (*term);
+	t.setCoefficient(1);
+	for(auto it = result->conjunctionBegin();
+			it!= result->conjunctionEnd();
+			++it){
+	    Conjunction* conj = (*it);
+	    auto itE = conj->equalities().begin();
+	    while(itE != conj->equalities().end()){
+	        if ((*itE)->dependsOn(t)){
+		    itE = conj->equalities().erase(itE);
+		}else { itE++; }
+	    }
+
+            itE = conj->inequalities().begin();
+	    while(itE != conj->inequalities().end()){
+	        if ((*itE)->dependsOn(t)){
+		    itE = conj->inequalities().erase(itE);
+		}else { itE++;}
+	    }
+	}
+    }
+
+    return result;
+
+}
+
+
 /******************************************************************************/
 #pragma mark -
 

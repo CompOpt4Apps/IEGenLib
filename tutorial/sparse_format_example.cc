@@ -38,6 +38,25 @@ int main(int ac, char **av) {
 
     std::cout<< closure200->prettyPrintString() << "\n"; 
     delete closure200;
+    delete rel200;
+
+    Computation * c = new Computation();
+    c->addStmt(new Stmt("$ACSR$[k] = $ABCSR$[p];",
+			    "{ [ii, kk, jj, hr, hc, p, k] : jj - bcol(kk) = 0"
+			    " && k - col_inv(5 ii + hr, 5 jj + hc) = 0 && 5 jj + hc"
+			    " - col(k) = 0 && 25 kk + 5 hr + hc - p = 0 && ii >= 0"
+			    " && hr >= 0 && hc >= 0 && kk - browptr(ii) >= 0 && -hr"
+			    " + 4 >= 0 && -hc + 4 >= 0 && k - rowptr(5 ii + hr) >= 0"
+			    " && -ii + NR_BR - 1 >= 0 && -kk + browptr(ii +  1) - 1 >= 0"
+			    " && -k + rowptr(5 ii + hr + 1) - 1 >= 0 }",
+			    "{[ii, kk, jj, hr, hc, p, k]->[ii, kk, jj, hr, hc, p, k]}",
+			    {{"ABCSR" , "{[ii, kk, jj, hr, hc, p, k]->[p]}"}},
+			    {{"ACSR" , "{[ii, kk, jj, hr, hc, p, k]->[k]}"}}));
+
+    std::cout << "Header :\n" << 
+	    c->codeGenMemoryManagementString() << "\n Body:\n"
+	    << c->codeGen() << "\n\n\n";
+    delete c;
     // Test COO WRT DENSE
     std::cout << "=> Starting example COO_WRT_DENSE\n\n";
 

@@ -100,15 +100,13 @@ class Computation {
 
     //! Returns a list of all the constraints of the given set
     static std::vector<std::string> getSetConstraints(Set* set);
-    
-    
-    //! Deletes statements that writes 
-    //! to nodes that are never read from 
-    //! in the computation.
-    void deleteDeadStatements();
 
-    //! add stmt
+    //! Add statement to the end of this Computation
     void addStmt(Stmt* stmt);
+    //! Insert statement at given index.
+    //! This may modify the statement to fit the needs of the Computation.
+    void addStmt(Stmt* stmt, int stmtIdx);
+
     //! Get a statement by index
     Stmt* getStmt(unsigned int index) const;
     //! Get the number of statements in this Computation
@@ -123,13 +121,18 @@ class Computation {
     //! Check if a given string is a name of a data space of this Computation
     bool isDataSpace(std::string name) const;
     //! Returns statement index of write if written to, else -1
-    int isWrittenTo(std::string dataSpace);
+    int firstWriteIndex(std::string dataSpace);
     //! Replace data space name if written to
     void replaceDataSpaceName(std::string original, std::string newString);
     //! Produces a rename for the inputted data space, incrementing dataRenameCnt
     std::string getDataSpaceRename(std::string dataSpaceName);
+    //! unroll  - $arrName__ati1__ati2...__atiN$
+    //  access  - $arrName$[i1][i2]...[iN]
+    //  tuple   - [i1,i2,...,iN]
+    static void getArrayAccessStrs(std::string& unroll, std::string& access,
+        std::string& tuple, std::string arrName, const std::list<int>& idxs);
     //! Checks if the given data space is an array with only constant accesses
-    bool isConstArray(std::string dataSpaceName);
+    //bool isConstArray(std::string dataSpaceName);
 
     //! Trims dollar signs off of data space
     static std::string trimDataSpaceName(std::string dataSpaceName);
@@ -204,15 +207,31 @@ class Computation {
     AppendComputationResult appendComputation(
         const Computation* other, std::string surroundingIterDomainStr,
         std::string surroundingExecScheduleStr,
-        const std::vector<std::string>& arguments = {});
+        std::vector<std::string> arguments = {});
 
-    //! Pads each statement's execution schedule with 0's such the all
-    //  execution schedules have the same arity
-    //  Caller is responsible for deallocating Relation*
-    std::vector<Relation*> padExecutionSchedules() const;
+    //! Performs operations with the assumption that no more statements will be added
+    void finalize(bool deleteDeadNodes = false);
 
     //! Returns true if all input sets have the same arity, false otherwise
     bool consistentSetArity(const std::vector<Set*>& sets);
+
+    //! Pads each statement's execution schedule with 0's such the all
+    //  execution schedules have the same arity
+    void padExecutionSchedules();
+
+    //! Performs special SSA renaming for constant access arrays
+    //  on all statements
+    void enforceArraySSA();
+
+    //! Adjusts all statement execution schedules to accouunt for 
+    //  dynamically added statements.
+    //  Ordering of inputted statements is maintained.
+    void adjustExecutionSchedules();
+
+    //! Deletes statements that writes 
+    //! to nodes that are never read from 
+    //! in the computation.
+    void deleteDeadStatements();
 
     //! Function returns a dot string representing nesting
     //  and loop carrie dependency.
@@ -233,7 +252,7 @@ class Computation {
 
     //! Sequentially apply added transformations to all statements.
     //! Returns a list of final statement schedules after transformation.
-    std::vector<Set*> applyTransformations() const;
+    std::vector<Set*> applyTransformations();
 
     //! Sequentially composes addes transfomations onto each statement's
     //  execution schedule (scheduling function)
@@ -290,37 +309,54 @@ class Computation {
     //  S0: {[0,i,0,j,0] | stuff}; S1:{[0,i,1,j,0] | stuff}
     void fuse (int s1, int s2, int fuseLevel);
 
+    //! Delimit data spaces in a statement so that it may be used properly in this Computation.
+    //! Modifies the given statement in-place.
+    void delimitDataSpacesInStmt(Stmt* stmt);
+    //! Go through the string, potentially consisting of C source code, and delimit all data space names.
+    std::string delimitDataSpacesInString(std::string originalString);
+    //! Wrap the given data space name in delimiters
+    static std::string delimitDataSpaceName(std::string dataSpaceName);
+    //! Get a new string with all instances of the data space delimiter removed from the original string
+    static std::string stripDataSpaceDelimiter(std::string delimitedStr);
+    //! Check if a data space name is delimited, excepting if it is only delimited on one side.
+    static bool nameIsDelimited(std::string name);
+
     private:
 
   	//! Human-readable name of Computation
   	std::string name;
 
     //! maps array name : true - has constant accesses at all dimensions
-    std::map<std::string, bool> arrays;
+    //std::map<std::string, bool> arrays;
     //! Performs special SSA renaming on arrays
     //  splits constant-access arrays into separate data spaces
-    void enforceArraySSA(Stmt* stmt);
+    //void enforceArraySSA(Stmt* stmt);
     //! Performs special SSA renaming for the data space
     //  at the specified read/write index in stmt
     //  returns true if successful, false otherwise
-    bool enforceArraySSA(Stmt* stmt, int dataIdx, bool isRead);
+    //bool enforceArraySSA(Stmt* stmt, int dataIdx, bool isRead);
 
     //! Locates phi nodes for a given statement. These occur when a data space
     //  which is being read can take multiple values based on the control flow
-    void locatePhiNodes(Stmt* stmt);
-    void locatePhiNode(std::string dataSpace, Stmt* srcStmt);
+    int locatePhiNodes(int stmtIdx);
+    //! Returns true if a phi nodes is created, false otherwise
+    bool locatePhiNode(int stmtIdx, std::string dataSpace);
     //! Adds in a phi node
-    void addPhiNode(std::pair<int, std::string> &first, std::pair<int, std::string> &guaranteed, Stmt* srcStmt);
+    //! Returns true if a phi nodes is created, false otherwise
+    bool addPhiNode(int stmtIdx, std::pair<int, std::string>& first,
+        std::pair<int, std::string>& guaranteed);
 
     //! For each write in the new statement, rename the written dataspace in all
     //  statements from the last statement to the last write to that data space.
-    void enforceSSA(Stmt* stmt);
+    void enforceSSA(int stmtIdx);
 
     //! Information on all statements in the Computation
     std::vector<Stmt*> stmts;
 
     //! Data spaces available in the Computation, pairs of name : type
     std::map<std::string, std::string> dataSpaces;
+    //! Non-delimited data space names
+    std::unordered_set<std::string> undelimitedDataSpaceNames;
 
     //! Parameters of the computation. All parameters should also be data spaces.
     std::vector<std::string> parameters;
@@ -333,8 +369,8 @@ class Computation {
     //! List of statement transformation lists
     std::vector<std::vector<Relation*>> transformationLists;
 
-    //! Assert that a given string would be a valid data space name, that is, it is properly delimited by $'s
-    static bool assertValidDataSpaceName(const std::string& name);
+    //! Assert that a given string would be a valid data space name
+    static bool assertValidDataSpaceName(const std::string& name, bool alreadyDelimited);
 
   //! Number of times *any* Computation has been appended into
     //! others, for creating unique name prefixes.
@@ -372,7 +408,8 @@ class Stmt {
     ~Stmt();
 
     //! Construct a complete Stmt, given strings that will be used to
-    //! construct each set/relation.
+    //! construct each set/relation. Data spaces in the incoming strings
+    //! will be delimited automatically.
     Stmt(std::string stmtSourceCode, std::string iterationSpaceStr,
          std::string executionScheduleStr,
          std::vector<std::pair<std::string, std::string>> dataReadsStrs,
@@ -381,15 +418,21 @@ class Stmt {
     //! Copy constructor
     Stmt(const Stmt& other);
 
-    //! Replace data space name only where read from
-    //! Returns true if such a read is found, false otherwise
-    bool replaceDataSpaceReads(std::string searchString, std::string replaceString);
+    //! Replaces read everywhere in the Stmt
+    void replaceRead(std::string searchStr, std::string replaceStr);
+    //! Replaces read data space
+    void replaceReadDataSpace(std::string searchStr, std::string replaceStr);
+    //! Replaces searchStr in the read portion of the source code
+    void replaceReadSourceCode(std::string searchStr, std::string replaceStr);
 
-    //! Replace data space name only where written to
-    //! Returns true if such a write is found, false otherwise
-    bool replaceDataSpaceWrites(std::string searchString, std::string replaceString);
+    //! Replaces write everywhere in the Stmt
+    void replaceWrite(std::string searchStr, std::string replaceStr);
+    //! Replaces write data space
+    void replaceWriteDataSpace(std::string searchStr, std::string replaceStr);
+    //! Replaces searchStr in the write portion of the source code
+    void replaceWriteSourceCode(std::string searchStr, std::string replaceStr);
 
-    //! Replace data space name
+    //! Replace data space everywhere in the Stmt
     void replaceDataSpace(std::string searchString, std::string replaceString);
 
     //! Assignment operator (copy)
@@ -440,8 +483,6 @@ class Stmt {
     //std::string getReadDataSpaceType(unsigned int index) const;
     //! Get a data read's relation by index
     Relation* getReadRelation(unsigned int index) const;
-    //! Get a data read's relation by name
-    Relation* getReadRelation(std::string name) const;
 
     //! Add a data write
     void addWrite(std::string dataSpace, std::string relationStr);
@@ -456,8 +497,9 @@ class Stmt {
     //std::string getWriteDataSpaceType(unsigned int index) const;
     //! Get a data write's relation by index
     Relation* getWriteRelation(unsigned int index) const;
-    //! Get a data write's relation by name
-    Relation* getWriteRelation(std::string name) const;
+
+    //! Checks if a data read/write is a constant access array
+    std::list<int> getConstArrayAccesses(unsigned int index, bool read) const;
 
     //Set debug string for the statement
     void setDebugStr(std::string str);
@@ -473,6 +515,11 @@ class Stmt {
     void setPhiNode(bool val) { phiNode = val; };
     bool isArrayAccess() const { return arrayAccess; }
     void setArrayAccess(bool val) { arrayAccess = val; };
+
+    //! Check if this Stmt has its data spaces delimited already
+    bool isDelimited() const { return delimited; }
+    //! Mark that this Stmt's data spaces have been delimited
+    void setDelimited() { delimited = true; }
 
 	//! EXPECT with gTest this Stmt equals the given one, component by component.
 	//! This method is for testing with gTest only.
@@ -493,6 +540,8 @@ class Stmt {
     std::vector<std::pair<std::string, std::unique_ptr<Relation>>> dataReads;
     //! Write dependences of a statement, pairing data space name to relation
     std::vector<std::pair<std::string, std::unique_ptr<Relation>>> dataWrites;
+    //! Whether this Stmt's references to data spaces are delimited
+    bool delimited = false;
 };
 
 /*!
@@ -513,6 +562,9 @@ class VisitorChangeUFsForOmega : public Visitor {
     //! UF calls that we've seen before and do not need to rename if encountered
     //! again; mapping from call as string -> new assigned name
     std::map<std::string, std::string> knownUFs;
+
+    std::vector<std::string> arrayAccessUFs;
+
     //! next number to use in creating unique function names
     int nextFuncReplacementNumber;
     //! stored tuple decl for variable retrieval
@@ -563,5 +615,7 @@ class VisitorChangeUFsForOmega : public Visitor {
 }  // namespace iegenlib
 
 #endif
+
+
 
 
