@@ -27,23 +27,23 @@ int main(int argc, char** argv) {
 
     Computation* macroComp = new Computation();
 
-    macroComp->addDataSpace("$x$", "int");
-    macroComp->addDataSpace("$y$", "int");
-    macroComp->addDataSpace("$z$", "int");
-    macroComp->addDataSpace("$a$", "int");
-    macroComp->addDataSpace("$b$", "int");
+    macroComp->addDataSpace("x", "int");
+    macroComp->addDataSpace("y", "int");
+    macroComp->addDataSpace("z", "int");
+    macroComp->addDataSpace("a", "int");
+    macroComp->addDataSpace("b", "int");
     
     Stmt* mc0 = new Stmt(
       "x[i] = y[j] * z[k];",
       "{[i,j,k]: i >= 0 && i<5 && j >= 0 && j<5 && k>=0 && k<5}",
       "{[i,j,k]->[0,i,0,j,0,k,0]}",
         {
-          {"$x$", "{[i,j,k]->[i]}"},
-          {"$y$", "{[i,j,k]->[j]}"},
-          {"$z$", "{[i,j,k]->[k]}"}
+          {"x", "{[i,j,k]->[i]}"},
+          {"y", "{[i,j,k]->[j]}"},
+          {"z", "{[i,j,k]->[k]}"}
         },
         {
-          {"$x$", "{[i,k,j]->[i]}"}
+          {"x", "{[i,k,j]->[i]}"}
         }
     );
     macroComp->addStmt(mc0);
@@ -53,10 +53,10 @@ int main(int argc, char** argv) {
       "{[i,j]: i >= 0 && i<5 && j >= 0 && j<5}",
       "{[i,j]->[0,i,0,j,1]}",
         {
-          {"$i$", "{[i,j]->[i]}"},
+          {"i", "{[i,j]->[i]}"},
         },
         {
-          {"$a$", "{[i,j]->[i]}"}
+          {"a", "{[i,j]->[i]}"}
         }
     );
     macroComp->addStmt(mc1);
