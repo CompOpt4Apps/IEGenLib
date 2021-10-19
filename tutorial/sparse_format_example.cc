@@ -41,7 +41,7 @@ int main(int ac, char **av) {
     delete rel200;
 
     Computation * c = new Computation();
-    c->addStmt(new Stmt("$ACSR$[k] = $ABCSR$[p];",
+    c->addStmt(new Stmt("ACSR[k] = ABCSR[p];",
 			    "{ [ii, kk, jj, hr, hc, p, k] : jj - bcol(kk) = 0"
 			    " && k - col_inv(5 ii + hr, 5 jj + hc) = 0 && 5 jj + hc"
 			    " - col(k) = 0 && 25 kk + 5 hr + hc - p = 0 && ii >= 0"

@@ -158,7 +158,7 @@ cout << "Code Gen \n" << simpleComp->codeGen() << "\n";
 
 Computation* spsComp = new Computation();
 Stmt* sps0 = new Stmt(
-  "$y$(i) += $A$(k) * $x$(j)",
+  "y(i) += A(k) * x(j)",
   "{[i,k,j]: 0 <= i < N && rowptr(i) <= k < rowptr(i+1) && j = col(k)}",
   "{[i,k,j]->[0,i,0,k,0,j,0]}",
   {
