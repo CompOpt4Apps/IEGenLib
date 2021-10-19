@@ -29,13 +29,12 @@ int main(int ac, char **av) {
      "{[i,j] ->[k]:rowptr(i)<=k<rowptr(i+ 1) and col2(k)=j and P2(i,j)=k}");
 
     Relation * coo2csr = dns2csr->Compose(coo2dns);
-    Relation * closure = coo2csr->TransitiveClosure() ;
 
-    std::cout<< closure->prettyPrintString() << "\n"; 
+    std::cout<< coo2csr->prettyPrintString() << "\n"; 
 
     // TODO
     // extract all known UFs
-    StringIterator* knownUFsIter = coo2dns->getSymbolIterator();
+    /*StringIterator* knownUFsIter = coo2dns->getSymbolIterator();
     std::vector<string> knownUFs;
     std::cout << "Known UFS\n";
     while (knownUFsIter->hasNext()) {
@@ -51,7 +50,7 @@ int main(int ac, char **av) {
        unknownUFs.push_back( unknownUFsIter->next() );
        domains.push_back(coo2csr->ExtractUFDomain(unknownUFs.back())); 
        std::cout << unknownUFs.back() << std::endl;
-    }
+    }*/
 
     
    
@@ -75,11 +74,6 @@ int main(int ac, char **av) {
     // The next task is to determine the iteration space associated
     // With those statements
     */
-
-    delete closure;
-    delete coo2csr;
-    delete dns2csr;
-    delete coo2dns;
 
     return 0;
 }
