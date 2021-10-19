@@ -2406,6 +2406,10 @@ void TupleTermVisitor::postVisitTupleVarTerm(TupleVarTerm* t){
 //! which the user is responsible
 //! for deallocating.
 Set* Set::GetDomain(std::string ufName){ 
+    if (mConjunctions.size()!=1){
+        throw assert_exception("GetDomain: Requires a single"
+                               " conjunction");
+    }
     std::vector<Set*> results;
     UFTermVisitor ufVisitor(ufName);
     this->acceptVisitor(&ufVisitor);
@@ -2422,6 +2426,34 @@ Set* Set::GetDomain(std::string ufName){
 	    delete res;
 	    res = temp;
 	}
+
+        TupleDecl newTupleDecl = TupleDecl::
+		sDefaultTupleDecl(res->arity() +term->numArgs());
+	TupleDecl oldTupleDecl = res->getTupleDecl();
+        
+	
+	
+	
+        res->setTupleDecl(newTupleDecl);
+	for (int i = 0 ; i < oldTupleDecl.getSize(); i++){
+            newTupleDecl.copyTupleElem(oldTupleDecl,i,i);
+	}	
+        
+	
+	
+	Conjunction* conj = (*res->conjunctionBegin());
+	
+	// After projection, add new Tuple variables
+	// with constraints per UF expression.
+	for(int arg =0 ; arg < term->numArgs(); arg++){
+            // tv = 2x+....[Expression]
+	    TupleVarTerm* tTerm  = new TupleVarTerm(-1,arg + oldTupleDecl.getSize());
+	    Exp* tConstraint = term->getParamExp(arg)->clone();
+            tConstraint->addTerm(tTerm); 
+	    tConstraint->setEquality();
+	    conj->addEquality(tConstraint); 
+	}
+
         results.push_back(res);	
     }
     
@@ -2736,6 +2768,7 @@ Set *Relation::Apply(const Set* rhs) const {
 }
 
 
+
 /*! Union this relation with the given other one
 **    (i.e., this Union rhs).  Returns a new Relation,
 **    which the caller is responsible for deallocating.
@@ -2947,6 +2980,9 @@ void Relation::addConjunction(Conjunction *adoptedConjunction) {
     SparseConstraints::addConjunction(adoptedConjunction);
 }
 
+
+
+
 // Replace UFs with vars, pass to ISL, and then reverse substitution.
 void Relation::normalize(bool bdr) {
 
@@ -2979,6 +3015,42 @@ void Relation::normalize(bool bdr) {
     delete superset_copy;
     delete superset_normalized;
 }
+
+//! Gets the domain of an uninterpreted function 
+//! in a set
+//! \param ufName name of the UF
+//! Returns a new set representing the domain of the UF
+//! which the user is responsible
+//! for deallocating.
+Set* Relation::GetDomain(std::string ufName){
+    // Convert relation to set
+    Set* temp = this->ToSet();
+    Set* domain = temp->GetDomain(ufName);
+    delete temp;
+    return domain;
+}
+
+//! Creates a set from a relation. Appends output tuple 
+//! to input tuple.
+//! {[x,y]->[z]: <constraints>}
+//! {[x,y,z]: <constriants>}
+Set* Relation::ToSet(){
+    Set* result = new Set(getTupleDecl());
+    for(auto conj : mConjunctions){
+        Conjunction * conjClone = new Conjunction(getTupleDecl());
+        for(auto equal: conj->equalities()){
+	    conjClone->addEquality(equal->clone());
+	}
+	
+        for(auto eq: conj->inequalities()){
+	    conjClone->addInequality(eq->clone());
+	}
+
+        result->addConjunction(conjClone);
+    }
+    return result;
+}
+
 
 /******************************************************************************/
 #pragma mark -

@@ -4737,15 +4737,49 @@ TEST_F(SetRelationTest,GetDomain){
 		    " j >= 0 and j < NC && k >=0 &&"
 		    " k < NZ and rowptr(i) >= j}");
     Set * domain = s->GetDomain("rowptr");
-    EXPECT_EQ(domain->arity(),1);
+    EXPECT_EQ(domain->arity(),2);
     EXPECT_EQ(domain->prettyPrintString(), 
-		    "{ [i] : i >= 0 && NC - 1 >= 0 &&" 
-		    " NZ - 1 >= 0 && -i + NR - 1 >= 0 } ");
+		    "{ [tv0, tv1] : tv0 - tv1 = 0 && tv0 >= 0 &&"
+		    " NC - 1 >= 0 && NZ - 1 >= 0 && -tv0 + NR - 1 >= 0 }");
+
     
+    s = new Set(
+		    "{[i,j,k]: i >= 0 && i < NR &&"
+		    " j >= 0 and j < NC && k >=0 &&"
+		    " k < NZ and rowptr(i+1)>j and"
+		    " rowptr(i) >= j}");
+    domain = s->GetDomain("rowptr");
+    EXPECT_EQ(domain->arity(),2);
+    EXPECT_EQ(domain->prettyPrintString(), 
+		    "{ [tv0, tv1] : tv0 - tv1 = 0 && tv0 >= 0 &&"
+		    " NC - 1 >= 0 && NZ - 1 >= 0 && -tv0 + NR - 1"
+		    " >= 0 } union { [tv0, tv1] : tv0 - tv1 + 1 = 0"
+		    " && tv0 >= 0 && NC - 1 >= 0 && NZ - 1 >= 0 &&"
+		    " -tv0 + NR - 1 >= 0 }");
+
 
 
 }
 
+TEST_F(SetRelationTest,ToSet){
+           
+    Relation * rel = new Relation(
+	     "{[i,j] -> [k]: A(i,j) > 0 and rowptr(i) <= k"
+	     " and k < rowptr(i+ 1) and col(k) =j and 0 <= i"
+	     " and i < NR and 0 <= j and j < NC}");
+    Set* set = rel->ToSet();
+    EXPECT_EQ("{ [i, j, k] : j - col(k) = 0 && i >= 0 &&"
+	      " j >= 0 && k - rowptr(i) >= 0 && A(i, j) - 1"
+	      " >= 0 && -i + NR - 1 >= 0 && -j + NC - 1 >= 0"
+	      " && -k + rowptr(i + 1) - 1 >= 0 }",
+	      set->prettyPrintString());
+    
+    rel = new Relation("{[l] -> [k]: 1 <= n"
+		    " and n <= 10 and k = n + 1}");
+    set = rel->ToSet();
+    EXPECT_EQ("{ [l, k] : k - n - 1 = 0 && -n +"
+	      " 10 >= 0 && n - 1 >= 0 }",set->prettyPrintString());
+}
 TEST_F(SetRelationTest,IntersectOnInputTuple){
            
     Relation * rel1 = new Relation(
