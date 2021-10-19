@@ -28,19 +28,44 @@ int main(int ac, char **av) {
    Relation * denseToA = new Relation("{[i,k,j]->[k,j]}"); 
 
    Relation * csrA = new Relation(
-       "{[i,j] ->[n]:rowptra(i)<=n<rowptra(i+1) and cola(n)=j and Pa(i,j) = n}");
+       "{[i,j] ->[n]:rowptra(i)<=n<rowptra(i+1) and cola(n)=j and Pa(i,j)=n}");
    Relation * csrB = new Relation(
-       "{[i,j] ->[n]:rowptrb(i)<=n<rowptrb(i+1) and colb(n)=j and Pb(i,j) = n}");
+       "{[i,j] ->[n]:rowptrb(i)<=n<rowptrb(i+1) and colb(n)=j and Pb(i,j)=n}");
   
    Relation * Arel = csrA->Compose(denseToA); 
    Relation * Brel = csrB->Compose(denseToB); 
 
-   Relation * result = Arel->IntersectOnInputTuple(Brel);
-   result = result->IntersectOnInputTuple(denseToA);
+   Relation * result = Arel->IntersectOnInputTuple(denseToC);
+   std::cout<< result->prettyPrintString() << "\n"; 
+   result = result->IntersectOnInputTuple(Brel);
+   std::cout<< result->prettyPrintString() << "\n"; 
    Set * resultSet = result->ToSet();
-   //Set * actualResult = result->Apply(dense);
-
    std::cout<< resultSet->prettyPrintString() << "\n"; 
+   Set * actualResult = result->Apply(dense);
+   std::cout<< actualResult->prettyPrintString() << "\n"; 
+
+   // The arity of the relation?? which is actually a set?
+   std::vector<int> arity;
+   arity.push_back(actualResult->arity());
+
+   // The iteration space
+   std::vector<std::string> iterSpaces;
+   VisitorChangeUFsForOmega* vOmegaReplacer=new VisitorChangeUFsForOmega();
+   actualResult->acceptVisitor(vOmegaReplacer);
+   std::string omegaIterString =
+             actualResult->toOmegaString(vOmegaReplacer->getUFCallDecls());
+   iterSpaces.push_back(omegaIterString);
+   std::cout << omegaIterString << std::endl;
+
+  
+   // Known Set -- we know nothing 
+   Set* knownSet = new Set("{}");
+   knownSet->acceptVisitor(vOmegaReplacer);
+   std::string known =
+       knownSet->toOmegaString(vOmegaReplacer->getUFCallDecls());
+
+   // Finally, codegen
+   std::cout << Computation::omegaCodeGenFromString(arity, iterSpaces, known);
 
    return 0;
 }

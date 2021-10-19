@@ -273,7 +273,7 @@ class Computation {
     std::string codeGen(Set* knownConstraints = nullptr);
 
     //!! Generates code from an omega string
-    std::string omegaCodeGenFromString(
+    static std::string omegaCodeGenFromString(
             std::vector<int> relationArity,
             std::vector<std::string> iterSpacesStr, std::string known);
 
