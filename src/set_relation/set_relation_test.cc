@@ -4746,6 +4746,14 @@ TEST_F(SetRelationTest,GetDomain){
 
 }
 
-TEST_F(SetRelationTest,Complement){
+TEST_F(SetRelationTest,IntersectOnInputTuple){
            
+    Relation * rel1 = new Relation(
+	     "{[i,j,k] -> [k]: }");
+    Relation * rel2 = new Relation(
+	     "{[i,j,k] -> [i,j]: }");
+    Relation *intersection = rel1->IntersectOnInputTuple(rel2);
+    Relation * expected = new Relation(
+	     "{[i,j,k] -> [k,i,j]: }");
+    EXPECT_TRUE((*intersection)==(*expected));
 }
