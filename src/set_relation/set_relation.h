@@ -961,6 +961,12 @@ public:
     //! {[x,y,z]: <constriants>}
     Set* ToSet();
 
+    
+    //! Computes the convex hull of this relation.
+    //! Returns a new relation for which the caller is responsible
+    //! for deallocating.
+    Relation * Hull();
+
 private:
     int mInArity;
     int mOutArity;
