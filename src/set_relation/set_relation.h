@@ -525,6 +525,9 @@ public:
  */
 class Set: public SparseConstraints {
 public:
+    //! Parses omega string to IEGenLib Set
+    static Set* parseOmegaString(std::string omegaString);
+	
     //! Parses the string to construct Set, assuming omega or ISL syntax.
     Set(std::string str);
 
@@ -565,6 +568,11 @@ public:
     ** \param rhs (not adopted)
     */
     Set *Union(const Set* rhs) const;
+    
+    //! Computes the convex hull of this set.
+    //! Returns a new set for which the caller is responsible
+    //! for deallocating.
+    Set * Hull();
 
     /*! Intersect this set with the given other one
     **    (i.e., this Intersect rhs).  Returns a new Set,
@@ -936,6 +944,20 @@ public:
     //! Returns a new relation, which the user is responsible
     //  for deallocating.
     Relation* TransitiveClosure();
+    
+    //! Gets the domain of an uninterpreted function 
+    //! in a set
+    //! \param ufName name of the UF
+    //! Returns a new set representing the domain of the UF
+    //! which the user is responsible
+    //! for deallocating.
+    Set* GetDomain(std::string ufName);
+
+    //! Creates a set from a relation. Appends output tuple 
+    //! to input tuple.
+    //! {[x,y]->[z]: <constraints>}
+    //! {[x,y,z]: <constriants>}
+    Set* ToSet();
 
 private:
     int mInArity;

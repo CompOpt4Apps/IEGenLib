@@ -57,6 +57,25 @@ int main(int ac, char **av) {
 	    c->codeGenMemoryManagementString() << "\n Body:\n"
 	    << c->codeGen() << "\n\n\n";
     delete c;
+    
+    c = new Computation();
+    c->addDataSpace("ACSR","int*");
+    c->addDataSpace("ACOO","int*");
+    c->addStmt(new Stmt("ACSR[k] = ACOO[n];",
+			    "{ [n,i,j,k] : i = row1(n) && j = col1(n) && col2(k) = j &&" 
+			    " rowptr(i) <= k <rowptr(i + 1) &&"
+			    " col2(k) = col1(n) && 0 <= row1(n) < NR && 0 <= col1(n)"
+			    " < NC && P(i,j) = k && 0 <= n < NNZ }",
+			    "{[n,i,j,k]->[n,i,j,k]}",
+			    {{"ACOO" , "{[n,i,j,k]->[n]}"}},
+			    {{"ACSR" , "{[n,i,j,k]->[k]}"}}));
+
+    std::cout << "COO to CSR \nHeader :\n" << 
+	    c->codeGenMemoryManagementString() << "\n Body:\n"
+	    << c->codeGen() << "\n\n\n";
+    delete c;
+
+    
     // Test COO WRT DENSE
     std::cout << "=> Starting example COO_WRT_DENSE\n\n";
 

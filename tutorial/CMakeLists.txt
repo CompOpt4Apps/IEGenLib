@@ -1,9 +1,9 @@
 # Add each example file as a separate executable
-file(GLOB_RECURSE COOtoCSR_SOURCES COOtoCSR.cc)
-add_executable(COOtoCSR EXCLUDE_FROM_ALL ${COOtoCSR_SOURCES})
-add_dependencies(COOtoCSR iegenlib)
-target_link_libraries(COOtoCSR iegenlib isl gmp)
-target_include_directories(COOtoCSR PUBLIC ${CMAKE_SOURCE_DIR}/src)
+#file(GLOB_RECURSE COOtoCSR_SOURCES COOtoCSR.cc)
+#add_executable(COOtoCSR EXCLUDE_FROM_ALL ${COOtoCSR_SOURCES})
+#add_dependencies(COOtoCSR iegenlib)
+#target_link_libraries(COOtoCSR iegenlib isl gmp)
+#target_include_directories(COOtoCSR PUBLIC ${CMAKE_SOURCE_DIR}/src)
 
 file(GLOB_RECURSE sparse_format_example_SOURCES sparse_format_example.cc)
 add_executable(sparse_format_example EXCLUDE_FROM_ALL ${sparse_format_example_SOURCES})
@@ -54,7 +54,7 @@ target_link_libraries(array_example iegenlib isl codegen omega gmp)
 target_include_directories(array_example PUBLIC ${CMAKE_SOURCE_DIR}/src)
 
 # Set binary output directory for examples
-set_target_properties(COOtoCSR sparse_format_example computation_example geoac_codegen_driver manual_graph_testing macro_testing append_computation_example miniFluxDiv_codegen_driver
+set_target_properties(sparse_format_example computation_example geoac_codegen_driver manual_graph_testing macro_testing append_computation_example miniFluxDiv_codegen_driver
     PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/tutorial"
     COMPILE_FLAGS "-g"
