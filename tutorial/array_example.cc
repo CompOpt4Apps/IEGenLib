@@ -40,48 +40,48 @@ Computation* cFunc1() {
     Computation* func2 = cFunc2();
     Computation* func3 = cFunc3();
 
-    func1->addParameter("$arr$", "int[]&");
-    func1->addParameter("$foo$", "int");
+    func1->addParameter("arr", "int[]&");
+    func1->addParameter("foo", "int");
 
     func1->addStmt(new Stmt(
-        "$arr$[0] = 1;",
+        "arr[0] = 1;",
         "{[0]}",
         "{[0]->[0]}",
         {},
-        { {"$arr$", "{[0]->[0]}"} }
+        { {"arr", "{[0]->[0]}"} }
     ));
 
     
     func1->addStmt(new Stmt(
-        "$arr$[0] = $arr$[0] + $arr$[1];",
+        "arr[0] = arr[0] + arr[1];",
         "{[0]}",
         "{[0]->[1]}",
-        { {"$arr$", "{[0]->[0]}"},
-          {"$arr$", "{[0]->[1]}"} },
-        { {"$arr$", "{[0]->[0]}"} }
+        { {"arr", "{[0]->[0]}"},
+          {"arr", "{[0]->[1]}"} },
+        { {"arr", "{[0]->[0]}"} }
     ));
 
-    std::vector<std::string> args = { "$arr$" };
+    std::vector<std::string> args = { "arr" };
     AppendComputationResult func2Res = func1->appendComputation(func2, "{[0]}", "{[0]->[2]}", args);
     unsigned int i = func2Res.tuplePosition + 1;
 
     func1->addStmt(new Stmt(
-        "$arr$[0] = 0;",
+        "arr[0] = 0;",
         "{[0]}",
         "{[0]->["+std::to_string(i++)+"]}",
         {},
-        { {"$arr$", "{[0]->[0]}"} }
+        { {"arr", "{[0]->[0]}"} }
     ));
 
     AppendComputationResult func3Res = func1->appendComputation(func3, "{[0]}", "{[0]->["+std::to_string(i)+"]}", args);
     i = func3Res.tuplePosition + 1;
 
     func1->addStmt(new Stmt(
-        "$arr$[2] = " + func3Res.returnValues.back() + ";",
+        "arr[2] = " + func3Res.returnValues.back() + ";",
         "{[0]}",
         "{[0]->["+std::to_string(i++)+"]}",
         { {func3Res.returnValues.back(), "{[0]->[0]}"} },
-        { {"$arr$", "{[0]->[2]}"} }
+        { {"arr", "{[0]->[2]}"} }
     ));
 
     delete func2;
@@ -93,15 +93,15 @@ Computation* cFunc2() {
     
     Computation* func2 = new Computation();
 
-    func2->addParameter("$arr2$", "int[]&");
+    func2->addParameter("arr2", "int[]&");
 
     func2->addStmt(new Stmt (
-        "$arr2$[2] = $arr2$[0] * $arr2$[1];",
+        "arr2[2] = arr2[0] * arr2[1];",
         "{[0]}",
         "{[0]->[0]}",
-        {{"$arr2$", "{[0]->[0]}"},
-         {"$arr2$", "{[0]->[1]}"}},
-        {{"$arr2$", "{[0]->[2]}"}}
+        {{"arr2", "{[0]->[0]}"},
+         {"arr2", "{[0]->[1]}"}},
+        {{"arr2", "{[0]->[2]}"}}
     ));
 
     return func2;
@@ -110,25 +110,25 @@ Computation* cFunc2() {
 Computation* cFunc3() {
     Computation* func3 = new Computation();
 
-    func3->addParameter("$arr3$", "int[]");
+    func3->addParameter("arr3", "int[]");
 
     func3->addStmt(new Stmt (
-        "$arr3$[2] = $arr3$[0] * $arr3$[1];",
+        "arr3[2] = arr3[0] * arr3[1];",
         "{[0]}",
         "{[0]->[0]}",
-        { {"$arr3$", "{[0]->[0]}"},
-         {"$arr3$", "{[0]->[1]}"} },
-        { {"$arr3$", "{[0]->[2]}"} }
+        { {"arr3", "{[0]->[0]}"},
+         {"arr3", "{[0]->[1]}"} },
+        { {"arr3", "{[0]->[2]}"} }
     ));
 
-    func3->addDataSpace("$arr3_return$", "int");
-    func3->addReturnValue("$arr3_return$", true);
+    func3->addDataSpace("arr3_return", "int");
+    func3->addReturnValue("arr3_return", true);
     func3->addStmt(new Stmt (
-        "$arr3_return$ = $arr3$[2];",
+        "arr3_return = arr3[2];",
         "{[0]}",
         "{[0]->[1]}",
-        {{"$arr3$", "{[0]->[2]}"}},
-        {{"$arr3_return$", "{[0]->[0]}"}}
+        {{"arr3", "{[0]->[2]}"}},
+        {{"arr3_return", "{[0]->[0]}"}}
     ));
 
     return func3;
@@ -138,41 +138,41 @@ Computation* cFunc4() {
 
     Computation* func3 = new Computation();
 
-    func3->addParameter("$arr$", "int[]&");
-    func3->addParameter("$arr2$", "int[]&");
-    func3->addDataSpace("$arr3$", "int[]");
-    func3->addDataSpace("$foo$", "int");
+    func3->addParameter("arr", "int[]&");
+    func3->addParameter("arr2", "int[]&");
+    func3->addDataSpace("arr3", "int[]");
+    func3->addDataSpace("foo", "int");
 
     func3->addStmt(new Stmt (
-        "$arr3$ = $arr$;",
+        "arr3 = arr;",
         "{[0]}",
         "{[0]->[0]}",
-        { {"$arr$", "{[0]->[0]}"} },
-        { {"$arr3$", "{[0]->[0]}"} }
+        { {"arr", "{[0]->[0]}"} },
+        { {"arr3", "{[0]->[0]}"} }
     ));
 
     func3->addStmt(new Stmt (
-        "$arr3$[2] = 0;",
+        "arr3[2] = 0;",
         "{[0]}",
         "{[0]->[1]}",
         {},
-        {{"$arr3$", "{[0]->[2]}"}}
+        {{"arr3", "{[0]->[2]}"}}
     ));
 
     func3->addStmt(new Stmt (
-        "$foo$ = $arr3$[0];",
+        "foo = arr3[0];",
         "{[0]}",
         "{[0]->[2]}",
-        {{"$arr3$", "{[0]->[0]}"}},
-        {{"$foo$", "{[0]->[0]}"}}
+        {{"arr3", "{[0]->[0]}"}},
+        {{"foo", "{[0]->[0]}"}}
     ));
     
     func3->addStmt(new Stmt (
-        "$arr3$ = $arr2$;",
+        "arr3 = arr2;",
         "{[0]}",
         "{[0]->[3]}",
-        {{"$arr2$", "{[0]->[0]}"}},
-        {{"$arr3$", "{[0]->[0]}"}}
+        {{"arr2", "{[0]->[0]}"}},
+        {{"arr3", "{[0]->[0]}"}}
     ));
     return func3;
 }
