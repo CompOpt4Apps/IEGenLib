@@ -203,6 +203,7 @@ public:
     ** \param rhs (not adopted)
     */
     Conjunction* Intersect(const Conjunction* rhs) const;
+    Conjunction* IntersectOnInputTuple(const Conjunction* rhs) const;
 
     //! Restrict this (interpreted as a Relation) to rhs, which is interpreted
     //! as a set.
@@ -796,6 +797,7 @@ public:
     ** \param rhs (not adopted)
     */
     Relation *Intersect(const Relation* rhs) const;
+    Relation *IntersectOnInputTuple(const Relation* rhs) const;
 
     /*!
     ** Restrict a set with a relation. Returns a new

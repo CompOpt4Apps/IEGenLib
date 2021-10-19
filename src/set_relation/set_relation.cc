@@ -1303,8 +1303,41 @@ Conjunction* Conjunction::Inverse() const{
 **    which the caller is responsible for deallocating.
 ** \param rhs (not adopted)
 */
-Conjunction* Conjunction::Intersect(const Conjunction* rhs) const {
+Conjunction* Conjunction::IntersectOnInputTuple(const Conjunction* rhs) const {
 
+    Conjunction *result = new Conjunction(
+        arity()+rhs->inarity());
+    result->mInArity = inarity()+rhs->inarity();
+    // e.g. if rhs = {[i]->[a,b,c]} then rhs_copy = {[  , ,i,a,b,c]}
+    // e.g. if lhs = {[e,f]->[a,b,c]} then lhs_copy = {[e, f, ,a,b,c]}
+    Conjunction* lhs_copy = new Conjunction(*this);
+    lhs_copy->pushConstToConstraints();
+    std::vector<int> shiftLHSVars(lhs_copy->arity());
+    for (int i=0; i<inarity(); i++) {
+        shiftLHSVars[i] = i;
+    }
+    for (int i=inarity(); i<arity(); i++) {
+        shiftLHSVars[i] = i+rhs->inarity();
+    }
+    lhs_copy->remapTupleVars(shiftLHSVars);
+
+    // e.g. if rhs = {[i]->[a,b,c]} then rhs_copy = {[  , ,i,a,b,c]}
+    Conjunction* rhs_copy = new Conjunction(*rhs);
+    rhs_copy->pushConstToConstraints();
+    std::vector<int> shiftRHSVars(rhs->arity());
+    for (int i=0; i<rhs->arity(); i++) {
+        shiftRHSVars[i] = i + (inarity());
+    }
+    rhs_copy->remapTupleVars(shiftRHSVars);
+
+    // copy the constraints from both into result
+    result->copyConstraintsFrom(rhs_copy);
+    result->copyConstraintsFrom(lhs_copy);
+
+    return result;
+}
+
+Conjunction* Conjunction::Intersect(const Conjunction* rhs) const {
     // copy in all of the constraints from ourselves
     Conjunction* retval = new Conjunction(*this);
 
@@ -2679,7 +2712,7 @@ void Relation::setTupleDecl( TupleDecl tuple_decl ) {
 */
 Relation *Relation::Compose(const Relation *rhs) const {
     // Check that the arities are compatible.
-    if (rhs->mOutArity != mInArity) {
+    if (rhs->mOutArity != mInArity ) {
         throw assert_exception("Relation::Compose: mismatched arities");
     }
     // For convenience, remember this inner arity that matches
@@ -2770,11 +2803,10 @@ Relation* Relation::Union(const Relation* rhs) const{
 */
 Relation* Relation::Intersect(const Relation* rhs) const{
     // Check that the arities are compatible.
-    if (rhs->mInArity != mInArity || rhs->mOutArity != mOutArity) {
-        throw assert_exception("Relation::Union: mismatched arities");
+    if (rhs->mInArity != mInArity || rhs->mOutArity != mOutArity ) {
+      throw assert_exception("Relation::Union: mismatched input arities");
     }
-
-    Relation *result = new Relation(mInArity, mOutArity);
+    Relation *result = new Relation(mInArity,mOutArity);
 
     // Have to do cross product intersection between conjunctions in both sets.
     for (std::list<Conjunction*>::const_iterator i=mConjunctions.begin();
@@ -2791,6 +2823,32 @@ Relation* Relation::Intersect(const Relation* rhs) const{
     //result->cleanUp();  FIXME: might want later when cleanup can merge
     //constraints that have adjacent constraints
     return result;
+}
+
+Relation* Relation::IntersectOnInputTuple(const Relation* rhs) const{
+    // Check that the arities are compatible.
+    if (rhs->mInArity != mInArity ) {
+      throw assert_exception("Relation::Union: mismatched input arities");
+    }
+    Relation *lhsInv = Inverse();
+    Relation *rhsInv = rhs->Inverse();
+    Relation *result = new Relation(mOutArity+rhs->mOutArity,mInArity);
+
+    // Have to do cross product intersection between conjunctions in both sets.
+    for (std::list<Conjunction*>::const_iterator i=lhsInv->mConjunctions.begin();
+            i != lhsInv->mConjunctions.end(); i++) {
+
+        for (std::list<Conjunction*>::const_iterator
+                j=rhsInv->mConjunctions.begin();
+                j != rhsInv->mConjunctions.end(); j++) {
+
+            result->addConjunction((*i)->IntersectOnInputTuple(*j));
+        }
+    }
+
+    result->cleanUp(); // FIXME: might want later when cleanup can merge
+    //constraints that have adjacent constraints
+    return result->Inverse();
 }
 
 /*!
