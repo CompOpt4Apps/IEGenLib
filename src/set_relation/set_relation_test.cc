@@ -4768,10 +4768,15 @@ TEST_F(SetRelationTest,ToSet){
 	     " and k < rowptr(i+ 1) and col(k) =j and 0 <= i"
 	     " and i < NR and 0 <= j and j < NC}");
     Set* set = rel->ToSet();
-    EXPECT_EQ("",set->prettyPrintString());
+    EXPECT_EQ("{ [i, j, k] : j - col(k) = 0 && i >= 0 &&"
+	      " j >= 0 && k - rowptr(i) >= 0 && A(i, j) - 1"
+	      " >= 0 && -i + NR - 1 >= 0 && -j + NC - 1 >= 0"
+	      " && -k + rowptr(i + 1) - 1 >= 0 }",
+	      set->prettyPrintString());
     
     rel = new Relation("{[l] -> [k]: 1 <= n"
 		    " and n <= 10 and k = n + 1}");
     set = rel->ToSet();
-    EXPECT_EQ("",set->prettyPrintString());
+    EXPECT_EQ("{ [l, k] : k - n - 1 = 0 && -n +"
+	      " 10 >= 0 && n - 1 >= 0 }",set->prettyPrintString());
 }

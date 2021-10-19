@@ -2979,7 +2979,16 @@ Set* Relation::GetDomain(std::string ufName){
 Set* Relation::ToSet(){
     Set* result = new Set(getTupleDecl());
     for(auto conj : mConjunctions){
-       result->addConjunction(conj->clone());
+        Conjunction * conjClone = new Conjunction(getTupleDecl());
+        for(auto equal: conj->equalities()){
+	    conjClone->addEquality(equal->clone());
+	}
+	
+        for(auto eq: conj->inequalities()){
+	    conjClone->addInequality(eq->clone());
+	}
+
+        result->addConjunction(conjClone);
     }
     return result;
 }
