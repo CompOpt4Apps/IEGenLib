@@ -1,8 +1,8 @@
 # Add each example file as a separate executable
 file(GLOB_RECURSE executor_SOURCES executor.cc)
 add_executable(executor EXCLUDE_FROM_ALL ${executor_SOURCES})
-add_dependencies(executor iegenlib)
-target_link_libraries(executor iegenlib isl gmp)
+add_dependencies(executor iegenlib )
+target_link_libraries(executor iegenlib isl codegen omega gmp)
 target_include_directories(executor PUBLIC ${CMAKE_SOURCE_DIR}/src)
 
 file(GLOB_RECURSE COOtoCSR_SOURCES COOtoCSR.cc)
