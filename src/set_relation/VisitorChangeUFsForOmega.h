@@ -2,8 +2,9 @@
 /*!
  * \file VisitorChangeUFsForOmega.h
  *
- * \brief Visitor that makes modifications to UF call terms so that they are
- * acceptable for what Omega supports.
+ * \brief Visitor classes  that makes modifications to UF call terms so that they are
+ * acceptable for what Omega supports and a class that replaces all instances
+ * of omega compliant UFs with more precise original UF. 
  *
  * Intended for use on sets/relations. Also gathers information needed to pass
  * along to Omega codegen, such as #define macros.
@@ -108,6 +109,18 @@ class VisitorChangeUFsForOmega : public Visitor {
 
     void preVisitExp(iegenlib::Exp * e);
 };
+
+class VisitorChangeOmegaUF:public Visitor {
+private:
+    // Stores each replaced UFCallTerm with 
+    // original UFCalll
+    std::map<std::string,UFCallTerm*> ufMap;
+public:
+    explicit VisitorChangeOmegaUF(std::map<std::string,UFCallTerm*> ufMap):
+	   ufMap(ufMap){} 
+    void postVisitUFCallTerm(UFCallTerm*);
+};	
+
 }
 
 #endif

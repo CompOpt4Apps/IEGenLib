@@ -21,10 +21,13 @@
 #include "UFCallMap.h"
 #include "Visitor.h"
 #include "environment.h"
-
+#include "VisitorChangeUFsForOmega.h"
 
 #include <util/util.h>
 #include <gtest/gtest.h>
+
+#include <omega/Relation.h>
+#include <code_gen/parser/parser.h>
 
 #include <utility>
 #include <fstream>
@@ -52,7 +55,7 @@ using iegenlib::UFCallMap;
 using iegenlib::UniQuantRuleType;
 using iegenlib::ruleInstantiation;
 using iegenlib::instantiate;
-
+using iegenlib::VisitorChangeUFsForOmega;
 // This is just a test setup class that is used in the other tests in this
 // file.  Sets up some expressions for use in many of the tests.
 class SetRelationTest : public::testing::Test {
@@ -4790,4 +4793,47 @@ TEST_F(SetRelationTest,IntersectOnInputTuple){
     Relation * expected = new Relation(
 	     "{[i,j,k] -> [k,i,j]: }");
     EXPECT_TRUE((*intersection)==(*expected));
+    delete intersection;
+    delete expected;
+    delete rel1;
+    delete rel2;
 }
+
+TEST_F(SetRelationTest,CONVEX_HULL){
+    Set * set1 = new Set(
+	      "{ [l, k] : k - n - 1 = 0 && -n +"
+	      " 10 >= 0 && n - 1 >= 0 } union {[l,k]: k = l}");
+    Set* hullSet = set1->Hull();
+    EXPECT_EQ("{ [l, k] }",hullSet->prettyPrintString());
+    delete set1;
+    delete hullSet;
+    set1 = new Set("{[i]: 0 <= i <NR } union {[i]: 1<= i <= NR}");
+    hullSet = set1->Hull(); 
+    EXPECT_EQ("{ [i] : i >= 0 && -i + NR >= 0 && NR - 1 >= 0 }",
+		    hullSet->prettyPrintString()); 
+
+    Relation * rel1 = new Relation(
+		    "{[i,j] -> [n]: i < NR && j < NC && i+j = n} union" 
+		 "   {[i,j] -> [n]: i >= 0 && j >= 0}");
+    Relation* hullRel = rel1->Hull();
+    EXPECT_EQ("{ [i, j] -> [n] }",hullRel->prettyPrintString());  
+}
+
+TEST_F(SetRelationTest,DISABLED_ParseOmegaString){
+    
+    Set * rel = new Set(
+	     "{[i,j,k]: A(i,j) > 0 and rowptr(i) <= k"
+	     " and k < rowptr(i+ 1) and col(k) =j and 0 <= i"
+	     " and i < NR and 0 <= j and j < NC}");
+    VisitorChangeUFsForOmega visitor;
+    rel->acceptVisitor(&visitor);
+    std::string omegaString = rel->toOmegaString(visitor.getUFCallDecls());
+    std::cerr << "String: "<< omegaString << "\n";
+    omega::Relation* omegaRel = omega::parser::ParseRelation(omegaString);
+    std::string constraintString = omegaRel->print_with_subs_to_string();
+    Relation* result = 
+	    Relation::parseOmegaString(constraintString,visitor.getUFMap());
+
+    EXPECT_EQ("",result->prettyPrintString());
+}
+

@@ -34,6 +34,7 @@ class Visitor;
 #include <sstream>
 #include <iostream>
 #include "isl_str_manipulation.h"
+#include "set_relation/set_relation.h"
 
 #include <isl/set.h>   // ISL Sets
 #include <isl/map.h>   // ISL Relations
@@ -527,7 +528,11 @@ public:
 class Set: public SparseConstraints {
 public:
     //! Parses omega string to IEGenLib Set
-    static Set* parseOmegaString(std::string omegaString);
+    //! \param omegaString String to be parsed 
+    //! \param ufMap maps prefixed omega UFs back to 
+    //               original UFCallTerm in IEGenLib
+    static Set* parseOmegaString(std::string omegaString,
+		    std::map<std::string,UFCallTerm*> ufMap);
 	
     //! Parses the string to construct Set, assuming omega or ISL syntax.
     Set(std::string str);
@@ -967,6 +972,15 @@ public:
     //! for deallocating.
     Relation * Hull();
 
+
+
+
+    //! Parses omega string to IEGenLib Relation
+    //! \param omegaString String to be parsed 
+    //! \param ufMap maps prefixed omega UFs back to 
+    //               original UFCallTerm in IEGenLib
+    static Relation* parseOmegaString(std::string omegaString,
+		    std::map<std::string,UFCallTerm*> ufMap);
 private:
     int mInArity;
     int mOutArity;
