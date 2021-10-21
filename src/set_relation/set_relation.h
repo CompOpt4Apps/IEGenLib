@@ -466,7 +466,7 @@ public:
     void indexUFCs();
 
     //! This function returns a set of constraints that are in caller but not in A
-    std::set<Exp> constraintsDifference(SparseConstraints* A);
+    std::set<Exp> constraintsDifference(const SparseConstraints* A) const;
 
     bool isUnsat(){
       for (std::list<Conjunction*>::const_iterator i = mConjunctions.begin();

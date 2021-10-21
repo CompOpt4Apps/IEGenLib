@@ -1424,6 +1424,7 @@ TEST_F(SetRelationTest, Union) {
     delete resultSet3;
     delete s5;
     delete s6;
+    
 
     Relation *r1 = new Relation("{[a,b]->[u,v]: b = v}");
     Relation *r2 = new Relation("{[c,d]->[x,y]: y < c}");
@@ -1434,7 +1435,6 @@ TEST_F(SetRelationTest, Union) {
     delete resultRelation;
     delete r1;
     delete r2;
-
     Relation *r3 = new Relation("{[]->[u,v,b]: u = b}");
     Relation *r4 = new Relation("{[]->[u,v,a]: a = 0}");
     Relation *resultRelation2 = r3->Union(r4);
@@ -1444,7 +1444,7 @@ TEST_F(SetRelationTest, Union) {
     delete resultRelation2;
     delete r3;
     delete r4;
-
+    
     Relation *r5 = new Relation("{[99,1,2]->[1,2,1]: 0 = 0}");
     Relation *r6 = new Relation("{[1,2,3]->[1,5,3]: 1 = 0}");
     Relation *resultRelation3 = r5->Union(r6);

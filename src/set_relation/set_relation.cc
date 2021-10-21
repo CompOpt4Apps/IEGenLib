@@ -2097,7 +2097,8 @@ void SparseConstraints::remapTupleVars(const std::vector<int>& oldToNewLocs) {
 
 
 //! This function returns a set of constraints that are in caller but not in A
-std::set<Exp> SparseConstraints::constraintsDifference(SparseConstraints* A){
+std::set<Exp> SparseConstraints::constraintsDifference(const SparseConstraints* A) const 
+{
 
   // Right now, this should only be called if there is a single Conjunction.
   if(mConjunctions.size() != 1 ){
@@ -2866,6 +2867,7 @@ Relation* Relation::Union(const Relation* rhs) const{
     }
     //result->cleanUp();  FIXME: might want later when cleanup can merge
     //constraints that have adjacent constraints
+   
     return result;
 }
 
