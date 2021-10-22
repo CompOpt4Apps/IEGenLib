@@ -724,7 +724,7 @@ void Computation::printInfo() const {
 }
 
 bool Computation::isComplete() const {
-    std::map<std::string, std::string> dataSpacesActuallyAccessed;
+    std::unordered_set<std::string> dataSpacesAccessedInStmts;
     for (const auto& stmt : stmts) {
         // check completeness of each statement
         if (!stmt->isComplete()) {
@@ -733,22 +733,22 @@ bool Computation::isComplete() const {
 
         // collect all data space accesses
         for (unsigned int i = 0; i < stmt->getNumReads(); ++i) {
-            dataSpacesActuallyAccessed[stmt->getReadDataSpace(i)] = "";
-            //dataSpacesActuallyAccessed.emplace_back(stmt->getReadDataSpace(i), "");
+            dataSpacesAccessedInStmts.emplace(stmt->getReadDataSpace(i));
         }
         for (unsigned int i = 0; i < stmt->getNumWrites(); ++i) {
-            dataSpacesActuallyAccessed[stmt->getWriteDataSpace(i)] = "";
-            // dataSpacesActuallyAccessed.emplace_back(stmt->getWriteDataSpace(i), "");
+            dataSpacesAccessedInStmts.emplace(stmt->getWriteDataSpace(i));
         }
     }
 
     // check that list of data spaces matches those accessed in statements
-    if (dataSpaces != dataSpacesActuallyAccessed) {
-        return false;
+    for (const auto& dataSpace : dataSpacesAccessedInStmts) {
+        // only checking inclusion in one direction because we aren't detecting accesses in for loop bounds
+        if (!dataSpaces.count(dataSpace)) {
+            return false;
+        }
     }
 
     return true;
-
 }
 
 std::string Computation::codeGenMemoryManagementString() {
