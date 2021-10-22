@@ -71,6 +71,8 @@ class Computation {
 
     //! Equality operator
     bool operator==(const Computation& other) const;
+    //! Inequality operator
+    bool operator!=(const Computation& other) const { return !(*this == other); };
 
 	//! Get the name of this Computation
 	std::string getName() const;
@@ -442,6 +444,8 @@ class Stmt {
     //! Equality operator
     //! Checks equality, NOT mathematical equivalence
     bool operator==(const Stmt& other) const;
+    //! Inequality operator
+    bool operator!=(const Stmt& other) const { return !(*this == other); };
 
     //! Get a copy of this Stmt with the given prefix applied to all names
     //Stmt* getUniquelyNamedClone(const std::string& prefix, const std::unordered_set<std::string>& dataSpaceNames) const;

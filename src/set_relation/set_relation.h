@@ -553,6 +553,7 @@ public:
     Set& operator=(const Set& other);
 
     bool operator==( const Set& other) const;
+    bool operator!=( const Set& other) const { return !(*this == other); };
     //! Less than operator.
     bool operator<( const Set& other) const;
 
@@ -739,6 +740,9 @@ public:
 
     //! Equals operator
     bool operator==( const Relation& other) const;
+
+    //! Not-equals operator
+    bool operator!=( const Relation& other) const { return !(*this == other); };
 
     //! Less than operator.
     bool operator<( const Relation& other) const;

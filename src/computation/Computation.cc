@@ -81,14 +81,42 @@ Computation& Computation::operator=(const Computation& other) {
 }
 
 bool Computation::operator==(const Computation& other) const {
+    bool stmtsEqual = true;
+    if (this->stmts.size() != other.stmts.size()) {
+        stmtsEqual = false;
+    } else {
+        for (unsigned int i = 0; i < this->stmts.size(); ++i) {
+            if (*this->stmts[i] != *other.stmts[i]) {
+                stmtsEqual = false;
+            }
+        }
+    }
+
+    bool transformationListsEqual = true;
+    if (this->transformationLists.size() != other.transformationLists.size()) {
+        transformationListsEqual = false;
+    } else {
+        for (unsigned int i = 0; i < this->transformationLists.size(); ++i) {
+            if (this->transformationLists[i].size() != other.transformationLists[i].size()) {
+                transformationListsEqual = false;
+            } else {
+                for (unsigned int j = 0; j < this->transformationLists[i].size(); ++j) {
+                    if (*this->transformationLists[i][j] != *other.transformationLists[i][j]) {
+                        transformationListsEqual = false;
+                    }
+                }
+            }
+        }
+    }
+
     return (
         this->name == other.name &&
         //this->arrays == other.arrays &&
-        this->stmts == other.stmts &&
+        stmtsEqual &&
         this->dataSpaces == other.dataSpaces &&
         this->parameters == other.parameters &&
         this->returnValues == other.returnValues &&
-        this->transformationLists == other.transformationLists
+        transformationListsEqual
     );
 }
 
@@ -2412,14 +2440,31 @@ Stmt& Stmt::operator=(const Stmt& other) {
 }
 
 bool Stmt::operator==(const Stmt& other) const {
+    bool accessesEqual = true;
+    if (this->getNumReads() != other.getNumReads() || this->getNumWrites() != other.getNumWrites()) {
+        accessesEqual = false;
+    } else {
+        for (unsigned int i = 0; i < this->getNumReads(); ++i) {
+            if (this->getReadDataSpace(i) != other.getReadDataSpace(i)
+            || *this->getReadRelation(i) != *other.getReadRelation(i)) {
+                accessesEqual = false;
+            }
+        }
+        for (unsigned int i = 0; i < this->getNumWrites(); ++i) {
+            if (this->getWriteDataSpace(i) != other.getWriteDataSpace(i)
+                || *this->getWriteRelation(i) != *other.getWriteRelation(i)) {
+                accessesEqual = false;
+            }
+        }
+    }
+
     return (
         this->phiNode == other.phiNode &&
         this->arrayAccess == other.arrayAccess &&
         this->stmtSourceCode == other.stmtSourceCode &&
-        this->iterationSpace == other.iterationSpace &&
-        this->executionSchedule == other.executionSchedule &&
-        this->dataReads == other.dataReads &&
-        this->dataWrites == other.dataWrites
+        *this->iterationSpace == *other.iterationSpace &&
+        *this->executionSchedule == *other.executionSchedule &&
+        accessesEqual
     );
 }
 
