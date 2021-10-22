@@ -164,7 +164,12 @@ class ComputationTest : public ::testing::Test {
 
         ASSERT_EQ(expected->isComplete(), actual->isComplete());
 
-        EXPECT_EQ(expected->getTransformations(), actual->getTransformations());
+        const auto expectedTransformations = expected->getTransformations();
+        const auto actualTransformations = actual->getTransformations();
+        ASSERT_EQ(expectedTransformations.size(), actualTransformations.size());
+        for (unsigned int i = 0; i < expectedTransformations.size(); ++i) {
+            EXPECT_EQ(*expectedTransformations[i], *actualTransformations[i]);
+        }
 
         ASSERT_EQ(expected->getNumStmts(), actual->getNumStmts());
         for (unsigned int i = 0; i < actual->getNumStmts(); ++i) {
