@@ -41,7 +41,7 @@ class ComputationTest : public ::testing::Test {
     virtual void SetUp() override {
         vOmegaReplacer = new VisitorChangeUFsForOmega();
         //! Reset the Computation class's running rename counter so generated name prefixes do not depend on test order.
-        Computation::resetNumRenames();
+        Computation::resetNumRenamesCounters();
     }
     virtual void TearDown() override { delete vOmegaReplacer; }
 

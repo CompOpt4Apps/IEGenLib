@@ -50,15 +50,16 @@
 //! Constraint used to test if constraints evaluate to false/true for phi nodes
 #define CONSTR_TEST "test__"
 
-//! String appended to arrays to crerate data spaces for constant accesses
+//! String appended to arrays to create data spaces for constant accesses
 #define ARR_ACCESS_STR "__at"
 
 
 namespace iegenlib {
 
 /* Computation */
-unsigned int Computation::numRenames = 0;
-unsigned int Computation::dataRenameCnt = 0;
+
+unsigned int Computation::numComputationRenames = 0;
+unsigned int Computation::numDataSpaceRenames = 0;
 
 Computation::Computation(std::string& name) {
   setName(name);
@@ -129,7 +130,7 @@ void Computation::setName(std::string newName) {
 }
 
 Computation* Computation::getUniquelyNamedClone() const {
-    std::string namePrefix = NAME_PREFIX_BASE + std::to_string(numRenames++);
+    std::string namePrefix = NAME_PREFIX_BASE + std::to_string(numComputationRenames++);
     Computation* prefixedCopy = new Computation();
 
     // prefix all data in the Computation and insert it to the new one
@@ -152,8 +153,9 @@ Computation* Computation::getUniquelyNamedClone() const {
     return prefixedCopy;
 }
 
-void Computation::resetNumRenames() {
-    Computation::numRenames = 0;
+void Computation::resetNumRenamesCounters() {
+    Computation::numComputationRenames = 0;
+    Computation::numDataSpaceRenames = 0;
 }
 
 std::string Computation::getPrefixedDataSpaceName(const std::string& originalName, const std::string& prefix) {
@@ -2335,7 +2337,7 @@ void Computation::replaceDataSpaceName(std::string original, std::string newStri
 
 std::string Computation::getDataSpaceRename(std::string dataSpaceName) {
     dataSpaceName = trimDataSpaceName(dataSpaceName);
-    return Computation::delimitDataSpaceName(dataSpaceName + DATA_RENAME_STR + std::to_string(dataRenameCnt++));
+    return Computation::delimitDataSpaceName(dataSpaceName + DATA_RENAME_STR + std::to_string(numDataSpaceRenames++));
 }
 
 void Computation::getArrayAccessStrs(std::string& unroll, std::string& access,
