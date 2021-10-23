@@ -58,7 +58,7 @@ class Computation {
     Computation() = default;
 
     //! Construct an empty Computation with the given name
-    explicit Computation(std::string& name);
+    explicit Computation(const std::string& name);
 
     //! Destructor
     ~Computation();

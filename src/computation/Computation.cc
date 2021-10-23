@@ -60,7 +60,7 @@ namespace iegenlib {
 
 unsigned int Computation::numComputationRenames = 0;
 
-Computation::Computation(std::string& name) {
+Computation::Computation(const std::string& name) {
   setName(name);
 }
 
