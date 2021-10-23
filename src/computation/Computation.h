@@ -379,8 +379,8 @@ class Computation {
     //! others, for creating unique name prefixes.
     static unsigned int numComputationRenames;
 
-    //! Number of times a data space has been renamed, for creating unique renamings.
-    static unsigned int numDataSpaceRenames;
+    //! Number of times a data space in this Computation has been renamed, for creating unique renamings.
+    unsigned int numDataSpaceRenames = 0;
 };
 
 /*!

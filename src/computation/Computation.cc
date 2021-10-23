@@ -59,7 +59,6 @@ namespace iegenlib {
 /* Computation */
 
 unsigned int Computation::numComputationRenames = 0;
-unsigned int Computation::numDataSpaceRenames = 0;
 
 Computation::Computation(std::string& name) {
   setName(name);
@@ -155,7 +154,6 @@ Computation* Computation::getUniquelyNamedClone() const {
 
 void Computation::resetNumRenamesCounters() {
     Computation::numComputationRenames = 0;
-    Computation::numDataSpaceRenames = 0;
 }
 
 std::string Computation::getPrefixedDataSpaceName(const std::string& originalName, const std::string& prefix) {
@@ -2337,7 +2335,8 @@ void Computation::replaceDataSpaceName(std::string original, std::string newStri
 
 std::string Computation::getDataSpaceRename(std::string dataSpaceName) {
     dataSpaceName = trimDataSpaceName(dataSpaceName);
-    return Computation::delimitDataSpaceName(dataSpaceName + DATA_RENAME_STR + std::to_string(numDataSpaceRenames++));
+    return Computation::delimitDataSpaceName(dataSpaceName + DATA_RENAME_STR
+        + std::to_string(this->numDataSpaceRenames++));
 }
 
 void Computation::getArrayAccessStrs(std::string& unroll, std::string& access,
