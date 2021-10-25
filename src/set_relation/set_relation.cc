@@ -4990,10 +4990,22 @@ string Relation::getString(bool generic)
     return result;
 }
 
-
-
-
-
+StringIterator* Relation::getSymbolIterator() const {
+    std::set<std::string> finalSymbolSet;
+        for (std::list<Conjunction*>::const_iterator it=this->mConjunctions.begin();
+            it != this->mConjunctions.end(); it++) {
+                std::cout <<" test abc 12 ";
+                std::cout << "this is iterator   " << (*it);
+                StringIterator* subSymIter = (*it)->getSymbolIterator();
+                std::cout << "this is subsystem it "<< subSymIter;
+                while (subSymIter->hasNext()) {
+                    std::cout << " this is not test";
+                    finalSymbolSet.insert( subSymIter->next() );
+                }
+        delete subSymIter;
+        }
+    return new StringIterator(finalSymbolSet);
+}
 
 /*****************************************************************************/
 #pragma mark -

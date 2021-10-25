@@ -4837,3 +4837,30 @@ TEST_F(SetRelationTest,DISABLED_ParseOmegaString){
     EXPECT_EQ("",result->prettyPrintString());
 }
 
+
+TEST_F(SetRelationTest, SymbolIterator) {
+
+    Relation * r1 = new Relation(
+         "{[i,j] ->[k]:rowptr(i)<=k<rowptr(i+ 1) and col2(k)=j and P2(i,j)=k}");
+  
+ 
+      // extract all known UFs
+    iegenlib::StringIterator* knownUFsIter = r1->getSymbolIterator();
+
+    std::cout << r1->toString()
+
+    std::cerr<< knownUFsIter << "\n";
+    std::vector<string> knownUFs;
+    std::cerr << "Known UFS\n";
+
+    while (knownUFsIter->hasNext()) {
+        knownUFs.push_back( knownUFsIter->next() );
+        std::cerr << knownUFs.back() << std::endl;
+        std::cerr  << "Something is being done";
+    }
+    //std::cerr << knownUFs;
+    //EXPECT_EQ(" ", knownUFs);
+    std::cerr  << "Something has been  done";
+    delete r1;
+    delete knownUFsIter;
+}
