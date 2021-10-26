@@ -4793,7 +4793,6 @@ TEST_F(SetRelationTest,IntersectOnInputTuple){
     Relation * rel3 = new Relation(
 	     "{[i,j,k] -> [j,k]: }");
     Relation *intersection = rel1->IntersectOnInputTuple(rel2);
-    std::cerr << "Finished Intersection\n";
     Relation * expected = new Relation(
 	     "{[i,j,k] -> [k,i,j]: }");
     ASSERT_NE(intersection,nullptr);
@@ -4802,7 +4801,7 @@ TEST_F(SetRelationTest,IntersectOnInputTuple){
     Relation *intersection2 = intersection->IntersectOnInputTuple(rel3);
     Relation * expected2 = new Relation(
 	     "{[i,j,k] -> [k,i,j]: }");
-    EXPECT_EQ("",intersection2->prettyPrintString());
+    ASSERT_NE(intersection2,nullptr);
     EXPECT_TRUE((*intersection2)==(*expected2));
 
     delete intersection;
@@ -4812,6 +4811,21 @@ TEST_F(SetRelationTest,IntersectOnInputTuple){
     delete rel1;
     delete rel2;
     delete rel3;
+}
+ 
+TEST_F(SetRelationTest,ProjectOutPotentialBug){
+
+  Relation * rel1 = new Relation(
+    "{ [i, j, k] -> [i, j] : i - i = 0 && j - j = 0 }");
+  Relation *p = rel1->projectOut(3);
+  ASSERT_NE(nullptr, p);
+  Relation * expected = new Relation(
+    "{ [i, j, k] -> [ j] :  j - j = 0 }");
+  EXPECT_EQ(expected->prettyPrintString(),p->prettyPrintString());
+
+  delete rel1;
+  delete p;
+  delete expected;
 }
 
 TEST_F(SetRelationTest,CONVEX_HULL){
