@@ -1305,34 +1305,10 @@ Conjunction* Conjunction::Inverse() const{
 */
 Conjunction* Conjunction::IntersectOnInputTuple(const Conjunction* rhs) const {
 
-    Conjunction *result = new Conjunction(
-        arity()+rhs->inarity());
-    result->mInArity = inarity()+rhs->inarity();
-    // e.g. if rhs = {[i]->[a,b,c]} then rhs_copy = {[  , ,i,a,b,c]}
-    // e.g. if lhs = {[e,f]->[a,b,c]} then lhs_copy = {[e, f, ,a,b,c]}
-    Conjunction* lhs_copy = new Conjunction(*this);
-    lhs_copy->pushConstToConstraints();
-    std::vector<int> shiftLHSVars(lhs_copy->arity());
-    for (int i=0; i<inarity(); i++) {
-        shiftLHSVars[i] = i;
-    }
-    for (int i=inarity(); i<arity(); i++) {
-        shiftLHSVars[i] = i+rhs->inarity();
-    }
-    lhs_copy->remapTupleVars(shiftLHSVars);
-
-    // e.g. if rhs = {[i]->[a,b,c]} then rhs_copy = {[  , ,i,a,b,c]}
-    Conjunction* rhs_copy = new Conjunction(*rhs);
-    rhs_copy->pushConstToConstraints();
-    std::vector<int> shiftRHSVars(rhs->arity());
-    for (int i=0; i<rhs->arity(); i++) {
-        shiftRHSVars[i] = i + (inarity());
-    }
-    rhs_copy->remapTupleVars(shiftRHSVars);
+    Conjunction *result = new Conjunction(*this);
 
     // copy the constraints from both into result
-    result->copyConstraintsFrom(rhs_copy);
-    result->copyConstraintsFrom(lhs_copy);
+    result->copyConstraintsFrom(rhs);
 
     return result;
 }
@@ -2350,6 +2326,26 @@ Set* Set::TransitiveClosure(){
     result->cleanUp();
     return result;
 }
+//! permutes the tuple variables so that they are valid for codegen
+/*Set* Set::PermuteForCodeGen(){
+  Set *t1;
+  Set *t2;
+  int error = 1;
+  std::vector<string>// HERE
+
+  t1 = this;
+  for(int j=0;j<arity() && error;j++){
+    for(int i=arity()-1; i>=0; i--){
+      if((t2 = t1->projectOut(i)) !=NULL){
+        error = 0;
+        t1 = t2;
+      }else{
+        error = 1;
+      }
+    }
+  }
+  return NULL;
+}*/
 
 
 
@@ -2826,29 +2822,176 @@ Relation* Relation::Intersect(const Relation* rhs) const{
 }
 
 Relation* Relation::IntersectOnInputTuple(const Relation* rhs) const{
+
     // Check that the arities are compatible.
     if (rhs->mInArity != mInArity ) {
-      throw assert_exception("Relation::Union: mismatched input arities");
+      throw assert_exception("Relation::IntersectOnInputTuple: mismatched input arities");
     }
+
+    std::cerr << "LHS starting point " << prettyPrintString() << std::endl;
+    // Create a mapping between the output tuple variables if they are equivalent
+    // Keep the tuple positions of the lhs and map the rhs to the lhs
+    std::vector<int> outputTupleMap; // maps rhs output tuples to lhs output tuples
+    for (int i=rhs->inArity(); i<rhs->arity(); i++) {
+      outputTupleMap.push_back(-1);
+    }
+    // for  all but one output tuple variable, project out
+    // for each output tuple variable 
+    for (int i=inArity(); i<arity(); i++) {
+      Relation *t1, *t2;
+      t1 = new Relation(*this);
+      std::cerr << "Should project out!! " << arity()-1 << std::endl;
+      // order here does matter -- work from right to left
+      for(int k=arity()-1; k>i && t1 != NULL; k--){
+        std::cerr << "Project Out " << k << std::endl;
+        t2 = t1->projectOut(k);
+        if(t2){
+          std::cerr << "LHS single " << t2->prettyPrintString() << std::endl;
+        }
+        delete t1;
+        t1 = t2;
+      }
+      for(int k=inArity(); k<i; k++){
+        std::cerr << "Project Out " << k << std::endl;
+        t2 = t1->projectOut(k);
+        if(t2){
+          std::cerr << "LHS single " << t2->prettyPrintString() << std::endl;
+        }
+        delete t1;
+        t1 = t2;
+      }
+      Relation *lhs_single = t1;
+      std::cerr << "LHS single " << lhs_single->prettyPrintString() << std::endl;
+      std::cerr << "Moving onto the rhs \n";
+      for (int j=rhs->inArity(); j<rhs->arity(); j++) {
+        t1 = new Relation(*rhs);
+        if(outputTupleMap[j-rhs->inArity()] >= 0){
+           // this variable is already mapped
+           continue;
+        } 
+        for(int k=rhs->arity()-1; k>j && t1 != NULL; k--){
+        std::cerr << "Project Out rhs 1 " << k << std::endl;
+          t2 = t1->projectOut(k);
+          delete t1;
+          t1 = t2;
+        }
+        for(int k=rhs->inArity(); t1!=NULL && k<j; k++){
+          std::cerr << "Project Out rhs 2 " << k << std::endl;
+          t2 = t1->projectOut(k);
+          delete t1;
+          t1 = t2;
+        }
+        std::cerr << "Done projecting\n" << std::endl;
+        std::cerr << "RHS single " << t1->prettyPrintString() << std::endl;
+        if(t1 != NULL && lhs_single != NULL){
+        std::cerr << "t1 arity "<< t1->arity()<<std::endl;
+        std::cerr << "lhs single arity "<< lhs_single->arity()<<std::endl;
+          if((*t1) == (*lhs_single)){
+            std::cerr << "Mapping " << j << " to " << i << std::endl;
+            outputTupleMap[j] = i;
+          }
+        }
+      }
+    }
+    // The mapping is done - if any output tuples were equivalent, we
+    // have those now.
+    std::cerr << "Final Mapping\n";
+    int arityIncrease = 0;
+    for (int i=rhs->inArity(); i<rhs->arity(); i++) {
+      std::cerr<< outputTupleMap[i-rhs->inArity()] << std::endl;
+      if(outputTupleMap[i-rhs->inArity()] <0){
+        arityIncrease++;
+      }
+    }
+    std::cerr << "arity increase " << arityIncrease << "\n";
+     
+    // I am about to reoder the output tuple, however, it won't work on the output
+    // tuple, so I am first inverting them and we will do all of the work on the inverse 
+    // and then invert again at the very end.
     Relation *lhsInv = Inverse();
     Relation *rhsInv = rhs->Inverse();
-    Relation *result = new Relation(mOutArity+rhs->mOutArity,mInArity);
 
+    // Now, working on the inverse, reorder the tuple variables, but, not all of them
+    // The output tuple variables should remain the same. And we need to be sure that
+    // any input tuple variables that are equivalent to output tuple variables 
+    // remain the same as well. This prevents duplicates later
+    // e.g. if lhs = {[e,f]->[a,b,c]} then lhsInv = {[e, f, ,a,b,c]}
+    // e.g. if rhs = {[i]->[a,b,c]} then rhsInv = {[  , ,i,a,b,c]}
+    // However if i=a and f=a then i=f and then the results changes
+    // e.g. if rhs = {[i]->[a,b,c]} then rhsInv = {[  ,i,a,b,c]}
+    // e.g. if lhs = {[e,f]->[a,b,c]} then lhsInv = {[e, f,a,b,c]}
+    // Therefore, we need to find out if for any of the input tuple variables
+    // we can find an equivalency. This is what the map is for.
+    //Conjunction* lhsInv = new Conjunction(*this);
+    std::vector<int> shiftLHSVars(lhsInv->arity());
+    std::vector<int> shiftRHSVars(rhsInv->arity());
+    for (int i=0; i<lhsInv->inArity(); i++) { 
+        shiftLHSVars[i] = i;
+        std::cerr << "shiftLHSVars[" <<i<<"] = " << shiftLHSVars[i]<<std::endl;
+    }
+    for (int i=lhsInv->inArity(); i<lhsInv->arity(); i++) {
+        shiftLHSVars[i] = i+arityIncrease;
+        std::cerr << "shiftLHSVars[" <<i<<"] = " << shiftLHSVars[i]<<std::endl;
+    }
+
+    // e.g. if rhs = {[i]->[a,b,c]} then rhsInv = {[  , ,i,a,b,c]}
+    //Conjunction* rhsInv = new Conjunction(*rhs);
+    int backby = 0;
+    std::cerr << "rhsArity is "<< rhsInv->arity() << std::endl;
+    for (int i=0; i<rhsInv->inArity(); i++) {
+        if(outputTupleMap[i] >= 0){
+           shiftRHSVars[i] = outputTupleMap[i];
+           backby++;
+        }else{
+          shiftRHSVars[i] = i + (lhsInv->inArity() - backby);
+        }
+        std::cerr << "shiftRHSVars[" <<i<<"] = " << shiftRHSVars[i]<<std::endl;
+    }
+    for (int i=rhsInv->inArity(); i<rhsInv->arity(); i++) {
+        shiftRHSVars[i] = i + (lhsInv->inArity() - backby);
+        std::cerr << "shiftRHSVars[" <<i<<"] = " << shiftRHSVars[i]<<std::endl;
+    }
+
+
+    // Start building result, first create the new relation
+    // Relation needs input arity and output arity
+    Relation *result = new Relation(mOutArity+arityIncrease,mInArity);
+    std::cerr << "created relation inarity: "<<mOutArity+arityIncrease << " outarity "<<mInArity <<"\n";
     // Have to do cross product intersection between conjunctions in both sets.
+    // copy the constraints from both into result
     for (std::list<Conjunction*>::const_iterator i=lhsInv->mConjunctions.begin();
             i != lhsInv->mConjunctions.end(); i++) {
+        std::cerr << "remapping\n";
+        // conjunction needs total arity, input arity
+        Conjunction *conjresult = new Conjunction( mOutArity+arityIncrease+mInArity,
+                                                   mOutArity+arityIncrease);
+       std::cerr << "created conj arity: "<<mOutArity+arityIncrease+mInArity << " inarity "
+                                            <<mOutArity+arityIncrease <<"\n";
+        Conjunction* lhs_copy = new Conjunction(**i);
+        lhs_copy->pushConstToConstraints();
+        lhs_copy->remapTupleVars(shiftLHSVars);
+     
 
         for (std::list<Conjunction*>::const_iterator
                 j=rhsInv->mConjunctions.begin();
                 j != rhsInv->mConjunctions.end(); j++) {
-
-            result->addConjunction((*i)->IntersectOnInputTuple(*j));
+            std::cerr << "remapping\n";
+            Conjunction* rhs_copy = new Conjunction(**j);
+            rhs_copy->pushConstToConstraints();
+            rhs_copy->remapTupleVars(shiftRHSVars);
+            // intersecting
+            std::cerr << "intersectin\n";
+            //result->addConjunction((*i)->IntersectOnInputTuple(*j));
+            conjresult->copyConstraintsFrom(rhs_copy);
+            conjresult->copyConstraintsFrom(lhs_copy);
+            result->addConjunction(conjresult);
+            std::cerr << "intersected\n";
         }
     }
-
     result->cleanUp(); // FIXME: might want later when cleanup can merge
     //constraints that have adjacent constraints
-    return result->Inverse();
+    Relation * resultInv = result->Inverse();
+    return resultInv;
 }
 
 /*!

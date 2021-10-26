@@ -4780,14 +4780,26 @@ TEST_F(SetRelationTest,ToSet){
     EXPECT_EQ("{ [l, k] : k - n - 1 = 0 && -n +"
 	      " 10 >= 0 && n - 1 >= 0 }",set->prettyPrintString());
 }
+
 TEST_F(SetRelationTest,IntersectOnInputTuple){
            
     Relation * rel1 = new Relation(
 	     "{[i,j,k] -> [k]: }");
     Relation * rel2 = new Relation(
 	     "{[i,j,k] -> [i,j]: }");
+    Relation * rel3 = new Relation(
+	     "{[i,j,k] -> [j,k]: }");
     Relation *intersection = rel1->IntersectOnInputTuple(rel2);
+    std::cerr << "Finished Intersection\n";
     Relation * expected = new Relation(
 	     "{[i,j,k] -> [k,i,j]: }");
+    ASSERT_NE(intersection,nullptr);
     EXPECT_TRUE((*intersection)==(*expected));
+
+
+    Relation *intersection2 = intersection->IntersectOnInputTuple(rel3);
+    Relation * expected2 = new Relation(
+	     "{[i,j,k] -> [k,i,j]: }");
+    EXPECT_EQ("",intersection2->prettyPrintString());
+    EXPECT_TRUE((*intersection2)==(*expected2));
 }

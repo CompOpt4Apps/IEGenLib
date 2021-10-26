@@ -701,6 +701,10 @@ public:
     Set* detectUnsatOrFindEqualities(bool *useRule=NULL);
 
     string getString(bool generic=false);
+    //! permutes the tuple variables into an order that is valid
+    //! for codegen.
+    //! \returns new Set
+    Set* permuteForCodeGen();
 
     //
     SetRelationshipType setRelationship(Set* rightSide);
