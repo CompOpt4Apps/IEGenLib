@@ -35,14 +35,13 @@ int main(int ac, char **av) {
    Relation * Arel = csrA->Compose(denseToA); 
    Relation * Brel = csrB->Compose(denseToB); 
 
+   std::cout << "Arel: " << Arel->prettyPrintString() << std::endl;
    Relation * result = Arel->IntersectOnInputTuple(denseToC);
-   std::cout<< result->prettyPrintString() << "\n"; 
-   result = result->IntersectOnInputTuple(Brel);
-   std::cout<< result->prettyPrintString() << "\n"; 
+   result = Brel->IntersectOnInputTuple(result);
    Set * resultSet = result->ToSet();
-   std::cout<< resultSet->prettyPrintString() << "\n"; 
    Set * actualResult = result->Apply(dense);
-   std::cout<< actualResult->prettyPrintString() << "\n"; 
+   std::cout<< "This is the new set!! " 
+            <<  actualResult->prettyPrintString() << "\n"; 
 
    // The arity of the relation?? which is actually a set?
    std::vector<int> arity;
