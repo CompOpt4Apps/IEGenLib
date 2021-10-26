@@ -50,17 +50,17 @@
 //! Constraint used to test if constraints evaluate to false/true for phi nodes
 #define CONSTR_TEST "test__"
 
-//! String appended to arrays to crerate data spaces for constant accesses
+//! String appended to arrays to create data spaces for constant accesses
 #define ARR_ACCESS_STR "__at"
 
 
 namespace iegenlib {
 
 /* Computation */
-unsigned int Computation::numRenames = 0;
-unsigned int Computation::dataRenameCnt = 0;
 
-Computation::Computation(std::string& name) {
+unsigned int Computation::numComputationRenames = 0;
+
+Computation::Computation(const std::string& name) {
   setName(name);
 }
 
@@ -81,14 +81,42 @@ Computation& Computation::operator=(const Computation& other) {
 }
 
 bool Computation::operator==(const Computation& other) const {
+    bool stmtsEqual = true;
+    if (this->stmts.size() != other.stmts.size()) {
+        stmtsEqual = false;
+    } else {
+        for (unsigned int i = 0; i < this->stmts.size(); ++i) {
+            if (*this->stmts[i] != *other.stmts[i]) {
+                stmtsEqual = false;
+            }
+        }
+    }
+
+    bool transformationListsEqual = true;
+    if (this->transformationLists.size() != other.transformationLists.size()) {
+        transformationListsEqual = false;
+    } else {
+        for (unsigned int i = 0; i < this->transformationLists.size(); ++i) {
+            if (this->transformationLists[i].size() != other.transformationLists[i].size()) {
+                transformationListsEqual = false;
+            } else {
+                for (unsigned int j = 0; j < this->transformationLists[i].size(); ++j) {
+                    if (*this->transformationLists[i][j] != *other.transformationLists[i][j]) {
+                        transformationListsEqual = false;
+                    }
+                }
+            }
+        }
+    }
+
     return (
         this->name == other.name &&
         //this->arrays == other.arrays &&
-        this->stmts == other.stmts &&
+        stmtsEqual &&
         this->dataSpaces == other.dataSpaces &&
         this->parameters == other.parameters &&
         this->returnValues == other.returnValues &&
-        this->transformationLists == other.transformationLists
+        transformationListsEqual
     );
 }
 
@@ -101,7 +129,7 @@ void Computation::setName(std::string newName) {
 }
 
 Computation* Computation::getUniquelyNamedClone() const {
-    std::string namePrefix = NAME_PREFIX_BASE + std::to_string(numRenames++);
+    std::string namePrefix = NAME_PREFIX_BASE + std::to_string(numComputationRenames++);
     Computation* prefixedCopy = new Computation();
 
     // prefix all data in the Computation and insert it to the new one
@@ -124,8 +152,8 @@ Computation* Computation::getUniquelyNamedClone() const {
     return prefixedCopy;
 }
 
-void Computation::resetNumRenames() {
-    Computation::numRenames = 0;
+void Computation::resetNumRenamesCounters() {
+    Computation::numComputationRenames = 0;
 }
 
 std::string Computation::getPrefixedDataSpaceName(const std::string& originalName, const std::string& prefix) {
@@ -724,7 +752,7 @@ void Computation::printInfo() const {
 }
 
 bool Computation::isComplete() const {
-    std::map<std::string, std::string> dataSpacesActuallyAccessed;
+    std::unordered_set<std::string> dataSpacesAccessedInStmts;
     for (const auto& stmt : stmts) {
         // check completeness of each statement
         if (!stmt->isComplete()) {
@@ -733,22 +761,22 @@ bool Computation::isComplete() const {
 
         // collect all data space accesses
         for (unsigned int i = 0; i < stmt->getNumReads(); ++i) {
-            dataSpacesActuallyAccessed[stmt->getReadDataSpace(i)] = "";
-            //dataSpacesActuallyAccessed.emplace_back(stmt->getReadDataSpace(i), "");
+            dataSpacesAccessedInStmts.emplace(stmt->getReadDataSpace(i));
         }
         for (unsigned int i = 0; i < stmt->getNumWrites(); ++i) {
-            dataSpacesActuallyAccessed[stmt->getWriteDataSpace(i)] = "";
-            // dataSpacesActuallyAccessed.emplace_back(stmt->getWriteDataSpace(i), "");
+            dataSpacesAccessedInStmts.emplace(stmt->getWriteDataSpace(i));
         }
     }
 
     // check that list of data spaces matches those accessed in statements
-    if (dataSpaces != dataSpacesActuallyAccessed) {
-        return false;
+    for (const auto& dataSpace : dataSpacesAccessedInStmts) {
+        // only checking inclusion in one direction because we aren't detecting accesses in for loop bounds
+        if (!dataSpaces.count(dataSpace)) {
+            return false;
+        }
     }
 
     return true;
-
 }
 
 std::string Computation::codeGenMemoryManagementString() {
@@ -2307,7 +2335,8 @@ void Computation::replaceDataSpaceName(std::string original, std::string newStri
 
 std::string Computation::getDataSpaceRename(std::string dataSpaceName) {
     dataSpaceName = trimDataSpaceName(dataSpaceName);
-    return Computation::delimitDataSpaceName(dataSpaceName + DATA_RENAME_STR + std::to_string(dataRenameCnt++));
+    return Computation::delimitDataSpaceName(dataSpaceName + DATA_RENAME_STR
+        + std::to_string(this->numDataSpaceRenames++));
 }
 
 void Computation::getArrayAccessStrs(std::string& unroll, std::string& access,
@@ -2412,14 +2441,31 @@ Stmt& Stmt::operator=(const Stmt& other) {
 }
 
 bool Stmt::operator==(const Stmt& other) const {
+    bool accessesEqual = true;
+    if (this->getNumReads() != other.getNumReads() || this->getNumWrites() != other.getNumWrites()) {
+        accessesEqual = false;
+    } else {
+        for (unsigned int i = 0; i < this->getNumReads(); ++i) {
+            if (this->getReadDataSpace(i) != other.getReadDataSpace(i)
+            || *this->getReadRelation(i) != *other.getReadRelation(i)) {
+                accessesEqual = false;
+            }
+        }
+        for (unsigned int i = 0; i < this->getNumWrites(); ++i) {
+            if (this->getWriteDataSpace(i) != other.getWriteDataSpace(i)
+                || *this->getWriteRelation(i) != *other.getWriteRelation(i)) {
+                accessesEqual = false;
+            }
+        }
+    }
+
     return (
         this->phiNode == other.phiNode &&
         this->arrayAccess == other.arrayAccess &&
         this->stmtSourceCode == other.stmtSourceCode &&
-        this->iterationSpace == other.iterationSpace &&
-        this->executionSchedule == other.executionSchedule &&
-        this->dataReads == other.dataReads &&
-        this->dataWrites == other.dataWrites
+        *this->iterationSpace == *other.iterationSpace &&
+        *this->executionSchedule == *other.executionSchedule &&
+        accessesEqual
     );
 }
 

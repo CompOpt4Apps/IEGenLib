@@ -58,7 +58,7 @@ class Computation {
     Computation() = default;
 
     //! Construct an empty Computation with the given name
-    explicit Computation(std::string& name);
+    explicit Computation(const std::string& name);
 
     //! Destructor
     ~Computation();
@@ -71,6 +71,8 @@ class Computation {
 
     //! Equality operator
     bool operator==(const Computation& other) const;
+    //! Inequality operator
+    bool operator!=(const Computation& other) const { return !(*this == other); };
 
 	//! Get the name of this Computation
 	std::string getName() const;
@@ -85,7 +87,7 @@ class Computation {
     //! Reset the counter for number of renames.
     //! **This method should only be used for testing purposes. Using it in
     //! production will cause name conflicts.**
-    static void resetNumRenames();
+    static void resetNumRenamesCounters();
     //! Get the new name for a data space that has the given prefix applied
     static std::string getPrefixedDataSpaceName(const std::string& originalName, const std::string& prefix);
 
@@ -125,7 +127,7 @@ class Computation {
     int firstWriteIndex(std::string dataSpace);
     //! Replace data space name if written to
     void replaceDataSpaceName(std::string original, std::string newString);
-    //! Produces a rename for the inputted data space, incrementing dataRenameCnt
+    //! Produces a counter-based unique rename for the inputted data space, incrementing counter
     std::string getDataSpaceRename(std::string dataSpaceName);
     //! unroll  - $arrName__ati1__ati2...__atiN$
     //  access  - $arrName$[i1][i2]...[iN]
@@ -373,11 +375,12 @@ class Computation {
     //! Assert that a given string would be a valid data space name
     static bool assertValidDataSpaceName(const std::string& name, bool alreadyDelimited);
 
-  //! Number of times *any* Computation has been appended into
+    //! Number of times *any* Computation has been appended into
     //! others, for creating unique name prefixes.
-    static unsigned int numRenames;
+    static unsigned int numComputationRenames;
 
-    static unsigned int dataRenameCnt;
+    //! Number of times a data space in this Computation has been renamed, for creating unique renamings.
+    unsigned int numDataSpaceRenames = 0;
 };
 
 /*!
@@ -442,6 +445,8 @@ class Stmt {
     //! Equality operator
     //! Checks equality, NOT mathematical equivalence
     bool operator==(const Stmt& other) const;
+    //! Inequality operator
+    bool operator!=(const Stmt& other) const { return !(*this == other); };
 
     //! Get a copy of this Stmt with the given prefix applied to all names
     //Stmt* getUniquelyNamedClone(const std::string& prefix, const std::unordered_set<std::string>& dataSpaceNames) const;

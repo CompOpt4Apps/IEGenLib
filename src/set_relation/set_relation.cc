@@ -22,6 +22,12 @@
 #include <map>
 #include <assert.h>
 
+#include <code_gen/parser/parser.h>
+#include <codegen.h>
+#include <omega/hull.h>
+
+#include "VisitorChangeUFsForOmega.h"
+
 namespace iegenlib{
 
 /************************ ISL helper routines ****************************/
@@ -2067,7 +2073,8 @@ void SparseConstraints::remapTupleVars(const std::vector<int>& oldToNewLocs) {
 
 
 //! This function returns a set of constraints that are in caller but not in A
-std::set<Exp> SparseConstraints::constraintsDifference(SparseConstraints* A){
+std::set<Exp> SparseConstraints::constraintsDifference(const SparseConstraints* A) const 
+{
 
   // Right now, this should only be called if there is a single Conjunction.
   if(mConjunctions.size() != 1 ){
@@ -2311,6 +2318,18 @@ void Set::normalize(bool bdr) {
 }
 
 
+//! Parses omega string to IEGenLib Set
+//! \param omegaString String to be parsed 
+//! \param ufMap maps prefixed omega UFs back to 
+//               original UFCallTerm in IEGenLib.
+//               UFCallTerms in list is not adopted.
+Set* Set::parseOmegaString(std::string omegaString,
+		    std::map<std::string,UFCallTerm*> ufMap){
+    Set* res = new Set(omegaString);
+    VisitorChangeOmegaUF* visitor = new VisitorChangeOmegaUF(ufMap);
+    res->acceptVisitor(visitor);
+    return res; 
+}
  //! Performs transitive closure in presence of UFs
 //! Returns a new set, which the user is responsible
 //  for deallocating.
@@ -2349,6 +2368,46 @@ Set* Set::TransitiveClosure(){
 
 
 
+//! Computes the convex hull of this set.
+//! Returns a new set for which the caller is responsible
+//! for deallocating.
+Set * Set::Hull(){
+    VisitorChangeUFsForOmega* vOmegaReplacer = new VisitorChangeUFsForOmega();
+    Set* set = new Set(*this);
+    set->acceptVisitor(vOmegaReplacer);
+    std::string omegaString = 
+          set->toOmegaString(vOmegaReplacer->getUFCallDecls());
+    omega::Relation* omegaSet =
+           omega::parser::ParseRelation(omegaString);
+    
+     
+    //Perform convex hull
+
+    omega::Relation hul = omega::ConvexHull(*omegaSet);
+    std::string hulString = hul.print_with_subs_to_string();
+
+    
+    // We need to revert changes that omega applies to Tuple Declaration
+    // because of
+    // equality constrains.We will be using an ISL implementation for this.
+    // We do this purely using string manipulation.
+    // Ex:
+    //     sstr      = { [i1, i2, i3] : i1 = col_i_ and ...}  ** dots (...) can
+    //     islStr    = { [col_i_, i2, i3] : ...}              ** be different
+    //     corrected = { [i1, i2, i3] : i1 = col_i_ and ...}  ** constraints
+    // For more detail refer to revertISLTupDeclToOrig function's comments.
+    int inArity = set->arity(), outArity = 0;
+    string corrected = revertISLTupDeclToOrig( omegaString, hulString,
+		  inArity, outArity);
+    
+    // Convert Omega back to IEGenLib
+    Set* result = parseOmegaString(corrected,
+		    vOmegaReplacer->getUFMap());
+    
+    delete set;
+    return result;
+   
+}
 
 /******************************************************************************/
 #pragma mark -
@@ -2690,6 +2749,21 @@ std::list<Exp*> Relation::getInverseFamily(Exp* exp){
     return family;
 }
 
+//! Parses omega string to IEGenLib Relation
+//! \param omegaString String to be parsed 
+//! \param ufMap maps prefixed omega UFs back to 
+//               original UFCallTerm in IEGenLib.
+//               UFCallTerms in list is not adopted.
+Relation* Relation::parseOmegaString(std::string omegaString,
+		    std::map<std::string,UFCallTerm*> ufMap){
+   
+    Relation* res = new Relation(omegaString);
+    VisitorChangeOmegaUF* visitor = new VisitorChangeOmegaUF(ufMap);
+    res->acceptVisitor(visitor);
+    delete visitor;
+    return res; 
+}
+ //! Performs transitive closure in presence of UFs
 
 //! For all conjunctions, sets them to the given tuple declaration.
 //! If there are some constants that don't agree then throws exception.
@@ -2789,6 +2863,7 @@ Relation* Relation::Union(const Relation* rhs) const{
     }
     //result->cleanUp();  FIXME: might want later when cleanup can merge
     //constraints that have adjacent constraints
+   
     return result;
 }
 
@@ -3160,7 +3235,7 @@ void Relation::normalize(bool bdr) {
 }
 
 //! Gets the domain of an uninterpreted function 
-//! in a set
+//! in a relation.
 //! \param ufName name of the UF
 //! Returns a new set representing the domain of the UF
 //! which the user is responsible
@@ -3172,6 +3247,40 @@ Set* Relation::GetDomain(std::string ufName){
     delete temp;
     return domain;
 }
+
+Relation* Relation::Hull(){
+    VisitorChangeUFsForOmega* vOmegaReplacer = new VisitorChangeUFsForOmega();
+    Relation* rel = new Relation(*this);
+    rel->acceptVisitor(vOmegaReplacer);
+    std::string omegaString = 
+            rel->toOmegaString(vOmegaReplacer->getUFCallDecls());
+    omega::Relation* omegaSet =
+	    omega::parser::ParseRelation(omegaString); 
+    //Perform convex hull
+
+    omega::Relation hul = omega::ConvexHull(*omegaSet);
+    std::string hulString = hul.print_with_subs_to_string();
+    
+    // We need to revert changes that omega applies to Tuple Declaration
+    // because of
+    // equality constrains.We will be using an ISL implementation for this.
+    // We do this purely using string manipulation.
+    // Ex:
+    //     sstr      = { [i1, i2, i3] : i1 = col_i_ and ...}  ** dots (...) can
+    //     islStr    = { [col_i_, i2, i3] : ...}              ** be different
+    //     corrected = { [i1, i2, i3] : i1 = col_i_ and ...}  ** constraints
+    // For more detail refer to revertISLTupDeclToOrig function's comments.
+    int inArity = rel->inArity(), outArity = rel->outArity();
+    string corrected = revertISLTupDeclToOrig( omegaString, hulString,
+		  inArity, outArity);
+    
+    // Convert Omega back to IEGenLib
+    Relation * result = parseOmegaString(corrected,
+		    vOmegaReplacer->getUFMap());
+    delete rel;
+    return result;
+}
+
 
 //! Creates a set from a relation. Appends output tuple 
 //! to input tuple.

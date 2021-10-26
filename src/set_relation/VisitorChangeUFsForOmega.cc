@@ -43,10 +43,6 @@ std::map<std::string, UFCallTerm*>& VisitorChangeUFsForOmega::getUFMap()  {
 
 void VisitorChangeUFsForOmega::preVisitSparseConstraints(
     SparseConstraints* sc) {
-    if (sc->getNumConjuncts() != 1) {
-        throw assert_exception(
-            "Must have exactly one conjunction for Omega conversion");
-    }
 }
 void VisitorChangeUFsForOmega::preVisitConjunction(Conjunction* c){
     bool requireChange = false;
@@ -262,4 +258,15 @@ void VisitorChangeUFsForOmega::postVisitUFCallTerm(UFCallTerm* callTerm) {
     // restore coefficient, which was changed temporarily for printing
     callTerm->setCoefficient(originalCoefficient);
 }
+
+void VisitorChangeOmegaUF::postVisitUFCallTerm(UFCallTerm* callTerm) {
+    auto it = ufMap.find(callTerm->name());
+    if (it != ufMap.end()){
+        // Perform a copy to change the callTerm
+        *callTerm = (*it->second);
+    }
+}
+
+
+
 }//namespace igenlib end
