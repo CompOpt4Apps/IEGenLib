@@ -4106,7 +4106,9 @@ TEST_F(SetRelationTest, projectOut)
 TEST_F(SetRelationTest,ProjectOutPotentialBug){
 
   Relation * rel1 = new Relation(
-    "{ [tv3, tv4, tv5] -> [tv0, tv1, tv2] : tv3 - tv1 = 0 && tv4 - tv2 = 0 && tv5 - tv0 = 0 }");
+    "{ [i, j, k] -> [l, m, n] : i - m = 0 && j - n = 0 && k - l = 0 }");
+  std::cerr<< "pretty string:" << rel1->prettyPrintString() << "\n";
+ //{ [tv3, tv4, tv5] -> [tv3, tv4] : tv3 - tv3 = 0 && tv3 - tv1 = 0 && tv4 - tv4 = 0 && tv4 - tv2 = 0 && tv5 - tv0 = 0 }
   Relation *p = rel1->projectOut(5);
   ASSERT_NE(nullptr, p);
   Relation * expected = new Relation(
