@@ -204,7 +204,10 @@ public:
     ** \param rhs (not adopted)
     */
     Conjunction* Intersect(const Conjunction* rhs) const;
-    Conjunction* IntersectOnInputTuple(const Conjunction* rhs) const;
+    Conjunction* IntersectOnInputTuple(const Conjunction* rhs,
+                           std::vector<int> lhsShift,
+                           std::vector<int> rhsShift, 
+                           int resultInArity) const;
 
     //! Restrict this (interpreted as a Relation) to rhs, which is interpreted
     //! as a set.
@@ -707,6 +710,10 @@ public:
     Set* detectUnsatOrFindEqualities(bool *useRule=NULL);
 
     string getString(bool generic=false);
+    //! permutes the tuple variables into an order that is valid
+    //! for codegen.
+    //! \returns new Set
+    Set* permuteForCodeGen();
 
     //
     SetRelationshipType setRelationship(Set* rightSide);
