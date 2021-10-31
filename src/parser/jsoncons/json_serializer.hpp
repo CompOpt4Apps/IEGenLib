@@ -50,7 +50,7 @@ class basic_json_serializer : public basic_json_output_handler<CharT>
 
         bool is_same_line() const
         {
-            return option_ = block_options::same_line;
+            return option_ == block_options::same_line;
         }
 
         bool is_next_line() const
