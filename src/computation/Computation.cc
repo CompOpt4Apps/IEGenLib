@@ -133,9 +133,6 @@ Computation* Computation::getUniquelyNamedClone() const {
     Computation* prefixedCopy = new Computation();
 
     // prefix all data in the Computation and insert it to the new one
-    for (auto& stmt : this->stmts) {
-        prefixedCopy->addStmt(stmt->getUniquelyNamedClone(namePrefix, this->getDataSpaces()));
-    }
     for (auto& space : this->dataSpaces) {
         prefixedCopy->addDataSpace(getPrefixedDataSpaceName(space.first, namePrefix), space.second);
     }
@@ -147,6 +144,9 @@ Computation* Computation::getUniquelyNamedClone() const {
         // literals
         prefixedCopy->addReturnValue(
             (retVal.second ? getPrefixedDataSpaceName(retVal.first, namePrefix) : retVal.first), retVal.second);
+    }
+    for (auto& stmt : this->stmts) {
+        prefixedCopy->addStmt(stmt->getUniquelyNamedClone(namePrefix, this->getDataSpaces()));
     }
 
     return prefixedCopy;
