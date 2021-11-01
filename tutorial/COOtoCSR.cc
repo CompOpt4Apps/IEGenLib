@@ -23,14 +23,14 @@ int main(int ac, char **av) {
 
    // COO to Dense
     Relation * coo2dns = new Relation(
-     "{[n] ->[i,j]:row1(n)=i and col1(n) =j }");
+     "{[n]->[i,j]:row1(n)=i and col1(n) =j and 0<=n<NNZ}");
 
     Relation * dns2csr = new Relation(
-     "{[i,j] ->[k]:rowptr(i)<=k<rowptr(i+ 1) and col2(k)=j and P2(i,j)=k}");
+     "{[i,j] ->[k]:rowptr(i)<=k<rowptr(i+ 1) and col2(k)=j and P(i,j)=k and 0<=i<NR and 0<=j<NC}");
 
     Relation * coo2csr = dns2csr->Compose(coo2dns);
 
-    std::cout<< coo2csr->prettyPrintString() << "\n"; 
+    std::cout<< coo2csr->TransitiveClosure()->prettyPrintString() << "\n"; 
 
     // TODO
     // extract all known UFs

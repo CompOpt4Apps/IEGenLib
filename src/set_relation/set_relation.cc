@@ -1780,6 +1780,18 @@ SparseConstraints::~SparseConstraints() {
     reset();
 }
 
+/*! Pushes the constants in the tuple declaration into equality
+**  constraints instead.
+*/
+void SparseConstraints::pushConstToConstraints(){
+
+    for (std::list<Conjunction*>::iterator i=mConjunctions.begin();
+            i != mConjunctions.end(); i++) {
+        Conjunction* c = *i;
+        c->pushConstToConstraints();
+    }
+}
+
 //! For all conjunctions, sets them to the given tuple declaration.
 //! If there are some constants that don't agree then throws exception.
 //! If replacing a constant with a variable ignores the substitution
