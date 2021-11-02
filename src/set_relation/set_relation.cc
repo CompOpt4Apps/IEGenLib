@@ -958,7 +958,7 @@ void Conjunction::pushConstToConstraints() {
         if (mTupleDecl.elemIsConst(i)) {
             int const_val = mTupleDecl.elemConstVal(i);
             std::stringstream ss;
-            ss << "c_" << const_val;
+            ss << "c_" << i;
             mTupleDecl.setTupleElem(i, ss.str());
             Exp* e = new Exp();
             e->addTerm( mTupleDecl.elemCreateTerm(i,i) );
