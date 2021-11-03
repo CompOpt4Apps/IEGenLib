@@ -958,7 +958,7 @@ void Conjunction::pushConstToConstraints() {
         if (mTupleDecl.elemIsConst(i)) {
             int const_val = mTupleDecl.elemConstVal(i);
             std::stringstream ss;
-            ss << "c_" << const_val;
+            ss << "c_" << i;
             mTupleDecl.setTupleElem(i, ss.str());
             Exp* e = new Exp();
             e->addTerm( mTupleDecl.elemCreateTerm(i,i) );
@@ -1778,6 +1778,18 @@ void SparseConstraints::reset() {
 
 SparseConstraints::~SparseConstraints() {
     reset();
+}
+
+/*! Pushes the constants in the tuple declaration into equality
+**  constraints instead.
+*/
+void SparseConstraints::pushConstToConstraints(){
+
+    for (std::list<Conjunction*>::iterator i=mConjunctions.begin();
+            i != mConjunctions.end(); i++) {
+        Conjunction* c = *i;
+        c->pushConstToConstraints();
+    }
 }
 
 //! For all conjunctions, sets them to the given tuple declaration.

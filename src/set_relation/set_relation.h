@@ -422,6 +422,15 @@ public:
     void
     substituteInConstraints(SubMap& searchTermToSubExp);
 
+
+    
+
+    /*! Pushes the constants in the tuple declaration into equality
+    **  constraints instead.
+    */
+    void pushConstToConstraints();
+
+
     //! Remove duplicate constraints and trivial constraints
     void cleanUp();
 

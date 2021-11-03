@@ -8,7 +8,7 @@ target_include_directories(executor PUBLIC ${CMAKE_SOURCE_DIR}/src)
 file(GLOB_RECURSE COOtoCSR_SOURCES COOtoCSR.cc)
 add_executable(COOtoCSR EXCLUDE_FROM_ALL ${COOtoCSR_SOURCES})
 add_dependencies(COOtoCSR iegenlib)
-target_link_libraries(COOtoCSR iegenlib isl gmp)
+target_link_libraries(COOtoCSR iegenlib isl codegen omega gmp)
 target_include_directories(COOtoCSR PUBLIC ${CMAKE_SOURCE_DIR}/src)
 
 file(GLOB_RECURSE sparse_format_example_SOURCES sparse_format_example.cc)
