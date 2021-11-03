@@ -38,7 +38,6 @@ int main(int ac, char **av) {
    std::cout << "Arel: " << Arel->prettyPrintString() << std::endl;
    Relation * result = Arel->IntersectOnInputTuple(denseToC);
    result = Brel->IntersectOnInputTuple(result);
-   Set * resultSet = result->ToSet();
    Set * actualResult = result->Apply(dense);
    std::cout<< "This is the new set!! " 
             <<  actualResult->prettyPrintString() << "\n"; 

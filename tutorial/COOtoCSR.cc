@@ -21,59 +21,69 @@ using iegenlib::Set;
 
 int main(int ac, char **av) {
 
-   // COO to Dense
+    // Set up our input relations
+    Set * dns = new Set(
+     "{[i,j] : 0<=i<NR and 0<=j<NC}");
     Relation * coo2dns = new Relation(
-     "{[n] ->[i,j]:row1(n)=i and col1(n) =j }");
-
+     "{[n] ->[i,j]:row1(n)=i and col1(n) =j and 0<=n<NNZ }");
     Relation * dns2csr = new Relation(
-     "{[i,j] ->[k]:rowptr(i)<=k<rowptr(i+ 1) and col2(k)=j and P2(i,j)=k}");
+     "{[i,j] ->[k]:rowptr(i)<=k<rowptr(i+ 1) and col2(k)=j and P(i,j)=k}");
 
     Relation * coo2csr = dns2csr->Compose(coo2dns);
 
     std::cout<< coo2csr->prettyPrintString() << "\n"; 
 
-    // TODO
-    // extract all known UFs
-    /*StringIterator* knownUFsIter = coo2dns->getSymbolIterator();
-    std::vector<string> knownUFs;
-    std::cout << "Known UFS\n";
-    while (knownUFsIter->hasNext()) {
-       knownUFs.push_back( knownUFsIter->next() );
-       std::cout << knownUFs.back() << std::endl;
-    }
-    // extract all unknown UFs
-    StringIterator* unknownUFsIter = dns2csr->getSymbolIterator();
-    std::vector<string> knownUFs;
-    std::vector<Set*> domains;
-    std::cout << "unknown UFS and their dowmains\n";
-    while (unknownUFsIter->hasNext()) {
-       unknownUFs.push_back( unknownUFsIter->next() );
-       domains.push_back(coo2csr->ExtractUFDomain(unknownUFs.back())); 
-       std::cout << unknownUFs.back() << std::endl;
-    }*/
+    // Step 1: Generate Computation
+    /*Computation* coo2csrComp = new Computation();
+    vector < pair<string, string> > dataReads;
+    vector < pair<string, string> > dataWrites;*/
 
+    // Step 2: Set up the parameters. Each of the UF that are in the
+    // coo2dns relation are known and will come in as paramters.
+    // Also, the dns set has NR and NC - parameters.
+    // This will create the data macros that can be used by the 
+    // statements we create below.
+
+
+    // Step 3: The first statement we are adding will be to populate
+    // P. 
+    // Get the constraint involving P, there should only be one.
+    // Get the tuple - generated code will use std::make_tuple, push_back
+    // on a vector, and then std::sort. The tupe of this dataspace will be
+    // std::vector<tuple> The declaration should not be created yet
+/*    std::string insertP = "P.push_back(std::make_tuple(";
+    insertP.append(// get the parameters to P)
     
-   
-   /* // Get all constraints that involve P2
-    std::vector<Expression> P2constraints = 
-         dns2csr->getConstraintsUsingUF(unknownUFs.at(2));
+    Stmt* Pstmt = new Stmt("P.push_back((row1(n),col1(n)));std::sort(p.begin(),P.end(),comparator",
+                "{[k] : 0 <= k <= -2 + 2n}",
+                "{[k]->[0, k, 0]}",
+                 dataReads,
+                 dataWrites
+                 );  */
 
-    // foreach constraint
-    // 2. sort into (a. self referential, b. depends on unknown UF, and c. other
-    for(auto &constraint : P2constraints){
-      if(constraint->usesUFMoreThanOnce()){
-        // push it onto insertion constraints
-      }else if(constraint->dependsOnUnknownUF()){
-        // discard we can't use this right now
-      }else{
-        // turn into a statment and push onto statement list
-      }
-    }
+    // Step 4: This will be done in a loop over the constraints. We need
+    // to keep track of which constraints we have attempted and make sure 
+    // to stop if we keep trying the same ones and they do not work
+    // LOOP TO DETECT COMPLETION OR STUCKNESS
+       // LOOP OVER CONSTRAINTS
+          // if all UFs are known/complete continue
+          // if unknown UF count > 1 continue
+          // if unknown UF count == 1
+             // Step 4a: Create Statement (3 options)
+             // Step 4b: Create Iteration to Index Mapping
+             // Step 4c: Create Iteration Space
+             // if(iteration space !ONTO domain(UF)
+                // create negated statement
+                // create iteration to Index Mapping
+                // create iteration space, project out tuple variable
+                // that prevents ONTO
+                // schedule this statement 
+                // add negated statement to computation
+             // Step 4d: Add statement to Computation
+             // Mark Constraint as known
 
-    // At this point we should have a statement list
-    // The next task is to determine the iteration space associated
-    // With those statements
-    */
 
+    // Computation for Iterator should be complete
+    // Will need to allocate dataspaces for codegen
     return 0;
 }

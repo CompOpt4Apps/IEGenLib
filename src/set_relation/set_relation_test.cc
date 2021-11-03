@@ -4103,20 +4103,6 @@ TEST_F(SetRelationTest, projectOut)
         delete r2;
     }
 }
-TEST_F(SetRelationTest,ProjectOutPotentialBug){
-
-  Relation * rel1 = new Relation(
-    "{ [tv3, tv4, tv5] -> [tv0, tv1, tv2] : tv3 - tv1 = 0 && tv4 - tv2 = 0 && tv5 - tv0 = 0 }");
-  Relation *p = rel1->projectOut(5);
-  ASSERT_NE(nullptr, p);
-  Relation * expected = new Relation(
-    "{ [tv3, tv4, tv5] -> [tv0, tv1] : tv3 - tv1 = 0 && tv5 - tv0 = 0 }");
-  EXPECT_EQ(expected->prettyPrintString(),p->prettyPrintString());
-
-  delete rel1;
-  delete p;
-  delete expected;
-}
 
 #if 0
 #pragma mark debuggingForILU
