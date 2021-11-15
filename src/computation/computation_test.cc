@@ -414,7 +414,7 @@ TEST_F(ComputationTest, OmegaCodeGenFromString){
 
     Computation* myComp =  new Computation();
     std::string codegen = myComp->omegaCodeGenFromString(arity, omegaIterationSpaces,"{ [] }");
-    EXPECT_EQ("",codegen);
+    EXPECT_EQ("for(t2 = 0; t2 <= N-1; t2++) {\n  s0(0,t2,0);\n  s1(0,t2,1);\n}\n\n",codegen);
 
     delete myComp;
 }
