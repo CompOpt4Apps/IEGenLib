@@ -2265,7 +2265,7 @@ std::string Computation::toOmegaString() {
     }
 
     delete vOmegaReplacer;
-    return omegaString.str();
+    return stripDataSpaceDelimiter(omegaString.str());
 }
 
 bool Computation::assertValidDataSpaceName(const std::string &name, bool alreadyDelimited) {
