@@ -4846,8 +4846,8 @@ TEST_F(SetRelationTest, SymbolIterator) {
  
       // extract all known UFs
     iegenlib::StringIterator* knownUFsIter = r1->getSymbolIterator();
-
-    std::cout << r1->toString()
+    std::cout << '\n';
+    std::cout <<"zero  " <<r1->toString();
 
     std::cerr<< knownUFsIter << "\n";
     std::vector<string> knownUFs;
@@ -4855,11 +4855,11 @@ TEST_F(SetRelationTest, SymbolIterator) {
 
     while (knownUFsIter->hasNext()) {
         knownUFs.push_back( knownUFsIter->next() );
-        std::cerr << knownUFs.back() << std::endl;
-        std::cerr  << "Something is being done";
+	EXPECT_EQ("rowptr", knownUFs);
+    	EXPECT_EQ("col2", knownUFs);
+    	EXPECT_EQ("P2", knownUFs);
     }
     //std::cerr << knownUFs;
-    //EXPECT_EQ(" ", knownUFs);
     std::cerr  << "Something has been  done";
     delete r1;
     delete knownUFsIter;

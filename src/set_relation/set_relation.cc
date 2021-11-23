@@ -728,10 +728,13 @@ StringIterator* Conjunction::getSymbolIterator() const {
     std::set<std::string> symbolSet;
 
     // Collect symbols from equalities
+    std:: cout << "\n Conjunctions \n ";
     for (std::list<Exp*>::const_iterator i=mEqualities.begin();
             i != mEqualities.end(); i++) {
         // recursively call on expressions
+        std:: cout << " mEqualities \n ";
         StringIterator* subSymIter = (*i)->getSymbolIterator();
+         std:: cout << " pointer  "<<  (*i) << '\n';
         while (subSymIter->hasNext()) {
             symbolSet.insert( subSymIter->next() );
         }
@@ -742,6 +745,7 @@ StringIterator* Conjunction::getSymbolIterator() const {
     for (std::list<Exp*>::const_iterator i=mInequalities.begin();
             i != mInequalities.end(); i++) {
         // recursively call on expressions
+        std:: cout << " mInequalities \n ";
         StringIterator* subSymIter = (*i)->getSymbolIterator();
         while (subSymIter->hasNext()) {
             symbolSet.insert( subSymIter->next() );
@@ -751,6 +755,7 @@ StringIterator* Conjunction::getSymbolIterator() const {
 
     return new StringIterator( symbolSet );
 }
+
 
 //! Get an iterator over the tuple variables, in order.
 StringIterator* Conjunction::getTupleIterator() const {

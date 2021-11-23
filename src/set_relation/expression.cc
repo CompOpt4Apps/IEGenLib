@@ -1695,15 +1695,15 @@ std::string Exp::toDotString(int parent_id, int & next_id) const {
 StringIterator* Exp::getSymbolIterator() const {
 
     std::set<std::string> symbolSet;
-
+    std:: cout << "expression \n";
     for (std::list<Term*>::const_iterator i=mTerms.begin();
                 i != mTerms.end(); i++) {
-
         VarTerm *varTerm = dynamic_cast<VarTerm*>(*i);
 
         // If have a var term then put in the set of symbols
         if (varTerm) {
             symbolSet.insert( varTerm->symbol() );
+	      std:: cout << "expression1 \n"<< varTerm<<'\n';
 
         } else {
 
@@ -1711,12 +1711,14 @@ StringIterator* Exp::getSymbolIterator() const {
             if ((*i)->isUFCall()) {
                 UFCallTerm *callTerm = dynamic_cast<UFCallTerm*>(*i);
                 // This term doesn't match, but maybe it contains other
+		 symbolSet.insert(callTerm->name());
                 // expressions that we need to search recursively.
                 for (unsigned int count=0; count<callTerm->numArgs(); count++) {
                     Exp* arg = callTerm->getParamExp(count);
                     StringIterator* subSymIter = arg->getSymbolIterator();
                     while (subSymIter->hasNext()) {
-                        symbolSet.insert( subSymIter->next() );
+                        	std:: cout<< "find1 \n";
+			    symbolSet.insert( subSymIter->next() );
                     }
                     delete subSymIter;
                 }
@@ -1729,6 +1731,7 @@ StringIterator* Exp::getSymbolIterator() const {
                     Exp* arg = tupTerm->getExpElem(count);
                     StringIterator* subSymIter = arg->getSymbolIterator();
                     while (subSymIter->hasNext()) {
+			    std:: cout<< "find2 \n";
                         symbolSet.insert( subSymIter->next() );
                     }
                     delete subSymIter;
@@ -1737,7 +1740,7 @@ StringIterator* Exp::getSymbolIterator() const {
 
         }
     }
-
+	   std:: cout << "exp end \n";
     return new StringIterator( symbolSet );
 }
 
