@@ -586,6 +586,13 @@ Stmt* Computation::getStmt(unsigned int index) const { return stmts.at(index); }
 unsigned int Computation::getNumStmts() const { return stmts.size(); }
 
 void Computation::addDataSpace(std::string dataSpaceName, std::string dataSpaceType) {
+    if (isDataSpace(dataSpaceName)) {
+        std::string previousType = getDataSpaceType(dataSpaceName);
+        if (dataSpaceType != previousType) {
+            throw assert_exception("Attempted to add already-added data space '"
+                + dataSpaceName + "' with new type '" + dataSpaceType + "' (was '" + previousType + "').");
+        }
+    }
     bool alreadyDelimited = nameIsDelimited(dataSpaceName);
     assertValidDataSpaceName(dataSpaceName, alreadyDelimited);
     if (alreadyDelimited) {
@@ -602,6 +609,9 @@ std::map<std::string, std::string> Computation::getDataSpaces() const {
 }
 
 std::string Computation::getDataSpaceType(std::string dataSpaceName) const{
+    if (!nameIsDelimited(dataSpaceName)) {
+        dataSpaceName = delimitDataSpaceName(dataSpaceName);
+    }
     return dataSpaces.at(dataSpaceName);
 }
 
