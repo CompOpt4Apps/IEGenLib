@@ -1568,3 +1568,17 @@ TEST_F(ComputationTest, DelimitDataSpacesTest) {
 
     delete comp;
 }
+
+TEST_F(ComputationTest, ActiveOutTest) {
+    auto *comp = new Computation();
+    comp->addParameter("intPtr", "int&");
+    comp->addParameter("intCopied", "int");
+    comp->addDataSpace("asdf", "int");
+    comp->addReturnValue("asdf");
+    comp->addReturnValue("0");
+
+    std::unordered_set<std::string> expectedActiveOut = {"$intPtr$", "$asdf$"};
+    EXPECT_EQ(comp->getActiveOutValues(), expectedActiveOut);
+
+    delete comp;
+}
