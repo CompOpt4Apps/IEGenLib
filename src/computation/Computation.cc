@@ -656,14 +656,22 @@ std::vector<std::string> Computation::getReturnValues() const {
     return names;
 }
 
-std::vector<std::string> Computation::getActiveOutValues() const {
-    std::vector<std::string> names = getReturnValues();
-    for (std::string name : parameters) {
-        if (getDataSpaceType(name).find('&') != std::string::npos ||
-            getDataSpaceType(name).find('*') != std::string::npos) {
-            names.push_back(name);
+std::unordered_set<std::string> Computation::getActiveOutValues() const {
+    std::unordered_set<std::string> names;
+
+    for (const auto& returnValue : returnValues) {
+        // only include non-constant return values
+        if (returnValue.second) {
+            names.emplace(returnValue.first);
         }
     }
+    for (const std::string &parameterName : parameters) {
+        if (getDataSpaceType(parameterName).find('&') != std::string::npos ||
+            getDataSpaceType(parameterName).find('*') != std::string::npos) {
+            names.emplace(parameterName);
+        }
+    }
+
     return names;
 }
 
@@ -1843,10 +1851,9 @@ void Computation::enforceArraySSA() {
     }
 
     // Array rerolling
-	std::vector<std::string> activeOut = getActiveOutValues();
+	auto activeOut = getActiveOutValues();
 	for (auto& pair : arrays) {
-    	if (std::find(activeOut.begin(), activeOut.end(), pair.first)
-        	== activeOut.end()) {
+        if (!activeOut.count(pair.first)) {
         	continue;
     	}
         for (auto& idxs : pair.second) {
