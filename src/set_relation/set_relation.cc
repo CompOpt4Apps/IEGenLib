@@ -728,13 +728,10 @@ StringIterator* Conjunction::getSymbolIterator() const {
     std::set<std::string> symbolSet;
 
     // Collect symbols from equalities
-    std:: cout << "\n Conjunctions \n ";
     for (std::list<Exp*>::const_iterator i=mEqualities.begin();
             i != mEqualities.end(); i++) {
         // recursively call on expressions
-        std:: cout << " mEqualities \n ";
         StringIterator* subSymIter = (*i)->getSymbolIterator();
-         std:: cout << " pointer  "<<  (*i) << '\n';
         while (subSymIter->hasNext()) {
             symbolSet.insert( subSymIter->next() );
         }
@@ -745,7 +742,6 @@ StringIterator* Conjunction::getSymbolIterator() const {
     for (std::list<Exp*>::const_iterator i=mInequalities.begin();
             i != mInequalities.end(); i++) {
         // recursively call on expressions
-        std:: cout << " mInequalities \n ";
         StringIterator* subSymIter = (*i)->getSymbolIterator();
         while (subSymIter->hasNext()) {
             symbolSet.insert( subSymIter->next() );
@@ -4999,12 +4995,8 @@ StringIterator* Relation::getSymbolIterator() const {
     std::set<std::string> finalSymbolSet;
         for (std::list<Conjunction*>::const_iterator it=this->mConjunctions.begin();
             it != this->mConjunctions.end(); it++) {
-                std::cout <<" test abc 12 ";
-                std::cout << "this is iterator   " << (*it);
                 StringIterator* subSymIter = (*it)->getSymbolIterator();
-                std::cout << "this is subsystem it "<< subSymIter;
                 while (subSymIter->hasNext()) {
-                    std::cout << " this is not test";
                     finalSymbolSet.insert( subSymIter->next() );
                 }
         delete subSymIter;

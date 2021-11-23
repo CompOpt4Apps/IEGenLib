@@ -386,7 +386,7 @@ TEST_F(ComputationTest, BasicForLoop) {
 
     std::string omegString= forLoopComp->toOmegaString();
     std::string codegen = forLoopComp->codeGen();
-
+    std::cerr << omegString;
     EXPECT_EQ("s0\n$tmp$ = $f$[i];\nDomain\nsymbolic $N$; { [__x0, i, __x2] : __"
     "x0 = 0 && __x2 = 0 && i >= 0 && -i + $N$ - 1 >= 0 };\ns1\n$tmp1$ = $f1$[i];"
     "\nDomain\nsymbolic $N$; { [__x0, i, __x2] : __x0 = 0 && __x2 - 1 = 0 && i >"

@@ -1695,7 +1695,6 @@ std::string Exp::toDotString(int parent_id, int & next_id) const {
 StringIterator* Exp::getSymbolIterator() const {
 
     std::set<std::string> symbolSet;
-    std:: cout << "expression \n";
     for (std::list<Term*>::const_iterator i=mTerms.begin();
                 i != mTerms.end(); i++) {
         VarTerm *varTerm = dynamic_cast<VarTerm*>(*i);
@@ -1703,7 +1702,6 @@ StringIterator* Exp::getSymbolIterator() const {
         // If have a var term then put in the set of symbols
         if (varTerm) {
             symbolSet.insert( varTerm->symbol() );
-	      std:: cout << "expression1 \n"<< varTerm<<'\n';
 
         } else {
 
@@ -1717,7 +1715,6 @@ StringIterator* Exp::getSymbolIterator() const {
                     Exp* arg = callTerm->getParamExp(count);
                     StringIterator* subSymIter = arg->getSymbolIterator();
                     while (subSymIter->hasNext()) {
-                        	std:: cout<< "find1 \n";
 			    symbolSet.insert( subSymIter->next() );
                     }
                     delete subSymIter;
@@ -1731,7 +1728,6 @@ StringIterator* Exp::getSymbolIterator() const {
                     Exp* arg = tupTerm->getExpElem(count);
                     StringIterator* subSymIter = arg->getSymbolIterator();
                     while (subSymIter->hasNext()) {
-			    std:: cout<< "find2 \n";
                         symbolSet.insert( subSymIter->next() );
                     }
                     delete subSymIter;
@@ -1740,7 +1736,6 @@ StringIterator* Exp::getSymbolIterator() const {
 
         }
     }
-	   std:: cout << "exp end \n";
     return new StringIterator( symbolSet );
 }
 
