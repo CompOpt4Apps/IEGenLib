@@ -1,3 +1,0 @@
-@macro themacro
-in themacro
-@end macro

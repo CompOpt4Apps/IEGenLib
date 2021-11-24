@@ -1,8 +1,0 @@
-\input texinfo
-
-
-@center centered
-
-Some text.
-
-@bye

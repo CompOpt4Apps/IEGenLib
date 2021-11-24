@@ -1,9 +1,0 @@
-{
-  "compilerOptions": {
-    "lib": ["dom", "es2017"],
-    "allowJs": true,
-    "checkJs": true,
-    "noEmit": true
-  },
-  "files": ["info.js"]
-}

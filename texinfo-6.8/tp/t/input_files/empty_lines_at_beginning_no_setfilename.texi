@@ -1,9 +1,0 @@
-\input texinfo
-
-
-@c comment
-
-@node Top
-@top top
-
-@bye

@@ -1,6 +1,0 @@
-PERL="/usr/bin/perl"
-DIFF_U_OPTION="-u"
-DIFF_A_OPTION="-a"
-if [ "z$srcdir" = 'z' ]; then
-  srcdir="."
-fi
