@@ -4783,20 +4783,49 @@ TEST_F(SetRelationTest,ToSet){
     EXPECT_EQ("{ [l, k] : k - n - 1 = 0 && -n +"
 	      " 10 >= 0 && n - 1 >= 0 }",set->prettyPrintString());
 }
+
 TEST_F(SetRelationTest,IntersectOnInputTuple){
            
     Relation * rel1 = new Relation(
 	     "{[i,j,k] -> [k]: }");
     Relation * rel2 = new Relation(
 	     "{[i,j,k] -> [i,j]: }");
+    Relation * rel3 = new Relation(
+	     "{[i,j,k] -> [j,k]: }");
     Relation *intersection = rel1->IntersectOnInputTuple(rel2);
     Relation * expected = new Relation(
 	     "{[i,j,k] -> [k,i,j]: }");
+    ASSERT_NE(intersection,nullptr);
     EXPECT_TRUE((*intersection)==(*expected));
+
+    Relation *intersection2 = intersection->IntersectOnInputTuple(rel3);
+    Relation * expected2 = new Relation(
+	     "{[i,j,k] -> [k,i,j]: }");
+    ASSERT_NE(intersection2,nullptr);
+    EXPECT_TRUE((*intersection2)==(*expected2));
+
     delete intersection;
     delete expected;
+    delete intersection2;
+    delete expected2;
     delete rel1;
     delete rel2;
+    delete rel3;
+}
+ 
+TEST_F(SetRelationTest,ProjectOutPotentialBug){
+
+  Relation * rel1 = new Relation(
+    "{ [i, j, k] -> [i, j] : i - i = 0 && j - j = 0 }");
+  Relation *p = rel1->projectOut(3);
+  ASSERT_NE(nullptr, p);
+  Relation * expected = new Relation(
+    "{ [i, j, k] -> [ j] :  j - j = 0 }");
+  EXPECT_EQ(expected->prettyPrintString(),p->prettyPrintString());
+
+  delete rel1;
+  delete p;
+  delete expected;
 }
 
 TEST_F(SetRelationTest,CONVEX_HULL){
@@ -4837,7 +4866,6 @@ TEST_F(SetRelationTest,DISABLED_ParseOmegaString){
     EXPECT_EQ("",result->prettyPrintString());
 }
 
-
 TEST_F(SetRelationTest, SymbolIterator) {
 
     Relation * r1 = new Relation(
@@ -4859,3 +4887,4 @@ TEST_F(SetRelationTest, SymbolIterator) {
     delete r1;
     delete knownUFsIter;
 }
+
