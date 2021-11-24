@@ -752,6 +752,7 @@ StringIterator* Conjunction::getSymbolIterator() const {
     return new StringIterator( symbolSet );
 }
 
+
 //! Get an iterator over the tuple variables, in order.
 StringIterator* Conjunction::getTupleIterator() const {
     std::list<std::string> tupleList;
@@ -5139,10 +5140,18 @@ string Relation::getString(bool generic)
     return result;
 }
 
-
-
-
-
+StringIterator* Relation::getSymbolIterator() const {
+    std::set<std::string> finalSymbolSet;
+        for (std::list<Conjunction*>::const_iterator it=this->mConjunctions.begin();
+            it != this->mConjunctions.end(); it++) {
+                StringIterator* subSymIter = (*it)->getSymbolIterator();
+                while (subSymIter->hasNext()) {
+                    finalSymbolSet.insert( subSymIter->next() );
+                }
+        delete subSymIter;
+        }
+    return new StringIterator(finalSymbolSet);
+}
 
 /*****************************************************************************/
 #pragma mark -

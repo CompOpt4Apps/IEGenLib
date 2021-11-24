@@ -1695,10 +1695,8 @@ std::string Exp::toDotString(int parent_id, int & next_id) const {
 StringIterator* Exp::getSymbolIterator() const {
 
     std::set<std::string> symbolSet;
-
     for (std::list<Term*>::const_iterator i=mTerms.begin();
                 i != mTerms.end(); i++) {
-
         VarTerm *varTerm = dynamic_cast<VarTerm*>(*i);
 
         // If have a var term then put in the set of symbols
@@ -1711,12 +1709,13 @@ StringIterator* Exp::getSymbolIterator() const {
             if ((*i)->isUFCall()) {
                 UFCallTerm *callTerm = dynamic_cast<UFCallTerm*>(*i);
                 // This term doesn't match, but maybe it contains other
+		 symbolSet.insert(callTerm->name());
                 // expressions that we need to search recursively.
                 for (unsigned int count=0; count<callTerm->numArgs(); count++) {
                     Exp* arg = callTerm->getParamExp(count);
                     StringIterator* subSymIter = arg->getSymbolIterator();
                     while (subSymIter->hasNext()) {
-                        symbolSet.insert( subSymIter->next() );
+			    symbolSet.insert( subSymIter->next() );
                     }
                     delete subSymIter;
                 }
@@ -1737,7 +1736,6 @@ StringIterator* Exp::getSymbolIterator() const {
 
         }
     }
-
     return new StringIterator( symbolSet );
 }
 
