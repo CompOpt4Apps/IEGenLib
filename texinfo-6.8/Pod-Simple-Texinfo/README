@@ -1,0 +1,31 @@
+Pod-Simple-Texinfo version 0.01
+===============================
+
+Pod::Simple based Pod formatter to render Texinfo.
+
+INSTALLATION
+
+To install this module type the following:
+
+   perl Makefile.PL
+   make
+   make test
+   make install
+
+DEPENDENCIES
+
+This module requires these other modules and libraries:
+
+Pod::Simple::PullParser, Texinfo::Parser.  
+
+COPYRIGHT AND LICENCE
+
+Copyright (C) 2011, 2012 Free Software Foundation, Inc.
+
+This library is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 3 of the License,
+or (at your option) any later version.
+
+_url_escape is general_url_escape from Pod::Simple::HTML.
+

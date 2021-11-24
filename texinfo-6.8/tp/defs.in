@@ -1,0 +1,6 @@
+PERL="@PERL@"
+DIFF_U_OPTION="@DIFF_U_OPTION@"
+DIFF_A_OPTION="@DIFF_A_OPTION@"
+if [ "z$srcdir" = 'z' ]; then
+  srcdir="@srcdir@"
+fi

@@ -1,0 +1,53 @@
+texinfo/tp/README
+
+  Copyright 2011-2019 Free Software Foundation, Inc.
+
+  Copying and distribution of this file, with or without modification,
+  are permitted in any medium without royalty provided the copyright
+  notice and this notice are preserved.
+
+Texinfo::Parser (hence the directory name tp) is a Perl module for
+parsing Texinfo code into a tree representing the Texinfo code
+structure.
+
+These other modules and libraries are required (all have been standard
+parts of Perl for years, at least since 5.7.3):
+  Carp, Config, Data::Dumper, Encode, File::Basename, File::Spec
+  Getopt::Long, Unicode::Normalize, Storable
+
+It also uses the less widely-available modules:
+  Locale::Messages, Unicode::EastAsianWidth, Text::Unidecode
+For these, internal versions are included, and are installed and used as
+part of Texinfo (not disturbing the Perl installation at all).
+
+To run the tests you also need:
+  Test::More, Data::Compare, Test::Deep
+On Debian-based distros, Test::More is part of perl-modules and thus 
+installed with perl, the packages corresponding to the other modules
+are named:
+  libdata-compare-perl libtest-deep-perl
+
+The tests are in the subdirectories t/ and test/.  The tests in t/ test 
+the Perl modules used by the makeinfo command, and the tests in test/ 
+test the command itself.
+
+This module is part of GNU Texinfo.  A standalone Perl module may also be
+produced from within the the Texinfo tree, using 
+  ./maintain/prepare_perl_standalone_module_archive.sh
+The resulting module, although standalone, should always be regenerated
+from the sources in Texinfo, to avoid divergence of sources.
+
+
+If you want to delve into making a new backend, the documentation in
+tp/Texinfo/Convert/Converter.pm is a good starting point, as it
+describes the existing backends and other places to look.  To do a good
+job, expect to spend a lot of time making it do the right thing with the
+existing tests.
+
+tp builds a complicated parse tree.  It can output a lot of debug
+information about the tree, and what it's doing generally.  For example,
+these commands output the tree (in different forms):
+  makeinfo -c DUMP_TREE=1 -c TEXINFO_OUTPUT_FORMAT=parse document.texi
+  makeinfo -c TEXINFO_OUTPUT_FORMAT=debugtree document.texi
+In addition (or instead) setting the DEBUG configuration variable will
+dump more information about what it's doing.

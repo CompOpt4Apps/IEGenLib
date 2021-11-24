@@ -1,0 +1,11 @@
+texinfo/install-info/README
+
+  Copyright 2008-2019 Free Software Foundation, Inc.
+
+  Copying and distribution of this file, with or without modification,
+  are permitted in any medium without royalty provided the copyright
+  notice and this notice are preserved.
+
+install-info updates the top-level dir file in the Info tree.
+(It does not actually install .info files into the Info directory, oddly
+enough.)

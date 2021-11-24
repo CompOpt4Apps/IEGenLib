@@ -1,0 +1,11 @@
+#info
+?	xxx-not-recognized # Check that unknown actions don't break.
+!	menu-digit	# menu-digit can't be rebound
+D	print-node	# Dump node to file
+#echo-area
+^x      echo-area-abort # as C-g discards typeahead and ESC used for Meta key
+#var
+infopath-no-defaults=On
+automatic-footnotes=On
+key-time=0
+nodeline=print

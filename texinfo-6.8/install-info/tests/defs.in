@@ -1,0 +1,114 @@
+# @configure_input@
+# 
+# Copyright 2008-2019 Free Software Foundation, Inc.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or (at
+# your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# (Some snippets copied from Autoconf and/or util/defs.in.)
+# Make sure we override the user shell.
+SHELL='@SHELL@'
+export SHELL
+
+# unsetting an already-unset variable fails with BSD sh.
+CDPATH=
+unset CDPATH
+
+# Ensure we are running from the right directory.
+if test ! -f ./defs; then
+   echo "$0: defs: not found in current directory." 1>&2
+   exit 1
+fi
+
+# If srcdir is not set, then we are not running from `make check'.
+if test -z "$srcdir"; then
+   VERBOSE=x
+   # compute $srcdir.
+   srcdir=`echo "$0" | sed -e 's,/[^\\/]*$,,'`
+   test $srcdir = $0 && srcdir=.
+fi
+
+# Get messages in English
+LC_ALL=C ; export LC_ALL
+
+# Use first line to run valgrind on the tests.  After "make check",
+# check for errors with "grep ERROR\ SUM *.log".
+#valgrind='valgrind '
+valgrind=
+
+# Two variables we use in the test scripts:
+top_builddir='@top_builddir@'
+install_info=${valgrind}${top_builddir}/install-info/ginstall-info
+export install_info
+#
+top_srcdir='@top_srcdir@'
+testdir=${top_srcdir}/install-info/tests
+export testdir
+
+if test -z "$TMPDIR"; then
+  TMPDIR=/tmp
+  export TMPDIR
+fi
+
+# In case someone pedantic insists on using grep -E.
+: ${EGREP=egrep}
+
+# Systems which define $COMSPEC or $ComSpec use semicolons to separate
+# directories in TEXINPUTS -- except for Cygwin et al., where COMSPEC
+# might be inherited, but : is used.
+if test -n "$COMSPEC$ComSpec" \
+   && uname | $EGREP -iv 'cygwin|mingw|djgpp' >/dev/null; then
+  path_sep=";"
+else
+  path_sep=":"
+fi
+
+# Return true if PROG is somewhere in PATH, else false.
+findprog ()
+{
+  local saveIFS="$IFS"
+  IFS=$path_sep  # break path components at the path separator
+  for dir in $PATH; do
+    IFS=$saveIFS
+    # The basic test for an executable is `test -f $f && test -x $f'.
+    # (`test -x' is not enough, because it can also be true for directories.)
+    # We have to try this both for $1 and $1.exe.
+    #
+    # On Cygwin and DJGPP, `test -x' also looks for .exe.  On Cygwin,
+    # also `test -f' has this enhancement, but not on DJGPP.  Both are
+    # design decisions, so there is little chance to make them consistent.
+    # So we must check for .exe explicitly.
+    #
+    if   { test -f "$dir/$1"     && test -x "$dir/$1"; } \
+      || { test -f "$dir/$1.exe" && test -x "$dir/$1.exe"; }; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+if findprog mktemp; then :; else
+# Some deficient proprietary systems lack mktemp; kowtow to them.
+# Our mktemp substitute doesn't need all the features of real mktemp;
+# our tests here only use it in the most simplistic way, to create a
+# temp file.  The autoconf manual suggests doing it in a temporary
+# directory (mode 700), so do that.  ($RANDOM may expand to nothing, but
+# that's ok.) We do not even bother to expand the X's in the template ...
+mktemp ()
+{
+  dir=$TMPDIR/iimktemp$$-$RANDOM
+  (umask 077 && mkdir "$dir")
+  touch "$dir/$1" || return 1
+  echo "$dir/$1"
+}
+fi
