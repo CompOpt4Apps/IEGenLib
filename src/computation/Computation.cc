@@ -128,9 +128,18 @@ void Computation::setName(std::string newName) {
   this->name = newName;
 }
 
+bool Computation::hasName() const {
+    return (!getName().empty());
+}
+
 Computation* Computation::getUniquelyNamedClone() const {
     std::string namePrefix = NAME_PREFIX_BASE + std::to_string(numComputationRenames++);
     Computation* prefixedCopy = new Computation();
+
+    // prefix name for clarity
+    if (this->hasName()) {
+        prefixedCopy->setName(namePrefix + this->getName());
+    }
 
     // prefix all data in the Computation and insert it to the new one
     for (auto& space : this->dataSpaces) {

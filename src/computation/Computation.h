@@ -74,10 +74,12 @@ class Computation {
     //! Inequality operator
     bool operator!=(const Computation& other) const { return !(*this == other); };
 
-	//! Get the name of this Computation
-	std::string getName() const;
-	//! Set the name of this Computation
-	void setName(std::string newName);
+    //! Get the name of this Computation
+    std::string getName() const;
+    //! Check if this Computation is named
+    bool hasName() const;
+    //! Set the name of this Computation
+    void setName(std::string newName);
 
     //! Get a copy of this Computation with uniquely-prefixed data spaces
     //! Uses string find-and-replace to change data space names, with the
