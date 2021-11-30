@@ -1412,6 +1412,20 @@ bool Exp::dependsOn(const Term& factor) const {
     return false;
 }
 
+
+
+/*! Returns true if this expression contains a UFCallTerm
+*/
+bool Exp::hasUFCall() const {
+    for (std::list<Term*>::const_iterator i=mTerms.begin();
+                i != mTerms.end(); i++) {
+        if ( (*i)->isUFCall() ) {
+            return true;
+        }
+    }
+    return false;
+}
+
 /*! Returns true if this expression contains a UFCallTerm
 **  that is being indexed.
 */

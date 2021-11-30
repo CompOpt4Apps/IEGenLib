@@ -17,6 +17,9 @@ for(int i = 0; i < n; i++)
    T: C[i+j] += A[i] * B[j] ;
 }*/
 Computation* MyComp = new Computation();
+MyComp->addDataSpace("C","int*");
+MyComp->addDataSpace("A","int*");
+MyComp->addDataSpace("B","int*");
 vector < pair<string, string> > dataReads;
 vector < pair<string, string> > dataWrites;
 
@@ -63,7 +66,7 @@ MyComp->addStmt(statement2);
 cout << "Stmt2 initialised" << "\n";
 
 //Calling toDot() on the Computation structure
-
+MyComp->finalize(false);
 cout << "Polynomial product Codegen:\n";
 cout << MyComp->codeGen();
 
