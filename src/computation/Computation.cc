@@ -128,9 +128,18 @@ void Computation::setName(std::string newName) {
   this->name = newName;
 }
 
+bool Computation::hasName() const {
+    return (!getName().empty());
+}
+
 Computation* Computation::getUniquelyNamedClone() const {
     std::string namePrefix = NAME_PREFIX_BASE + std::to_string(numComputationRenames++);
     Computation* prefixedCopy = new Computation();
+
+    // prefix name for clarity
+    if (this->hasName()) {
+        prefixedCopy->setName(namePrefix + this->getName());
+    }
 
     // prefix all data in the Computation and insert it to the new one
     for (auto& space : this->dataSpaces) {
@@ -586,6 +595,13 @@ Stmt* Computation::getStmt(unsigned int index) const { return stmts.at(index); }
 unsigned int Computation::getNumStmts() const { return stmts.size(); }
 
 void Computation::addDataSpace(std::string dataSpaceName, std::string dataSpaceType) {
+    if (isDataSpace(dataSpaceName)) {
+        std::string previousType = getDataSpaceType(dataSpaceName);
+        if (dataSpaceType != previousType) {
+            throw assert_exception("Attempted to add already-added data space '"
+                + dataSpaceName + "' with new type '" + dataSpaceType + "' (was '" + previousType + "').");
+        }
+    }
     bool alreadyDelimited = nameIsDelimited(dataSpaceName);
     assertValidDataSpaceName(dataSpaceName, alreadyDelimited);
     if (alreadyDelimited) {
@@ -602,6 +618,9 @@ std::map<std::string, std::string> Computation::getDataSpaces() const {
 }
 
 std::string Computation::getDataSpaceType(std::string dataSpaceName) const{
+    if (!nameIsDelimited(dataSpaceName)) {
+        dataSpaceName = delimitDataSpaceName(dataSpaceName);
+    }
     return dataSpaces.at(dataSpaceName);
 }
 
@@ -656,14 +675,22 @@ std::vector<std::string> Computation::getReturnValues() const {
     return names;
 }
 
-std::vector<std::string> Computation::getActiveOutValues() const {
-    std::vector<std::string> names = getReturnValues();
-    for (std::string name : parameters) {
-        if (getDataSpaceType(name).find('&') != std::string::npos ||
-            getDataSpaceType(name).find('*') != std::string::npos) {
-            names.push_back(name);
+std::unordered_set<std::string> Computation::getActiveOutValues() const {
+    std::unordered_set<std::string> names;
+
+    for (const auto& returnValue : returnValues) {
+        // only include non-constant return values
+        if (returnValue.second) {
+            names.emplace(returnValue.first);
         }
     }
+    for (const std::string &parameterName : parameters) {
+        if (getDataSpaceType(parameterName).find('&') != std::string::npos ||
+            getDataSpaceType(parameterName).find('*') != std::string::npos) {
+            names.emplace(parameterName);
+        }
+    }
+
     return names;
 }
 
@@ -1843,10 +1870,9 @@ void Computation::enforceArraySSA() {
     }
 
     // Array rerolling
-	std::vector<std::string> activeOut = getActiveOutValues();
+	auto activeOut = getActiveOutValues();
 	for (auto& pair : arrays) {
-    	if (std::find(activeOut.begin(), activeOut.end(), pair.first)
-        	== activeOut.end()) {
+        if (!activeOut.count(pair.first)) {
         	continue;
     	}
         for (auto& idxs : pair.second) {
@@ -2265,7 +2291,7 @@ std::string Computation::toOmegaString() {
     }
 
     delete vOmegaReplacer;
-    return omegaString.str();
+    return stripDataSpaceDelimiter(omegaString.str());
 }
 
 bool Computation::assertValidDataSpaceName(const std::string &name, bool alreadyDelimited) {

@@ -609,6 +609,11 @@ public:
     */
     bool dependsOn(const Term& factor) const;
 
+
+    /*! Returns true if this expression contains a UFCallTerm
+    */
+    bool hasUFCall() const;
+    
     /*! Returns true if this expression contains a UFCallTerm
     **  that is being indexed.
     */

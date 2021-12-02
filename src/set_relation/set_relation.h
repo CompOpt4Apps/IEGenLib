@@ -1001,6 +1001,9 @@ public:
     //               original UFCallTerm in IEGenLib
     static Relation* parseOmegaString(std::string omegaString,
 		    std::map<std::string,UFCallTerm*> ufMap);
+    
+    StringIterator* getSymbolIterator() const;
+
 private:
     int mInArity;
     int mOutArity;

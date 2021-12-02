@@ -37,11 +37,11 @@ TEST(UtilTests, ReplaceInString) {
 }
 
 TEST(UtilTests, GenerateDotLabel) {
-   EXPECT_EQ("label=\"\\{ [0] \\}\n double r = current_values[0], theta=current_values[1], phi=current_values[2];\"",
+   EXPECT_EQ("label=\"\\{ \\[0\\] \\}\n double r = current_values\\[0\\], theta=current_values\\[1\\], phi=current_values\\[2\\];\"",
              generateDotLabel("{ [0] }\n double r = current_values[0], theta=current_values[1], phi=current_values[2];"));
-   EXPECT_EQ("label=\"\\{ [100] \\}\n double $_iegen_17_iegen_16x$ = $_iegen_17r_eval$;\"",
+   EXPECT_EQ("label=\"\\{ \\[100\\] \\}\n double _iegen_17_iegen_16x = _iegen_17r_eval;\"",
              generateDotLabel("{ [100] }\n double $_iegen_17_iegen_16x$ = $_iegen_17r_eval$;"));
-   EXPECT_EQ("label=\"\\{ [0] \\}\\n double r = current_values[0], theta=current_values[1], phi=current_values[2];\"",
+   EXPECT_EQ("label=\"\\{ \\[0\\] \\}\\n double r = current_values\\[0\\], theta=current_values\\[1\\], phi=current_values\\[2\\];\"",
              generateDotLabel({"{ [0] }", "\\n ", "double r = current_values[0], theta=current_values[1], phi=current_values[2];"}));
 }
 

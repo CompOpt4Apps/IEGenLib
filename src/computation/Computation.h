@@ -74,10 +74,12 @@ class Computation {
     //! Inequality operator
     bool operator!=(const Computation& other) const { return !(*this == other); };
 
-	//! Get the name of this Computation
-	std::string getName() const;
-	//! Set the name of this Computation
-	void setName(std::string newName);
+    //! Get the name of this Computation
+    std::string getName() const;
+    //! Check if this Computation is named
+    bool hasName() const;
+    //! Set the name of this Computation
+    void setName(std::string newName);
 
     //! Get a copy of this Computation with uniquely-prefixed data spaces
     //! Uses string find-and-replace to change data space names, with the
@@ -169,7 +171,7 @@ class Computation {
     //! Get the list of return values
     std::vector<std::string> getReturnValues() const;
     //! Gets all active out data spaces - return values and reference parameters
-    std::vector<std::string> getActiveOutValues() const;
+    std::unordered_set<std::string> getActiveOutValues() const;
     //! Check if a data space is a return values
     bool isReturnValue(std::string dataSpaceName) const;
     //! Get the number of return values this Computation has (some languages
