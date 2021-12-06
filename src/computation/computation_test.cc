@@ -119,6 +119,7 @@ class ComputationTest : public ::testing::Test {
             EXPECT_EQ(expectedAssignments[t.first],t.second);
 	}
         delete set;
+	vOmegaReplacer->reset();
     }
 
     //! Test that appending a computation to another yields the correct results.
@@ -1582,3 +1583,85 @@ TEST_F(ComputationTest, ActiveOutTest) {
 
     delete comp;
 }
+TEST_F(ComputationTest, NestedUFTest) {
+    auto vOmegaReplacer = new VisitorChangeUFsForOmega();
+    Set * s = new Set("{[n]: 0 < n && n < NNZ && rowptr(row(n)) <= NNZ }");
+    
+    EXPECT_NO_THROW(s->acceptVisitor(vOmegaReplacer));
+    EXPECT_EQ("{[n,x1]: n - 1 >= 0 && n - NNZ + 1 >= 0"
+	      " && rowptr1(n,x1) <= NNZ && x1 = row1(n,x1) }",
+	      s->prettyPrintString());
+    auto ufMaps = vOmegaReplacer->getUFMap();
+    ASSERT_EQ(2,ufMaps.size());
+    auto ufMapIter = ufMaps.begin(); 
+    EXPECT_EQ("rowptr1", (*ufMapIter).first);
+    EXPECT_EQ("",  (*ufMapIter).second->prettyPrintString(s->getTupleDecl())); 
+    
+    ufMapIter++;
+    EXPECT_EQ("row1", (*ufMapIter).first);
+    EXPECT_EQ("", (*ufMapIter).second->prettyPrintString(s->getTupleDecl())); 
+    vOmegaReplacer->reset();
+    
+    delete s;
+    
+    
+    // Doubly nested UF test
+    s = new Set("{[n]: 0 < n && n < NNZ && rowptr(row(col(n))) <= NNZ }");
+    EXPECT_NO_THROW(s->acceptVisitor(vOmegaReplacer));
+    EXPECT_EQ("{[n,x1,x2]: n - 1 >= 0 && n - NNZ + 1 >= 0"
+	      " && rowptr1(n,x1,x2) <= NNZ && x1 = row2(n,x1,x2) && x2 = col(n,x1,x2) }",
+	      s->prettyPrintString());
+
+    ufMaps = vOmegaReplacer->getUFMap();
+    ASSERT_EQ(3,ufMaps.size());
+    ufMapIter = ufMaps.begin(); 
+    EXPECT_EQ("rowptr1", (*ufMapIter).first);
+    EXPECT_EQ("",  (*ufMapIter).second->prettyPrintString(s->getTupleDecl())); 
+    
+    ufMapIter++;
+    EXPECT_EQ("row1", (*ufMapIter).first);
+    EXPECT_EQ("", (*ufMapIter).second->prettyPrintString(s->getTupleDecl())); 
+   
+    ufMapIter++; 
+    EXPECT_EQ("col1", (*ufMapIter).first);
+    EXPECT_EQ("", (*ufMapIter).second->prettyPrintString(s->getTupleDecl())); 
+
+    vOmegaReplacer->reset();
+    delete s;
+
+    
+    // Tests with expressions in UF parameter.
+    s = new Set("{[n]: 0 < n && n < NNZ && rowptr(row(n) + NNZ) <= NNZ }");
+    
+    EXPECT_NO_THROW(s->acceptVisitor(vOmegaReplacer));
+    EXPECT_EQ("{[n,x1,x3]: n - 1 >= 0 && n - NNZ + 1 >= 0"
+	      " && rowptr1(n,x1) <= NNZ && x1 = row1(n,x1,x3) && x3 = x1 + NNZ }",
+	      s->prettyPrintString());
+    ufMaps = vOmegaReplacer->getUFMap();
+    ASSERT_EQ(2,ufMaps.size());
+    
+    ufMapIter = ufMaps.begin(); 
+    EXPECT_EQ("rowptr1", (*ufMapIter).first);
+    EXPECT_EQ("",  (*ufMapIter).second->prettyPrintString(s->getTupleDecl())); 
+    
+    ufMapIter++;
+    EXPECT_EQ("row1", (*ufMapIter).first);
+    EXPECT_EQ("", (*ufMapIter).second->prettyPrintString(s->getTupleDecl())); 
+    vOmegaReplacer->reset();
+    
+    delete s;
+}
+
+
+TEST_F(ComputationTest, NestedUFComputationTest) {
+     Computation* comp = new Computation();
+     comp->addStmt(new Stmt("s0","{[n,k]: 0 <= n < NNZ && "
+			     "rowptr(row(n) + 1) <= k < rowptr(row(n))}",
+			     "{[n,k]->[0,n,0,k,0]}", {{}},{{}}));
+     comp->finalize(false);
+     std::string codeGenStr = "";
+     EXPECT_NO_THROW(codeGenStr = comp->codeGen());
+     EXPECT_EQ("",codeGenStr);
+    
+}
+
