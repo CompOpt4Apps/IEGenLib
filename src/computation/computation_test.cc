@@ -1605,29 +1605,6 @@ TEST_F(ComputationTest, NestedUFTest) {
     vOmegaReplacer->reset();
     
     
-    // Doubly nested UF test
-    s = new Set("{[n]: 0 < n && n < NNZ && rowptr(row(col(n))) <= NNZ }");
-    EXPECT_NO_THROW(s->acceptVisitor(vOmegaReplacer));
-    EXPECT_EQ("{[n,x1,x2]: n - 1 >= 0 && n - NNZ + 1 >= 0"
-	      " && rowptr1(n,x1,x2) <= NNZ && x1 = row2(n,x1,x2) && x2 = col(n,x1,x2) }",
-	      s->prettyPrintString());
-
-    ufMaps = vOmegaReplacer->getUFMap();
-    ASSERT_EQ(3,ufMaps.size());
-    ufMapIter = ufMaps.begin(); 
-    EXPECT_EQ("col_2", (*ufMapIter).first);
-    EXPECT_EQ("col(n)",  (*ufMapIter).second->prettyPrintString(s->getTupleDecl())); 
-    
-    ufMapIter++;
-    EXPECT_EQ("row_1", (*ufMapIter).first);
-    EXPECT_EQ("row(_x2)", (*ufMapIter).second->prettyPrintString(s->getTupleDecl())); 
-   
-    ufMapIter++; 
-    EXPECT_EQ("rowptr_0", (*ufMapIter).first);
-    EXPECT_EQ("rowptr(_x1)", (*ufMapIter).second->prettyPrintString(s->getTupleDecl())); 
-
-    vOmegaReplacer->reset();
-    delete s;
 
     
     // Tests with expressions in UF parameter.
@@ -1652,7 +1629,33 @@ TEST_F(ComputationTest, NestedUFTest) {
     delete s;
 }
 
+TEST_F(ComputationTest,InfiniteNestingTest){
+    // Tests on infinite nesting..
+    auto vOmegaReplacer = new VisitorChangeUFsForOmega();
+    // Doubly nested UF test
+    Set* s = new Set("{[n]: 0 < n && n < NNZ && rowptr(row(col(n))) <= NNZ }");
+    EXPECT_NO_THROW(s->acceptVisitor(vOmegaReplacer));
+    EXPECT_EQ("{[n,x1,x2]: n - 1 >= 0 && n - NNZ + 1 >= 0"
+	      " && rowptr1(n,x1,x2) <= NNZ && x1 = row2(n,x1,x2) && x2 = col(n,x1,x2) }",
+	      s->prettyPrintString());
 
+    auto ufMaps = vOmegaReplacer->getUFMap();
+    ASSERT_EQ(3,ufMaps.size());
+    auto ufMapIter = ufMaps.begin(); 
+    EXPECT_EQ("col_2", (*ufMapIter).first);
+    EXPECT_EQ("col(n)",  (*ufMapIter).second->prettyPrintString(s->getTupleDecl())); 
+    
+    ufMapIter++;
+    EXPECT_EQ("row_1", (*ufMapIter).first);
+    EXPECT_EQ("row(_x2)", (*ufMapIter).second->prettyPrintString(s->getTupleDecl())); 
+   
+    ufMapIter++; 
+    EXPECT_EQ("rowptr_0", (*ufMapIter).first);
+    EXPECT_EQ("rowptr(_x1)", (*ufMapIter).second->prettyPrintString(s->getTupleDecl())); 
+
+    vOmegaReplacer->reset();
+    delete s;
+}
 TEST_F(ComputationTest, NestedUFComputationTest) {
      Computation* comp = new Computation();
      comp->addStmt(new Stmt("s0","{[n,k]: 0 <= n < NNZ && "
