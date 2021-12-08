@@ -45,6 +45,16 @@ namespace iegenlib{
 */
 class VisitorChangeUFsForOmega : public Visitor {
    private:
+    
+    // Map of UfCallterm to tuple variable that has been upgraded to 
+    // tuple variables to flatten and remove nesting. Index denotes
+    // the tuple variable offset off of the original tuple declaration
+    // size.
+    std::vector<UFCallTerm*> flatUfTupleMap;
+    
+    Conjunction * currentConjunc;
+    
+        
     // Stores each replaced UFCallTerm with 
     // original UFCalll
     std::map<std::string,UFCallTerm*> ufMap;
@@ -101,15 +111,24 @@ class VisitorChangeUFsForOmega : public Visitor {
     //! Get the declarations of UF calls needed by Omega parser
     std::set<std::string> getUFCallDecls();
 
-    void preVisitSparseConstraints(SparseConstraints*);
-
     void preVisitConjunction(Conjunction* c);
+    
+    void postVisitConjunction(Conjunction*);
 
     void postVisitUFCallTerm(UFCallTerm*);
+    
+    void preVisitUFCallTerm(UFCallTerm*);
 
     void preVisitExp(iegenlib::Exp * e);
+
 };
 
+
+/**
+ * VisitorChangeOmegaUF, this reverses the transfformation 
+ * of VisitorChangeUFsForOmega. It replaces all occurence 
+ * of modified ufs back to their original uf call
+ */
 class VisitorChangeOmegaUF:public Visitor {
 private:
     // Stores each replaced UFCallTerm with 

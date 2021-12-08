@@ -14,6 +14,7 @@ void VisitorChangeUFsForOmega::reset() {
     currentTupleDecl = NULL;
     for(auto uf : ufMap) { delete uf.second;}
     ufMap.clear();
+    flatUfTupleMap.clear();
 }
 
 void VisitorChangeUFsForOmega::prepareForNext() {
@@ -41,9 +42,6 @@ std::map<std::string, UFCallTerm*>& VisitorChangeUFsForOmega::getUFMap()  {
     return ufMap;
 }
 
-void VisitorChangeUFsForOmega::preVisitSparseConstraints(
-    SparseConstraints* sc) {
-}
 void VisitorChangeUFsForOmega::preVisitConjunction(Conjunction* c){
     bool requireChange = false;
     std::string prefix = "__x";
@@ -96,6 +94,7 @@ void VisitorChangeUFsForOmega::preVisitConjunction(Conjunction* c){
        tupleAssignments[i] = "0";
     }
 }
+
 void VisitorChangeUFsForOmega::preVisitExp(iegenlib::Exp * e){
     if(e->isEquality() && !e->hasUFCall()){
 	std::list<Term*> terms = e->getTermList();
@@ -125,8 +124,96 @@ void VisitorChangeUFsForOmega::preVisitExp(iegenlib::Exp * e){
 	std::string solvedForString = solveFor->toString();
 	tupleAssignments[tupTerm->tvloc()] =  solvedForString;
     }
+
 }
 
+
+void VisitorChangeUFsForOmega::preVisitUFCallTerm(UFCallTerm* callTerm){
+    
+    if (currentTupleDecl == NULL) {
+        throw assert_exception(
+            "No TupleDecl collected -- is this Visitor (incorrectly) being run "
+            "on something other than a Set/Relation?");
+    }
+    // Check for uf calls in param expression and 
+    // replace with tuple variables.
+    for (unsigned int i = 0; i < callTerm->numArgs(); ++i) {
+        SubMap map;
+	// loop through all terms, processing as needed
+        for (const auto& term : callTerm->getParamExp(i)->getTermList()) {
+            if (term->isUFCall()) {
+		// If term is a ufcall, then replace occurence 
+		// of such ufcall with a tuple variable. When the 
+		// recursive visitor pops out of the current expression,
+		// a new expression will be added in the conjunction.
+                UFCallTerm * cTerm = dynamic_cast<UFCallTerm*>(term);
+		cTerm->setCoefficient(1);
+		auto it = std::find_if(flatUfTupleMap.begin(),flatUfTupleMap.end(),
+		     [cTerm](const UFCallTerm* ct){
+		         return *ct == *cTerm;
+		     });
+                TupleVarTerm* tupReplacement = NULL;
+	        if (it != flatUfTupleMap.end()){
+	            // call Term already has a tuple variable
+	            int tupleVarIndex = it - flatUfTupleMap.end();
+		    tupReplacement = new TupleVarTerm(1,tupleVarIndex);
+	        }else{
+	            int nextTupleVarIndex = currentTupleDecl.size() 
+			    + flatUfTupleMap.size();
+		    
+		    auto cTermClone = dynamic_cast
+			    <UFCallTerm*>(cTerm->clone());
+		    cTermClone->setCoefficient(1);
+	            tupReplacement = new TupleVarTerm(1,
+				    nextTupleVarIndex);
+		    flatUfTupleMap.push_back(cTermClone);
+	        }
+		Exp* e = new Exp();
+		e->addTerm(tupReplacement);
+		// Replace uf term with tuple variable term
+		map.insertPair(term->clone(),e);
+            } 
+	}
+	// substitute all occurence of uf call term 
+	// with tuple variable.
+	callTerm->getParamExp(i)->substitute(map);
+    }
+}
+
+void VisitorChangeUFsForOmega::postVisitConjunction(Conjunction* c){
+    if(flatUfTupleMap.size()!= 0){
+        TupleDecl newTupleDecl(currentTupleDecl.size() + flatUfTupleMap.size());
+        for(int i = 0 ; i < newTupleDecl.size(); i++){
+            if (i < currentTupleDecl.size()){
+                newTupleDecl.copyTupleElem(currentTupleDecl,i,i);
+	    }else {
+	        newTupleDecl.setTupleElem(i,"_x"+std::to_string(i));
+	    }
+	}
+	c->setTupleDecl(newTupleDecl);
+        
+	for(int i = 0; i <  flatUfTupleMap.size() ; ++i){
+	    int tupleIndex = i + currentTupleDecl.size();
+	    Exp * e = new Exp();
+	    e->setEquality();
+	    e->addTerm(flatUfTupleMap[i]);
+	    e->addTerm(new TupleVarTerm(-1,tupleIndex));
+	    // Visit expression to make expression 
+	    // omega compliant beffore adding
+	    // to conjunction
+	    currentTupleDecl = newTupleDecl;
+	    c->addEquality(e);
+	    flatUfTupleMap.clear();
+	    // Recursively revisit the conjunction 
+	    // due to the addition of a new expression.
+
+
+
+	    c->acceptVisitor(this);
+	}
+
+    } 
+}
 
 void VisitorChangeUFsForOmega::postVisitUFCallTerm(UFCallTerm* callTerm) {
     if (currentTupleDecl == NULL) {
@@ -141,9 +228,7 @@ void VisitorChangeUFsForOmega::postVisitUFCallTerm(UFCallTerm* callTerm) {
     for (unsigned int i = 0; i < callTerm->numArgs(); ++i) {
         // loop through all terms, processing as needed
         for (const auto& term : callTerm->getParamExp(i)->getTermList()) {
-            if (term->isUFCall()) {
-                throw assert_exception("Nested UF calls are not yet supported");
-            } else if (term->type() == "TupleVarTerm") {
+            if (term->type() == "TupleVarTerm") {
                 TupleVarTerm* termAsTupleVar = static_cast<TupleVarTerm*>(term);
                 max_tvloc = std::max(termAsTupleVar->tvloc(), max_tvloc);
             } else if (term->type() == "TupleExpTerm") {
@@ -171,6 +256,14 @@ void VisitorChangeUFsForOmega::postVisitUFCallTerm(UFCallTerm* callTerm) {
 
     std::string originalUFString = callTerm->toString();
     std::string originalCall = callTerm->toString();
+    
+    //A check for inifinite nesting.. do not modify ufs 
+    //that have already been made omega compliant
+    auto itCall = ufMap.find(callTerm->name());
+    // If call term is already been made ommega compliant
+    // dont go any further.
+    if (itCall != ufMap.end()) { return;}
+    
     UFCallTerm* originalTerm =(UFCallTerm*) callTerm->clone(); 
     auto itArr = std::find(arrayAccessUFs.begin(),
 		    arrayAccessUFs.end(),originalCall);
