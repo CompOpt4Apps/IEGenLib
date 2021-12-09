@@ -399,22 +399,24 @@ TEST_F(ComputationTest, BasicForLoop) {
               omegString);
 
     EXPECT_EQ("#undef s0\n"
-              "#undef s_0\n"
-              "#undef s1\n"
-              "#undef s_1\n"
-              "#define s_0(i)   tmp = f[i]; \n"
-              "#define s0(c_0, i, c_2)   s_0(i);\n"
-              "#define s_1(i)   tmp1 = f1[i]; \n"
-              "#define s1(c_0, i, c_2)   s_1(i);\n\n\n"
-              "t1 = 0; \n\n"
-              "for(t2 = 0; t2 <= N-1; t2++) {\n"
-              "  s0(0,t2,0);\n"
-              "  s1(0,t2,1);\n"
-              "}\n\n"
-              "#undef s0\n"
-              "#undef s_0\n"
-              "#undef s1\n"
-              "#undef s_1\n",
+	      "#undef s_0\n"
+	      "#undef s1\n"
+	      "#undef s_1\n"
+	      "#define s_0(i)   tmp = f[i]; \n"
+	      "#define s0(__x0, i, __x2)   s_0(i);\n"
+	      "#define s_1(i)   tmp1 = f1[i]; \n"
+	      "#define s1(__x0, i, __x2)   s_1(i);\n\n\n"
+	      "t1 = 0; \n"
+	      "t2 = 0; \n"
+	      "t3 = 1; \n\n"
+	      "for(t2 = 0; t2 <= N-1; t2++) {\n"
+	      "  s0(0,t2,0);\n"
+	      "  s1(0,t2,1);\n"
+	      "}\n\n"
+	      "#undef s0\n"
+	      "#undef s_0\n"
+	      "#undef s1\n"
+	      "#undef s_1\n",
               codegen);
 
     delete forLoopComp;
@@ -562,10 +564,7 @@ TEST_F(ComputationTest, SSARenaming) {
 
     std::string codeGen = computation->codeGen();
 
-    EXPECT_EQ("#undef s0\n#undef s_0\n#undef s1\n#undef s_1\n#define s_0(__x0) "
-    "  bar = foo; \n#define s0(__x0)   s_0(0);\n#define s_1(__x0)   foo = bar +"
-    " 1 \n#define s1(__x0)   s_1(0);\n\n\nt1 = 0; \n\ns0(0);\ns1(1);\n\n#undef "
-    "s0\n#undef s_0\n#undef s1\n#undef s_1\n",codeGen);
+    EXPECT_EQ("#undef s0\n#undef s_0\n#undef s1\n#undef s_1\n#define s_0(0)   bar = foo; \n#define s0(__x0)   s_0(0);\n#define s_1(0)   foo = bar + 1 \n#define s1(__x0)   s_1(0);\n\n\nt1 = 1; \n\ns0(0);\ns1(1);\n\n#undef s0\n#undef s_0\n#undef s1\n#undef s_1\n",codeGen);
 
 
     delete computation;
@@ -763,7 +762,6 @@ TEST_F(ComputationTest, Colors) {
     forLoopComp->addStmt(s1);
 
     string dotString = forLoopComp->toDotString();
-    std::cerr << dotString << std::endl;
 
     delete forLoopComp;
 }
@@ -1588,8 +1586,8 @@ TEST_F(ComputationTest, NestedUFTest) {
     Set * s = new Set("{[n]: 0 < n && n < NNZ && rowptr(row(n)) <= NNZ }");
     
     EXPECT_NO_THROW(s->acceptVisitor(vOmegaReplacer));
-    EXPECT_EQ("{ [n, _x1] : _x1 - row_1(n) = 0 && n - 1 >= 0 &&"
-	      " NNZ + rowptr_0(n, _x1) >= 0 && -n + NNZ - 1 >= 0 }",
+    EXPECT_EQ("{ [n, _x1] : _x1 - row_1(n) = 0 && n - 1 >="
+	" 0 && NNZ - rowptr_0(n, _x1) >= 0 && -n + NNZ - 1 >= 0 }",
 	      s->prettyPrintString());
     auto ufMaps = vOmegaReplacer->getUFMap();
     ASSERT_EQ(2,ufMaps.size());
@@ -1611,8 +1609,8 @@ TEST_F(ComputationTest, NestedUFTest) {
     s = new Set("{[n]: 0 < n && n < NNZ && rowptr(row(n) + NNZ) <= NNZ }");
     
     EXPECT_NO_THROW(s->acceptVisitor(vOmegaReplacer));
-    EXPECT_EQ("{ [n, _x1] : _x1 - row_1(n) = 0 && n - 1 >= 0 && NNZ +"
-	      " rowptr_0(n, _x1) >= 0 && -n + NNZ - 1 >= 0 }",
+    EXPECT_EQ("{ [n, _x1] : _x1 - row_1(n) = 0 && n - 1 >= 0 &&"
+	  " NNZ - rowptr_0(n, _x1) >= 0 && -n + NNZ - 1 >= 0 }",
 	      s->prettyPrintString());
     ufMaps = vOmegaReplacer->getUFMap();
     ASSERT_EQ(2,ufMaps.size());
@@ -1658,13 +1656,13 @@ TEST_F(ComputationTest,InfiniteNestingTest){
 }
 TEST_F(ComputationTest, NestedUFComputationTest) {
      Computation* comp = new Computation();
-     comp->addStmt(new Stmt("s0","{[n,k]: 0 <= n < NNZ && "
-			     "rowptr(row(n) + 1) <= k < rowptr(row(n))}",
-			     "{[n,k]->[0,n,0,k,0]}", {{}},{{}}));
-     comp->finalize(false);
+     comp->addStmt(new Stmt("s0","{ [n,k]: 0 <= n && n < NNZ && "
+			     "rowptr(row(n) + 1) <= k < P }",
+			     "{[n,k]->[0,n,0,k,0]}", {},{}));
+     comp->padExecutionSchedules();
      std::string codeGenStr = "";
      EXPECT_NO_THROW(codeGenStr = comp->codeGen());
-     EXPECT_EQ("",codeGenStr);
+     EXPECT_EQ("#undef s0\n#undef s_0\n#define s_0(n, k)   s0 \n#define s0(__x0, a1, tv2, __x2, a3, __x4)   s_0(a1, a3);\n\n#undef row(t0)\n#undef row_1(__tv0, __tv1)\n#undef rowptr(t0)\n#undef rowptr_0(__tv0, __tv1, __tv2)\n#define row(t0) row[t0]\n#define row_1(__tv0, __tv1) row(__tv1)\n#define rowptr(t0) rowptr[t0]\n#define rowptr_0(__tv0, __tv1, __tv2) rowptr(__tv2 + 1)\n\nt1 = 0; \nt2 = 0; \nt3 = 0; \nt4 = 0; \nt5 = 0; \nt6 = 0; \n\nfor(t2 = 0; t2 <= NNZ-1; t2++) {\n  t3=row_1(t1,t2);\n  for(t5 = rowptr_0(t1,t2,t3); t5 <= P-1; t5++) {\n    s0(0,t2,t3,0,t5,0);\n  }\n}\n\n#undef s0\n#undef s_0\n#undef row(t0)\n#undef row_1(__tv0, __tv1)\n#undef rowptr(t0)\n#undef rowptr_0(__tv0, __tv1, __tv2)\n",codeGenStr);
     
 }
 

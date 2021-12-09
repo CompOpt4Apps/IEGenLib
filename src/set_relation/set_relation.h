@@ -734,6 +734,11 @@ public:
 
 private:
     int mArity;
+    // give VisitorChangeUFsForOmega access to 
+    // mArity
+    friend class VisitorChangeUFsForOmega;
+
+
 };
 
 /*!

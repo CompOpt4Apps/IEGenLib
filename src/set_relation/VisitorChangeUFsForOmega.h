@@ -46,14 +46,15 @@ namespace iegenlib{
 class VisitorChangeUFsForOmega : public Visitor {
    private:
     
-    // Map of UfCallterm to tuple variable that has been upgraded to 
-    // tuple variables to flatten and remove nesting. Index denotes
-    // the tuple variable offset off of the original tuple declaration
-    // size.
-    std::vector<UFCallTerm*> flatUfTupleMap;
+    // List of flattened ufcall terms and where it will
+    // be substituted in the tuple declaration.
+    // For example 
+    // Initial Set: {[n,k]:} 
+    // FlatUF,1
+    // Final Set: {[n,t1,k]
+    std::vector<std::pair<UFCallTerm*,int>> flatUfTupleMap;
     
-    Conjunction * currentConjunc;
-    
+    Conjunction* currentConjunction ; 
         
     // Stores each replaced UFCallTerm with 
     // original UFCalll
@@ -120,7 +121,10 @@ class VisitorChangeUFsForOmega : public Visitor {
     void preVisitUFCallTerm(UFCallTerm*);
 
     void preVisitExp(iegenlib::Exp * e);
+    
+    void postVisitSet(iegenlib::Set*);
 
+    void preVisitRelation(iegenlib::Relation*);
 };
 
 

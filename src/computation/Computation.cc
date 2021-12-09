@@ -136,7 +136,7 @@ Computation* Computation::getUniquelyNamedClone() const {
     std::string namePrefix = NAME_PREFIX_BASE + std::to_string(numComputationRenames++);
     Computation* prefixedCopy = new Computation();
 
-    // prefix name for clarity
+    // prefix name forerrarity
     if (this->hasName()) {
         prefixedCopy->setName(namePrefix + this->getName());
     }
@@ -2068,7 +2068,6 @@ std::vector<Relation*> Computation::getTransformations() const {
         transformedSchedules[stmtNum] = new Relation(
             *getStmt(stmtNum)->getExecutionSchedule());
         for (Relation* transformation : transformationLists.at(stmtNum)) {
-            std::cerr << "Transformation " << transformation->getString() << std::endl;
             Relation* curr = transformedSchedules[stmtNum];
             if (curr->outArity() != transformation->inArity()) {
                 std::cerr << "Mismatched Arities: cannot apply transformation" << std::endl;
@@ -2128,17 +2127,18 @@ std::string Computation::codeGen(Set* knownConstraints) {
 
         // Generate the first macro based on the original iteration space
         Set* iterSpace = stmt->getIterationSpace();
-        // This is required to generate correct tuple variable names
-        iterSpace->acceptVisitor(vOmegaReplacer);
-
-        stmtMacroDefs << "#define s_" << stmtCount << "("
+        
+	stmtMacroDefs << "#define s_" << stmtCount << "("
                       << iterSpace->getTupleDecl().toString() << ")   "
                       << Computation::stripDataSpaceDelimiter(stmt->getStmtSourceCode())
                       << " \n";
 
         // Get the new iteration space set
         Set* newIterSpace = rel->Apply(stmt->getIterationSpace());
-        newIterSpace->pushConstToConstraints(); 
+        
+        // This is required to generate correct tuple variable names
+        newIterSpace->acceptVisitor(vOmegaReplacer);
+	newIterSpace->pushConstToConstraints(); 
         // Generate the second macro based on the new iteration space
         // Generate a mapping between the two iteration spaces using
         // the transformation relation
@@ -2172,13 +2172,12 @@ std::string Computation::codeGen(Set* knownConstraints) {
 	// circumvent Omega's schedulling bug.
         std::string omegaIterString =
             newIterSpace->toOmegaString(vOmegaReplacer->getUFCallDecls());
-        std::cout << "\nOmegaIterString: " << omegaIterString << std::endl;
 
         iterSpaces.push_back(omegaIterString);
 
         // Use identity transformation instead.
         //transforms.push_back(omega::Identity(iterSpace->arity()));
-        arity.push_back(newIterSpace->arity());
+	arity.push_back(newIterSpace->arity());
 
         delete newIterSpace;
     	delete rel;
@@ -2254,7 +2253,7 @@ std::string Computation::omegaCodeGenFromString(std::vector<int> relationArity, 
             generatedCode << "/* empty */\n";
         }
     } catch (const std::exception& e) {
-        std::cout << e.what() << std::endl;
+        std::cerr<< "err" << e.what() << std::endl;
     }
     delete omegaKnown;
 
