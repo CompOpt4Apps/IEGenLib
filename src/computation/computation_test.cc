@@ -1633,9 +1633,10 @@ TEST_F(ComputationTest,InfiniteNestingTest){
     // Doubly nested UF test
     Set* s = new Set("{[n]: 0 < n && n < NNZ && rowptr(row(col(n))) <= NNZ }");
     EXPECT_NO_THROW(s->acceptVisitor(vOmegaReplacer));
-    EXPECT_EQ("{[n,x1,x2]: n - 1 >= 0 && n - NNZ + 1 >= 0"
-	      " && rowptr1(n,x1,x2) <= NNZ && x1 = row2(n,x1,x2) && x2 = col(n,x1,x2) }",
-	      s->prettyPrintString());
+    EXPECT_EQ("{ [n, tv1, _x1] : tv1 - col_2(n) = 0 && "
+	      "_x1 - row_1(n, tv1) = 0 && n - 1 >= 0 &&"
+	      " NNZ - rowptr_0(n, _x1) >= 0 && -n + NNZ"
+	      " - 1 >= 0 }",s->prettyPrintString());
 
     auto ufMaps = vOmegaReplacer->getUFMap();
     ASSERT_EQ(3,ufMaps.size());
@@ -1645,11 +1646,11 @@ TEST_F(ComputationTest,InfiniteNestingTest){
     
     ufMapIter++;
     EXPECT_EQ("row_1", (*ufMapIter).first);
-    EXPECT_EQ("row(_x2)", (*ufMapIter).second->prettyPrintString(s->getTupleDecl())); 
+    EXPECT_EQ("row(tv1)", (*ufMapIter).second->prettyPrintString(s->getTupleDecl())); 
    
     ufMapIter++; 
     EXPECT_EQ("rowptr_0", (*ufMapIter).first);
-    EXPECT_EQ("rowptr(_x1)", (*ufMapIter).second->prettyPrintString(s->getTupleDecl())); 
+    EXPECT_EQ("rowptr(tv1)", (*ufMapIter).second->prettyPrintString(s->getTupleDecl())); 
 
     vOmegaReplacer->reset();
     delete s;
@@ -1663,6 +1664,107 @@ TEST_F(ComputationTest, NestedUFComputationTest) {
      std::string codeGenStr = "";
      EXPECT_NO_THROW(codeGenStr = comp->codeGen());
      EXPECT_EQ("#undef s0\n#undef s_0\n#define s_0(n, k)   s0 \n#define s0(__x0, a1, tv2, __x2, a3, __x4)   s_0(a1, a3);\n\n#undef row(t0)\n#undef row_1(__tv0, __tv1)\n#undef rowptr(t0)\n#undef rowptr_0(__tv0, __tv1, __tv2)\n#define row(t0) row[t0]\n#define row_1(__tv0, __tv1) row(__tv1)\n#define rowptr(t0) rowptr[t0]\n#define rowptr_0(__tv0, __tv1, __tv2) rowptr(__tv2 + 1)\n\nt1 = 0; \nt2 = 0; \nt3 = 0; \nt4 = 0; \nt5 = 0; \nt6 = 0; \n\nfor(t2 = 0; t2 <= NNZ-1; t2++) {\n  t3=row_1(t1,t2);\n  for(t5 = rowptr_0(t1,t2,t3); t5 <= P-1; t5++) {\n    s0(0,t2,t3,0,t5,0);\n  }\n}\n\n#undef s0\n#undef s_0\n#undef row(t0)\n#undef row_1(__tv0, __tv1)\n#undef rowptr(t0)\n#undef rowptr_0(__tv0, __tv1, __tv2)\n",codeGenStr);
-    
+
+    delete comp;
+
+    // Test is directly dumped from synthesis 
+    // result
+    comp = new Computation();
+    comp->addStmt(new Stmt("P.insert(row(n), col2(n))", 
+			 "{ [tv0, tv1, tv2] : tv1 - row(tv0) = 0 && "
+			 "tv2 - col2(tv0) = 0 && tv0 >= 0 &&"
+			 " col2(tv0) >= 0 && row(tv0) >= 0 &&"
+			 " NC - 1 >= 0 && NNZ - 1 >= 0 &&"
+			 " NR - 1 >= 0 && -tv0 + NNZ - 1 >="
+			 " 0 && NC - col2(tv0) - 1 >= 0 &&"
+			 " NR - row(tv0) - 1 >= 0 }",
+		       	" { [tv0, tv1, tv2] -> [0, a1, 0, a3, 0, a5, 0]"
+			" : tv0 - a1 = 0 && tv1 - a3 = 0 &&"
+			" tv2 - a5 = 0 }",
+			{{"row", "{ [tv0, tv1, tv2] -> [tv3] : tv0"
+			" - tv3 = 0 }"},
+			{"col2", "{ [tv0, tv1, tv2] -> [tv3] : tv0"
+			" - tv3 = 0 }"}},
+		        {{"P", "{ [tv0, tv1, tv2] -> [0] }"}}));
+     comp->addStmt(new Stmt("ACSR(n,k) = ACOO(n,k)",
+			    "{ [n, k] : k - P(row(n), col2(n)) = 0"
+			    " && col1(k) - col2(n) = 0 && n >= 0"
+			    " && col2(n) >= 0 && row(n) >= 0 &&"
+			    " k - rowptr(row(n)) >= 0 && -n + NNZ"
+			    " - 1 >= 0 && -k + rowptr(row(n) + 1)"
+			    " - 1 >= 0 && NC - col2(n) - 1 >= 0"
+			    " && NR - row(n) - 1 >= 0 }",
+			    "{ [tv0, tv1] -> [1, a1, 0, a3, 0, 0, 0]"
+			    " : tv0 - a1 = 0 && tv1 - a3 = 0 }",
+			    {{"ACOO", "{ [n, k] -> [n] : n - n = 0 }"}},
+			    {{"ACSR", "{ [n, k] -> [k] : k - k = 0 }"}}));
+     comp->padExecutionSchedules();
+     codeGenStr = "";
+     EXPECT_NO_THROW(codeGenStr = comp->codeGen());
+     EXPECT_EQ("#undef s0\n#undef s_0\n#undef s1\n#"
+	"undef s_1\n#define s_0(tv0, tv1, tv2)   P.insert(row(n), col2(n)) \n"
+	"#define s0(__x0, a1, __x2, a3, __x4, a5, __x6)   s_0(a1, a3, a5);\n"
+	"#define s_1(n, k)   ACSR(n,k) = ACOO(n,k) \n"
+	"#define s1(__x0, a1, tv2, __x2, a3, __x4, __x5, __x6, _x7)   s_1(a1, a3);\n\n"
+	"#undef P(t0,t1)\n#undef P_2(__tv0, __tv1, __tv2, __tv3)\n"
+	"#undef col1(t0)\n#undef col1_3(__tv0, __tv1, __tv2, __tv3, __tv4, __tv5)\n"
+	"#undef col2(t0)\n#undef col2_1(__tv0, __tv1)\n"
+	"#undef row(t0)\n#undef row_0(__tv0, __tv1)\n"
+	"#undef rowptr(t0)\n#undef rowptr_4(__tv0, __tv1, __tv2)\n"
+	"#undef rowptr_5(__tv0, __tv1, __tv2)\n"
+	"#define P(t0,t1) P[t0][t1]\n"
+	"#define P_2(__tv0, __tv1, __tv2, __tv3) P(__tv3, __tv2)\n"
+	"#define col1(t0) col1[t0]\n"
+	"#define col1_3(__tv0, __tv1, __tv2, __tv3, __tv4, __tv5) col1(__tv5)\n"
+	"#define col2(t0) col2[t0]\n"
+	"#define col2_1(__tv0, __tv1) col2(__tv1)\n"
+	"#define row(t0) row[t0]\n"
+	"#define row_0(__tv0, __tv1) row(__tv1)\n"
+	"#define rowptr(t0) rowptr[t0]\n"
+	"#define rowptr_4(__tv0, __tv1, __tv2) rowptr(__tv2)\n"
+	"#define rowptr_5(__tv0, __tv1, __tv2) rowptr(__tv2 + 1)\n\n"
+	"t1 = 1; \nt2 = 0; \nt3 = 0; \nt4 = 0; \nt5 = 0; \nt6 = 0; \nt7 = 0; \n"
+	"t8 = 0; \nt9 = 0; \n\n"
+	"if (NR >= 1 && NC >= 1) {\n"
+	"  for(t2 = 0; t2 <= NNZ-1; t2++) {\n"
+	"    if (row_0(t1,t2) >= 0 && NC >= col2_1(t1,t2)+1 && NR >= "
+	"row_0(t1,t2)+1 && col2_1(t1,t2) >= 0) {\n"
+	"      t4=row_0(t1,t2);\n"
+	"      t6=col2_1(t1,t2);\n"
+	"      s0(0,t2,0,t4,0,t6,0);\n"
+	"    }\n"
+	"  }\n"
+	"  for(t2 = 0; t2 <= NNZ-1; t2++) {\n"
+	"    if (col2_1(t1,t2) >= 0 && row_0(t1,t2) >= 0 &&"
+	" NC >= col2_1(t1,t2)+1 && NR >= row_0(t1,t2)+1) {\n"
+	"      t3=row_0(t1,t2);\n"
+	"      if (rowptr_5(t1,t2,t3) >= rowptr_4(t1,t2,t3)+1) {\n"
+	"        t4=col2_1(t1,t2);\n"
+	"        if (rowptr_5(t1,t2,t3) >= P_2(t1,t2,t3,t4)+1 &&"
+	" P_2(t1,t2,t3,t4) >= rowptr_4(t1,t2,t3)) {\n"
+	"          t6=P_2(t1,t2,t3,t4);\n"
+	"          if (col1_3(t1,t2,t3,t4,t5,t6) == col2_1(t1,t2)) {\n"
+	"            s1(1,t2,t3,t4,0,t6,0,0,0);\n"
+	"          }\n"
+	"        }\n"
+	"      }\n"
+	"    }\n"
+	"  }\n"
+	"}\n\n"
+	"#undef s0\n"
+	"#undef s_0\n"
+	"#undef s1\n"
+	"#undef s_1\n"
+	"#undef P(t0,t1)\n"
+	"#undef P_2(__tv0, __tv1, __tv2, __tv3)\n"
+	"#undef col1(t0)\n"
+	"#undef col1_3(__tv0, __tv1, __tv2, __tv3, __tv4, __tv5)\n"
+	"#undef col2(t0)\n#undef col2_1(__tv0, __tv1)\n"
+	"#undef row(t0)\n"
+	"#undef row_0(__tv0, __tv1)\n"
+	"#undef rowptr(t0)\n"
+	"#undef rowptr_4(__tv0, __tv1, __tv2)\n"
+	"#undef rowptr_5(__tv0, __tv1, __tv2)\n",codeGenStr);
+
 }
 

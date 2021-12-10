@@ -2138,7 +2138,7 @@ std::string Computation::codeGen(Set* knownConstraints) {
         
         // This is required to generate correct tuple variable names
         newIterSpace->acceptVisitor(vOmegaReplacer);
-	newIterSpace->pushConstToConstraints(); 
+//newIterSpace->pushConstToConstraints(); 
         // Generate the second macro based on the new iteration space
         // Generate a mapping between the two iteration spaces using
         // the transformation relation
@@ -2172,7 +2172,6 @@ std::string Computation::codeGen(Set* knownConstraints) {
 	// circumvent Omega's schedulling bug.
         std::string omegaIterString =
             newIterSpace->toOmegaString(vOmegaReplacer->getUFCallDecls());
-
         iterSpaces.push_back(omegaIterString);
 
         // Use identity transformation instead.

@@ -200,6 +200,7 @@ void VisitorChangeUFsForOmega::preVisitUFCallTerm(UFCallTerm* callTerm){
 	                }
 	            }
 	            currentConjunction->setTupleDecl(newTupleDecl);
+		    int newTupleIndex = tupleVarLocation;
 		    if (tupleVarLocation < currentTupleDecl.size()){
 			    
                         // Shift tuple declaration
@@ -211,6 +212,15 @@ void VisitorChangeUFsForOmega::preVisitUFCallTerm(UFCallTerm* callTerm){
 			        shiftTupVars[j] = j;
                         }
                         currentConjunction->remapTupleVars(shiftTupVars);
+
+			// Check if there is already a tuplevariable
+			// on this location and put the new tupleIndex
+			// just after. 
+			for(auto& flatUfTuple : flatUfTupleMap){
+			    if (flatUfTuple.second >= tupleVarLocation){
+		                newTupleIndex++;
+			    }
+			}
 		    }
 	            currentTupleDecl = newTupleDecl;
 		    auto cTermClone = dynamic_cast
@@ -218,7 +228,7 @@ void VisitorChangeUFsForOmega::preVisitUFCallTerm(UFCallTerm* callTerm){
 		    cTermClone->setCoefficient(1);
 	            tupReplacement = new TupleVarTerm(1,
 				    tupleVarLocation);
-		    flatUfTupleMap.push_back({cTermClone,tupleVarLocation});
+		    flatUfTupleMap.push_back({cTermClone,newTupleIndex});
 	        }
 		Exp* e = new Exp();
 		e->addTerm(tupReplacement);
