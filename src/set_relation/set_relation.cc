@@ -2539,11 +2539,11 @@ Set* Set::GetDomain(std::string ufName){
         
 	
 	
-	
-        res->setTupleDecl(newTupleDecl);
 	for (int i = 0 ; i < oldTupleDecl.getSize(); i++){
             newTupleDecl.copyTupleElem(oldTupleDecl,i,i);
 	}	
+	
+        res->setTupleDecl(newTupleDecl);
         
 	
 	

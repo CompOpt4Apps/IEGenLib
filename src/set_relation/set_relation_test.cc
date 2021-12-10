@@ -4741,10 +4741,8 @@ TEST_F(SetRelationTest,GetDomain){
 		    " k < NZ and rowptr(i) >= j}");
     Set * domain = s->GetDomain("rowptr");
     EXPECT_EQ(domain->arity(),2);
-    EXPECT_EQ(domain->prettyPrintString(), 
-		    "{ [tv0, tv1] : tv0 - tv1 = 0 && tv0 >= 0 &&"
-		    " NC - 1 >= 0 && NZ - 1 >= 0 && -tv0 + NR - 1 >= 0 }");
-
+    EXPECT_EQ( "{ [i, tv1] : i - tv1 = 0 && i >= 0 && NC - 1 >="
+	       " 0 && NZ - 1 >= 0 && -i + NR - 1 >= 0 }",domain->prettyPrintString());
     
     s = new Set(
 		    "{[i,j,k]: i >= 0 && i < NR &&"
@@ -4753,13 +4751,11 @@ TEST_F(SetRelationTest,GetDomain){
 		    " rowptr(i) >= j}");
     domain = s->GetDomain("rowptr");
     EXPECT_EQ(domain->arity(),2);
-    EXPECT_EQ(domain->prettyPrintString(), 
-		    "{ [tv0, tv1] : tv0 - tv1 = 0 && tv0 >= 0 &&"
-		    " NC - 1 >= 0 && NZ - 1 >= 0 && -tv0 + NR - 1"
-		    " >= 0 } union { [tv0, tv1] : tv0 - tv1 + 1 = 0"
-		    " && tv0 >= 0 && NC - 1 >= 0 && NZ - 1 >= 0 &&"
-		    " -tv0 + NR - 1 >= 0 }");
-
+    EXPECT_EQ("{ [i, tv1] : i - tv1 = 0 && i >= 0 && NC - 1"
+	      " >= 0 && NZ - 1 >= 0 && -i + NR - 1 >= 0 }"
+	      " union { [i, tv1] : i - tv1 + 1 = 0 &&"
+	      " i >= 0 && NC - 1 >= 0 && NZ - 1 >= 0 &&"
+	      " -i + NR - 1 >= 0 }",domain->prettyPrintString());
 
 
 }
