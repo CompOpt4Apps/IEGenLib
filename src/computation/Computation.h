@@ -120,7 +120,9 @@ class Computation {
     //! Add a data space to this Computation
     void addDataSpace(std::string dataSpaceName, std::string dataSpaceType);
     //! Get data spaces
-    std::map<std::string, std::string> getDataSpaces() const;
+    std::map<std::string, std::string> getDelimitedDataSpaces() const;
+    //! Get data spaces without name delimiters
+    std::map<std::string, std::string> getUndelimitedDataSpaces() const;
     //! Get data space's type
     std::string getDataSpaceType(std::string) const;
     //! Check if a given string is a name of a data space of this Computation
@@ -358,7 +360,7 @@ class Computation {
     //! Information on all statements in the Computation
     std::vector<Stmt*> stmts;
 
-    //! Data spaces available in the Computation, pairs of name : type
+    //! Data spaces available in the Computation, pairs of name : type, with delimiters around name.
     std::map<std::string, std::string> dataSpaces;
     //! Non-delimited data space names
     std::unordered_set<std::string> undelimitedDataSpaceNames;

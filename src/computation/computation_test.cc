@@ -178,7 +178,7 @@ class ComputationTest : public ::testing::Test {
           expectStmtsEqual(actual->getStmt(i), expected->getStmt(i));
         }
 
-        EXPECT_EQ(expected->getDataSpaces(), actual->getDataSpaces());
+        EXPECT_EQ(expected->getDelimitedDataSpaces(), actual->getDelimitedDataSpaces());
 
         ASSERT_EQ(expected->getNumParams(), actual->getNumParams());
         for (unsigned int i = 0; i < actual->getNumParams(); ++i) {
@@ -1071,7 +1071,7 @@ TEST_F(ComputationTest, ComputationNamePrefixing) {
                                                   {"$_iegen_0x$", "int"},
                                                   {"$_iegen_0y$", "int"}
                                                 };
-    EXPECT_EQ(mapPrefixedComp1, prefixedComp1->getDataSpaces());
+    EXPECT_EQ(mapPrefixedComp1, prefixedComp1->getDelimitedDataSpaces());
     EXPECT_EQ("$_iegen_0product$[i] += $_iegen_0x$[i][j] * $_iegen_0y$[j];",
               prefixedComp1->getStmt(0)->getStmtSourceCode());
     EXPECT_EQ(
@@ -1094,7 +1094,7 @@ TEST_F(ComputationTest, ComputationNamePrefixing) {
                                                   {"$_iegen_1y$", "int"}
                                                 };
     EXPECT_EQ(mapPrefixedComp2,
-              prefixedComp2->getDataSpaces());
+              prefixedComp2->getDelimitedDataSpaces());
     EXPECT_EQ("$_iegen_1product$[i] += $_iegen_1x$[i][j] * $_iegen_1y$[j];",
               prefixedComp2->getStmt(0)->getStmtSourceCode());
     EXPECT_EQ(
@@ -1118,7 +1118,7 @@ TEST_F(ComputationTest, ComputationNamePrefixing) {
                                                   {"$_iegen_2_iegen_0y$", "int"}
                                                 };
     EXPECT_EQ(mapPrefixedComp3,
-              prefixedComp3->getDataSpaces());
+              prefixedComp3->getDelimitedDataSpaces());
     EXPECT_EQ("$_iegen_2_iegen_0product$[i] += $_iegen_2_iegen_0x$[i][j] * $_iegen_2_iegen_0y$[j];",
               prefixedComp3->getStmt(0)->getStmtSourceCode());
     EXPECT_EQ(
