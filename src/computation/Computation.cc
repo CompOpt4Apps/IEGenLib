@@ -2032,7 +2032,7 @@ std::string Computation::toDotString(bool reducePCRelations,
         }
     }
 
-    return graph.toDotString();
+    return stripDataSpaceDelimiter(graph.toDotString());
 }
 
 std::vector<std::pair<int, std::string>> Computation::getStmtDebugStrings() {
@@ -2220,7 +2220,7 @@ std::string Computation::codeGen(Set* knownConstraints) {
     // undefine macros, which are now extraneous
     generatedCode << stmtMacroUndefs.str() << UFMacroUndefs.str();
 
-    return generatedCode.str();
+    return stripDataSpaceDelimiter(generatedCode.str());
 }
 
 std::string Computation::omegaCodeGenFromString(std::vector<int> relationArity, std::vector<std::string> iterSpacesStr, std::string known){
