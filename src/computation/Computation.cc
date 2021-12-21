@@ -155,7 +155,7 @@ Computation* Computation::getUniquelyNamedClone() const {
             (retVal.second ? getPrefixedDataSpaceName(retVal.first, namePrefix) : retVal.first), retVal.second);
     }
     for (auto& stmt : this->stmts) {
-        prefixedCopy->addStmt(stmt->getUniquelyNamedClone(namePrefix, this->getDataSpaces()));
+        prefixedCopy->addStmt(stmt->getUniquelyNamedClone(namePrefix, this->getDelimitedDataSpaces()));
     }
 
     return prefixedCopy;
@@ -613,8 +613,16 @@ void Computation::addDataSpace(std::string dataSpaceName, std::string dataSpaceT
     }
 }
 
-std::map<std::string, std::string> Computation::getDataSpaces() const {
+std::map<std::string, std::string> Computation::getDelimitedDataSpaces() const {
     return dataSpaces;
+}
+
+std::map<std::string, std::string> Computation::getUndelimitedDataSpaces() const {
+    std::map<std::string, std::string> undelimitedDataSpaces;
+    for (const auto& dataSpaceInfo : this->getDelimitedDataSpaces()) {
+        undelimitedDataSpaces.emplace(stripDataSpaceDelimiter(dataSpaceInfo.first), dataSpaceInfo.second);
+    }
+    return undelimitedDataSpaces;
 }
 
 std::string Computation::getDataSpaceType(std::string dataSpaceName) const{
@@ -809,7 +817,7 @@ bool Computation::isComplete() const {
 std::string Computation::codeGenMemoryManagementString() {
 
     std::ostringstream outputString;
-    std::map<std::string, std::string> dataSpaces = this->getDataSpaces();
+    std::map<std::string, std::string> dataSpaces = this->getDelimitedDataSpaces();
     std::map<std::string, std::string>::iterator it = dataSpaces.begin();
 
     while (it != dataSpaces.end()){
@@ -921,7 +929,7 @@ AppendComputationResult Computation::appendComputation(
     }
 
     // add (already name prefixed) data spaces from appendee to appender
-    for (const auto& dataSpace : toAppend->getDataSpaces()) {
+    for (const auto& dataSpace : toAppend->getDelimitedDataSpaces()) {
         this->addDataSpace(dataSpace.first, dataSpace.second);
     }
 
@@ -2032,7 +2040,7 @@ std::string Computation::toDotString(bool reducePCRelations,
         }
     }
 
-    return graph.toDotString();
+    return stripDataSpaceDelimiter(graph.toDotString());
 }
 
 std::vector<std::pair<int, std::string>> Computation::getStmtDebugStrings() {
@@ -2220,7 +2228,7 @@ std::string Computation::codeGen(Set* knownConstraints) {
     // undefine macros, which are now extraneous
     generatedCode << stmtMacroUndefs.str() << UFMacroUndefs.str();
 
-    return generatedCode.str();
+    return stripDataSpaceDelimiter(generatedCode.str());
 }
 
 std::string Computation::omegaCodeGenFromString(std::vector<int> relationArity, std::vector<std::string> iterSpacesStr, std::string known){
