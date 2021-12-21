@@ -1731,7 +1731,6 @@ std::list<Exp*> Conjunction::GetUpperBounds(TupleVarTerm& tVar){
 			 && tupTerm->coefficient() < 0){
 	    Term* tVarClone = tVar.clone();
             Exp* solveFor = e->solveForFactor(tVarClone);
-            solveFor->multiplyBy(-1);	    
 	    res.push_back(solveFor); 
 	 }	 
       }
