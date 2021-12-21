@@ -228,6 +228,7 @@ void VisitorChangeUFsForOmega::preVisitUFCallTerm(UFCallTerm* callTerm){
 		    cTermClone->setCoefficient(1);
 	            tupReplacement = new TupleVarTerm(1,
 				    tupleVarLocation);
+		    newTupleLocs.push_back(newTupleIndex);
 		    flatUfTupleMap.push_back({cTermClone,newTupleIndex});
 	        }
 		Exp* e = new Exp();

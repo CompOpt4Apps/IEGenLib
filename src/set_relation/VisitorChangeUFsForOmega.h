@@ -54,6 +54,12 @@ class VisitorChangeUFsForOmega : public Visitor {
     // Final Set: {[n,t1,k]
     std::vector<std::pair<UFCallTerm*,int>> flatUfTupleMap;
     
+
+    // This contains a list of 
+    // new tuple locations created 
+    // by flattening ufs.
+    std::vector<int> newTupleLocs;
+     
     Conjunction* currentConjunction ; 
         
     // Stores each replaced UFCallTerm with 

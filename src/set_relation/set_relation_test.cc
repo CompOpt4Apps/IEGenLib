@@ -4884,3 +4884,18 @@ TEST_F(SetRelationTest, SymbolIterator) {
     delete knownUFsIter;
 }
 
+TEST_F(SetRelationTest, TupleBoundsTest){
+    Set * domain = new Set("{[i]:0 <= i <= NR}");
+    TupleVarTerm tupVar(1,0);
+    auto upperBounds = domain->GetUpperBounds(tupVar);
+    auto lowerBounds = domain->GetLowerBounds(tupVar);
+
+    ASSERT_EQ(1,upperBounds.size());
+    ASSERT_EQ(1,lowerBounds.size());
+    
+    EXPECT_EQ("-NR",(*upperBounds.begin())->
+		    prettyPrintString(domain->getTupleDecl()));
+
+    EXPECT_EQ("",(*lowerBounds.begin())->
+		    prettyPrintString(domain->getTupleDecl()));
+}
