@@ -181,7 +181,7 @@ void Computation::addStmt(Stmt* stmt, int stmtIdx) {
     // TODO: if stmtIdx < stmts.size(), update later execution schedules
     stmts.insert(stmts.begin() + stmtIdx, stmt);
     //enforceArraySSA(stmt);
-    stmtIdx = locatePhiNodes(stmtIdx);
+    //stmtIdx = locatePhiNodes(stmtIdx);
     // Turn off SSA for array accesses.
     //
     //enforceSSA(stmtIdx);
