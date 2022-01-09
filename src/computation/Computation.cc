@@ -182,7 +182,9 @@ void Computation::addStmt(Stmt* stmt, int stmtIdx) {
     stmts.insert(stmts.begin() + stmtIdx, stmt);
     //enforceArraySSA(stmt);
     stmtIdx = locatePhiNodes(stmtIdx);
-    enforceSSA(stmtIdx);
+    // Turn off SSA for array accesses.
+    //
+    //enforceSSA(stmtIdx);
 }
 
 /*
@@ -1637,7 +1639,7 @@ void Computation::fuse (int s1, int s2, int fuseLevel){
 }
 
 void Computation::finalize(bool deleteDeadNodes) {
-    enforceArraySSA();
+    //enforceArraySSA();
     adjustExecutionSchedules();
 	padExecutionSchedules();
 
@@ -2138,7 +2140,8 @@ std::string Computation::codeGen(Set* knownConstraints) {
         
 	stmtMacroDefs << "#define s_" << stmtCount << "("
                       << iterSpace->getTupleDecl().toString() << ")   "
-                      << Computation::stripDataSpaceDelimiter(stmt->getStmtSourceCode())
+                      << Computation::stripDataSpaceDelimiter
+		      (stmt->getStmtSourceCode())
                       << " \n";
 
         // Get the new iteration space set
@@ -2194,9 +2197,15 @@ std::string Computation::codeGen(Set* knownConstraints) {
     std::ostringstream UFMacroUndefs;
     std::ostringstream UFMacroDefs;
     for (const auto& macro : *vOmegaReplacer->getUFMacros()) {
-        UFMacroUndefs << "#undef " << macro.first << "\n";
         UFMacroDefs << "#define " << macro.first << " " << macro.second << "\n";
     }
+    // Create undefs
+    
+    for (const auto& macro: vOmegaReplacer->getUFMap()){
+        
+        UFMacroUndefs << "#undef " << macro.first << "\n";
+    }
+    
     generatedCode << stmtMacroUndefs.str() << stmtMacroDefs.str() << "\n";
     generatedCode << UFMacroUndefs.str() << UFMacroDefs.str() << "\n";
 

@@ -4568,8 +4568,12 @@ TEST_F(SetRelationTest, RestrictDomainTest){
 }
 
 
-// Test solve for output tuple.
-TEST_F(SetRelationTest, SolveForOutputTuple){
+// Solve for output tuple was created for synthesis. 
+// it is supposed to return constraints involving output
+// tuple and create an inverse family. This is inverse family
+// research is still in it's early infancy and therefore
+// tests will be disabled for now.
+TEST_F(SetRelationTest, DISABLED_SolveForOutputTuple){
 
     Relation * rel = new Relation(
 	     "{[i,j] -> [k]: A(i,j) > 0 and rowptr(i) <= k"

@@ -760,6 +760,7 @@ TEST_F(ExpTest, SymbolIterator){
     actualSet.clear();
     expectedSet.insert("Q");
     expectedSet.insert("N");
+    expectedSet.insert("g");
     siter = e5->getSymbolIterator();
     while (siter->hasNext()) {
         actualSet.insert(siter->next());

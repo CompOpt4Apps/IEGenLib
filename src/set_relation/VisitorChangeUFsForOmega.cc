@@ -160,12 +160,11 @@ void VisitorChangeUFsForOmega::preVisitUFCallTerm(UFCallTerm* callTerm){
         for (const auto& term : callTerm->getParamExp(i)->getTermList()) {
             if (term->isUFCall()) {
 		// If term is a ufcall, then replace occurence 
-		// of such ufcall with a tuple variable. When the 
-		// recursive visitor pops out of the current expression,
-		// a new expression will be added in the conjunction.
+		// of such ufcall with a tuple variable.
                 UFCallTerm * cTerm = dynamic_cast<UFCallTerm*>(term);
 		cTerm->setCoefficient(1);
-		auto it = std::find_if(flatUfTupleMap.begin(),flatUfTupleMap.end(),
+		auto it = std::find_if(flatUfTupleMap.begin(),
+				flatUfTupleMap.end(),
 		     [cTerm](const std::pair<UFCallTerm*,int>& ct){
 		         return *(ct.first) == *cTerm;
 		     });
@@ -175,8 +174,6 @@ void VisitorChangeUFsForOmega::preVisitUFCallTerm(UFCallTerm* callTerm){
 	            int tupleVarIndex = it - flatUfTupleMap.end();
 		    tupReplacement = new TupleVarTerm(1,it->second);
 	        }else{
-	            int nextTupleVarIndex = currentTupleDecl.size() 
-			    + flatUfTupleMap.size();
 		    // Tuple index has to be placed just after 
 		    // the maximum tv location in this
 		    // expression, and the rest 
@@ -381,7 +378,8 @@ void VisitorChangeUFsForOmega::postVisitUFCallTerm(UFCallTerm* callTerm) {
 	ufMap.emplace(replacementName,originalTerm);
     }
     // add UF call to the list of declarations
-    ufCallDecls.emplace(callTerm->name() + "(" + std::to_string(max_tvloc + 1) +
+    ufCallDecls.emplace(callTerm->name() + "(" 
+		    + std::to_string(max_tvloc + 1) +
                         ")");
 
     // restore coefficient, which was changed temporarily for printing
