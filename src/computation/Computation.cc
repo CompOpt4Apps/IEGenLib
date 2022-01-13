@@ -2123,6 +2123,7 @@ std::string Computation::codeGen(Set* knownConstraints) {
     // convert sets/relations to Omega format for use in codegen, and
     // collect statement macro definitions
     VisitorChangeUFsForOmega* vOmegaReplacer = new VisitorChangeUFsForOmega();
+    FlattenUFNestingVisitor* flatner = new FlattenUFNestingVisitor();
     std::ostringstream stmtMacroUndefs;
     std::ostringstream stmtMacroDefs;
     int stmtCount = 0;
@@ -2146,7 +2147,7 @@ std::string Computation::codeGen(Set* knownConstraints) {
 
         // Get the new iteration space set
         Set* newIterSpace = rel->Apply(stmt->getIterationSpace());
-        
+        newIterSpace->acceptVisitor(flatner); 
         // This is required to generate correct tuple variable names
         newIterSpace->acceptVisitor(vOmegaReplacer);
 //newIterSpace->pushConstToConstraints(); 
@@ -2225,6 +2226,7 @@ std::string Computation::codeGen(Set* knownConstraints) {
     } else {
         modifiedKnown = new Set("{}");
     }
+    modifiedKnown->acceptVisitor(flatner);
     modifiedKnown->acceptVisitor(vOmegaReplacer);
     std::string omegaKnownString =
         modifiedKnown->toOmegaString(vOmegaReplacer->getUFCallDecls());
@@ -2282,6 +2284,7 @@ std::string Computation::toOmegaString() {
     // convert sets/relations to Omega format for use in codegen, and
     // collect statement macro definitions
     VisitorChangeUFsForOmega* vOmegaReplacer = new VisitorChangeUFsForOmega();
+    FlattenUFNestingVisitor* flattner = new FlattenUFNestingVisitor();
     int stmtCount = 0;
     for (const auto& stmt : stmts) {
         omegaString << "s" << stmtCount << "\n";
@@ -2294,8 +2297,8 @@ std::string Computation::toOmegaString() {
 	// circumvent Omega's schedulling bug.
         Set * iterSpace = stmt->getExecutionSchedule()->
 		Apply(stmt->getIterationSpace());
+	iterSpace->acceptVisitor(flattner);
 	iterSpace->acceptVisitor(vOmegaReplacer);
-
 
         std::string omegaIterString =
             iterSpace->toOmegaString(vOmegaReplacer->getUFCallDecls());

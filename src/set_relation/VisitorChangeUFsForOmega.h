@@ -120,12 +120,9 @@ class VisitorChangeUFsForOmega : public Visitor {
 
     void preVisitConjunction(Conjunction* c);
     
-    void postVisitConjunction(Conjunction*);
 
     void postVisitUFCallTerm(UFCallTerm*);
     
-    void preVisitUFCallTerm(UFCallTerm*);
-
     void preVisitExp(iegenlib::Exp * e);
     
     void postVisitSet(iegenlib::Set*);
@@ -149,6 +146,35 @@ public:
 	   ufMap(ufMap){} 
     void postVisitUFCallTerm(UFCallTerm*);
 };	
+
+/**
+ * FlattenUFNestingVisitor, this visitor flatten all nested UFs
+ * present in constraint. It expands the tuple declaration of 
+ * of the constraint been run on and returns new positions of 
+ * tuple variables 
+ */
+class FlattenUFNestingVisitor: public Visitor{
+    std::vector<int> newPos;
+    // List of flattened ufcall terms and where it will
+    // be substituted in the tuple declaration.
+    // For example 
+    // Initial Set: {[n,k]:} 
+    // FlatUF,1
+    // Final Set: {[n,t1,k]
+    std::vector<std::pair<UFCallTerm*,int>> flatUfTupleMap;
+    
+    Conjunction* currentConjunction ; 
+    
+    //! stored tuple decl for variable retrieval
+    TupleDecl currentTupleDecl;
+
+public:
+    void preVisitUFCallTerm(UFCallTerm* t);
+    void preVisitConjunction(Conjunction* c);
+    void postVisitConjunction(Conjunction* c);
+    void reset();
+};
+
 
 }
 
