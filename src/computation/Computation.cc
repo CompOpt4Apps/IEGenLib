@@ -2122,8 +2122,10 @@ std::string Computation::codeGen(Set* knownConstraints) {
 
     // convert sets/relations to Omega format for use in codegen, and
     // collect statement macro definitions
-    VisitorChangeUFsForOmega* vOmegaReplacer = new VisitorChangeUFsForOmega();
-    FlattenUFNestingVisitor* flatner = new FlattenUFNestingVisitor();
+    VisitorChangeUFsForOmega* vOmegaReplacer = 
+	    new VisitorChangeUFsForOmega();
+    FlattenUFNestingVisitor* flatner = 
+	    new FlattenUFNestingVisitor();
     std::ostringstream stmtMacroUndefs;
     std::ostringstream stmtMacroDefs;
     int stmtCount = 0;
@@ -2147,10 +2149,10 @@ std::string Computation::codeGen(Set* knownConstraints) {
 
         // Get the new iteration space set
         Set* newIterSpace = rel->Apply(stmt->getIterationSpace());
-        newIterSpace->acceptVisitor(flatner); 
-        // This is required to generate correct tuple variable names
+        // Flatten UF Nesting
+	newIterSpace->acceptVisitor(flatner);
+        // Enforce prefix rule	
         newIterSpace->acceptVisitor(vOmegaReplacer);
-//newIterSpace->pushConstToConstraints(); 
         // Generate the second macro based on the new iteration space
         // Generate a mapping between the two iteration spaces using
         // the transformation relation
@@ -2198,7 +2200,8 @@ std::string Computation::codeGen(Set* knownConstraints) {
     std::ostringstream UFMacroUndefs;
     std::ostringstream UFMacroDefs;
     for (const auto& macro : *vOmegaReplacer->getUFMacros()) {
-        UFMacroDefs << "#define " << macro.first << " " << macro.second << "\n";
+        UFMacroDefs << "#define " << macro.first << " " 
+		<< macro.second << "\n";
     }
     // Create undefs
     

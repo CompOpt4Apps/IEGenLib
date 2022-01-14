@@ -194,57 +194,6 @@ void DiGraph::transitiveClosure(){
 }
 
 
-void DiGraph::mergeVertices(std::vector<int>& aliasMap, int u, int v) {
-    //assert(0 && "merging vertices not currently supported");   
-    // Remove edges between u and v
-    adj[u][v] = EdgeType::NONE;
-    adj[v][u] = EdgeType::NONE;
-
-    // Put all the contents of v in u.
-    for(int i = 0; i < adj[v].size() ; i++){
-	// edgeOp will pick a stronger constraint
-	// if a constraint already exist in u when
-	// merging.
-	
-	// Merge all outgoing edges in v with u.    
-        adj[u][i] = edgeOp(adj[u][i],adj[v][i]);
-
-	// Merge all incoming edges in v with u.
-	adj[i][u] = edgeOp(adj[i][u],adj[i][v]);
-    }
-
-    // Remove column v from the adj matrix.
-
-    // Shift each column after index v backward 
-    // to delete column v for each row.
-    for(int i =  0 ; i < adj.size() ; i++){
-        for(int j = v; j < adj[i].size()-1; j++){
-	    adj[i][j] = adj[i][j+1];
-
-	}
-	adj[i].resize(adj[i].size() -1);
-    }
-     
-    // update aliasmap to ensure that oldvertices
-    // are mapped to a new position after merge.
-    //
-    // The way it works is that vertexes just after
-    // the vertex removed gets their indices decremented
-    // by 1 in the alias map.
-    for(int i = v+1; i < aliasMap.size(); i++){
-        --aliasMap[i];
-    }
-    // Any check on deleted vertex becomes aliased 
-    // to the merged vertex u; 
-    aliasMap[v] = u;
-
-    // Remove row v from the matrix.
-    adj.erase(adj.begin() + v);
-    // Clear content of removed vertex.
-    vertices[v].reset();
-    // Remove v from vertices
-    vertices.erase(vertices.begin() +v);
-}
 
 void DiGraph::simplifyGreaterOrEqual(){
     int size = adj.size();
@@ -276,9 +225,6 @@ void DiGraph::simplifyGreaterOrEqual(){
 	       // Add a new greater than edge to the graph from vertex at i
 	       // to the newVertex.
                addEdge(vertices[i],newVertex,EdgeType::GREATER_THAN);
-
-
-	       
 	    }  
        }
     }
