@@ -194,6 +194,28 @@ void DiGraph::transitiveClosure(){
 }
 
 
+std::vector<Term*> DiGraph::getAliasTerms(Term& t){
+   Vertex tVert;
+   tVert.addTerm(&t);
+   std::vector<Term*> res;
+   for(int i = 0; i < vertices.size() ; i++){
+      Vertex& vertex = vertices[i];
+      if (vertex == tVert){
+         // Find vertices with equality relationships
+	 // we are currently only concerned with 
+	 // single terms 
+	 for( int j = 0; j < adj[i].size(); j++){
+            if(i!=j && adj[i][j] == EdgeType::EQUAL){
+	       Vertex& jVertex = vertices[j];
+	       if(jVertex.getTermList().size() == 1){
+	           res.push_back(jVertex.getTermList().front());   
+	       } 
+	    }
+	 }
+      }
+   }
+   return res;
+}
 
 void DiGraph::simplifyGreaterOrEqual(){
     int size = adj.size();
@@ -431,21 +453,31 @@ void DiGraph::findAddMonotonicity (){
 			for( int q = 0; q < currentUF->numArgs(); q++){
 			    Exp* exp = currentClone->getParamExp(q);
 			    for(auto term: exp->getTermList()){
-			       
+			       // At this point there are new relationships
+			       // and a term T might be equal to some other 
+			       // terms so we need to get alias terms 
+			       auto aliasTerms= getAliasTerms(*term);  
 				auto it = std::find_if(paramExpPairs.begin(),
 				   paramExpPairs.end(),
-			           [term](
+			           [term,&aliasTerms](
 			           std::pair<Exp*,Exp*>& e){ 
-				       return e.first->dependsOn(*term)
+				       
+				       bool res = false;
+				       for(auto t : aliasTerms){
+				           res|= e.first->dependsOn(*t) || 
+					         e.second->dependsOn(*t);
+				       }
+				       res |= e.first->dependsOn(*term)
 				       || e.second->dependsOn(*term);
+				       return res;
 				   });
 			       if (it!=paramExpPairs.end()){
                                    
-			           Exp* expTemp = (*it).second->clone(); 
+			           Exp* expTempUBound = (*it).second->clone(); 
 			           Exp* expTempLBound = (*it).first->clone();
 			           expTempLBound->multiplyBy(-1);
-			           expTemp->addExp(expTempLBound);
-			           exp->addExp(expTemp);
+			           expTempUBound->addExp(expTempLBound);
+			           exp->addExp(expTempUBound);
 			       }
 			    }
 			}

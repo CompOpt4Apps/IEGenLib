@@ -4724,6 +4724,29 @@ TEST_F(SetRelationTest, TransitiveClosure){
 	      " n - idx(i) - 1 >= 0 && n - idx(i + 1) - 1"
 	      " >= 0 && -idx(i) + idx(i + 1) - 1 >= 0 }"
 	      ,clo5->prettyPrintString());
+    rel = new Relation("{ [n] -> [i, k] : i - row1(n) = 0 "
+		    "&& k - P1(row1(n), col1(n)) = 0 &&"
+		    " col1(n) - col2(k) = 0 && n >= 0 &&"
+		    " i >= 0 && col1(n) >= 0 &&"
+		    " row1(n) >= 0 && k - rowptr(i) >= 0 &&"
+		    " -n + NNZ - 1 >= 0 &&"
+		    " -i + NR - 1 >= 0 && -k + rowptr(i + 1) - 1 >= 0 &&"
+		    " NC - col1(n) - 1 >= 0 &&"
+		    " NR - row1(n) - 1 >= 0 }");
+    closure = rel->TransitiveClosure();
+    EXPECT_EQ("{ [n] -> [i, k] : i - row1(n) = 0 &&"
+	" k - P1(row1(n), col1(n)) = 0 && col1(n) - col2(k) = 0 &&"
+	" n >= 0 && i >= 0 && col1(n) >= 0 && col2(k) >= 0 &&"
+	" row1(n) >= 0 && k - rowptr(i) >= 0 &&"
+	" NC - 1 >= 0 && NNZ - 1 >= 0 && NR - 1 >= 0"
+	" && P1(row1(n), col1(n)) - rowptr(i) >= 0"
+	" && -n + NNZ - 1 >= 0 && -i + NR - 1 >= 0"
+	" && -k + rowptr(i + 1) - 1 >= 0 && NC - col1(n) - 1 >= 0 &&"
+	" NC - col2(k) - 1 >= 0 && NR - row1(n) - 1 >= 0 &&"
+	" -P1(row1(n) + 1, col1(n)) + P1(row1(n), col1(n)) - 1 >= 0 &&"
+	" -P1(row1(n), col1(n)) + rowptr(i + 1) - 1 >= 0 &&"
+	" -rowptr(i) + rowptr(i + 1) - 1 >= 0 }",
+	closure->prettyPrintString());
 
     delete set;
     delete clo5;

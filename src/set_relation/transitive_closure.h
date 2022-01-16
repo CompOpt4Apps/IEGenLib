@@ -100,6 +100,11 @@ private:
 
     //! Converts an edge to an actual string.
     std::string edgeToString (const EdgeType e)const;
+    //! This function performs a lookup of nodes in 
+    //the graph and returns single term nodes that 
+    //have a direct equality relationship with this term
+    // \param t term being aliased for and is not adopted.
+    std::vector<Term*> getAliasTerms(Term& t);
 public:
     
     DiGraph();

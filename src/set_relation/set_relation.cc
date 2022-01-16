@@ -1653,7 +1653,6 @@ Conjunction*  Conjunction::TransitiveClosure(){
     // information.
     for (std::list<Exp*>::const_iterator i=retVal->mEqualities.begin();
          i != retVal->mEqualities.end(); i++) {
-        //TODO: Make this a function.
         // Split Terms as different nodes
 	Vertex lhsNode;
 	Vertex rhsNode;
@@ -1668,7 +1667,6 @@ Conjunction*  Conjunction::TransitiveClosure(){
 	       lhsNode.addTerm(t->clone());
 	    }
 	}
-        // TODO: Remove current expression from the list.
 	// Add edge between lhs and rhs in the graph.
         g->addEdge(lhsNode,rhsNode,EdgeType::EQUAL);
 
@@ -1689,7 +1687,6 @@ Conjunction*  Conjunction::TransitiveClosure(){
 	       lhsNode.addTerm(t->clone());
 	    }
 	}
-        // TODO: Remove current expression from the list.
 	// Add edge between lhs and rhs in the graph.
         g->addEdge(lhsNode,rhsNode,EdgeType::GREATER_OR_EQUAL_TO);
     }
@@ -1698,7 +1695,7 @@ Conjunction*  Conjunction::TransitiveClosure(){
     g->simplifyGreaterOrEqual();
     g->transitiveClosure();
     g->findAddMonotonicity ();
-   // std::cout <<  "After: \n";
+    //std::cout <<  "After: \n";
     //std::cout << g->toDotString();
     // Delete all expressions in the retVal conjunction.
     retVal->reset();
