@@ -336,11 +336,10 @@ void FlattenUFNestingVisitor::preVisitUFCallTerm(UFCallTerm* callTerm){
 		       if (callTerm->getParamExp(i)->dependsOn(tv)){
 		           maxDependence = std::max(maxDependence,j);
 		       } 
-		    } 
+		    }
 		    int tupleVarLocation = maxDependence+1;
 		    // Expand current tuple declaration
 		    TupleDecl newTupleDecl(currentTupleDecl.size() + 1);
-		    
                     for(int i = 0 ; i < newTupleDecl.size(); i++){
                         if (i < currentTupleDecl.size()){
                             newTupleDecl.copyTupleElem(currentTupleDecl,i,i);
@@ -349,9 +348,19 @@ void FlattenUFNestingVisitor::preVisitUFCallTerm(UFCallTerm* callTerm){
 	                }
 	            }
 	            currentConjunction->setTupleDecl(newTupleDecl);
-		    int newTupleIndex = tupleVarLocation;
-		    if (tupleVarLocation < currentTupleDecl.size()){
-			    
+		   
+		    int tupleVarLocTemp = tupleVarLocation;
+	            // Check if there is already a tuplevariable
+	            // on this location and put the new tupleIndex
+	            // just after. 
+	            for(auto& flatUfTuple : flatUfTupleMap){
+		        if (flatUfTuple.second == tupleVarLocTemp){
+		                tupleVarLocation++;
+			}
+		    }
+		    // If new tuple location is not at the 
+		    // last tuple location of the new tuple Decl
+		    if (tupleVarLocation != newTupleDecl.size()-1){
                         // Shift tuple declaration
 		        std::vector<int> shiftTupVars(currentTupleDecl.size());
                         for (int j = 0; j<currentTupleDecl.size(); j++) {
@@ -362,22 +371,16 @@ void FlattenUFNestingVisitor::preVisitUFCallTerm(UFCallTerm* callTerm){
                         }
                         currentConjunction->remapTupleVars(shiftTupVars);
 
-			// Check if there is already a tuplevariable
-			// on this location and put the new tupleIndex
-			// just after. 
-			for(auto& flatUfTuple : flatUfTupleMap){
-			    if (flatUfTuple.second >= tupleVarLocation){
-		                newTupleIndex++;
-			    }
-			}
 		    }
-	            currentTupleDecl = newTupleDecl;
+	            
+		    
+		    currentTupleDecl = currentConjunction->getTupleDecl();
 		    auto cTermClone = dynamic_cast
 			    <UFCallTerm*>(cTerm->clone());
 		    cTermClone->setCoefficient(1);
 	            tupReplacement = new TupleVarTerm(1,
 				    tupleVarLocation);
-		    flatUfTupleMap.push_back({cTermClone,newTupleIndex});
+		    flatUfTupleMap.push_back({cTermClone,tupleVarLocation});
 	        }
 		Exp* e = new Exp();
 		e->addTerm(tupReplacement);

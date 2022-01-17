@@ -1632,6 +1632,79 @@ TEST_F(ComputationTest, NestedUFTest) {
     EXPECT_EQ("rowptr_1", (*ufMapIter).first);
     EXPECT_EQ("rowptr(_x1 + NNZ)", (*ufMapIter).second->prettyPrintString(s->getTupleDecl())); 
     vOmegaReplacer->reset();
+    flatner->reset();
+
+    delete s;
+
+    s = new Set("{ [n, i, k] : i - P0(row1(n), col1(n)) = 0 &&"
+		" i - row1(n) = 0 && k - P1(row1(n), col1(n)) = 0 &&"
+		" col1(n) - col2(k) = 0 && n >= 0 && i >= 0 &&"
+		" col1(n) >= 0 && row1(n) >= 0 && k - rowptr(i) >= 0 &&"
+		" -n + NNZ - 1 >= 0 && -i + NR - 1 >= 0 &&"
+		" -k + rowptr(i + 1) - 1 >= 0 && NC - col1(n) - 1 >= 0"
+		" && NR - row1(n) - 1 >= 0 }");
+
+    EXPECT_NO_THROW(s->acceptVisitor(flatner));
+    EXPECT_EQ("{ [n, tv1, tv2, i, k] : tv1 - row1(n) = 0 &&"
+	      " tv2 - col1(n) = 0 && i - P0(tv1, tv2) = 0 &&"
+	      " i - row1(n) = 0 && k - P1(tv1, tv2) = 0 &&"
+	      " col1(n) - col2(k) = 0 && n >= 0 && i >= 0 &&"
+	      " col1(n) >= 0 && row1(n) >= 0 && k - rowptr(i) >= 0 &&"
+	      " -n + NNZ - 1 >= 0 && -i + NR - 1 >= 0 && -k +"
+	      " rowptr(i + 1) - 1 >= 0 && NC - col1(n) - 1 >= 0 &&"
+	      " NR - row1(n) - 1 >= 0 }",
+	      s->prettyPrintString());
+    EXPECT_NO_THROW(s->acceptVisitor(vOmegaReplacer));
+    EXPECT_EQ("{ [n, tv1, tv2, i, k] : tv1 - row1_0(n) = 0 &&"
+	      " tv2 - col1_1(n) = 0 && i - P0_2(n, tv1, tv2) = 0 &&"
+	      " i - row1_0(n) = 0 && k - P1_3(n, tv1, tv2) = 0 &&"
+	      " col1_1(n) - col2_4(n, tv1, tv2, i, k) = 0 && n >= 0 &&"
+	      " i >= 0 && col1_1(n) >= 0 && row1_0(n) >= 0 &&"
+	      " k - rowptr_5(n, tv1, tv2, i) >= 0 &&"
+	      " -n + NNZ - 1 >= 0 && -i + NR - 1 >= 0 && -k +"
+	      " rowptr_6(n, tv1, tv2, i) - 1 >= 0 && NC - col1_1(n)"
+	      " - 1 >= 0 && NR - row1_0(n) - 1 >= 0 }",
+	      s->prettyPrintString());
+    ufMaps = vOmegaReplacer->getUFMap();
+    ASSERT_EQ(7,ufMaps.size());
+    
+    ufMapIter = ufMaps.begin(); 
+    EXPECT_EQ("P0_2", (*ufMapIter).first);
+    EXPECT_EQ("P0(tv1, tv2)",  (*ufMapIter).second->prettyPrintString(s->getTupleDecl())); 
+    
+    ufMapIter++;
+    EXPECT_EQ("P1_3", (*ufMapIter).first);
+    EXPECT_EQ("P1(tv1, tv2)", (*ufMapIter).second->
+		    prettyPrintString(s->getTupleDecl())); 
+    
+    ufMapIter++;
+    EXPECT_EQ("col1_1", (*ufMapIter).first);
+    EXPECT_EQ("col1(n)", (*ufMapIter).second->
+		    prettyPrintString(s->getTupleDecl())); 
+    
+    ufMapIter++;
+    EXPECT_EQ("col2_4", (*ufMapIter).first);
+    EXPECT_EQ("col2(k)", (*ufMapIter).second->
+		    prettyPrintString(s->getTupleDecl())); 
+    
+    ufMapIter++;
+    EXPECT_EQ("row1_0", (*ufMapIter).first);
+    EXPECT_EQ("row1(n)", (*ufMapIter).second->
+		    prettyPrintString(s->getTupleDecl())); 
+    
+    ufMapIter++;
+    EXPECT_EQ("rowptr_5", (*ufMapIter).first);
+    EXPECT_EQ("rowptr(i)", (*ufMapIter).second->
+		    prettyPrintString(s->getTupleDecl())); 
+   
+    
+    ufMapIter++;
+    EXPECT_EQ("rowptr_6", (*ufMapIter).first);
+    EXPECT_EQ("rowptr(i + 1)", (*ufMapIter).second->
+		    prettyPrintString(s->getTupleDecl())); 
+
+    vOmegaReplacer->reset();
+    flatner->reset();
     
     delete s;
     delete vOmegaReplacer;
@@ -1759,7 +1832,7 @@ TEST_F(ComputationTest, NestedUFComputationTest) {
 "#define s_0(tv0, tv1, tv2)   P.insert(row(n), col2(n)) \n"
 "#define s0(__x0, a1, __x2, a3, __x4, a5, __x6)   s_0(a1, a3, a5);\n"
 "#define s_1(n, k)   ACSR(n,k) = ACOO(n,k) \n"
-"#define s1(__x0, a1, tv2, __x3, __x4, __x5, __x6, __x7, __x8)   s_1(a1, a3);\n"
+"#define s1(__x0, a1, tv2, tv3, __x4, a3, __x6, __x7, __x8)   s_1(a1, a3);\n"
 "\n"
 "#undef P_2\n"
 "#undef col1_3\n"
@@ -1768,7 +1841,7 @@ TEST_F(ComputationTest, NestedUFComputationTest) {
 "#undef rowptr_4\n"
 "#undef rowptr_5\n"
 "#define P(t0,t1) P[t0][t1]\n"
-"#define P_2(__tv0, __tv1, __tv2, __tv3) P(__tv3, __tv2)\n"
+"#define P_2(__tv0, __tv1, __tv2, __tv3) P(__tv2, __tv3)\n"
 "#define col1(t0) col1[t0]\n"
 "#define col1_3(__tv0, __tv1, __tv2, __tv3, __tv4, __tv5) col1(__tv5)\n"
 "#define col2(t0) col2[t0]\n"
@@ -1798,12 +1871,14 @@ TEST_F(ComputationTest, NestedUFComputationTest) {
 "    }\n"
 "  }\n"
 "  for(t2 = 0; t2 <= NNZ-1; t2++) {\n"
-"    if (col2_1(t1,t2) == 0 && NR >= row_0(t1,t2)+1 && row_0(t1,t2) >= 0) {\n"
+"    if (col2_1(t1,t2) >= 0 && row_0(t1,t2) >= 0 && NC >= col2_1(t1,t2)+1 && NR >= row_0(t1,t2)+1) {\n"
 "      t3=row_0(t1,t2);\n"
-"      if (rowptr_4(t1,t2,t3) <= 0 && rowptr_5(t1,t2,t3) >= 1) {\n"
-"        if (P_2(t1,t2,t3,t4) == 0) {\n"
-"          if (col1_3(t1,t2,t3,t4,t5,t6) == 0) {\n"
-"            s1(1,t2,t3,0,0,0,0,0,0);\n"
+"      if (rowptr_5(t1,t2,t3) >= rowptr_4(t1,t2,t3)+1) {\n"
+"        t4=col2_1(t1,t2);\n"
+"        if (rowptr_5(t1,t2,t3) >= P_2(t1,t2,t3,t4)+1 && P_2(t1,t2,t3,t4) >= rowptr_4(t1,t2,t3)) {\n"
+"          t6=P_2(t1,t2,t3,t4);\n"
+"          if (col1_3(t1,t2,t3,t4,t5,t6) == col2_1(t1,t2)) {\n"
+"            s1(1,t2,t3,t4,0,t6,0,0,0);\n"
 "          }\n"
 "        }\n"
 "      }\n"
