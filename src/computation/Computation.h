@@ -47,10 +47,6 @@ class AppendComputationResult;
  *
  * \brief SPF representation of a computation (group of statements such as a
  * function).
- *
- * Incoming code must have highly-unique variable names (assumed to be
- * surrounded in some non-code string such as $'s') if it may be appended to
- * another Computation.
  */
 class Computation {
    public:
