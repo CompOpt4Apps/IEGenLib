@@ -136,7 +136,7 @@ Computation* Computation::getUniquelyNamedClone() const {
     std::string namePrefix = NAME_PREFIX_BASE + std::to_string(numComputationRenames++);
     Computation* prefixedCopy = new Computation();
 
-    // prefix name for clarity
+    // prefix name forerrarity
     if (this->hasName()) {
         prefixedCopy->setName(namePrefix + this->getName());
     }
@@ -155,7 +155,7 @@ Computation* Computation::getUniquelyNamedClone() const {
             (retVal.second ? getPrefixedDataSpaceName(retVal.first, namePrefix) : retVal.first), retVal.second);
     }
     for (auto& stmt : this->stmts) {
-        prefixedCopy->addStmt(stmt->getUniquelyNamedClone(namePrefix, this->getDataSpaces()));
+        prefixedCopy->addStmt(stmt->getUniquelyNamedClone(namePrefix, this->getDelimitedDataSpaces()));
     }
 
     return prefixedCopy;
@@ -181,8 +181,10 @@ void Computation::addStmt(Stmt* stmt, int stmtIdx) {
     // TODO: if stmtIdx < stmts.size(), update later execution schedules
     stmts.insert(stmts.begin() + stmtIdx, stmt);
     //enforceArraySSA(stmt);
-    stmtIdx = locatePhiNodes(stmtIdx);
-    enforceSSA(stmtIdx);
+    //stmtIdx = locatePhiNodes(stmtIdx);
+    // Turn off SSA for array accesses.
+    //
+    //enforceSSA(stmtIdx);
 }
 
 /*
@@ -613,8 +615,16 @@ void Computation::addDataSpace(std::string dataSpaceName, std::string dataSpaceT
     }
 }
 
-std::map<std::string, std::string> Computation::getDataSpaces() const {
+std::map<std::string, std::string> Computation::getDelimitedDataSpaces() const {
     return dataSpaces;
+}
+
+std::map<std::string, std::string> Computation::getUndelimitedDataSpaces() const {
+    std::map<std::string, std::string> undelimitedDataSpaces;
+    for (const auto& dataSpaceInfo : this->getDelimitedDataSpaces()) {
+        undelimitedDataSpaces.emplace(stripDataSpaceDelimiter(dataSpaceInfo.first), dataSpaceInfo.second);
+    }
+    return undelimitedDataSpaces;
 }
 
 std::string Computation::getDataSpaceType(std::string dataSpaceName) const{
@@ -809,7 +819,7 @@ bool Computation::isComplete() const {
 std::string Computation::codeGenMemoryManagementString() {
 
     std::ostringstream outputString;
-    std::map<std::string, std::string> dataSpaces = this->getDataSpaces();
+    std::map<std::string, std::string> dataSpaces = this->getDelimitedDataSpaces();
     std::map<std::string, std::string>::iterator it = dataSpaces.begin();
 
     while (it != dataSpaces.end()){
@@ -883,10 +893,10 @@ AppendComputationResult Computation::appendComputation(
         }
     }
 
-    // Insert declarations+assignment of (would-have-been if not for inlining)
+    // Insert assignment of (would-have-been if not for inlining)
     // parameter values, at the beginning of the appendee.
     // Assignment of a parameter i will be like:
-    // [type of i] [name of i] = [name of argument i from passed-in list];
+    // [name of i] = [name of argument i from passed-in list];
     // Insertion is done by prepending statements one at a time in reverse
     // order.
 
@@ -921,7 +931,7 @@ AppendComputationResult Computation::appendComputation(
     }
 
     // add (already name prefixed) data spaces from appendee to appender
-    for (const auto& dataSpace : toAppend->getDataSpaces()) {
+    for (const auto& dataSpace : toAppend->getDelimitedDataSpaces()) {
         this->addDataSpace(dataSpace.first, dataSpace.second);
     }
 
@@ -1629,7 +1639,7 @@ void Computation::fuse (int s1, int s2, int fuseLevel){
 }
 
 void Computation::finalize(bool deleteDeadNodes) {
-    enforceArraySSA();
+    //enforceArraySSA();
     adjustExecutionSchedules();
 	padExecutionSchedules();
 
@@ -2032,7 +2042,7 @@ std::string Computation::toDotString(bool reducePCRelations,
         }
     }
 
-    return graph.toDotString();
+    return stripDataSpaceDelimiter(graph.toDotString());
 }
 
 std::vector<std::pair<int, std::string>> Computation::getStmtDebugStrings() {
@@ -2068,7 +2078,6 @@ std::vector<Relation*> Computation::getTransformations() const {
         transformedSchedules[stmtNum] = new Relation(
             *getStmt(stmtNum)->getExecutionSchedule());
         for (Relation* transformation : transformationLists.at(stmtNum)) {
-            std::cerr << "Transformation " << transformation->getString() << std::endl;
             Relation* curr = transformedSchedules[stmtNum];
             if (curr->outArity() != transformation->inArity()) {
                 std::cerr << "Mismatched Arities: cannot apply transformation" << std::endl;
@@ -2113,7 +2122,10 @@ std::string Computation::codeGen(Set* knownConstraints) {
 
     // convert sets/relations to Omega format for use in codegen, and
     // collect statement macro definitions
-    VisitorChangeUFsForOmega* vOmegaReplacer = new VisitorChangeUFsForOmega();
+    VisitorChangeUFsForOmega* vOmegaReplacer = 
+	    new VisitorChangeUFsForOmega();
+    FlattenUFNestingVisitor* flatner = 
+	    new FlattenUFNestingVisitor();
     std::ostringstream stmtMacroUndefs;
     std::ostringstream stmtMacroDefs;
     int stmtCount = 0;
@@ -2128,17 +2140,19 @@ std::string Computation::codeGen(Set* knownConstraints) {
 
         // Generate the first macro based on the original iteration space
         Set* iterSpace = stmt->getIterationSpace();
-        // This is required to generate correct tuple variable names
-        iterSpace->acceptVisitor(vOmegaReplacer);
-
-        stmtMacroDefs << "#define s_" << stmtCount << "("
+        
+	stmtMacroDefs << "#define s_" << stmtCount << "("
                       << iterSpace->getTupleDecl().toString() << ")   "
-                      << Computation::stripDataSpaceDelimiter(stmt->getStmtSourceCode())
+                      << Computation::stripDataSpaceDelimiter
+		      (stmt->getStmtSourceCode())
                       << " \n";
 
         // Get the new iteration space set
         Set* newIterSpace = rel->Apply(stmt->getIterationSpace());
-        newIterSpace->pushConstToConstraints(); 
+        // Flatten UF Nesting
+	newIterSpace->acceptVisitor(flatner);
+        // Enforce prefix rule	
+        newIterSpace->acceptVisitor(vOmegaReplacer);
         // Generate the second macro based on the new iteration space
         // Generate a mapping between the two iteration spaces using
         // the transformation relation
@@ -2172,13 +2186,11 @@ std::string Computation::codeGen(Set* knownConstraints) {
 	// circumvent Omega's schedulling bug.
         std::string omegaIterString =
             newIterSpace->toOmegaString(vOmegaReplacer->getUFCallDecls());
-        std::cout << "\nOmegaIterString: " << omegaIterString << std::endl;
-
         iterSpaces.push_back(omegaIterString);
 
         // Use identity transformation instead.
         //transforms.push_back(omega::Identity(iterSpace->arity()));
-        arity.push_back(newIterSpace->arity());
+	arity.push_back(newIterSpace->arity());
 
         delete newIterSpace;
     	delete rel;
@@ -2188,9 +2200,16 @@ std::string Computation::codeGen(Set* knownConstraints) {
     std::ostringstream UFMacroUndefs;
     std::ostringstream UFMacroDefs;
     for (const auto& macro : *vOmegaReplacer->getUFMacros()) {
-        UFMacroUndefs << "#undef " << macro.first << "\n";
-        UFMacroDefs << "#define " << macro.first << " " << macro.second << "\n";
+        UFMacroDefs << "#define " << macro.first << " " 
+		<< macro.second << "\n";
     }
+    // Create undefs
+    
+    for (const auto& macro: vOmegaReplacer->getUFMap()){
+        
+        UFMacroUndefs << "#undef " << macro.first << "\n";
+    }
+    
     generatedCode << stmtMacroUndefs.str() << stmtMacroDefs.str() << "\n";
     generatedCode << UFMacroUndefs.str() << UFMacroDefs.str() << "\n";
 
@@ -2210,6 +2229,7 @@ std::string Computation::codeGen(Set* knownConstraints) {
     } else {
         modifiedKnown = new Set("{}");
     }
+    modifiedKnown->acceptVisitor(flatner);
     modifiedKnown->acceptVisitor(vOmegaReplacer);
     std::string omegaKnownString =
         modifiedKnown->toOmegaString(vOmegaReplacer->getUFCallDecls());
@@ -2222,7 +2242,7 @@ std::string Computation::codeGen(Set* knownConstraints) {
     // undefine macros, which are now extraneous
     generatedCode << stmtMacroUndefs.str() << UFMacroUndefs.str();
 
-    return generatedCode.str();
+    return stripDataSpaceDelimiter(generatedCode.str());
 }
 
 std::string Computation::omegaCodeGenFromString(std::vector<int> relationArity, std::vector<std::string> iterSpacesStr, std::string known){
@@ -2254,7 +2274,7 @@ std::string Computation::omegaCodeGenFromString(std::vector<int> relationArity, 
             generatedCode << "/* empty */\n";
         }
     } catch (const std::exception& e) {
-        std::cout << e.what() << std::endl;
+        std::cerr<< "err" << e.what() << std::endl;
     }
     delete omegaKnown;
 
@@ -2267,6 +2287,7 @@ std::string Computation::toOmegaString() {
     // convert sets/relations to Omega format for use in codegen, and
     // collect statement macro definitions
     VisitorChangeUFsForOmega* vOmegaReplacer = new VisitorChangeUFsForOmega();
+    FlattenUFNestingVisitor* flattner = new FlattenUFNestingVisitor();
     int stmtCount = 0;
     for (const auto& stmt : stmts) {
         omegaString << "s" << stmtCount << "\n";
@@ -2279,8 +2300,8 @@ std::string Computation::toOmegaString() {
 	// circumvent Omega's schedulling bug.
         Set * iterSpace = stmt->getExecutionSchedule()->
 		Apply(stmt->getIterationSpace());
+	iterSpace->acceptVisitor(flattner);
 	iterSpace->acceptVisitor(vOmegaReplacer);
-
 
         std::string omegaIterString =
             iterSpace->toOmegaString(vOmegaReplacer->getUFCallDecls());

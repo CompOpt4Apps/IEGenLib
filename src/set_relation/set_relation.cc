@@ -1653,7 +1653,6 @@ Conjunction*  Conjunction::TransitiveClosure(){
     // information.
     for (std::list<Exp*>::const_iterator i=retVal->mEqualities.begin();
          i != retVal->mEqualities.end(); i++) {
-        //TODO: Make this a function.
         // Split Terms as different nodes
 	Vertex lhsNode;
 	Vertex rhsNode;
@@ -1668,7 +1667,6 @@ Conjunction*  Conjunction::TransitiveClosure(){
 	       lhsNode.addTerm(t->clone());
 	    }
 	}
-        // TODO: Remove current expression from the list.
 	// Add edge between lhs and rhs in the graph.
         g->addEdge(lhsNode,rhsNode,EdgeType::EQUAL);
 
@@ -1689,7 +1687,6 @@ Conjunction*  Conjunction::TransitiveClosure(){
 	       lhsNode.addTerm(t->clone());
 	    }
 	}
-        // TODO: Remove current expression from the list.
 	// Add edge between lhs and rhs in the graph.
         g->addEdge(lhsNode,rhsNode,EdgeType::GREATER_OR_EQUAL_TO);
     }
@@ -1698,7 +1695,7 @@ Conjunction*  Conjunction::TransitiveClosure(){
     g->simplifyGreaterOrEqual();
     g->transitiveClosure();
     g->findAddMonotonicity ();
-   // std::cout <<  "After: \n";
+    //std::cout <<  "After: \n";
     //std::cout << g->toDotString();
     // Delete all expressions in the retVal conjunction.
     retVal->reset();
@@ -1714,6 +1711,54 @@ Conjunction*  Conjunction::TransitiveClosure(){
     delete g;
     return retVal;
 }
+
+
+/*!
+ * Returns a list of expressions denoting the upper bound 
+ * of a tuple variable. The expressions in this 
+ * list are owned by caller.
+*/
+std::list<Exp*> Conjunction::GetUpperBounds(TupleVarTerm& tVar){
+   // Upper bounds are only present in the inequality constraints
+   std::list<Exp*> res;
+   for(Exp* e : mInequalities){
+      for(Term* t : e->getTermList()){
+         TupleVarTerm* tupTerm = dynamic_cast<TupleVarTerm*>(t);
+         if(tupTerm != NULL && tupTerm->tvloc() == tVar.tvloc()
+			 && tupTerm->coefficient() < 0){
+	    Term* tVarClone = tVar.clone();
+            Exp* solveFor = e->solveForFactor(tVarClone);
+	    res.push_back(solveFor); 
+	 }	 
+      }
+   }
+   return res;
+}
+    
+/*! Returns a list of expressions on the lower bound
+ * of a tuple variable tVar. The expressions returned
+ * is owned by the caller.
+ * */
+std::list<Exp*> Conjunction::GetLowerBounds(TupleVarTerm& tVar){
+   
+   // Upper bounds are only present in the inequality constraints
+   std::list<Exp*> res;
+   for(Exp* e : mInequalities){
+      for(Term* t : e->getTermList()){
+         TupleVarTerm* tupTerm = dynamic_cast<TupleVarTerm*>(t);
+         if(tupTerm != NULL && tupTerm->tvloc() == tVar.tvloc()
+			 && tupTerm->coefficient() > 0){
+	    Term* tVarClone = tVar.clone();
+            Exp* solveFor = e->solveForFactor(tVarClone);	    
+	    res.push_back(solveFor); 
+	 }	 
+      }
+   }
+   return res;
+}
+
+
+
 /******************************************************************************/
 #pragma mark -
 
@@ -2505,6 +2550,12 @@ void TupleTermVisitor::postVisitTupleVarTerm(TupleVarTerm* t){
     if (it == tupleLocs.end()) {tupleLocs.push_back(t->tvloc()); }
 }
 
+
+
+
+
+
+
 //! Gets the domain of an uninterpreted function 
 //! in a set
 //! \param ufName name of the UF
@@ -2539,11 +2590,11 @@ Set* Set::GetDomain(std::string ufName){
         
 	
 	
-	
-        res->setTupleDecl(newTupleDecl);
 	for (int i = 0 ; i < oldTupleDecl.getSize(); i++){
             newTupleDecl.copyTupleElem(oldTupleDecl,i,i);
 	}	
+	
+        res->setTupleDecl(newTupleDecl);
         
 	
 	
@@ -2597,6 +2648,7 @@ Set* Set::GetDomain(std::string ufName){
     return result;
 
 }
+
 
 
 /******************************************************************************/
@@ -5385,5 +5437,51 @@ std::vector<std::string> SparseConstraints::getZ3form
 
 
 
+/*!
+ * Returns a list of expressions denoting the upper bound 
+ * of a tuple variable. The expressions in this 
+ * list are owned by caller.
+ * \param tVar (not adopted)
+ * \throws if tVar location is not a vlid tuple location
+*/
+std::list<Exp*> SparseConstraints::GetUpperBounds(TupleVarTerm& tVar){
+   
+   if(tVar.tvloc() >= arity() || tVar.tvloc() < 0){
+	throw assert_exception("GetLowerBound: invalid tuple var location");
+   }
+	
+
+   std::list<Exp*> res;
+   for (std::list<Conjunction*>::const_iterator it=this->mConjunctions.begin();
+        it != this->mConjunctions.end(); it++) {
+	   std::list<Exp*> expList = (*it)->GetUpperBounds(tVar);
+           for(Exp * e : expList){
+	       res.push_back(e);
+	   }
+   }
+   return res;
+}
+    
+/*! Returns a list of expressions on the lower bound
+ * of a tuple variable tVar. The expressions returned
+ * is owned by the caller.
+ * \param tVar (not adopted)
+ * \throws if tVar location is not a vlid tuple location
+ * */
+std::list<Exp*> SparseConstraints::GetLowerBounds(TupleVarTerm& tVar){
+   if(tVar.tvloc() >= arity() || tVar.tvloc() < 0){
+	throw assert_exception("GetLowerBound: invalid tuple var location");
+   }
+   std::list<Exp*> res;
+
+   for (std::list<Conjunction*>::const_iterator it=this->mConjunctions.begin();
+        it != this->mConjunctions.end(); it++) {
+	   std::list<Exp*> expList = (*it)->GetLowerBounds(tVar);
+           for(Exp * e : expList){
+	      res.push_back(e);
+	   }
+   }
+   return res;
+}
 
 }//end namespace iegenlib

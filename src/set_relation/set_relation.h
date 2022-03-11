@@ -295,6 +295,22 @@ public:
      */
     bool isConstBounded (TupleVarTerm* t);
     
+    
+    
+    /*!
+     * Returns a list of expressions denoting the upper bound 
+     * of a tuple variable. The expressions in this 
+     * list are owned by caller.
+     * \param tVar (not adopted)
+     */
+    std::list<Exp*> GetUpperBounds(TupleVarTerm& tVar);
+    
+    /*! Returns a list of expressions on the lower bound
+     * of a tuple variable tVar. The expressions returned
+     * is owned by the caller.
+     * \param tVar (not adopted)
+     * */
+    std::list<Exp*> GetLowerBounds(TupleVarTerm& tVar);
 
 
     void setUnsat(){ unsat = true;}
@@ -520,6 +536,24 @@ public:
     std::vector<std::string> getZ3form(std::set<std::string> &UFSyms,
                   std::set<std::string> &VarSyms, bool termDef = true);
 
+
+    /*!
+     * Returns a list of expressions denoting the upper bound 
+     * of a tuple variable. The expressions in this 
+     * list are owned by caller.
+     * \param tVar (not adopted)
+     */
+    std::list<Exp*> GetUpperBounds(TupleVarTerm& tVar);
+    
+    /*! Returns a list of expressions on the lower bound
+     * of a tuple variable tVar. The expressions returned
+     * is owned by the caller.
+     * \param tVar (not adopted)
+     * */
+    std::list<Exp*> GetLowerBounds(TupleVarTerm& tVar);
+
+
+
 // FIXME: what methods should we have to iterate over conjunctions so
 // this can go back to protected?
 // protected:
@@ -734,6 +768,11 @@ public:
 
 private:
     int mArity;
+    // give VisitorChangeUFsForOmega access to 
+    // mArity
+    friend class VisitorChangeUFsForOmega;
+
+
 };
 
 /*!

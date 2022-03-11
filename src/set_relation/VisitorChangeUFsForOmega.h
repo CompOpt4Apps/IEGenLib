@@ -45,6 +45,23 @@ namespace iegenlib{
 */
 class VisitorChangeUFsForOmega : public Visitor {
    private:
+    
+    // List of flattened ufcall terms and where it will
+    // be substituted in the tuple declaration.
+    // For example 
+    // Initial Set: {[n,k]:} 
+    // FlatUF,1
+    // Final Set: {[n,t1,k]
+    std::vector<std::pair<UFCallTerm*,int>> flatUfTupleMap;
+    
+
+    // This contains a list of 
+    // new tuple locations created 
+    // by flattening ufs.
+    std::vector<int> newTupleLocs;
+     
+    Conjunction* currentConjunction ; 
+        
     // Stores each replaced UFCallTerm with 
     // original UFCalll
     std::map<std::string,UFCallTerm*> ufMap;
@@ -101,15 +118,24 @@ class VisitorChangeUFsForOmega : public Visitor {
     //! Get the declarations of UF calls needed by Omega parser
     std::set<std::string> getUFCallDecls();
 
-    void preVisitSparseConstraints(SparseConstraints*);
-
     void preVisitConjunction(Conjunction* c);
+    
 
     void postVisitUFCallTerm(UFCallTerm*);
-
+    
     void preVisitExp(iegenlib::Exp * e);
+    
+    void postVisitSet(iegenlib::Set*);
+
+    void preVisitRelation(iegenlib::Relation*);
 };
 
+
+/**
+ * VisitorChangeOmegaUF, this reverses the transfformation 
+ * of VisitorChangeUFsForOmega. It replaces all occurence 
+ * of modified ufs back to their original uf call
+ */
 class VisitorChangeOmegaUF:public Visitor {
 private:
     // Stores each replaced UFCallTerm with 
@@ -120,6 +146,35 @@ public:
 	   ufMap(ufMap){} 
     void postVisitUFCallTerm(UFCallTerm*);
 };	
+
+/**
+ * FlattenUFNestingVisitor, this visitor flatten all nested UFs
+ * present in constraint. It expands the tuple declaration of 
+ * of the constraint been run on and returns new positions of 
+ * tuple variables 
+ */
+class FlattenUFNestingVisitor: public Visitor{
+    std::vector<int> newPos;
+    // List of flattened ufcall terms and where it will
+    // be substituted in the tuple declaration.
+    // For example 
+    // Initial Set: {[n,k]:} 
+    // FlatUF,1
+    // Final Set: {[n,t1,k]
+    std::vector<std::pair<UFCallTerm*,int>> flatUfTupleMap;
+    
+    Conjunction* currentConjunction ; 
+    
+    //! stored tuple decl for variable retrieval
+    TupleDecl currentTupleDecl;
+
+public:
+    void preVisitUFCallTerm(UFCallTerm* t);
+    void preVisitConjunction(Conjunction* c);
+    void postVisitConjunction(Conjunction* c);
+    void reset();
+};
+
 
 }
 

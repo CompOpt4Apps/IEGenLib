@@ -4568,8 +4568,12 @@ TEST_F(SetRelationTest, RestrictDomainTest){
 }
 
 
-// Test solve for output tuple.
-TEST_F(SetRelationTest, SolveForOutputTuple){
+// Solve for output tuple was created for synthesis. 
+// it is supposed to return constraints involving output
+// tuple and create an inverse family. This is inverse family
+// research is still in it's early infancy and therefore
+// tests will be disabled for now.
+TEST_F(SetRelationTest, DISABLED_SolveForOutputTuple){
 
     Relation * rel = new Relation(
 	     "{[i,j] -> [k]: A(i,j) > 0 and rowptr(i) <= k"
@@ -4720,6 +4724,29 @@ TEST_F(SetRelationTest, TransitiveClosure){
 	      " n - idx(i) - 1 >= 0 && n - idx(i + 1) - 1"
 	      " >= 0 && -idx(i) + idx(i + 1) - 1 >= 0 }"
 	      ,clo5->prettyPrintString());
+    rel = new Relation("{ [n] -> [i, k] : i - row1(n) = 0 "
+		    "&& k - P1(row1(n), col1(n)) = 0 &&"
+		    " col1(n) - col2(k) = 0 && n >= 0 &&"
+		    " i >= 0 && col1(n) >= 0 &&"
+		    " row1(n) >= 0 && k - rowptr(i) >= 0 &&"
+		    " -n + NNZ - 1 >= 0 &&"
+		    " -i + NR - 1 >= 0 && -k + rowptr(i + 1) - 1 >= 0 &&"
+		    " NC - col1(n) - 1 >= 0 &&"
+		    " NR - row1(n) - 1 >= 0 }");
+    closure = rel->TransitiveClosure();
+    EXPECT_EQ("{ [n] -> [i, k] : i - row1(n) = 0 &&"
+	" k - P1(row1(n), col1(n)) = 0 && col1(n) - col2(k) = 0 &&"
+	" n >= 0 && i >= 0 && col1(n) >= 0 && col2(k) >= 0 &&"
+	" row1(n) >= 0 && k - rowptr(i) >= 0 &&"
+	" NC - 1 >= 0 && NNZ - 1 >= 0 && NR - 1 >= 0"
+	" && P1(row1(n), col1(n)) - rowptr(i) >= 0"
+	" && -n + NNZ - 1 >= 0 && -i + NR - 1 >= 0"
+	" && -k + rowptr(i + 1) - 1 >= 0 && NC - col1(n) - 1 >= 0 &&"
+	" NC - col2(k) - 1 >= 0 && NR - row1(n) - 1 >= 0 &&"
+	" -P1(row1(n) + 1, col1(n)) + P1(row1(n), col1(n)) - 1 >= 0 &&"
+	" -P1(row1(n), col1(n)) + rowptr(i + 1) - 1 >= 0 &&"
+	" -rowptr(i) + rowptr(i + 1) - 1 >= 0 }",
+	closure->prettyPrintString());
 
     delete set;
     delete clo5;
@@ -4741,10 +4768,8 @@ TEST_F(SetRelationTest,GetDomain){
 		    " k < NZ and rowptr(i) >= j}");
     Set * domain = s->GetDomain("rowptr");
     EXPECT_EQ(domain->arity(),2);
-    EXPECT_EQ(domain->prettyPrintString(), 
-		    "{ [tv0, tv1] : tv0 - tv1 = 0 && tv0 >= 0 &&"
-		    " NC - 1 >= 0 && NZ - 1 >= 0 && -tv0 + NR - 1 >= 0 }");
-
+    EXPECT_EQ( "{ [i, tv1] : i - tv1 = 0 && i >= 0 && NC - 1 >="
+	       " 0 && NZ - 1 >= 0 && -i + NR - 1 >= 0 }",domain->prettyPrintString());
     
     s = new Set(
 		    "{[i,j,k]: i >= 0 && i < NR &&"
@@ -4753,13 +4778,11 @@ TEST_F(SetRelationTest,GetDomain){
 		    " rowptr(i) >= j}");
     domain = s->GetDomain("rowptr");
     EXPECT_EQ(domain->arity(),2);
-    EXPECT_EQ(domain->prettyPrintString(), 
-		    "{ [tv0, tv1] : tv0 - tv1 = 0 && tv0 >= 0 &&"
-		    " NC - 1 >= 0 && NZ - 1 >= 0 && -tv0 + NR - 1"
-		    " >= 0 } union { [tv0, tv1] : tv0 - tv1 + 1 = 0"
-		    " && tv0 >= 0 && NC - 1 >= 0 && NZ - 1 >= 0 &&"
-		    " -tv0 + NR - 1 >= 0 }");
-
+    EXPECT_EQ("{ [i, tv1] : i - tv1 = 0 && i >= 0 && NC - 1"
+	      " >= 0 && NZ - 1 >= 0 && -i + NR - 1 >= 0 }"
+	      " union { [i, tv1] : i - tv1 + 1 = 0 &&"
+	      " i >= 0 && NC - 1 >= 0 && NZ - 1 >= 0 &&"
+	      " -i + NR - 1 >= 0 }",domain->prettyPrintString());
 
 
 }
@@ -4888,3 +4911,18 @@ TEST_F(SetRelationTest, SymbolIterator) {
     delete knownUFsIter;
 }
 
+TEST_F(SetRelationTest, TupleBoundsTest){
+    Set * domain = new Set("{[i]:0 <= i <= NR}");
+    TupleVarTerm tupVar(1,0);
+    auto upperBounds = domain->GetUpperBounds(tupVar);
+    auto lowerBounds = domain->GetLowerBounds(tupVar);
+
+    ASSERT_EQ(1,upperBounds.size());
+    ASSERT_EQ(1,lowerBounds.size());
+    
+    EXPECT_EQ("NR",(*upperBounds.begin())->
+		    prettyPrintString(domain->getTupleDecl()));
+
+    EXPECT_EQ("",(*lowerBounds.begin())->
+		    prettyPrintString(domain->getTupleDecl()));
+}
