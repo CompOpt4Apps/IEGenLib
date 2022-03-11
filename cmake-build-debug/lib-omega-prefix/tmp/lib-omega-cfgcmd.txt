@@ -1,1 +1,0 @@
-cmd='autoreconf;-f;-i;COMMAND;./configure;--prefix=/tmp/tmp.8uD4RXirDP/lib/installed'
