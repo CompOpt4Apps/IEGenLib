@@ -1,0 +1,43 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/tmp/tmp.8uD4RXirDP/cmake-build-debug-remote/CMakeFiles/lib-isl"
+		},
+		{
+			"file" : "/tmp/tmp.8uD4RXirDP/cmake-build-debug-remote/CMakeFiles/lib-isl.rule"
+		},
+		{
+			"file" : "/tmp/tmp.8uD4RXirDP/cmake-build-debug-remote/CMakeFiles/lib-isl-complete.rule"
+		},
+		{
+			"file" : "/tmp/tmp.8uD4RXirDP/cmake-build-debug-remote/lib-isl-prefix/src/lib-isl-stamp/lib-isl-install.rule"
+		},
+		{
+			"file" : "/tmp/tmp.8uD4RXirDP/cmake-build-debug-remote/lib-isl-prefix/src/lib-isl-stamp/lib-isl-mkdir.rule"
+		},
+		{
+			"file" : "/tmp/tmp.8uD4RXirDP/cmake-build-debug-remote/lib-isl-prefix/src/lib-isl-stamp/lib-isl-download.rule"
+		},
+		{
+			"file" : "/tmp/tmp.8uD4RXirDP/cmake-build-debug-remote/lib-isl-prefix/src/lib-isl-stamp/lib-isl-update.rule"
+		},
+		{
+			"file" : "/tmp/tmp.8uD4RXirDP/cmake-build-debug-remote/lib-isl-prefix/src/lib-isl-stamp/lib-isl-patch.rule"
+		},
+		{
+			"file" : "/tmp/tmp.8uD4RXirDP/cmake-build-debug-remote/lib-isl-prefix/src/lib-isl-stamp/lib-isl-configure.rule"
+		},
+		{
+			"file" : "/tmp/tmp.8uD4RXirDP/cmake-build-debug-remote/lib-isl-prefix/src/lib-isl-stamp/lib-isl-build.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"lib-isl"
+		],
+		"name" : "lib-isl"
+	}
+}

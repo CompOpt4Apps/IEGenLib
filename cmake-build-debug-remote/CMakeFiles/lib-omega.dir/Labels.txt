@@ -1,0 +1,13 @@
+# Target labels
+ lib-omega
+# Source files and their labels
+/tmp/tmp.8uD4RXirDP/cmake-build-debug-remote/CMakeFiles/lib-omega
+/tmp/tmp.8uD4RXirDP/cmake-build-debug-remote/CMakeFiles/lib-omega.rule
+/tmp/tmp.8uD4RXirDP/cmake-build-debug-remote/CMakeFiles/lib-omega-complete.rule
+/tmp/tmp.8uD4RXirDP/cmake-build-debug-remote/lib-omega-prefix/src/lib-omega-stamp/lib-omega-install.rule
+/tmp/tmp.8uD4RXirDP/cmake-build-debug-remote/lib-omega-prefix/src/lib-omega-stamp/lib-omega-mkdir.rule
+/tmp/tmp.8uD4RXirDP/cmake-build-debug-remote/lib-omega-prefix/src/lib-omega-stamp/lib-omega-download.rule
+/tmp/tmp.8uD4RXirDP/cmake-build-debug-remote/lib-omega-prefix/src/lib-omega-stamp/lib-omega-update.rule
+/tmp/tmp.8uD4RXirDP/cmake-build-debug-remote/lib-omega-prefix/src/lib-omega-stamp/lib-omega-patch.rule
+/tmp/tmp.8uD4RXirDP/cmake-build-debug-remote/lib-omega-prefix/src/lib-omega-stamp/lib-omega-configure.rule
+/tmp/tmp.8uD4RXirDP/cmake-build-debug-remote/lib-omega-prefix/src/lib-omega-stamp/lib-omega-build.rule

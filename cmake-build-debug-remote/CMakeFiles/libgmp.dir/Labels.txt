@@ -1,0 +1,13 @@
+# Target labels
+ libgmp
+# Source files and their labels
+/tmp/tmp.8uD4RXirDP/cmake-build-debug-remote/CMakeFiles/libgmp
+/tmp/tmp.8uD4RXirDP/cmake-build-debug-remote/CMakeFiles/libgmp.rule
+/tmp/tmp.8uD4RXirDP/cmake-build-debug-remote/CMakeFiles/libgmp-complete.rule
+/tmp/tmp.8uD4RXirDP/cmake-build-debug-remote/libgmp-prefix/src/libgmp-stamp/libgmp-install.rule
+/tmp/tmp.8uD4RXirDP/cmake-build-debug-remote/libgmp-prefix/src/libgmp-stamp/libgmp-mkdir.rule
+/tmp/tmp.8uD4RXirDP/cmake-build-debug-remote/libgmp-prefix/src/libgmp-stamp/libgmp-download.rule
+/tmp/tmp.8uD4RXirDP/cmake-build-debug-remote/libgmp-prefix/src/libgmp-stamp/libgmp-update.rule
+/tmp/tmp.8uD4RXirDP/cmake-build-debug-remote/libgmp-prefix/src/libgmp-stamp/libgmp-patch.rule
+/tmp/tmp.8uD4RXirDP/cmake-build-debug-remote/libgmp-prefix/src/libgmp-stamp/libgmp-configure.rule
+/tmp/tmp.8uD4RXirDP/cmake-build-debug-remote/libgmp-prefix/src/libgmp-stamp/libgmp-build.rule

@@ -29,6 +29,12 @@ add_dependencies(mttkrp iegenlib)
 target_link_libraries(mttkrp iegenlib isl codegen omega gmp)
 target_include_directories(mttkrp PUBLIC ${CMAKE_SOURCE_DIR}/src)
 
+file(GLOB_RECURSE parflowio_SOURCES mttkrp.cc)
+add_executable(parflowio EXCLUDE_FROM_ALL ${parflowio_SOURCES})
+add_dependencies(parflowio iegenlib)
+target_link_libraries(parflowio iegenlib isl codegen omega gmp)
+target_include_directories(parflowio PUBLIC ${CMAKE_SOURCE_DIR}/src)
+
 file(GLOB_RECURSE geoac_codegen_driver_SOURCES geoac_codegen_driver.cc)
 add_executable(geoac_codegen_driver EXCLUDE_FROM_ALL ${geoac_codegen_driver_SOURCES})
 add_dependencies(geoac_codegen_driver iegenlib)
@@ -77,7 +83,8 @@ add_custom_target(tutorial
     DEPENDS executor
             COOtoCSR
             sparse_format_example
-					  mttkrp
+			mttkrp
+            parflowio
             computation_example
             geoac_codegen_driver
             manual_graph_testing

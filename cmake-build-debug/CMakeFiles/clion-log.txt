@@ -1,0 +1,4 @@
+CMake executable not found: /usr/local/apps/cmake/bin/cmake Configure Disable profile
+
+Cannot get compiler information:
+	Unable to create a temporary file
