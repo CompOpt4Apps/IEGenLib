@@ -91,6 +91,102 @@ int main(int argc, char **argv){
 
   parflowio.addStmt(&s3);
 
+  // statement 4
+  /* gy = y + i  */
+
+  Stmt s4("gy = y + i ",
+          "{[k,i,nsg] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids }",
+          "{[nsg,k,i]->[0, nsg, 0, k, 0,i,0 ]}",
+          {
+            {"y", "{[0] -> [0]}"},
+          },
+          {
+            {"gy", "{[0] -> [0]}"}
+          });
+
+    parflowio.addStmt(&s4);
+
+// statement 5
+// int cx = gx - clip_x;
+  Stmt s5("cx = gx - clip_x",
+          "{[k,i,nsg] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids }",
+          "{[nsg,k,i]->[0, nsg, 0, k, 0,i,0 ]}",
+          {
+            {"gx", "{[0] -> [0]}"},
+            {"clip_x", "{[0] -> [0]}"} 
+          },
+          {
+            {"cx", "{[0] -> [0]}"}
+          });
+
+    parflowio.addStmt(&s5);
+
+// statement 6
+// cy = gy - clip_y;
+
+  Stmt s6("gy - clip_y;",
+        "{[k,i,nsg] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids }",
+        "{[nsg,k,i]->[0, nsg, 0, k, 0,i,0 ]}",
+        {
+          {"gy", "{[0] -> [0]}"},
+          {"clip_y", "{[0] -> [0]}"}
+
+        },
+        {
+          {"cy", "{[0] -> [0]}"}
+        });
+
+    parflowio.addStmt(&s6);
+
+// statement 7
+// cy = gy - clip_y;
+
+  Stmt s7("gy - clip_y;",
+      "{[k,i,nsg] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids }",
+      "{[nsg,k,i]->[0, nsg, 0, k, 0,i,0 ]}",
+      {
+        {"gy", "{[0] -> [0]}"},
+        {"clip_y", "{[0] -> [0]}"}
+
+      },
+      {
+        {"cy", "{[0] -> [0]}"}
+      });
+
+    parflowio.addStmt(&s7);
+
+// statement 9
+// cz = gz;
+
+    Stmt s8("cz = gz",
+          "{[k,i,nsg] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids }",
+          "{[nsg,k,i]->[0, nsg, 0, k, 0,i,0 ]}",
+          {
+            {"gz", "{[0] -> [0]}"}
+          },
+          {
+            {"cz", "{[0] -> [0]}"}
+          });
+
+    parflowio.addStmt(&s8);
+  
+// statement 9 
+//if(gy>=clip_y && gy<clip_y+extent_y)
+// int read_count = fread(buf,8,nx,m_fp);
+
+    Stmt s9("read_count = fread(buf,8,nx,m_fp)",
+          "{[k,i,nsg] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && gy >=clip_y && gy< clip_y+ extent_y }",
+          "{[nsg,k,i]->[0, nsg, 0, k, 0,i,0 ]}",
+          {
+            {"clip_y", "{[0] -> [0]}"},
+            {"extent_y", "{[0] -> [0]}"},
+            {"gy", "{[0] -> [0]}"},        
+          },
+          {
+            {"read_count", "{[0] -> [0]}"}
+          });
+
+  parflowio.addStmt(&s9);
 
   //Calling 
   cout << "Codegen:\n";
