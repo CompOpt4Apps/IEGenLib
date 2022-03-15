@@ -34,7 +34,7 @@ int main(int argc, char **argv){
 
   Stmt s1("x_overlap = fminl(clip_x+extent_x, x+nx) - fmaxl(clip_x,x)",
           "{[0] : 0 <= nsg < m_numSubgrids}",
-          "{[i]->[0, i, 0]}",
+          "{[nsg]->[0, nsg, 0]}",
           {
             {"clip_x", "{[0] -> [0]}"},
             {"extent_x", "{[0] -> [0]}"},
@@ -56,7 +56,7 @@ int main(int argc, char **argv){
 
   Stmt s2("y_overlap = fminl(clip_y+extent_y, y+ny) - fmaxl(clip_y,y)",
           "{[0] : 0 <= nsg < m_numSubgrids}",
-          "{[i]->[0, i, 0]}",
+          "{[nsg]->[0, nsg, 0]}",
           {
             {"clip_y", "{[0] -> [0]}"},
             {"extent_y", "{[0] -> [0]}"},
@@ -67,6 +67,30 @@ int main(int argc, char **argv){
           });
 
   parflowio.addStmt(&s2);
+
+  // statement 3 
+  /*
+    for (k=0; k<nz; k++){
+      for(i=0;i<ny;i++){
+          // Determine the indices of the first element of the pencil in the
+          // global space
+          int gx = x;
+          int gy = y + i  
+  */
+
+  Stmt s3("gx = x",
+          "{[k,i,nsg] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids }",
+          "{[nsg,k,i]->[0, nsg, 0, k, 0,i,0 ]}",
+          {
+            {"x", "{[0] -> [0]}"},
+            {"y", "{[0] -> [0]}"},
+          },
+          {
+            {"gx", "{[0] -> [0]}"}
+          });
+
+  parflowio.addStmt(&s3);
+
 
   //Calling 
   cout << "Codegen:\n";
