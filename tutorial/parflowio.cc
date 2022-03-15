@@ -29,6 +29,8 @@ int main(int argc, char **argv){
   parflowio.addDataSpace("clip_x","int");
   parflowio.addDataSpace("extent_x","int");
 
+// Statement 1 
+// int x_overlap = fminl(clip_x+extent_x, x+nx) - fmaxl(clip_x,x); 
 
   Stmt s1("x_overlap = fminl(clip_x+extent_x, x+nx) - fmaxl(clip_x,x)",
           "{[0] : 0 <= nsg < m_numSubgrids}",
@@ -44,6 +46,27 @@ int main(int argc, char **argv){
 
   parflowio.addStmt(&s1);
 
+
+ //  Statement 2  
+ // int y_overlap = fminl(clip_y+extent_y, y+ny) - fmaxl(clip_y,y); 
+
+  parflowio.addDataSpace("y_overlap","int");
+  parflowio.addDataSpace("clip_y","int");
+  parflowio.addDataSpace("extent_y","int");
+
+  Stmt s2("y_overlap = fminl(clip_y+extent_y, y+ny) - fmaxl(clip_y,y)",
+          "{[0] : 0 <= nsg < m_numSubgrids}",
+          "{[i]->[0, i, 0]}",
+          {
+            {"clip_y", "{[0] -> [0]}"},
+            {"extent_y", "{[0] -> [0]}"},
+            {"y", "{[0] -> [0]}"},
+          },
+          {
+            {"y_overlap", "{[0] -> [0]}"}
+          });
+
+  parflowio.addStmt(&s2);
 
   //Calling 
   cout << "Codegen:\n";
