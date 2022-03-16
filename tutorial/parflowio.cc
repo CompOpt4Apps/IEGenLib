@@ -131,7 +131,7 @@ int main(int argc, char **argv){
 // statement 6
 // cy = gy - clip_y;
 
-  parflowio.addDataSpace("gx","int");
+  parflowio.addDataSpace("cy","int");
 
   Stmt s6("cy = gy - clip_y;",
         "{[k,i,nsg] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids }",
@@ -186,8 +186,6 @@ int main(int argc, char **argv){
 // int read_count = fread(buf,8,nx,m_fp);
 
   parflowio.addDataSpace("read_count","int");
-  
-parflowio.addDataSpace("read_count","int");
 
     Stmt s9("read_count = fread(buf,8,nx,m_fp)",
           "{[k,i,nsg] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && gy >=clip_y && gy< clip_y+ extent_y }",
@@ -219,9 +217,10 @@ parflowio.addDataSpace("read_count","int");
   }
 
 */
+  parflowio.addDataSpace("cxi","int");
 
-  Stmt s1O("cxi = cx+j",
-        "{[k,i,nsg] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && 0<=j<nx && gy>=clip_y && gy< clip_y+ extent_y  && (gx+j) >= clip_x && (gx+j) < clip_x+extent_x}",
+  Stmt s10("cxi = cx+j",
+        "{[k,i,nsg,j] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && 0<=j<nx && gy>=clip_y && gy< clip_y+ extent_y && (gx+j) >= clip_x && (gx+j) < clip_x+extent_x}",
         "{[nsg,k,i,j]->[0, nsg, 0, k, 0,i,0 ,j,0]}",
         {
           {"gx", "{[0] -> [0]}"},
@@ -229,15 +228,17 @@ parflowio.addDataSpace("read_count","int");
           {"clip_x", "{[0] -> [0]}"},
           {"extent_x", "{[0] -> [0]}"},
           {"extent_y", "{[0] -> [0]}"},
-          {"cx", "{[0] -> [0]}"}
+          {"cx", "{[0] -> [0]}"},
+          {"clip_y", "{[0] -> [0]}"}
         },
         {
           {"cxi", "{[0] -> [0]}"}
   });
+    parflowio.addStmt(&s10);
 
 
   Stmt s11("index = cz*(extent_y*extent_x) + cy*extent_x + cxi",
-        "{[k,i,nsg] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && 0<=j<nx && gy>=clip_y && gy< clip_y+ extent_y  && (gx+j) >= clip_x && (gx+j) < clip_x+extent_x}",
+        "{[k,i,j,nsg] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && 0<=j<nx && gy>=clip_y && gy< clip_y+ extent_y  && (gx+j) >= clip_x && (gx+j) < clip_x+extent_x}",
         "{[nsg,k,i,j]->[0, nsg, 0, k, 0,i,0 ,j,0]}",
         {
           {"gx", "{[0] -> [0]}"},
@@ -248,53 +249,70 @@ parflowio.addDataSpace("read_count","int");
           {"cxi", "{[0] -> [0]}"},
           {"cz", "{[0] -> [0]}"},
           {"extent_y", "{[0] -> [0]}"},
+          {"clip_y", "{[0] -> [0]}"}
         },
         {
           {"index", "{[0] -> [0]}"}
   });
+    parflowio.addStmt(&s11);
 
 
   Stmt s12("tmp = buf[j]",
-        "{[k,i,nsg] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && 0<=j<nx && gy>=clip_y && gy< clip_y+ extent_y  && (gx+j) >= clip_x && (gx+j) < clip_x+extent_x}",
+        "{[k,i,j,nsg] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && 0<=j<nx && gy>=clip_y && gy< clip_y+ extent_y  && (gx+j) >= clip_x && (gx+j) < clip_x+extent_x}",
         "{[nsg,k,i,j]->[0, nsg, 0, k, 0,i,0 ,j,0]}",
         {
           {"gx", "{[0] -> [0]}"},
           {"j", "{[0] -> [0]}"},
           {"clip_x", "{[0] -> [0]}"},
           {"extent_x", "{[0] -> [0]}"},
-          {"buf", "{[j] -> [j]}"}
+          {"buf", "{[j] -> [j]}"},
+          {"extent_y", "{[0] -> [0]}"},
+          {"clip_y", "{[0] -> [0]}"}
         },
         {
           {"tmp", "{[0] -> [0]}"}
   });
+      
+      parflowio.addStmt(&s12);
 
 
     Stmt s13("tmp = bswap64(tmp)",
-        "{[k,i,nsg] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && 0<=j<nx && gy>=clip_y && gy< clip_y+ extent_y  && (gx+j) >= clip_x && (gx+j) < clip_x+extent_x}",
+        "{[k,i,j,nsg] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && 0<=j<nx && gy>=clip_y && gy< clip_y+ extent_y  && (gx+j) >= clip_x && (gx+j) < clip_x+extent_x}",
         "{[nsg,k,i,j]->[0, nsg, 0, k, 0,i,0 ,j,0]}",
         {
           {"gx", "{[0] -> [0]}"},
           {"j", "{[0] -> [0]}"},
           {"clip_x", "{[0] -> [0]}"},
           {"extent_x", "{[0] -> [0]}"},
+          {"extent_y", "{[0] -> [0]}"},
+          {"clip_y", "{[0] -> [0]}"}
+
         },
         {
           {"tmp", "{[0] -> [0]}"}
   });
-// m_data[index] = *(double*)(&tmp);
+    parflowio.addStmt(&s13);
 
-  Stmt s14(" m_data[index] = *(double*)(&tmp)",
-      "{[k,i,nsg] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && 0<=j<nx && gy>=clip_y && gy< clip_y+ extent_y  && (gx+j) >= clip_x && (gx+j) < clip_x+extent_x}",
+// // m_data[index] = *(double*)(&tmp);
+
+  Stmt s14("m_data[index] = *(double*)(&tmp)",
+      "{[k,i,j,nsg] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && 0<=j<nx && gy>=clip_y && gy< clip_y+ extent_y  && (gx+j) >= clip_x && (gx+j) < clip_x+extent_x}",
       "{[nsg,k,i,j]->[0, nsg, 0, k, 0,i,0 ,j,0]}",
       {
         {"gx", "{[0] -> [0]}"},
         {"j", "{[0] -> [0]}"},
         {"clip_x", "{[0] -> [0]}"},
         {"extent_x", "{[0] -> [0]}"},
+        {"tmp", "{[0]->[0]}"},
+        {"clip_y", "{[0] -> [0]}"},
+        {"extent_y", "{[0] -> [0]}"}
       },
       {
         {"m_data", "{[index] -> [index]}"}
-});
+    });
+    
+    parflowio.addStmt(&s14);
+
 
 /// statement x
 /*
@@ -312,6 +330,25 @@ else{
 
   parflowio.addStmt(&sx);
 
+  // statement last
+  /*else{
+          // this entire subgrid does not fit into our clip, so
+          // scan to the next subgrid
+           std::fseek(m_fp, 8*nx*ny*nz, SEEK_CUR);
+        }
+  */
+    Stmt sy("std::fseek(m_fp, 8*nx*ny*nz, SEEK_CUR)",
+      "{[k,i,nsg] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && gy >=clip_y && gy< clip_y+ extent_y }",
+      "{[nsg,k,i]->[0, nsg, 0, k, 0,i,0 ]}",
+      {
+        {"m_fp", "{[0] -> [0]}"},
+        {"nx", "{[0] -> [0]}"},
+        {"ny", "{[0] -> [0]}"},
+        {"nz", "{[0] -> [0]}"},
+      },
+      { });
+    
+    parflowio.addStmt(&sy);
 
   //Calling 
   cout << "Codegen:\n";
