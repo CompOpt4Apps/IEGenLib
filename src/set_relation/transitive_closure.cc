@@ -5,6 +5,9 @@
 #include <typeinfo>
 #include <sstream>
 #include <map>
+
+// TODO: Switch internal memory to use heap memory
+// for vertices.
 namespace iegenlib{
 
 
@@ -115,7 +118,6 @@ DiGraph::DiGraph()
 {
 }
 
-
 DiGraph::~DiGraph()
 {
    // for(auto v : vertices){
@@ -216,6 +218,14 @@ std::vector<Term*> DiGraph::getAliasTerms(Term& t){
    }
    return res;
 }
+
+
+void DiGraph::Closure(){
+    simplifyGreaterOrEqual();
+    transitiveClosure();
+    findAddMonotonicity ();
+}
+
 
 void DiGraph::simplifyGreaterOrEqual(){
     int size = adj.size();

@@ -1692,9 +1692,7 @@ Conjunction*  Conjunction::TransitiveClosure(){
     }
     //std::cout <<  "Before: \n";
     //std::cout << g->toDotString();
-    g->simplifyGreaterOrEqual();
-    g->transitiveClosure();
-    g->findAddMonotonicity ();
+    g->Closure();
     //std::cout <<  "After: \n";
     //std::cout << g->toDotString();
     // Delete all expressions in the retVal conjunction.
