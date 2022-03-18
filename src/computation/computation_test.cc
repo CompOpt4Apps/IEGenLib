@@ -782,8 +782,8 @@ TEST_F(ComputationTest, ConvertToOmega) {
         "{[i,j]: foo_0(i) = i && 0 <= i < N && 0 <= j < M}");
     // multiple uses of same UF
     checkOmegaSetConversion(
-        "{[i,j]: A(i) = A(j) && A(i,j) = A(j)}",
-        "{[i,j]: A_0(i) = A_1(i,j) && A_2(i,j) = A_1(i,j)}");
+        "{[i,j]: A(i) = A(j) && B(i,j) = A(j)}",
+        "{[i,j]: A_0(i) = A_1(i,j) && B_2(i,j) = A_1(i,j)}");
 
     // replacing constants with variables in tuple.
     checkOmegaSetConversion(

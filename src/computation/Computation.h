@@ -47,10 +47,6 @@ class AppendComputationResult;
  *
  * \brief SPF representation of a computation (group of statements such as a
  * function).
- *
- * Incoming code must have highly-unique variable names (assumed to be
- * surrounded in some non-code string such as $'s') if it may be appended to
- * another Computation.
  */
 class Computation {
    public:
@@ -426,6 +422,15 @@ class Stmt {
     //! Copy constructor
     Stmt(const Stmt& other);
 
+    //! Copy assignment operator
+    Stmt& operator=(const Stmt& other);
+
+    //! Move constructor
+    Stmt(Stmt &&other) noexcept = delete;
+
+    //! Move constructor
+    Stmt &operator=(Stmt &&other) noexcept = delete;
+
     //! Replaces read everywhere in the Stmt
     void replaceRead(std::string searchStr, std::string replaceStr);
     //! Replaces read data space
@@ -442,9 +447,6 @@ class Stmt {
 
     //! Replace data space everywhere in the Stmt
     void replaceDataSpace(std::string searchString, std::string replaceString);
-
-    //! Assignment operator (copy)
-    Stmt& operator=(const Stmt& other);
 
     //! Equality operator
     //! Checks equality, NOT mathematical equivalence

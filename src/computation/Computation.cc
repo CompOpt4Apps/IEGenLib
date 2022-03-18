@@ -893,10 +893,10 @@ AppendComputationResult Computation::appendComputation(
         }
     }
 
-    // Insert declarations+assignment of (would-have-been if not for inlining)
+    // Insert assignment of (would-have-been if not for inlining)
     // parameter values, at the beginning of the appendee.
     // Assignment of a parameter i will be like:
-    // [type of i] [name of i] = [name of argument i from passed-in list];
+    // [name of i] = [name of argument i from passed-in list];
     // Insertion is done by prepending statements one at a time in reverse
     // order.
 
