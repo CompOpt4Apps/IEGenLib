@@ -314,6 +314,7 @@ void FlattenUFNestingVisitor::preVisitUFCallTerm(UFCallTerm* callTerm){
 		// If term is a ufcall, then replace occurence 
 		// of such ufcall with a tuple variable.
                 UFCallTerm * cTerm = dynamic_cast<UFCallTerm*>(term);
+	        int coeff = cTerm->coefficient(); 	
 		cTerm->setCoefficient(1);
 		auto it = std::find_if(flatUfTupleMap.begin(),
 				flatUfTupleMap.end(),
@@ -324,7 +325,7 @@ void FlattenUFNestingVisitor::preVisitUFCallTerm(UFCallTerm* callTerm){
 	        if (it != flatUfTupleMap.end()){
 	            // call Term already has a tuple variable
 	            int tupleVarIndex = it - flatUfTupleMap.end();
-		    tupReplacement = new TupleVarTerm(1,it->second);
+		    tupReplacement = new TupleVarTerm(coeff,it->second);
 	        }else{
 		    // Tuple index has to be placed just after 
 		    // the maximum tv location in this
@@ -378,7 +379,7 @@ void FlattenUFNestingVisitor::preVisitUFCallTerm(UFCallTerm* callTerm){
 		    auto cTermClone = dynamic_cast
 			    <UFCallTerm*>(cTerm->clone());
 		    cTermClone->setCoefficient(1);
-	            tupReplacement = new TupleVarTerm(1,
+	            tupReplacement = new TupleVarTerm(coeff,
 				    tupleVarLocation);
 		    flatUfTupleMap.push_back({cTermClone,tupleVarLocation});
 	        }
