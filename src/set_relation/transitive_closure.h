@@ -81,9 +81,11 @@ public:
 
 
 /*!
- *  \class Vertex
+ *  \class DiGraph
  *
- *  \brief A Vertex in the graph.
+ *  \brief A Directed Graph representing 
+ *         constraint expressions as vertex in a 
+ *         directed graph.
  *       
  *
  */
@@ -93,8 +95,27 @@ private:
     std::vector<Vertex> vertices;
     //! Expands adjMatrix by 1
     void adjustAdjMatrix( int N);
+   /*!
+    * Function looks for monotonic vertices
+    * and appropriates monotonicity to enclosing
+    * vertices.
+    * rowptr(i+1) >= col(i,j) > rowptr(i)
+    * col(i+1,j) > col(i,j)
+   */
+    void findAddMonotonicity () ;
 
+    /*! Function runs the transitive closure algorithm: Floyd Warshall on 
+     * the graph. The graph changes in place.
+    */
+    void transitiveClosure();
+    /*!
+     * Simplifies the graph to remove unnecessary, >= constraints
+     * 
+     * */
+    void simplifyGreaterOrEqual();
     
+
+      
     //! This outlines the combination of two edges.
     EdgeType edgeOp (const EdgeType e1, const EdgeType e2);
 
@@ -111,29 +132,14 @@ public:
     
     ~DiGraph();
     
-/*!
- * Function looks for monotonic vertices
- * and appropriates monotonicity to enclosing
- * vertices.
- * rowptr(i+1) >= col(i,j) > rowptr(i)
- * col(i+1,j) > col(i,j)
-*/
-    void findAddMonotonicity () ;
-
+    /* Performs closure on the graph.
+     * */
+    void Closure(); 
     /*! Adds an edge to the graph.
      * pointers in u and v gets adopted.
      * */
     void addEdge(Vertex u, Vertex v, EdgeType e); 
     
-    /*! Function runs the transitive closure algorithm on 
-     * the graph. The graph changes in place.
-    */
-    void transitiveClosure();
-    /*!
-     * Simplifies the graph to remove unnecessary, >= constraints
-     * 
-     * */
-    void simplifyGreaterOrEqual();
     
     /*!
      * Dump debug information of the graph.

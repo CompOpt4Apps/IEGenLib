@@ -323,7 +323,8 @@ else{
     }
   */
     Stmt sx("std::fseek(m_fp, 8*nx, SEEK_CUR)",
-        "{[nsg,k,i] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && gy <clip_y && gy >= clip_y+ extent_y  && x_overlap > 0 && y_overlap >0}",
+        " {[nsg,k,i] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && x_overlap > 0} union" 
+	" { [nsg,k,i] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && gy <clip_y && gy >= clip_y+ extent_y  && y_overlap >0}",
         "{[nsg,k,i]->[0, nsg, 0, k, 0,i,0 ]}",
         { },
         { });

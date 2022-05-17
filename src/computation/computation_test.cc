@@ -1705,6 +1705,31 @@ TEST_F(ComputationTest, NestedUFTest) {
 
     vOmegaReplacer->reset();
     flatner->reset();
+    // This test covers coefficient bugs in nested UFs
+    // for instance pos (-col1(n) + row1(n))
+    // previously the nesting will ignore the negative coefficient
+    // on  
+    s = new Set("{ [n] : P1(row1(n), col1(n)) - pos(-col1(n)"
+		" + row1(n)) = 0 && row1(n) - P0(row1(n),"
+		" col1(n)) = 0 && P1(row1(n), col1(n)) -"
+		" P2(row1(n), col1(n)) + 99 P0(row1(n),"
+		" col1(n)) = 0 && n >= 0 && P1(row1(n),"
+		" col1(n)) >= 0 && col1(n) >= 0 && P0(row1(n),"
+		" col1(n)) >= 0 && NC - 1 >= 0 && ND - 1 >= 0 && NNZ"
+		" - 1 >= 0 && NR - 1 >= 0 && -n + NNZ - 1 >= 0 && NC"
+		" - col1(n) - 1 >= 0 && ND - P1(row1(n),"
+		" col1(n)) - 1 >= 0 && NR - P0(row1(n), col1(n))"
+		" - 1 >= 0 }");
+    EXPECT_NO_THROW(s->acceptVisitor(flatner));
+    EXPECT_EQ("{ [n, _x1, _x2] : _x1 - row1(n) = 0 && _x2 - col1(n) = 0"
+	 " && P0(_x1, _x2) - row1(n) = 0 && P1(_x1, _x2) - pos(_x1 -"
+	 " _x2) = 0 && 99 P0(_x1, _x2) + P1(_x1, _x2) - P2(_x1, _x2) "
+	 "= 0 && n >= 0 && P0(_x1, _x2) >= 0 && P1(_x1, _x2) >="
+	 " 0 && col1(n) >= 0 && NC - 1 >= 0 && ND - 1 >= 0 && NNZ - 1"
+	 " >= 0 && NR - 1 >= 0 && -n + NNZ - 1 >= 0 && NC - col1(n) - 1"
+	 " >= 0 && ND - P1(_x1, _x2) - 1 >= 0 && NR - P0(_x1, _x2)"
+	 " - 1 >= 0 }",
+	      s->prettyPrintString());
     
     delete s;
     delete vOmegaReplacer;
