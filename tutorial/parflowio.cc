@@ -23,7 +23,6 @@ int main(int argc, char **argv){
   parflowio.addDataSpace("rx","int");
   parflowio.addDataSpace("ry","int");
   parflowio.addDataSpace("rz","int");
-  parflowio.addDataSpace("nsg","int");
   parflowio.addDataSpace("errcheck","int");
   parflowio.addDataSpace("x_overlap","int");
   parflowio.addDataSpace("clip_x","int");
@@ -33,7 +32,7 @@ int main(int argc, char **argv){
 // int x_overlap = fminl(clip_x+extent_x, x+nx) - fmaxl(clip_x,x); 
 
   Stmt s1("x_overlap = fminl(clip_x+extent_x, x+nx) - fmaxl(clip_x,x)",
-          "{[0] : 0 <= nsg < m_numSubgrids}",
+          "{[nsg] : 0 <= nsg < m_numSubgrids}",
           "{[nsg]->[0, nsg, 0]}",
           {
             {"clip_x", "{[0] -> [0]}"},
@@ -55,7 +54,7 @@ int main(int argc, char **argv){
   parflowio.addDataSpace("extent_y","int");
 
   Stmt s2("y_overlap = fminl(clip_y+extent_y, y+ny) - fmaxl(clip_y,y)",
-          "{[0] : 0 <= nsg < m_numSubgrids}",
+          "{[nsg] : 0 <= nsg < m_numSubgrids}",
           "{[nsg]->[0, nsg, 0]}",
           {
             {"clip_y", "{[0] -> [0]}"},
@@ -81,7 +80,7 @@ int main(int argc, char **argv){
   parflowio.addDataSpace("gx","int");
 
   Stmt s3("gx = x",
-          "{[k,i,nsg] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && x_overlap > 0 && y_overlap >0 }",
+          "{[nsg,k,i] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && x_overlap > 0 && y_overlap >0 }",
           "{[nsg,k,i]->[0, nsg, 0, k, 0,i,0 ]}",
           {
             {"x", "{[0] -> [0]}"},
@@ -99,7 +98,7 @@ int main(int argc, char **argv){
   parflowio.addDataSpace("gy","int");
 
   Stmt s4("gy = y + i ",
-          "{[k,i,nsg] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && x_overlap > 0 && y_overlap >0}",
+          "{[nsg,k,i] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && x_overlap > 0 && y_overlap >0}",
           "{[nsg,k,i]->[0, nsg, 0, k, 0,i,0 ]}",
           {
             {"y", "{[0] -> [0]}"},
@@ -114,7 +113,7 @@ int main(int argc, char **argv){
   parflowio.addDataSpace("gz","int");
 
   Stmt sm("gz = z + k",
-          "{[k,i,nsg] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && x_overlap > 0 && y_overlap >0}",
+          "{[nsg,k,i] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && x_overlap > 0 && y_overlap >0}",
           "{[nsg,k,i]->[0, nsg, 0, k, 0,i,0 ]}",
           {
             {"z", "{[0] -> [0]}"},
@@ -132,7 +131,7 @@ int main(int argc, char **argv){
   parflowio.addDataSpace("cx","int");
 
   Stmt s5("cx = gx - clip_x",
-          "{[k,i,nsg] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && x_overlap > 0 && y_overlap >0 }",
+          "{[nsg,k,i] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && x_overlap > 0 && y_overlap >0 }",
           "{[nsg,k,i]->[0, nsg, 0, k, 0,i,0 ]}",
           {
             {"gx", "{[0] -> [0]}"},
@@ -150,7 +149,7 @@ int main(int argc, char **argv){
   parflowio.addDataSpace("cy","int");
 
   Stmt s6("cy = gy - clip_y;",
-        "{[k,i,nsg] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids  && x_overlap > 0 && y_overlap >0}",
+        "{[nsg, k,i] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids  && x_overlap > 0 && y_overlap >0}",
         "{[nsg,k,i]->[0, nsg, 0, k, 0,i,0 ]}",
         {
           {"gy", "{[0] -> [0]}"},
@@ -170,7 +169,7 @@ int main(int argc, char **argv){
   parflowio.addDataSpace("cz","int");
 
     Stmt s8("cz = gz",
-          "{[k,i,nsg] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && x_overlap > 0 && y_overlap >0 }",
+          "{[nsg,k,i] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && x_overlap > 0 && y_overlap >0 }",
           "{[nsg,k,i]->[0, nsg, 0, k, 0,i,0 ]}",
           {
             {"gz", "{[0] -> [0]}"}
@@ -188,7 +187,7 @@ int main(int argc, char **argv){
   parflowio.addDataSpace("read_count","int");
 
     Stmt s9("read_count = fread(buf,8,nx,m_fp)",
-          "{[k,i,nsg] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && gy >=clip_y && gy< clip_y+ extent_y && x_overlap > 0 && y_overlap >0}",
+          "{[nsg, k, i] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && gy >=clip_y && gy< clip_y+ extent_y && x_overlap > 0 && y_overlap >0}",
           "{[nsg,k,i]->[0, nsg, 0, k, 0,i,0 ]}",
           {
             {"clip_y", "{[0] -> [0]}"},
@@ -220,7 +219,7 @@ int main(int argc, char **argv){
   parflowio.addDataSpace("cxi","int");
 
   Stmt s10("cxi = cx+j",
-        "{[k,i,nsg,j] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && 0<=j<nx && gy>=clip_y && gy< clip_y+ extent_y && (gx+j) >= clip_x && (gx+j) < clip_x+extent_x && x_overlap > 0 && y_overlap >0}",
+        "{[nsg,k,i,j] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && 0<=j<nx && gy>=clip_y && gy< clip_y+ extent_y && (gx+j) >= clip_x && (gx+j) < clip_x+extent_x && x_overlap > 0 && y_overlap >0}",
         "{[nsg,k,i,j]->[0, nsg, 0, k, 0,i,0 ,j,0]}",
         {
           {"gx", "{[0] -> [0]}"},
@@ -238,7 +237,7 @@ int main(int argc, char **argv){
 
 
   Stmt s11("index = cz*(extent_y*extent_x) + cy*extent_x + cxi",
-        "{[k,i,j,nsg] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && 0<=j<nx && gy>=clip_y && gy< clip_y+ extent_y  && (gx+j) >= clip_x && (gx+j) < clip_x+extent_x && x_overlap > 0 && y_overlap >0}",
+        "{[nsg,k,i,j] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && 0<=j<nx && gy>=clip_y && gy< clip_y+ extent_y  && (gx+j) >= clip_x && (gx+j) < clip_x+extent_x && x_overlap > 0 && y_overlap >0}",
         "{[nsg,k,i,j]->[0, nsg, 0, k, 0,i,0 ,j,0]}",
         {
           {"gx", "{[0] -> [0]}"},
@@ -259,7 +258,7 @@ int main(int argc, char **argv){
   parflowio.addDataSpace("tmp","int");
 
   Stmt s12("tmp = buf[j]",
-        "{[k,i,j,nsg] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && 0<=j<nx && gy>=clip_y && gy< clip_y+ extent_y  && (gx+j) >= clip_x && (gx+j) < clip_x+extent_x && x_overlap > 0 && y_overlap >0}",
+        "{[nsg,k,i,j] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && 0<=j<nx && gy>=clip_y && gy< clip_y+ extent_y  && (gx+j) >= clip_x && (gx+j) < clip_x+extent_x && x_overlap > 0 && y_overlap >0}",
         "{[nsg,k,i,j]->[0, nsg, 0, k, 0,i,0 ,j,0]}",
         {
           {"gx", "{[0] -> [0]}"},
@@ -278,7 +277,7 @@ int main(int argc, char **argv){
 
 
     Stmt s13("tmp = bswap64(tmp)",
-        "{[k,i,j,nsg] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && 0<=j<nx && gy>=clip_y && gy< clip_y+ extent_y  && (gx+j) >= clip_x && (gx+j) < clip_x+extent_x && x_overlap > 0 && y_overlap >0}",
+        "{[nsg, k,i,j] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && 0<=j<nx && gy>=clip_y && gy< clip_y+ extent_y  && (gx+j) >= clip_x && (gx+j) < clip_x+extent_x && x_overlap > 0 && y_overlap >0}",
         "{[nsg,k,i,j]->[0, nsg, 0, k, 0,i,0 ,j,0]}",
         {
           {"gx", "{[0] -> [0]}"},
@@ -297,7 +296,7 @@ int main(int argc, char **argv){
 // // m_data[index] = *(double*)(&tmp);
 
   Stmt s14("m_data[index] = *(double*)(&tmp)",
-      "{[k,i,j,nsg] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && 0<=j<nx && gy>=clip_y && gy< clip_y+ extent_y  && (gx+j) >= clip_x && (gx+j) < clip_x+extent_x && x_overlap > 0 && y_overlap >0}",
+      "{[nsg,k,i,j] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && 0<=j<nx && gy>=clip_y && gy< clip_y+ extent_y  && (gx+j) >= clip_x && (gx+j) < clip_x+extent_x && x_overlap > 0 && y_overlap >0}",
       "{[nsg,k,i,j]->[0, nsg, 0, k, 0,i,0 ,j,0]}",
       {
         {"gx", "{[0] -> [0]}"},
@@ -324,7 +323,7 @@ else{
     }
   */
     Stmt sx("std::fseek(m_fp, 8*nx, SEEK_CUR)",
-        "{[k,i,nsg] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && gy <clip_y && gy >= clip_y+ extent_y  && x_overlap > 0 && y_overlap >0}",
+        "{[nsg,k,i] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && gy <clip_y && gy >= clip_y+ extent_y  && x_overlap > 0 && y_overlap >0}",
         "{[nsg,k,i]->[0, nsg, 0, k, 0,i,0 ]}",
         { },
         { });
@@ -339,7 +338,7 @@ else{
         }
   */
     Stmt sy("std::fseek(m_fp, 8*nx*ny*nz, SEEK_CUR)",
-      "{[k,i,nsg] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && gy >=clip_y && gy< clip_y+ extent_y }",
+      "{[nsg, k,i] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && gy<clip_y && gy>clip_y+extent_y}",
       "{[nsg,k,i]->[0, nsg, 0, k, 0,i,0 ]}",
       {
         {"m_fp", "{[0] -> [0]}"},
