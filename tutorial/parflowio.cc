@@ -188,7 +188,7 @@ int main(int argc, char **argv){
 
     Stmt s9("read_count = fread(buf,8,nx,m_fp)",
           "{[nsg, k, i] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && gy >=clip_y && gy< clip_y+ extent_y && x_overlap > 0 && y_overlap >0}",
-          "{[nsg,k,i]->[0, nsg, 0, k, 0,i,0 ]}",
+          "{[nsg,k,i]->[0, nsg, 0, k, 0,i, 1]}",
           {
             {"clip_y", "{[0] -> [0]}"},
             {"extent_y", "{[0] -> [0]}"},
@@ -220,7 +220,7 @@ int main(int argc, char **argv){
 
   Stmt s10("cxi = cx+j",
         "{[nsg,k,i,j] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && 0<=j<nx && gy>=clip_y && gy< clip_y+ extent_y && (gx+j) >= clip_x && (gx+j) < clip_x+extent_x && x_overlap > 0 && y_overlap >0}",
-        "{[nsg,k,i,j]->[0, nsg, 0, k, 0,i,0 ,j,0]}",
+        "{[nsg,k,i,j]->[0, nsg, 0, k, 0,i,1 ,j,0]}",
         {
           {"gx", "{[0] -> [0]}"},
           {"j", "{[0] -> [0]}"},
@@ -238,7 +238,7 @@ int main(int argc, char **argv){
 
   Stmt s11("index = cz*(extent_y*extent_x) + cy*extent_x + cxi",
         "{[nsg,k,i,j] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && 0<=j<nx && gy>=clip_y && gy< clip_y+ extent_y  && (gx+j) >= clip_x && (gx+j) < clip_x+extent_x && x_overlap > 0 && y_overlap >0}",
-        "{[nsg,k,i,j]->[0, nsg, 0, k, 0,i,0 ,j,0]}",
+        "{[nsg,k,i,j]->[0, nsg, 0, k, 0,i,1 ,j,0]}",
         {
           {"gx", "{[0] -> [0]}"},
           {"j", "{[0] -> [0]}"},
@@ -259,7 +259,7 @@ int main(int argc, char **argv){
 
   Stmt s12("tmp = buf[j]",
         "{[nsg,k,i,j] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && 0<=j<nx && gy>=clip_y && gy< clip_y+ extent_y  && (gx+j) >= clip_x && (gx+j) < clip_x+extent_x && x_overlap > 0 && y_overlap >0}",
-        "{[nsg,k,i,j]->[0, nsg, 0, k, 0,i,0 ,j,0]}",
+        "{[nsg,k,i,j]->[0, nsg, 0, k, 0,i,1 ,j,0]}",
         {
           {"gx", "{[0] -> [0]}"},
           {"j", "{[0] -> [0]}"},
@@ -278,7 +278,7 @@ int main(int argc, char **argv){
 
     Stmt s13("tmp = bswap64(tmp)",
         "{[nsg, k,i,j] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && 0<=j<nx && gy>=clip_y && gy< clip_y+ extent_y  && (gx+j) >= clip_x && (gx+j) < clip_x+extent_x && x_overlap > 0 && y_overlap >0}",
-        "{[nsg,k,i,j]->[0, nsg, 0, k, 0,i,0 ,j,0]}",
+        "{[nsg,k,i,j]->[0, nsg, 0, k, 0,i,1 ,j,0]}",
         {
           {"gx", "{[0] -> [0]}"},
           {"j", "{[0] -> [0]}"},
@@ -297,7 +297,7 @@ int main(int argc, char **argv){
 
   Stmt s14("m_data[index] = *(double*)(&tmp)",
       "{[nsg,k,i,j] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && 0<=j<nx && gy>=clip_y && gy< clip_y+ extent_y  && (gx+j) >= clip_x && (gx+j) < clip_x+extent_x && x_overlap > 0 && y_overlap >0}",
-      "{[nsg,k,i,j]->[0, nsg, 0, k, 0,i,0 ,j,0]}",
+      "{[nsg,k,i,j]->[0, nsg, 0, k, 0,i,1,j,0]}",
       {
         {"gx", "{[0] -> [0]}"},
         {"j", "{[0] -> [0]}"},
@@ -323,9 +323,9 @@ else{
     }
   */
     Stmt sx("std::fseek(m_fp, 8*nx, SEEK_CUR)",
-        " {[nsg,k,i] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && x_overlap > 0} union" 
-	" { [nsg,k,i] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && gy <clip_y && gy >= clip_y+ extent_y  && y_overlap >0}",
-        "{[nsg,k,i]->[0, nsg, 0, k, 0,i,0 ]}",
+        " {[nsg,k,i] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && x_overlap > 0 && y_overlap > 0 && gy<  clip_y  } union" 
+	      "{[nsg,k,i] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && x_overlap > 0 && y_overlap > 0 && gy >= clip_y+ extent_y}",
+        "{[nsg,k,i]->[0, nsg, 0, k, 0,i, 2]}",
         { },
         { });
 
@@ -339,13 +339,17 @@ else{
         }
   */
     Stmt sy("std::fseek(m_fp, 8*nx*ny*nz, SEEK_CUR)",
-      "{[nsg, k,i] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && gy<clip_y && gy>clip_y+extent_y}",
-      "{[nsg,k,i]->[0, nsg, 0, k, 0,i,0 ]}",
+      "{[nsg] : 0 <= nsg < m_numSubgrids && x_overlap <= 0 } union" 
+      "{[nsg]:  0 <= nsg < m_numSubgrids && y_overlap <=0}",
+      "{[nsg]->[0, nsg, 1]}", 
       {
         {"m_fp", "{[0] -> [0]}"},
         {"nx", "{[0] -> [0]}"},
         {"ny", "{[0] -> [0]}"},
         {"nz", "{[0] -> [0]}"},
+        {"x_overlap","{[0] -> [0]}" },
+        {"y_overlap","{[0] -> [0]}" },
+
       },
       { });
     
