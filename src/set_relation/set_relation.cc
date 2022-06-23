@@ -4236,7 +4236,7 @@ Set *Set::projectOut(int tvar) {
 
     Set *result;
     if (v->hasMultiVarCall()) {
-        result = NULL;
+        throw assert_exception("Set::projectOut, has multivariate UF call");
     } else {
         closure->removeUFCallConsts(tvar);
         // Geting a map of UFCalls
