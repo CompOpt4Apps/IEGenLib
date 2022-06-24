@@ -4229,14 +4229,47 @@ class VisitorFindMultiVarUFCalls : public Visitor {
 Set *Set::projectOut(int tvar) {
     // find transitive closure
     Set *closure = this->TransitiveClosure();
-
+    
+    
+    // Check if this tuple variable is directly equal to another
+    // tuple variable.
+    bool hasDirectReplacement = false;
+    SubMap subMap;
+    for(auto conjIt = closure->conjunctionBegin();
+		conjIt != closure->conjunctionEnd();
+	    conjIt++){
+	auto constIt = (*conjIt)->equalities().begin();
+	while(constIt!= (*conjIt)->equalities().end()){
+            Exp* eqConstr = *constIt;
+	    TupleVarTerm tv(tvar);
+	    Exp* solveFor = eqConstr->solveForFactor(tv.clone());
+	    TupleVarTerm* otherTup = NULL;
+	    if(solveFor != NULL && 
+			    solveFor->getTermList().size() == 1 
+	     && (otherTup = dynamic_cast<TupleVarTerm*>(solveFor->getTerm() ))){
+		// Here we do have another tuple variable 
+		// that is directly equal to this tuple variable
+		// we can go ahead to replace this tuple variables
+		// with the other tuple variables.
+		subMap.insertPair(tv.clone(),solveFor);
+                hasDirectReplacement = true;
+		// Remove constraint from constraint list.
+	        constIt = (*conjIt)->equalities().erase(constIt);
+		continue;	
+	    }
+	    constIt++;
+	}
+    }
+    closure->substituteInConstraints(subMap);
+    
     // make sure there are no UFs involving both this tuple variable and others
     VisitorFindMultiVarUFCalls *v = new VisitorFindMultiVarUFCalls(tvar);
     closure->acceptVisitor(v);
+    // Support multivariate UFCall by adding a new tuple variable
 
     Set *result;
     if (v->hasMultiVarCall()) {
-        throw assert_exception("Set::projectOut, has multivariate UF call");
+        return NULL;
     } else {
         closure->removeUFCallConsts(tvar);
         // Geting a map of UFCalls
