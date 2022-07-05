@@ -4046,9 +4046,52 @@ TEST_F(SetRelationTest, projectOut)
     }
     EXPECT_EQ(s1->toISLString(), "[ A ] -> { [i, j, ii] : i - ii = 0 &&"
 		    " i >= 0 && j >= 0 && A(i) - 1 >= 0 && A(j) - 1 >="
-		    " 0 && -i + A(j) - 1 >= 0 && -j + A(i) - 1 >= 0 }");
+ 		    " 0 && -i + A(j) - 1 >= 0 && -j + A(i) - 1 >= 0 }");
     delete s1, ex_s1;
+    
+    s1 = new Set("{ [n, ii, jj, ii1, k, jj1] : ii - ii1 = 0 && ii - row1(n) = 0"
+		 " && jj - jj1 = 0 && jj - P2(ii, jj) = 0 && jj - col1(n) = 0"
+		 " && jj - col2(k) = 0 && ii1 - row1(n) = 0 && k - P1(ii, jj)"
+		 " = 0 && jj1 - P2(ii, jj) = 0 && jj1 - col1(n) = 0 &&"
+		 " jj1 - col2(k) = 0 && P2(ii, jj) - col1(n) = 0 &&"
+		 " P2(ii, jj) - col2(k) = 0 && col1(n) - col2(k) = 0 &&"
+		 " n >= 0 && ii >= 0 && jj >= 0 && ii1 >= 0 && jj1 >= 0 &&"
+		 " P2(ii, jj) >= 0 && col1(n) >= 0 && col2(k) >= 0 && row1(n)"
+		 " >= 0 && k - rowptr(ii1) >= 0 && NC - 1 >= 0 && NNZ - 1 >="
+		 " 0 && NR - 1 >= 0 && P1(ii, jj) - rowptr(ii1) >= 0 &&"
+		 " -n + NNZ - 1 >= 0 && -ii + NR - 1 >= 0 && -jj + NC - 1 >="
+		 " 0 && -ii1 + NR - 1 >= 0 && -k + rowptr(ii1 + 1) - 1 >= 0"
+		 " && -jj1 + NC - 1 >= 0 && NC - P2(ii, jj) - 1 >= 0 &&"
+		 " NC - col1(n) - 1 >= 0 && NC - col2(k) - 1 >= 0 &&"
+		 " NR - row1(n) - 1 >= 0 && -P1(ii + 1, jj) + P1(ii, jj)"
+		 " - 1 >= 0 && -P1(ii, jj) + rowptr(ii1 + 1) - 1 >= 0 &&"
+		 " -rowptr(ii1) + rowptr(ii1 + 1) - 1 >= 0 }");
 
+    ex_s1 = new Set("{[i,j,ii]: ii = i && 0 <= i && 0 < A(i)}");
+    s2 = s1->projectOut(5);
+    if (s2) {
+        delete s1;
+        s1 = s2;
+    }
+    EXPECT_EQ(s2->prettyPrintString(), "{ [n, ii, jj, ii1, k] : ii - ii1 = 0 &&"
+		    " ii - row1(n) = 0 && jj - P2(ii, jj) = 0 && jj - col1(n)"
+		    " = 0 && jj - col2(k) = 0 && ii1 - row1(n) = 0 && k -"
+		    " P1(ii, jj) = 0 && P2(ii, jj) - col1(n) = 0 && P2(ii, jj)"
+		    " - col2(k) = 0 && col1(n) - col2(k) = 0 && n >= 0"
+		    "&& ii >= 0 && jj >= 0 && ii1 >= 0 && P2(ii, jj) >= 0"
+		    " && col1(n) >= 0 && col2(k) >= 0 && row1(n) >= 0 &&"
+		    " k - rowptr(ii1) >= 0 && NC - 1 >= 0 && NNZ - 1 >= 0 &&"
+		    " NR - 1 >= 0 && P1(ii, jj) - rowptr(ii1) >= 0 && -n + NNZ"
+		    " - 1 >= 0 && -ii + NR - 1 >= 0 && -jj + NC - 1 >"
+		    "= 0 && -ii1 + NR - 1 >= 0 && -k + rowptr(ii1 + 1) - 1 >= 0"
+		    " && k - P1(ii + 1, jj) - 1 >= 0 && NC - P2(ii, jj) - 1 >= 0"
+		    " && NC - col1(n) - 1 >= 0 && NC - col2(k) - 1 >= 0 && NR -"
+		    " row1(n) - 1 >= 0 && -P1(ii + 1, jj) + P1(ii, jj) - 1 >= 0"
+		    " && -P1(ii + 1, jj) + rowptr(ii1 + 1) - 1 >= 0 && -P1(ii, jj)"
+		    " + rowptr(ii1 + 1) - 1 >= 0 && -rowptr(ii1) + rowptr(ii1 + 1)"
+		    " - 1 >= 0 }");
+    delete s1, ex_s1;
+    
 
 
     s1 = new Set("{[i,j]: 0 <= A(i,B(j)) && 0 <= i < N}");
@@ -4910,7 +4953,6 @@ TEST_F(SetRelationTest,DISABLED_ParseOmegaString){
     VisitorChangeUFsForOmega visitor;
     rel->acceptVisitor(&visitor);
     std::string omegaString = rel->toOmegaString(visitor.getUFCallDecls());
-    std::cerr << "String: "<< omegaString << "\n";
     omega::Relation* omegaRel = omega::parser::ParseRelation(omegaString);
     std::string constraintString = omegaRel->print_with_subs_to_string();
     Relation* result = 

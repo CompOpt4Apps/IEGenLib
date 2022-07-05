@@ -4260,8 +4260,22 @@ Set *Set::projectOut(int tvar) {
 	    constIt++;
 	}
     }
-    closure->substituteInConstraints(subMap);
-    
+    if(hasDirectReplacement){
+	std::vector<int> oldToNewLocs;
+	closure->substituteInConstraints(subMap);
+	// shift  tuple variables 
+	for(int i = 0; i < closure->getTupleDecl().size(); i++){
+	    if( i > tvar) oldToNewLocs.push_back(i-1);
+	    else oldToNewLocs.push_back(i);
+	}
+	closure->remapTupleVars(oldToNewLocs);
+        TupleDecl tdl(closure->getTupleDecl().size()-1);
+	for(int i = 0;i < tdl.size(); i++){
+	    tdl.copyTupleElem(closure->getTupleDecl(),i,i);
+	}
+	closure->setTupleDecl(tdl);
+	return closure;
+    }
     // make sure there are no UFs involving both this tuple variable and others
     VisitorFindMultiVarUFCalls *v = new VisitorFindMultiVarUFCalls(tvar);
     closure->acceptVisitor(v);
@@ -4289,7 +4303,7 @@ Set *Set::projectOut(int tvar) {
         // Adjusting changes in UFCTerms due to projection: _tvN -> _tvN-1
         VisitorProjectOutCleanUp *cv = new VisitorProjectOutCleanUp(tvar);
         result->acceptVisitor(cv);
-        delete cv;
+	delete cv;
 
         delete sup_s;
         delete pv;
