@@ -724,6 +724,10 @@ TEST_F(ComputationTest, AppendComputationSSA) {
     delete comp2;
 }
 
+TEST_F(ComputationTest, ArraySSA){
+    EXPECT_EQ("","");
+
+}
 TEST_F(ComputationTest, Colors) {
     // Basic for loop with 2 statements
     // for (i = 0; i < N; i++) /loop over rows
