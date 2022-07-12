@@ -184,7 +184,7 @@ void Computation::addStmt(Stmt* stmt, int stmtIdx) {
     stmtIdx = locatePhiNodes(stmtIdx);
     // Turn off SSA for array accesses.
     //
-    //enforceSSA(stmtIdx);
+    enforceSSA(stmtIdx);
 }
 
 /*

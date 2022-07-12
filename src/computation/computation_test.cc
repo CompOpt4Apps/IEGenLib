@@ -20,6 +20,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <regex>
 
 #include "code_gen/parser/parser.h"
 #include "omega/Relation.h"
@@ -667,17 +668,23 @@ TEST_F(ComputationTest, AppendComputationSSA) {
         "useMe = useMe + input;", "{[0]}", "{[0]->["+std::to_string(pos++)+"]}", {{"useMe", "{[0]->[0]}"}, {"input", "{[0]->[0]}"}}, {{"useMe", "{[0]->[0]}"}}
     ));
 
-    std::stringstream ss;
-    ss << "#undef s0\n#undef s1\n#undef s2\n#undef s3\n#undef s4\n#undef s5\n#undef s6\n#undef s7\n#undef s8\n#undef s9\n#undef s10\n#undef s11\n#undef s12\n";
-    ss << "#define s0(__x0)   useMe__w__0 = 80; \n" << "#define s1(__x0)   input__w__6 = useMe__w__0 * 8; \n" << "#define s2(__x0)   useMe__w__7 = useMe__w__0 + input__w__6; \n";
-    ss << "#define s3(__x0)   int _iegen_1foo__w__5 = input__w__6; \n" << "#define s4(__x0)   _iegen_1bar__w__3 = _iegen_1foo__w__4; \n";
-    ss << "#define s5(__x0)   _iegen_1foo__w__4 = _iegen_1bar__w__3 + 1; \n" << "#define s6(__x0)   int _iegen_0foo__w__2 = _iegen_1foo__w__4; \n";
-    ss << "#define s7(__x0)   _iegen_1_iegen_0foo__w__1 = 3 * 21; \n" << "#define s8(__x0)   _iegen_1_iegen_0foo = _iegen_1_iegen_0foo__w__1 + 1; \n";
-    ss << "#define s9(__x0)   _iegen_1bar = _iegen_1foo__w__4 + _iegen_1_iegen_0foo; \n" << "#define s10(__x0)   _iegen_1foo = _iegen_1foo__w__4 - 1; \n";
-    ss << "#define s11(__x0)   input = _iegen_1foo; \n" << "#define s12(__x0)   useMe = useMe__w__7 + input; \n\n\n";
-    ss << "t1 = 0; \n\ns0(0);\ns1(1);\ns2(2);\ns3(3);\ns4(4);\ns5(5);\ns6(6);\ns7(7);\ns8(8);\ns9(9);\ns10(10);\ns11(11);\ns12(12);\n\n";
-    ss << "#undef s0\n#undef s1\n#undef s2\n#undef s3\n#undef s4\n#undef s5\n#undef s6\n#undef s7\n#undef s8\n#undef s9\n#undef s10\n#undef s11\n#undef s12\n";
-    EXPECT_EQ(comp1->codeGen(), ss.str());
+    std::string ss; 
+    std::string regex = "useMe__w__[0-9]+ =";
+    std::string strArr[] = {"useMe__w__0 =", "useMe__w__3 ="};
+    std::regex reg (regex, std::regex::extended);
+    ss = comp1->codeGen();
+    vector <string> mArr;
+    
+    for (sregex_iterator it = sregex_iterator(ss.begin(), ss.end(), reg);
+         it != sregex_iterator(); it++) {
+        smatch match;
+        match = *it;
+        mArr.push_back(match.str(0));
+        
+    }
+
+    EXPECT_EQ(mArr[0], strArr[0]);
+    EXPECT_EQ(mArr[1], strArr[1]);
 
     delete comp1;
     delete comp2;
@@ -713,13 +720,22 @@ TEST_F(ComputationTest, AppendComputationSSA) {
         {{"input", "{[0]->[0]}"}}
     ));
 
-    ss.str("");
-    ss << "#undef s0\n#undef s1\n#undef s2\n#undef s3\n";
-    ss << "#define s0(__x0)   input__w__8 = 4 * 8; \n" << "#define s1(__x0)   int _iegen_2foo = input__w__8; \n";
-    ss << "#define s2(__x0)   _iegen_2bar = _iegen_2foo; \n" << "#define s3(__x0)   input = _iegen_2foo; \n\n\n";
-    ss << "t1 = 0; \n\ns0(0);\ns1(1);\ns2(2);\ns3(3);\n\n#undef s0\n#undef s1\n#undef s2\n#undef s3\n";
-    EXPECT_EQ(comp1->codeGen(), ss.str());
+    ss = comp1->codeGen();
 
+    std::string regex1 = "input__w__[0-9]+ =";
+    std::string strArr1[] = {"input__w__0 ="};
+    std::regex reg1 (regex1, std::regex::extended);
+    ss = comp1->codeGen();
+    vector <string> mArr1;
+    
+    for (sregex_iterator it = sregex_iterator(ss.begin(), ss.end(), reg1);
+         it != sregex_iterator(); it++) {
+        smatch match;
+        match = *it;
+        mArr1.push_back(match.str(0));
+        
+    }
+    EXPECT_EQ(mArr1[0], strArr1[0]);
     delete comp1;
     delete comp2;
 }
