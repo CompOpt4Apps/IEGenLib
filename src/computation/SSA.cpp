@@ -24,9 +24,8 @@ SSA::SSA() {}
 SSA::~SSA() {
 }
 
- SSA::dominanceTree** SSA::getDominanceTree(std::vector<std::pair<int, iegenlib::Set*>>& executionS ) {
+std::vector<SSA::dominanceTree> SSA::getDominanceTree(std::vector<std::pair<int, iegenlib::Set*>>& executionS ) {
 
     std::cout  << executionS[1].first;
-
-    return 0;
+    return {};
 }
