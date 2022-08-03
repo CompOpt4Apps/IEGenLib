@@ -1,6 +1,18 @@
-//
-// Created by ANT on 8/2/22.
-//
+/*!
+ * \file SSA.h
+ *
+ * \brief Implementation of the SSA class
+ *
+ * The SSA class is the class that gives us the dominance graph.
+ *
+ * \date Started: 08/02/22
+ *
+ * \authors Kalyan Bhetwal
+ *
+ * Copyright (c) 2020, Boise State University <br>
+ * All rights reserved. <br>
+ * See ../../COPYING for details. <br>
+ */
 
 #ifndef SSA_H_
 #define SSA_H_
