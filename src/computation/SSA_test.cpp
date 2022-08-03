@@ -22,13 +22,13 @@
 TEST(SSATest, dominanceTree){
    // string s = {([0],0), ([1],2), ([2],2)};
     SSA ssa;
-    iegenlib::Set* s1 = new iegenlib::Set("{[0,i,1] | | 0<= i < N}");
-    iegenlib::Set* s2 = new iegenlib::Set("{[0,j,1] | 0<=j < M}");
+    iegenlib::Set* s1 = new iegenlib::Set("{[0,i,1] : 0 <= i< N}");
+    iegenlib::Set* s2 = new iegenlib::Set("{[0,j,1] : 0 <=j< M}");
     std::vector<std::pair<int, iegenlib::Set*>> executionS {{0, s1}, {1, s2}};
     std::vector<SSA::dominanceTree> dt;
     dt = ssa.getDominanceTree(executionS);
     if(!dt.empty()){
-        std::vector<SSA::dominanceTree*> child =  dt[1].child;
+        std::vector<SSA::dominanceTree*> child = dt[1].child;
         SSA::dominanceTree* parent = dt[1].parent;
         EXPECT_EQ("child","string");
         EXPECT_EQ("parent","string");

@@ -26,6 +26,8 @@ SSA::~SSA() {
 
 std::vector<SSA::dominanceTree> SSA::getDominanceTree(std::vector<std::pair<int, iegenlib::Set*>>& executionS ) {
 
+    std::sort( executionS.begin(), executionS.end(), [] (const std::pair<int, iegenlib::Set*> &a, const std::pair<int, iegenlib::Set*> &b){return a.second->getTupleDecl() < b.second->getTupleDecl();});
+
     std::cout  << executionS[1].first;
     return {};
 }
