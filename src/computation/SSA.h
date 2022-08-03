@@ -30,7 +30,6 @@ public:
         std::vector<dominanceTree*>child;  // list of the Children's
         std::pair<int, std::vector<std::string>> data; // iteration domain with stmtIdx as key
     };
-
     dominanceTree** getDominanceTree(std::vector<std::pair<int,iegenlib::Set*>>&executionS);
 };
 
