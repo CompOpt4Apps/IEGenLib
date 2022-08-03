@@ -31,6 +31,7 @@ std::vector<SSA::dominanceTree> SSA::getDominanceTree(std::vector<std::pair<int,
         std::cout<< v.first<<'\n';
         std::cout<< v.second-> prettyPrintString()<<'\n';
 
+
     }
 //    std::cout  << executionS[1].first;
     return {};
