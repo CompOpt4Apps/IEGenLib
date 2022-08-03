@@ -21,16 +21,35 @@
 #include <tuple>
 #include <iostream>
 #include "set_relation/set_relation.h"
-class SSA {
-public:
-    SSA();
-    virtual ~SSA();
-    struct dominanceTree{
-        dominanceTree * parent; // parent to the node
-        std::vector<dominanceTree*>child;  // list of the Children's
-        std::pair<int, std::vector<std::string>> data; // iteration domain with stmtIdx as key
-    };
-    std::vector<SSA::dominanceTree> getDominanceTree(std::vector<std::pair<int,iegenlib::Set*>>&executionS);
-};
+//class SSA {
+//public:
+//    SSA();
+//    virtual ~SSA();
+//    struct dominanceTree{
+//        dominanceTree * parent; // parent to the node
+//        std::vector<dominanceTree*>child;  // list of the Children's
+//        std::pair<int, std::vector<std::string>> data; // iteration domain with stmtIdx as key
+//    };
+//    std::vector<SSA::dominanceTree> getDominanceTree(std::vector<std::pair<int,iegenlib::Set*>>&executionS);
+//};
+//
 
+namespace SSA{
+class DominanceTree {
+private:
+    struct Node{
+        int parent; // parent to the node
+        std::vector<int>children;  // list of the Children's
+        std::pair<int, iegenlib::Set*> data; // iteration domain with stmtIdx as key
+    };
+    std::vector<Node> nodes;
+public:
+    DominanceTree();
+    ~DominanceTree();
+    int push_back(std::pair<int,iegenlib::Set*>);
+    void add_edge(int parent , int child);
+    bool equivalent(DominanceTree);
+    void createDominanceTree( std::vector<std::pair<int, iegenlib::Set*>>);
+    };
+};
 #endif
