@@ -1,0 +1,49 @@
+/usr/local/apps/cmake/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" -S /home/KALYANBHETWAL/IEGenLib -B /home/KALYANBHETWAL/IEGenLib/cmake-build-debug-remote
+-- Using install prefix: /usr/local
+-- Generating parser code: No
+-- Building Python bindings: No
+CMake Deprecation Warning at src/CMakeLists.txt:120 (cmake_policy):
+  The OLD behavior for policy CMP0037 will be removed from a future version
+  of CMake.
+
+  The cmake-policies(7) manual explains that the OLD behaviors of all
+  policies are deprecated and that a policy should be set to OLD only under
+  specific short-term circumstances.  Projects should be ported to the NEW
+  behavior and not rely on setting a policy to OLD.
+
+
+CMake Deprecation Warning at src/CMakeLists.txt:125 (cmake_policy):
+  The OLD behavior for policy CMP0037 will be removed from a future version
+  of CMake.
+
+  The cmake-policies(7) manual explains that the OLD behaviors of all
+  policies are deprecated and that a policy should be set to OLD only under
+  specific short-term circumstances.  Projects should be ported to the NEW
+  behavior and not rely on setting a policy to OLD.
+
+
+CMake Deprecation Warning at src/CMakeLists.txt:130 (cmake_policy):
+  The OLD behavior for policy CMP0037 will be removed from a future version
+  of CMake.
+
+  The cmake-policies(7) manual explains that the OLD behaviors of all
+  policies are deprecated and that a policy should be set to OLD only under
+  specific short-term circumstances.  Projects should be ported to the NEW
+  behavior and not rely on setting a policy to OLD.
+
+
+CMake Warning (dev) at src/CMakeLists.txt:192 (add_custom_command):
+  Policy CMP0040 is not set: The target in the TARGET signature of
+  add_custom_command() must exist and must be defined in the current
+  directory.  Run "cmake --help-policy CMP0040" for policy details.  Use the
+  cmake_policy command to set the policy and suppress this warning.
+
+  No TARGET 'run_iegen_tests' has been created in this directory.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/KALYANBHETWAL/IEGenLib/cmake-build-debug-remote
+Unable to determine product file path for target ../bin/simplifyDriver. Running and debugging will be unavailable.
+Unable to determine product file path for target ../bin/superAffSet. Running and debugging will be unavailable.
+Unable to determine product file path for target ../bin/subSetDriver. Running and debugging will be unavailable.

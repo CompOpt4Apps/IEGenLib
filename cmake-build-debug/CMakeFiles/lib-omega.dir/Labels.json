@@ -1,0 +1,43 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles/lib-omega"
+		},
+		{
+			"file" : "/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles/lib-omega.rule"
+		},
+		{
+			"file" : "/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles/lib-omega-complete.rule"
+		},
+		{
+			"file" : "/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/lib-omega-prefix/src/lib-omega-stamp/lib-omega-build.rule"
+		},
+		{
+			"file" : "/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/lib-omega-prefix/src/lib-omega-stamp/lib-omega-configure.rule"
+		},
+		{
+			"file" : "/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/lib-omega-prefix/src/lib-omega-stamp/lib-omega-download.rule"
+		},
+		{
+			"file" : "/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/lib-omega-prefix/src/lib-omega-stamp/lib-omega-install.rule"
+		},
+		{
+			"file" : "/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/lib-omega-prefix/src/lib-omega-stamp/lib-omega-mkdir.rule"
+		},
+		{
+			"file" : "/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/lib-omega-prefix/src/lib-omega-stamp/lib-omega-patch.rule"
+		},
+		{
+			"file" : "/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/lib-omega-prefix/src/lib-omega-stamp/lib-omega-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"lib-omega"
+		],
+		"name" : "lib-omega"
+	}
+}

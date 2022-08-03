@@ -1,0 +1,54 @@
+/Applications/CLion.app/Contents/bin/cmake/mac/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" -S /Users/ant/Documents/AdaptLab/IEGenLib -B /Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug
+CMake Deprecation Warning at CMakeLists.txt:1 (cmake_minimum_required):
+  Compatibility with CMake < 2.8.12 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value or use a ...<max> suffix to tell
+  CMake that the project does not need compatibility with older versions.
+
+
+-- Using install prefix: /usr/local
+-- Generating parser code: No
+-- Building Python bindings: No
+CMake Deprecation Warning at src/CMakeLists.txt:120 (cmake_policy):
+  The OLD behavior for policy CMP0037 will be removed from a future version
+  of CMake.
+
+  The cmake-policies(7) manual explains that the OLD behaviors of all
+  policies are deprecated and that a policy should be set to OLD only under
+  specific short-term circumstances.  Projects should be ported to the NEW
+  behavior and not rely on setting a policy to OLD.
+
+
+CMake Deprecation Warning at src/CMakeLists.txt:125 (cmake_policy):
+  The OLD behavior for policy CMP0037 will be removed from a future version
+  of CMake.
+
+  The cmake-policies(7) manual explains that the OLD behaviors of all
+  policies are deprecated and that a policy should be set to OLD only under
+  specific short-term circumstances.  Projects should be ported to the NEW
+  behavior and not rely on setting a policy to OLD.
+
+
+CMake Deprecation Warning at src/CMakeLists.txt:130 (cmake_policy):
+  The OLD behavior for policy CMP0037 will be removed from a future version
+  of CMake.
+
+  The cmake-policies(7) manual explains that the OLD behaviors of all
+  policies are deprecated and that a policy should be set to OLD only under
+  specific short-term circumstances.  Projects should be ported to the NEW
+  behavior and not rely on setting a policy to OLD.
+
+
+CMake Warning (dev) at src/CMakeLists.txt:192 (add_custom_command):
+  Policy CMP0040 is not set: The target in the TARGET signature of
+  add_custom_command() must exist and must be defined in the current
+  directory.  Run "cmake --help-policy CMP0040" for policy details.  Use the
+  cmake_policy command to set the policy and suppress this warning.
+
+  No TARGET 'run_iegen_tests' has been created in this directory.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug

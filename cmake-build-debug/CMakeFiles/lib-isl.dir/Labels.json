@@ -1,0 +1,43 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles/lib-isl"
+		},
+		{
+			"file" : "/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles/lib-isl.rule"
+		},
+		{
+			"file" : "/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles/lib-isl-complete.rule"
+		},
+		{
+			"file" : "/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/lib-isl-prefix/src/lib-isl-stamp/lib-isl-build.rule"
+		},
+		{
+			"file" : "/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/lib-isl-prefix/src/lib-isl-stamp/lib-isl-configure.rule"
+		},
+		{
+			"file" : "/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/lib-isl-prefix/src/lib-isl-stamp/lib-isl-download.rule"
+		},
+		{
+			"file" : "/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/lib-isl-prefix/src/lib-isl-stamp/lib-isl-install.rule"
+		},
+		{
+			"file" : "/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/lib-isl-prefix/src/lib-isl-stamp/lib-isl-mkdir.rule"
+		},
+		{
+			"file" : "/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/lib-isl-prefix/src/lib-isl-stamp/lib-isl-patch.rule"
+		},
+		{
+			"file" : "/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/lib-isl-prefix/src/lib-isl-stamp/lib-isl-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"lib-isl"
+		],
+		"name" : "lib-isl"
+	}
+}
