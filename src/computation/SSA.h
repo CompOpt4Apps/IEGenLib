@@ -19,7 +19,8 @@
 
 #include <vector>
 #include <tuple>
-
+#include <iostream>
+#include "set_relation/set_relation.h"
 class SSA {
 public:
     SSA();
@@ -30,7 +31,7 @@ public:
         std::pair<int, std::vector<std::string>> data; // iteration domain with stmtIdx as key
     };
 
-    dominanceTree** getDominanceTree(std::vector<std::pair<int, std::vector<std::string>>>&executionS);
+    dominanceTree** getDominanceTree(std::vector<std::pair<int,iegenlib::Set*>>&executionS);
 };
 
 #endif

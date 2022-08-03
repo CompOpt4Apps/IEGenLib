@@ -13,6 +13,7 @@
  */
 #include "SSA.h"
 #include <gtest/gtest.h>
+#include "set_relation/set_relation.h"
 #include <string>
 #include <utility>
 #include <vector>
@@ -21,8 +22,10 @@
 TEST(SSATest, dominanceTree){
    // string s = {([0],0), ([1],2), ([2],2)};
     SSA ssa;
-    std::vector<std::pair<int, std::vector<std::string>>>a {{0, {"0"}},{1, {"1"}}};
-    ssa.getDominanceTree(a);
+    iegenlib::Set* s1 = new iegenlib::Set("{[i]}");
+    iegenlib::Set* s2 = new iegenlib::Set("{[j]}");
+    std::vector<std::pair<int, iegenlib::Set*>> executionS {{0, s1}, {1, s2}};
+    ssa.getDominanceTree(executionS);
     EXPECT_EQ(1,1);
 }
 

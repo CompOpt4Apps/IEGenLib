@@ -16,13 +16,17 @@
 #include "SSA.h"
 #include <vector>
 #include <tuple>
+#include "set_relation/set_relation.h"
+#include <iostream>
 
 SSA::SSA() {}
 
 SSA::~SSA() {
 }
 
- SSA::dominanceTree** SSA::getDominanceTree(std::vector<std::pair<int, std::vector<std::string>>>& executionS ) {
+ SSA::dominanceTree** SSA::getDominanceTree(std::vector<std::pair<int, iegenlib::Set*>>& executionS ) {
+
+    std::cout  << executionS[1].first;
 
     return 0;
 }
