@@ -14,13 +14,11 @@
 #include "SSA.h"
 #include <gtest/gtest.h>
 #include "set_relation/set_relation.h"
-#include <string>
 #include <utility>
 #include <vector>
-#include <regex>
 using namespace SSA;
 
-TEST(SSATest, DT){
+TEST(SSATest, DominanceTreeTEST){
    // string s = {([0],0), ([1],2), ([2],2)};
     iegenlib::Set* s1 = new iegenlib::Set("{[0,i,0] : 0 <=i< N}");
     iegenlib::Set* s2 = new iegenlib::Set("{[0,i,1] : 0 <=i< N && x >10}");
@@ -31,11 +29,19 @@ TEST(SSATest, DT){
     DominanceTree* dt;
     dt->DominanceTree::createDominanceTree(executionS);
     DominanceTree edt;
-    int p1 = edt.push_back({0, s1});
-    int p2 =  edt.push_back({1, s2});
-    int p3 =  edt.push_back({2, s3});
-    edt.add_edge(p1,p2);
-    edt.add_edge(p1,p3);
+    int p1 = edt.push_Back({0, s1});
+    int p2 =  edt.push_Back({1, s2});
+    int p3 =  edt.push_Back({2, s3});
+
+    bool isdominator = edt.isDominator(s1, s3);
+    if(isdominator) {
+        edt.add_edge(p1, p2);
+    }
+    bool isdominator1 = edt.isDominator(s1, s2);
+
+    if(isdominator1) {
+        edt.add_edge(p1, p3);
+    }
     //EXPECT_TRUE(edt.equivalent(*dt));
 
 }

@@ -42,14 +42,15 @@ private:
         std::vector<int>children;  // list of the Children's
         std::pair<int, iegenlib::Set*> data; // iteration domain with stmtIdx as key
     };
-    std::vector<Node> nodes;
+    std::vector<Node> nodes{};
 public:
     DominanceTree();
     ~DominanceTree();
-    int push_back(std::pair<int,iegenlib::Set*>);
+    int push_Back(std::pair<int,iegenlib::Set*>);
     void add_edge(int parent , int child);
     bool equivalent(DominanceTree);
     void createDominanceTree( std::vector<std::pair<int, iegenlib::Set*>>);
+    bool isDominator(iegenlib::Set*, iegenlib::Set*);
     };
 };
 #endif
