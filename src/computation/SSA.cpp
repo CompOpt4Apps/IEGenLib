@@ -26,11 +26,11 @@ DominanceTree::~DominanceTree() {
 }
 
 int DominanceTree::push_Back(std::pair<int, iegenlib::Set*> data) {
-    Node node;
-    node.parent= -1;
-    node.children = {};
-    node.data = data;
-    nodes.push_back(node);
+    Node* node = new Node();
+    node->parent= -1;
+    node->children = {};
+    node->data = data;
+    nodes.push_back(*node);
     return(nodes.size()-1);
 }
 
@@ -51,21 +51,24 @@ bool DominanceTree::isDominator(iegenlib::Set * j, iegenlib::Set * i) {
     return false;
 }
 
-void DominanceTree::createDominanceTree( std::vector<std::pair<int, iegenlib::Set*>> executionS) {
+DominanceTree* createDominanceTree( std::vector<std::pair<int, iegenlib::Set*>> executionS) {
+    DominanceTree * rval = new DominanceTree();
+
     std::sort(executionS.begin(), executionS.end(), []
             (const std::pair<int, iegenlib::Set *> &a, const std::pair<int, iegenlib::Set *> &b) {
         return a.second->getTupleDecl() < b.second->getTupleDecl();
     });
 
     for (auto v: executionS) {
-        DominanceTree::push_Back(v);
+        rval->push_Back(v);
     }
 
     for (int i = executionS.size() - 1; i >= 0; i--) {
-        for (int j = i--; j >= 0; j--) {
+        for (int j = i-1; j >= 0; j--) {
             //bool isDominator = DominanceTree::isDominator(executionS[j].second, executionS[i].second);
         }
     }
+    return rval;
 }
 
 //
