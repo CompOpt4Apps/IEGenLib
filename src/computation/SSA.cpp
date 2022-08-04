@@ -51,7 +51,7 @@ bool DominanceTree::isDominator(iegenlib::Set * j, iegenlib::Set * i) {
     return false;
 }
 
-DominanceTree* createDominanceTree( std::vector<std::pair<int, iegenlib::Set*>> executionS) {
+DominanceTree* SSA::createDominanceTree(std::vector<std::pair<int, iegenlib::Set *>>executionS) {
     DominanceTree * rval = new DominanceTree();
 
     std::sort(executionS.begin(), executionS.end(), []

@@ -40,8 +40,7 @@ TEST(SSATest, DominanceTreeTEST){
 }
 
 TEST(SSATest, IsDominator){
-
-
+    EXPECT_EQ("", "");
 }
 
 
