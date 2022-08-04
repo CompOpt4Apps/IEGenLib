@@ -33,7 +33,6 @@ int DominanceTree::push_back(std::pair<int, iegenlib::Set*> data) {
     return(nodes.size()-1);
 }
 
-
 void DominanceTree::add_edge(int parent, int child) {
     nodes[parent].children.push_back(child);
     nodes[child].parent = parent;
@@ -41,20 +40,30 @@ void DominanceTree::add_edge(int parent, int child) {
 
 bool DominanceTree::equivalent(DominanceTree) {
     return true;
-
 }
 
 void DominanceTree::createDominanceTree( std::vector<std::pair<int, iegenlib::Set*>> executionS){
+    std::sort( executionS.begin(), executionS.end(), []
+    (const std::pair<int, iegenlib::Set*> &a, const std::pair<int, iegenlib::Set*> &b)
+    {return a.second->getTupleDecl() < b.second->getTupleDecl();});
 
 
+    for( std::vector<std::pair<int, iegenlib::Set*>>::reverse_iterator it = executionS.rbegin(); it != executionS.rend(); ++it ){
+
+
+        auto tupl = it->second->getTupleDecl();
+        for( std::vector<std::pair<int, iegenlib::Set*>>::reverse_iterator it1 = executionS.rbegin(); it1 != executionS.rend(); ++it1 ){
+            if(tupl.getSize()==it1->second->getTupleDecl().getSize()){
+                std::cout<< it1->first<<'\n';
+                std::cout<< it1->second-> prettyPrintString()<<'\n';
+                std::string a =  it1->second->getTupleDecl().toString();
+                std::cout << "this is test  " << a<<'\n';
+                int p1 = this->DominanceTree::push_back(*it1);
+                int p2 = this-> DominanceTree::push_back(*it);
+//                this->DominanceTree::add_edge(p1, p2);
+                break;
+            }
+        }
+        break;
+    }
 }
-
-//std::vector<SSA::dominanceTree> SSA::getDominanceTree(std::vector<std::pair<int, iegenlib::Set*>>& executionS ) {
-//
-//    std::sort( executionS.begin(), executionS.end(), [] (const std::pair<int, iegenlib::Set*> &a, const std::pair<int, iegenlib::Set*> &b){return a.second->getTupleDecl() < b.second->getTupleDecl();});
-//    for( auto v: executionS){
-//        std::cout<< v.first<<'\n';
-//        std::cout<< v.second-> prettyPrintString()<<'\n';
-//    }
-//    std::cout  << executionS[1].first;
-//  return {};
