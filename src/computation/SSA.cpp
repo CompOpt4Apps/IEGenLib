@@ -66,7 +66,7 @@ DominanceTree* SSA::createDominanceTree(std::vector<std::pair<int, iegenlib::Set
     });
 
     for (auto v: executionS) {
-        rval->push_Back(v);
+        rval->push_Back({ v.first,  v.second->Set::projectOutConst(v.second)});
     }
     for (int i = executionS.size() - 1; i >= 0; i--) {
         for (int j = i-1; j >= 0; j--) {
