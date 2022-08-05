@@ -2249,7 +2249,7 @@ bool Set::LexiSort(Set * a, Set * b){
 /*
  * add zeros at the end to make arity equal
  */
-Set* addPadding(int n){
+Set* Set::addPadding(int n){
     return 0;
 }
 //! Creates a set with the specified tuple declaration.
