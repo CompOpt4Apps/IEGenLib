@@ -5028,7 +5028,8 @@ TEST_F(SetRelationTest, SetPadding){
     iegenlib::Set* s1 = new iegenlib::Set("{[0,i,0] : 0 <=i< N}");
     iegenlib::Set* s2 = new iegenlib::Set("{[i] : 0 <=i< N}");
 
-    Set* s3 expectedPad = s1->addPadding(s2);
+    int max = std::max( s1->getArity(), s2->getArity());
 
-
+    Set* s3  = s2->addPadding();
+    EXPECT_EQ(s3->prettyPrintString(), "{[i,0,0] : 0 <=i< N}");
 }
