@@ -20,6 +20,16 @@ using namespace SSA;
 
 TEST(SSATest, DominanceTreeTEST){
    // string s = {([0],0), ([1],2), ([2],2)};
+    /*
+     * for(i=0;i<N;i++){
+     * s0: x= 5+y;
+     *  if(x>10){
+     *  s1: x=6;
+     * }else{
+     * s2: x 10;
+     * }
+     *
+     */
     iegenlib::Set* s1 = new iegenlib::Set("{[0,i,0] : 0 <=i< N}");
     iegenlib::Set* s2 = new iegenlib::Set("{[0,i,1] : 0 <=i< N && x >10}");
     iegenlib::Set* s3 = new iegenlib::Set("{[0,i,2] : 0 <=i< N && x <=10}");
@@ -40,7 +50,12 @@ TEST(SSATest, DominanceTreeTEST){
 }
 
 TEST(SSATest, IsDominator){
-    EXPECT_EQ("", "");
+
+    iegenlib::Set* s1 = new iegenlib::Set("{[0,i,0] : 0 <=i< N}");
+    iegenlib::Set* s2 = new iegenlib::Set("{[0,i,1] : 0 <=i< N && x >10}");
+    iegenlib::Set* s3 = new iegenlib::Set("{[0,i,2] : 0 <=i< N && x <=10}");
+    bool status = SSA::isDominator(s1,s3);
+    EXPECT_EQ(status, true);
 }
 
 

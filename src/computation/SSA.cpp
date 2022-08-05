@@ -45,11 +45,11 @@ bool DominanceTree::equivalent(DominanceTree) {
 
 bool SSA::isDominator(iegenlib::Set * parent, iegenlib::Set * child){
     std::cout<< child -> prettyPrintString()<<'\n';
-    std::cout << child -> prettyPrintString() <<'\n';
+    std::cout << parent -> prettyPrintString() <<'\n';
     if( parent->getTupleDecl().getSize() > child->getTupleDecl().getSize()){
         return  false;
     }
-    // Set* childN = child-> projectOutConst();
+    Set* childN = child-> projectOutConst(child);
 
     return false;
 }
@@ -66,7 +66,7 @@ DominanceTree* SSA::createDominanceTree(std::vector<std::pair<int, iegenlib::Set
     });
 
     for (auto v: executionS) {
-        rval->push_Back({ v.first,  v.second->Set::projectOutConst(v.second)});
+        rval->push_Back(v);
     }
     for (int i = executionS.size() - 1; i >= 0; i--) {
         for (int j = i-1; j >= 0; j--) {
