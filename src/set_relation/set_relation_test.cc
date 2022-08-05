@@ -5017,6 +5017,10 @@ TEST_F(SetRelationTest, ProjectOutConstTest ){
     s3_afterP = s3->projectOutConst(s3);
     EXPECT_EQ(s3_afterP->prettyPrintString(),"{ [i] : i >= 0 && N - 1 >= 0 && -x + 10 >= 0 && -i + N - 1 >= 0 }");
 
+    delete s1_afterP;
+    delete s2_afterP;
+    delete s3_afterP;
+
     //std::cout << "after projection " << s1_afterP->prettyPrintString()<<'\n';
 
 }
