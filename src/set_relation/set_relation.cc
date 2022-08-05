@@ -27,6 +27,8 @@
 #include <omega/hull.h>
 
 #include "VisitorChangeUFsForOmega.h"
+#include <regex>
+#include <sstream>
 
 namespace iegenlib{
 
@@ -2250,7 +2252,34 @@ bool Set::LexiSort(Set * a, Set * b){
  * add zeros at the end to make arity equal
  */
 Set* Set::addPadding(int n){
-    return 0;
+    int input_arity = this->getArity();
+    int arity_diff = n - input_arity;
+    std::string paddedString;
+    if(arity_diff) {
+        //tupledecl t = tnis -> getTupleDecl().toString();
+        std::ostringstream oss;
+        oss << this->prettyPrintString();
+        std::string s = oss.str();
+        std::regex rgx("(.*)](.*)", std::regex::extended);
+        std::smatch matches;
+
+        if (std::regex_search(s, matches, rgx)) {
+           //std::cout << "test " << matches[2] << '\n';
+            paddedString = matches[1].str();
+            for (int i = 0; i < arity_diff; i++) {
+                paddedString = paddedString + ",0";
+            }
+            paddedString += "]";
+            paddedString += matches[2].str();
+
+            //std::cout << "test1 " << paddedString << '\n';
+
+            Set *newset = new Set(paddedString);
+            return newset;
+        }
+    }
+    return(this);
+
 }
 //! Creates a set with the specified tuple declaration.
 //! It starts with no constraints so all tuples of that arity belong in it.

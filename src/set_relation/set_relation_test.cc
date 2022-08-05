@@ -5031,5 +5031,5 @@ TEST_F(SetRelationTest, SetPadding){
     int max = std::max( s1->getArity(), s2->getArity());
 
     Set* s3  = s2->addPadding(max);
-    EXPECT_EQ("s3->prettyPrintString()", "{[i,0,0] : 0 <=i< N}");
+    EXPECT_EQ(s3->prettyPrintString(), "{ [i, 0, 0] : i >= 0 && -i + N - 1 >= 0 }");
 }
