@@ -43,10 +43,13 @@ bool DominanceTree::equivalent(DominanceTree) {
     return true;
 }
 
-bool DominanceTree::isDominator(iegenlib::Set * j, iegenlib::Set * i) {
-
-    std::cout<< j -> prettyPrintString()<<'\n';
-    std::cout << i-> prettyPrintString() <<'\n';
+bool SSA::isDominator(iegenlib::Set * parent, iegenlib::Set * child){
+    std::cout<< child -> prettyPrintString()<<'\n';
+    std::cout << child -> prettyPrintString() <<'\n';
+    if( parent->getTupleDecl().getSize() > child->getTupleDecl().getSize()){
+        return  false;
+    }
+     Set* childN = child-> projectOutConst();
 
     return false;
 }
@@ -56,7 +59,10 @@ DominanceTree* SSA::createDominanceTree(std::vector<std::pair<int, iegenlib::Set
 
     std::sort(executionS.begin(), executionS.end(), []
             (const std::pair<int, iegenlib::Set *> &a, const std::pair<int, iegenlib::Set *> &b) {
-        return a.second->getTupleDecl() < b.second->getTupleDecl();
+        Set* s;
+        bool status = s->Set::LexiSort(a.second, b.second);
+        return(status);
+        delete s;
     });
 
     for (auto v: executionS) {
@@ -65,7 +71,10 @@ DominanceTree* SSA::createDominanceTree(std::vector<std::pair<int, iegenlib::Set
 
     for (int i = executionS.size() - 1; i >= 0; i--) {
         for (int j = i-1; j >= 0; j--) {
-            //bool isDominator = DominanceTree::isDominator(executionS[j].second, executionS[i].second);
+            bool isDominator1 = SSA::isDominator(executionS[j].second, executionS[i].second);
+            if(isDominator1){
+                rval -> add_edge(j,i);
+            }
         }
     }
     return rval;
@@ -75,14 +84,14 @@ DominanceTree* SSA::createDominanceTree(std::vector<std::pair<int, iegenlib::Set
 //    for( std::vector<std::pair<int, iegenlib::Set*>>::reverse_iterator it = executionS.rbegin(); it != executionS.rend(); ++it ){
 //
 //
-//        auto tupl = it->second->getTupleDecl();
+    //        auto tupl = it->second->getTupleDecl();
 //        for( std::vector<std::pair<int, iegenlib::Set*>>::reverse_iterator it1 = executionS.rbegin(); it1 != executionS.rend(); ++it1 ){
 //            if(tupl.getSize()==it1->second->getTupleDecl().getSize()){
 //                std::cout<< it1->first<<'\n';
 //                std::cout<< it1->second-> prettyPrintString()<<'\n';
 //                std::string a =  it1->second->getTupleDecl().toString();
 //                std::cout << "this is test  " << a<<'\n';
-////                this->DominanceTree::add_edge(p1, p2);
+//               this->DominanceTree::add_edge(p1, p2);
 //                break;
 //            }
 //        }

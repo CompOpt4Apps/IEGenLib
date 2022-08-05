@@ -766,6 +766,9 @@ public:
     //
     void removeUPs();
 
+    bool LexiSort(Set * a, Set * b);
+    Set* projectOutConst(Set* s);
+
 private:
     int mArity;
     // give VisitorChangeUFsForOmega access to 

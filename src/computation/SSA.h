@@ -49,9 +49,8 @@ public:
     int push_Back(std::pair<int,iegenlib::Set*>);
     void add_edge(int parent , int child);
     bool equivalent(DominanceTree);
-    bool isDominator(iegenlib::Set*, iegenlib::Set*);
 };
-
+    bool isDominator(iegenlib::Set* parent, iegenlib::Set* child);
     DominanceTree* createDominanceTree( std::vector<std::pair<int, iegenlib::Set*>> executionS);
 
 };

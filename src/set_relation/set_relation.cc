@@ -2233,6 +2233,18 @@ Set::Set(std::string str) {
 Set::Set(int arity) : SparseConstraints(), mArity(arity) {
     addConjunction(new Conjunction(TupleDecl::sDefaultTupleDecl(arity)));
 }
+/*
+ *Lexicographically sorting sets
+ */
+bool Set::LexiSort(Set * a, Set * b){
+    Set a_copy = *a;
+    Set b_copy = *b;
+    int max = std::max( a_copy.getArity(), b_copy.getArity());
+//    a_copy.padExecutionSchedules(max);
+//    b_copy.padExecutionSchedules(max);
+    bool ret_value = (a_copy.getTupleDecl() < b_copy.getTupleDecl());
+    return ret_value;
+}
 
 //! Creates a set with the specified tuple declaration.
 //! It starts with no constraints so all tuples of that arity belong in it.
@@ -4314,6 +4326,18 @@ Set *Set::projectOut(int tvar) {
 
     return result;
 }
+
+Set* Set::projectOutConst(Set* s){
+     Set* res = new Set(*s);
+    // Set * s1;
+    TupleDecl tl = s->getTupleDecl();
+    for(int i= tl.size()-1; i>=0 ;i--){
+        if( tl.elemIsConst(i))
+        res = s->projectOut(i);
+    }
+    return res;
+
+};
 
 Relation *Relation::projectOut(int tvar) {
     // find transitive closure
