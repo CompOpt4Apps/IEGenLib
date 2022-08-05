@@ -26,7 +26,7 @@ TEST(SSATest, DominanceTreeTEST){
      *  if(x>10){
      *  s1: x=6;
      * }else{
-     * s2: x 10;
+     * s2: x = 10;
      * }
      *
      */
@@ -56,6 +56,7 @@ TEST(SSATest, IsDominator){
     iegenlib::Set* s3 = new iegenlib::Set("{[0,i,2] : 0 <=i< N && x <=10}");
     bool status = SSA::isDominator(s1,s3);
     EXPECT_EQ(status, true);
+
 }
 
 

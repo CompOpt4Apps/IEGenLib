@@ -468,7 +468,7 @@ TEST_F(SetRelationTest, RelationWithUFCall) {
 
 }
 
-#pragma mark SolveForFactor
+#pragma mark Set(olveForFactor
 TEST_F(SetRelationTest, SolveForFactor) {
     iegenlib::setCurrEnv();
     // Now set up an environment that defines an inverse for f.
@@ -4997,4 +4997,26 @@ TEST_F(SetRelationTest, TupleBoundsTest){
 
     EXPECT_EQ("",(*lowerBounds.begin())->
 		    prettyPrintString(domain->getTupleDecl()));
+}
+
+TEST_F(SetRelationTest, ProjectOutConstTest ){
+    iegenlib::Set* s1 = new iegenlib::Set("{[0,i,0] : 0 <=i< N}");
+    iegenlib::Set* s2 = new iegenlib::Set("{[0,i,1] : 0 <=i< N && x >10}");
+    iegenlib::Set* s3 = new iegenlib::Set("{[0,i,2] : 0 <=i< N && x <=10}");
+
+    Set * s1_afterP;
+    s1_afterP = s1->projectOutConst(s1);
+    EXPECT_EQ(s1_afterP->prettyPrintString(),"{ [i] : i >= 0 && N - 1 >= 0 && -i + N - 1 >= 0 }");
+
+    Set * s2_afterP;
+    s2_afterP = s2->projectOutConst(s2);
+    EXPECT_EQ(s2_afterP->prettyPrintString(),"{ [i] : i >= 0 && N - 1 >= 0 && x - 11 >= 0 && -i + N - 1 >= 0 }");
+
+
+    Set * s3_afterP;
+    s3_afterP = s3->projectOutConst(s3);
+    EXPECT_EQ(s3_afterP->prettyPrintString(),"{ [i] : i >= 0 && N - 1 >= 0 && -x + 10 >= 0 && -i + N - 1 >= 0 }");
+
+    //std::cout << "after projection " << s1_afterP->prettyPrintString()<<'\n';
+
 }

@@ -46,16 +46,23 @@ bool DominanceTree::equivalent(DominanceTree) {
 bool SSA::isDominator(iegenlib::Set * parent, iegenlib::Set * child){
     std::cout<< child -> prettyPrintString()<<'\n';
     std::cout << parent -> prettyPrintString() <<'\n';
-    if( parent->getTupleDecl().getSize() > child->getTupleDecl().getSize()){
+    // project out constant both parent and child
+    if( parent->arity() > child->arity()){
         return  false;
     }
-    Set* childN = child-> projectOutConst(child);
+
+//    while( par->arity() < child->arity()) {
+//        Set *childN = child->projectOutConst(child);
+//    }
+    // s1 subset s2;
 
     return false;
 }
 
 DominanceTree* SSA::createDominanceTree(std::vector<std::pair<int, iegenlib::Set *>>executionS) {
     DominanceTree * rval = new DominanceTree();
+
+    //perform the lexicographical sort
 
     std::sort(executionS.begin(), executionS.end(), []
             (const std::pair<int, iegenlib::Set *> &a, const std::pair<int, iegenlib::Set *> &b) {
@@ -65,9 +72,14 @@ DominanceTree* SSA::createDominanceTree(std::vector<std::pair<int, iegenlib::Set
         delete s;
     });
 
+    // collect nodes into node list
     for (auto v: executionS) {
-        rval->push_Back({ v.first,  v.second->Set::projectOutConst(v.second)});
+        //rval->push_Back({ v.first,  v.second->Set::projectOutConst(v.second)});
+        rval ->push_Back(v);
     }
+    // set up the relations( parent and child)
+    //
+    //
     for (int i = executionS.size() - 1; i >= 0; i--) {
         for (int j = i-1; j >= 0; j--) {
             bool isDominator1 = SSA::isDominator(executionS[j].second, executionS[i].second);

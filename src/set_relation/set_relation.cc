@@ -4333,11 +4333,11 @@ Set *Set::projectOut(int tvar) {
     TupleDecl tl = s->getTupleDecl();
     for(int i= tl.size(); i>=0 ;i--){
         if( tl.elemIsConst(i)) {
-            std::cout<< "the const ele are " << i <<'\n';
-            res = s->projectOut(i);
+            std::cout<< "the const elem are " << i <<'\n';
+            res = res->projectOut(i);
         }
     }
-     std::cout << res -> prettyPrintString() <<'\n';
+    //std::cout << res -> prettyPrintString() <<'\n';
     return res;
 
 };
