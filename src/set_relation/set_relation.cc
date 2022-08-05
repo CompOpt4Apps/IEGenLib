@@ -27,6 +27,8 @@
 #include <omega/hull.h>
 
 #include "VisitorChangeUFsForOmega.h"
+#include <regex>
+#include <sstream>
 
 namespace iegenlib{
 
@@ -2233,7 +2235,52 @@ Set::Set(std::string str) {
 Set::Set(int arity) : SparseConstraints(), mArity(arity) {
     addConjunction(new Conjunction(TupleDecl::sDefaultTupleDecl(arity)));
 }
+/*
+ *Lexicographically sorting sets
+ */
+bool Set::LexiSort(Set * a, Set * b){
+    Set a_copy = *a;
+    Set b_copy = *b;
+    int max = std::max( a_copy.getArity(), b_copy.getArity());
+    a_copy.addPadding(max);
+    b_copy.addPadding(max);
+    bool ret_value = (a_copy.getTupleDecl() < b_copy.getTupleDecl());
+    return ret_value;
+}
 
+/*
+ * add zeros at the end to make arity equal
+ */
+Set* Set::addPadding(int n){
+    int input_arity = this->getArity();
+    int arity_diff = n - input_arity;
+    std::string paddedString;
+    if(arity_diff) {
+        //tupledecl t = tnis -> getTupleDecl().toString();
+        std::ostringstream oss;
+        oss << this->prettyPrintString();
+        std::string s = oss.str();
+        std::regex rgx("(.*)](.*)", std::regex::extended);
+        std::smatch matches;
+
+        if (std::regex_search(s, matches, rgx)) {
+           //std::cout << "test " << matches[2] << '\n';
+            paddedString = matches[1].str();
+            for (int i = 0; i < arity_diff; i++) {
+                paddedString = paddedString + ",0";
+            }
+            paddedString += "]";
+            paddedString += matches[2].str();
+
+            //std::cout << "test1 " << paddedString << '\n';
+
+            Set *newset = new Set(paddedString);
+            return newset;
+        }
+    }
+    return(this);
+
+}
 //! Creates a set with the specified tuple declaration.
 //! It starts with no constraints so all tuples of that arity belong in it.
 Set::Set(TupleDecl tdecl) : SparseConstraints(), mArity(tdecl.size()) {
@@ -4323,6 +4370,21 @@ Set *Set::projectOut(int tvar) {
 
     return result;
 }
+
+ Set* Set::projectOutConst(Set* s){
+     Set* res = new Set(*s);
+    // Set * s1;
+    TupleDecl tl = s->getTupleDecl();
+    for(int i= tl.size(); i>=0 ;i--){
+        if( tl.elemIsConst(i)) {
+            //std::cout<< "the const elem are " << i <<'\n';
+            res = res->projectOut(i);
+        }
+    }
+    //std::cout << res -> prettyPrintString() <<'\n';
+    return res;
+
+};
 
 Relation *Relation::projectOut(int tvar) {
     // find transitive closure

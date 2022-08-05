@@ -468,7 +468,7 @@ TEST_F(SetRelationTest, RelationWithUFCall) {
 
 }
 
-#pragma mark SolveForFactor
+#pragma mark Set(olveForFactor
 TEST_F(SetRelationTest, SolveForFactor) {
     iegenlib::setCurrEnv();
     // Now set up an environment that defines an inverse for f.
@@ -4984,9 +4984,43 @@ TEST_F(SetRelationTest, TupleBoundsTest){
 }
 
 
-TEST_F(SetRelationTest, IsSubset){
-    Set* s1 = new Set("{[i]: 0 <= i < N && x < 0}");
-    Set* s2 = new Set("{[i]: 0 <= i < N}");
+TEST_F(SetRelationTest, IsSubset) {
+    Set *s1 = new Set("{[i]: 0 <= i < N && x < 0}");
+    Set *s2 = new Set("{[i]: 0 <= i < N}");
     EXPECT_FALSE(s2->isSubset(s1));
     EXPECT_TRUE(s1->isSubset(s2));
+}
+TEST_F(SetRelationTest, ProjectOutConstTest ){
+    iegenlib::Set* s1 = new iegenlib::Set("{[0,i,0] : 0 <=i< N}");
+    iegenlib::Set* s2 = new iegenlib::Set("{[0,i,1] : 0 <=i< N && x >10}");
+    iegenlib::Set* s3 = new iegenlib::Set("{[0,i,2] : 0 <=i< N && x <=10}");
+
+    Set * s1_afterP;
+    s1_afterP = s1->projectOutConst(s1);
+    EXPECT_EQ(s1_afterP->prettyPrintString(),"{ [i] : i >= 0 && N - 1 >= 0 && -i + N - 1 >= 0 }");
+
+    Set * s2_afterP;
+    s2_afterP = s2->projectOutConst(s2);
+    EXPECT_EQ(s2_afterP->prettyPrintString(),"{ [i] : i >= 0 && N - 1 >= 0 && x - 11 >= 0 && -i + N - 1 >= 0 }");
+
+
+    Set * s3_afterP;
+    s3_afterP = s3->projectOutConst(s3);
+    EXPECT_EQ(s3_afterP->prettyPrintString(),"{ [i] : i >= 0 && N - 1 >= 0 && -x + 10 >= 0 && -i + N - 1 >= 0 }");
+
+    delete s1_afterP;
+    delete s2_afterP;
+    delete s3_afterP;
+
+    //std::cout << "after projection " << s1_afterP->prettyPrintString()<<'\n';
+}
+
+TEST_F(SetRelationTest, SetPadding){
+    iegenlib::Set* s1 = new iegenlib::Set("{[0,i,0] : 0 <=i< N}");
+    iegenlib::Set* s2 = new iegenlib::Set("{[i] : 0 <=i< N}");
+
+    int max = std::max( s1->getArity(), s2->getArity());
+
+    Set* s3  = s2->addPadding(max);
+    EXPECT_EQ(s3->prettyPrintString(), "{ [i, 0, 0] : i >= 0 && -i + N - 1 >= 0 }");
 }

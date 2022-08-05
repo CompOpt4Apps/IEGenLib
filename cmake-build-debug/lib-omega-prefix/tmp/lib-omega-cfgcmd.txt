@@ -1,0 +1,1 @@
+cmd='autoreconf;-f;-i;COMMAND;./configure;--prefix=/Users/ant/Documents/AdaptLab/IEGenLib/lib/installed'

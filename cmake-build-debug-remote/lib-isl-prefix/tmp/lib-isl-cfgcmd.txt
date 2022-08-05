@@ -1,0 +1,1 @@
+cmd='autoreconf;-f;-i;COMMAND;./configure;--prefix=/home/KALYANBHETWAL/IEGenLib/lib/installed;--with-int=imath-32;--disable-shared;--with-pic'

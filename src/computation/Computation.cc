@@ -180,11 +180,11 @@ void Computation::addStmt(Stmt* stmt, int stmtIdx) {
     }
     // TODO: if stmtIdx < stmts.size(), update later execution schedules
     stmts.insert(stmts.begin() + stmtIdx, stmt);
-    //enforceArraySSA(stmt);
-    stmtIdx = locatePhiNodes(stmtIdx);
+    //enforceArraySSA(stmtIdx);
+    //stmtIdx = locatePhiNodes(stmtIdx);
     // Turn off SSA for array accesses.
     //
-    enforceSSA(stmtIdx);
+    //enforceSSA(stmtIdx);
 }
 
 /*
@@ -314,232 +314,49 @@ bool Computation::enforceArraySSA(Stmt* stmt, int dataIdx, bool isRead) {
 
 void Computation::enforceSSA(int stmtIdx) {
     if (stmtIdx < 0 || stmtIdx >= getNumStmts()) { return; }
+//
+//    struct SSAWrite {
+//        std::string oldWrite, newWrite;
+//        int firstWrite;
+//    };
 
-    struct SSAWrite {
-        std::string oldWrite, newWrite;
-        int firstWrite;
-    };
+//    Stmt* stmt = getStmt(stmtIdx);
+//    std::vector<SSAWrite> writes;
+//    for (int i = 0; i < stmt->getNumWrites(); i++) {
+//        std::string write = stmt->getWriteDataSpace(i);
+//        // Is a constant access array
+//        if (!stmt->getConstArrayAccesses(i, false).empty()) { continue; }
+//        // Is not written to or is written to at or after stmtIdx
+//        int writeIdx = firstWriteIndex(write);
+//        if (writeIdx < 0 || writeIdx >= stmtIdx) { continue; }
+//
+//        std::string newWrite = getDataSpaceRename(write);
+//        writes.push_back(SSAWrite{ write, newWrite, writeIdx });
+//
+//        addDataSpace(newWrite, getDataSpaceType(write));
+//
+//        // Rename in the reads of the new statement
+//        stmt->replaceRead(write, newWrite);
+//    }
 
-    Stmt* stmt = getStmt(stmtIdx);
-    std::vector<SSAWrite> writes;
-    for (int i = 0; i < stmt->getNumWrites(); i++) {
-        std::string write = stmt->getWriteDataSpace(i);
-        // Is a constant access array
-        if (!stmt->getConstArrayAccesses(i, false).empty()) { continue; }
-        // Is not written to or is written to at or after stmtIdx
-        int writeIdx = firstWriteIndex(write);
-        if (writeIdx < 0 || writeIdx >= stmtIdx) { continue; }
-
-        std::string newWrite = getDataSpaceRename(write);
-        writes.push_back(SSAWrite{ write, newWrite, writeIdx });
-
-        addDataSpace(newWrite, getDataSpaceType(write));
-
-        // Rename in the reads of the new statement
-        stmt->replaceRead(write, newWrite);
-    }
-
-    for (int i = stmtIdx - 1; i >= 0; i--) {
-        Stmt* currStmt = getStmt(i);
-        auto it = writes.begin();
-        while (it != writes.end()) {
-            if (it->firstWrite == i) {
-                // Rename in the writes of the current statement
-                currStmt->replaceWrite(it->oldWrite, it->newWrite);
-                it = writes.erase(it);
-            } else {
-            // Rename throughout the entire statment
-                currStmt->replaceDataSpace(it->oldWrite, it->newWrite);
-                ++it;
-            }
-        }
-        if (writes.empty()) { break; }
-    }
+//    for (int i = stmtIdx - 1; i >= 0; i--) {
+//        Stmt* currStmt = getStmt(i);
+//        auto it = writes.begin();
+//        while (it != writes.end()) {
+//            if (it->firstWrite == i) {
+//                // Rename in the writes of the current statement
+//                currStmt->replaceWrite(it->oldWrite, it->newWrite);
+//                it = writes.erase(it);
+//            } else {
+//            // Rename throughout the entire statement
+//                currStmt->replaceDataSpace(it->oldWrite, it->newWrite);
+//                ++it;
+//            }
+//        }
+//        if (writes.empty()) { break; }
+//    }
 }
 
-int Computation::locatePhiNodes(int stmtIdx) {
-    if (stmtIdx < 0 || stmtIdx >= getNumStmts()) { return stmtIdx; }
-    // Phi nodes will always generate another phi node
-    // which is just a duplicate of itself - skip phi nodes
-    Stmt* stmt = getStmt(stmtIdx);
-    if (!stmt->isPhiNode()) {
-        for (int i = 0; i < stmt->getNumReads(); i++) {
-            if (locatePhiNode(stmtIdx, stmt->getReadDataSpace(i))) {
-                stmtIdx++;
-            }
-        }
-    }
-    return stmtIdx;
-}
-
-bool Computation::locatePhiNode(int stmtIdx, std::string dataSpace) {
-    if (stmtIdx < 0 || stmtIdx >= getNumStmts()) { return false; }
-//    std::cerr << "Locating Phi Node" << std::endl;
-    std::pair<int, std::string> first{ -1, "" }, guaranteed{ -1, "" };
-    for (int i = stmtIdx - 1; i >= 0; i--) {
-        Stmt* stmt = getStmt(i);
-        for (int j = 0; j < stmt->getNumWrites(); j++) {
-            std::string write = stmt->getWriteDataSpace(j);
-            if (areEquivalentRenames(dataSpace, write)) {
-                if (isGuaranteedExecute(stmt, getStmt(stmtIdx))) {
-                    // std::cerr << "Phi Node Located" << std::endl;
-                    guaranteed = { i, write };
-                    return addPhiNode(stmtIdx, first, guaranteed);
-                } else if (first.first == -1) { first = { i, write }; }
-            }
-        }
-    }
-//    std::cerr << "No guaranteed write identified" << std::endl;
-    return false;
-}
-
-bool Computation::addPhiNode(int stmtIdx,
-    std::pair<int, std::string>& first, std::pair<int, std::string>& guaranteed) {
-    if (stmtIdx < 0 || stmtIdx >= getNumStmts()) { return false; }
-    if (first.first == -1) { return false; }
-//    std::cerr << "Adding Phi Node" << std::endl;
-
-    // Removing every tuple element will cause an error
-    // add an extra tuple element at the end to ensure there is one
-    // tuple element remaining
-    TupleDecl pad(1);
-    pad.setTupleElem(0, 0);
-
-    // Test constraint to check for true/false constraints in firstIS
-    // If it is eliminated, 1+ other constraints were false
-    // If it is the last constraint, all other constraints were true
-    // Otherwise, ignore as there are other valid constraints
-    Conjunction* testConstr = new Conjunction(1);
-    Exp* testExp = new Exp();
-    testExp->addTerm(new VarTerm(CONSTR_TEST));
-    testExp->setEquality();
-    testConstr->addEquality(testExp);
-
-    // Project out everything in the source read's iteration space
-    Set* sourceIS = trimISDataSpaces(getStmt(stmtIdx)->getIterationSpace());
-    // Pad the tuple
-    sourceIS->setTupleDecl(sourceIS->getTupleDecl().concat(pad));
-//    std::cerr << "sourceIS: " << sourceIS->prettyPrintString() << std::endl;
-    // Ignore the padded element
-    int size = sourceIS->getTupleDecl().size() - 1;
-    // Remove all iterators, generating a single condition for each corresponding loop
-    for (int i = 0; i < size; i++) {
-        Set* tmp = sourceIS;
-        sourceIS = sourceIS->projectOut(i);
-        delete tmp;
-    }
-//    std::cerr << "\t-> " << sourceIS->prettyPrintString() << std::endl;
-
-    // Stores all data spaces in the first write's constraints
-    std::set<std::string> trimmedNames;
-    // Project out everything in the first write's iteration space
-    Stmt* firstStmt = getStmt(first.first);
-    Set* firstIS = trimISDataSpaces(firstStmt->getIterationSpace(),
-        trimmedNames);
-    // Add the test constraint
-    firstIS->addConjunction(testConstr);
-    // Pad the tuple
-    firstIS->setTupleDecl(firstIS->getTupleDecl().concat(pad));
-//    std::cerr << "firstIS: " << firstIS->prettyPrintString() << std::endl;
-    // Ignore the padded element
-    size = firstIS->getTupleDecl().size() - 1;
-    for (int i = 0; i < size; i++) {
-        Set* tmp = firstIS;
-        firstIS = firstIS->projectOut(i);
-        delete tmp;
-    }
-//    std::cerr << "\t-> " << firstIS->prettyPrintString() << std::endl;
-
-    // Get all conditions for the source read
-    std::vector<std::string> sourceConstr = getSetConstraints(sourceIS);
-/*    std::cerr << "Source Read Constraints: ";
-    for (std::string str : sourceConstr) {
-        if (str != sourceConstr.at(0)) { std::cerr << " && "; }
-        std::cerr << str;
-    }
-    std::cerr << std::endl;*/
-
-    // Get all conditions for the first write that aren't
-    // used by the source read
-    std::vector<std::string> constrs;
-    for (std::string constr : getSetConstraints(firstIS)) {
-        if (std::find(sourceConstr.begin(), sourceConstr.end(), constr) ==
-            sourceConstr.end()) {
-            constrs.push_back(constr);
-        }
-    }
-/*    std::cerr << "First Write Constraints: ";
-    for (std::string str : constrs) {
-        if (str != constrs.at(0)) { std::cerr << " && "; }
-        std::cerr << str;
-    }
-    std::cerr << std::endl;*/
-
-    // Stmt source code
-    std::ostringstream code;
-    // Stmt reads/writes
-    std::vector<std::pair<std::string, std::string>> reads, writes;
-    // We always write to this
-    writes.push_back({ first.second, "{[0]->[0]}" });
-    // No constraints so one of the constraints = false
-    // skip to guaranteed write
-    if (constrs.size() == 0) {
-        reads.push_back({ guaranteed.second, "{[0]->[0]}" });
-        code << first.second << " = " << guaranteed.second << ";";
-    // The only constraint is the test constraint, so all constraints = true
-    // skip to first write
-    } else if (constrs.size() == 1) {
-        reads.push_back({ first.second, "{[0]->[0]}" });
-        code << first.second << " = " << first.second << ";";
-    // Some constraints are left, generate ternary expression
-    } else {
-        reads.push_back({ first.second, "{[0]->[0]}" });
-        reads.push_back({ guaranteed.second, "{[0]->[0]}" });
-
-        // Remove the test string
-        std::string testStr = " == 0";
-        testStr = CONSTR_TEST + testStr;
-        constrs.erase(std::find(constrs.begin(), constrs.end(), testStr));
-        // Write all our constraints
-        for (int i = 0; i < constrs.size(); i++) {
-            if (i != 0) { code << " && "; }
-            code << constrs.at(i);
-        }
-        // Re-add delimiter to data spaces
-        std::string codeStr = code.str();
-        for (std::string str : trimmedNames) {
-            std::string newStr = Computation::delimitDataSpaceName(str);
-            std::string old = codeStr;
-            codeStr = iegenlib::replaceInString(codeStr, str, newStr);
-            if (codeStr != old) {
-                // TODO: correct access relation
-                // Add the data space as a read
-                reads.push_back({ newStr, "{[0]->[0]}" });
-            }
-        }
-        // Compose full string
-        code.str("");
-        code << first.second << " = " << codeStr << " ? "
-            << first.second << " : " << guaranteed.second << ";";
-    }
-
-    // Create phi node
-    Stmt* phiStmt = new Stmt(code.str(), sourceIS->prettyPrintString(),
-        getStmt(stmtIdx)->getExecutionSchedule()->prettyPrintString(),
-        reads, writes);
-    phiStmt->setDelimited();
-    phiStmt->setPhiNode(true);
-//    std::cerr << "New Phi Node {\n" << phiStmt->prettyPrintString() << "}" << std::endl;
-    // Add the statement
-    addStmt(phiStmt, stmtIdx);
-
-    // Clean up
-    delete sourceIS;
-    delete firstIS;
-
-//    std::cerr << "Phi Node Added {\n" << phiStmt->prettyPrintString() << "}" << std::endl;
-    return true;
-}
 
 bool Computation::isGuaranteedExecute(Stmt* stmt1, Stmt* stmt2) {
     Set* iterSpace1 = stmt1->getIterationSpace();
@@ -1639,7 +1456,7 @@ void Computation::fuse (int s1, int s2, int fuseLevel){
 }
 
 void Computation::finalize(bool deleteDeadNodes) {
-    //enforceArraySSA();
+    //enforceSSA();
     adjustExecutionSchedules();
 	padExecutionSchedules();
 

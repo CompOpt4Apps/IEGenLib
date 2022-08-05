@@ -740,9 +740,79 @@ TEST_F(ComputationTest, AppendComputationSSA) {
     delete comp2;
 }
 
-TEST_F(ComputationTest, ArraySSA){
-    EXPECT_EQ("","");
+TEST_F(ComputationTest, StaticSSA){
 
+//    Computation* comp1 = new Computation();
+//    comp1->addDataSpace("input", "int");
+//    comp1->addStmt(new Stmt (
+//            "input = 80;", "{[0]: input > 90}", "{[0]->[0]}", {}, {{"input", "{[0]->[0]}"}}
+//    ));
+//    comp1->addStmt(new Stmt (
+//            "input = 90;", "{[0]: input <=90}", "{[0]->[0]}", {}, {{"input", "{[0]->[0]}"}}
+//    ));
+//
+//    std:: string  ss;
+//
+//    ss =  comp1->codeGen();
+//    EXPECT_EQ("","");
+// Computation* comp1 = new Computation();
+//    comp1->addDataSpace("x", "array");
+//
+//    comp1->addDataSpace("y", "array");
+//
+//        comp1->addStmt(new Stmt (
+//            "x[i] = 5 ;", "{[i]: 0<=i<N && i > 5}", "{[i]->[i]}", {}, {{"x", "{[i]->[i]}"}}
+//    ));
+//        comp1->addStmt(new Stmt (
+//            "x[i] =  6 ;", "{[i]: 0<=i<N && i < 5 }", "{[i]->[i]}", {}, {{"x", "{[i]->[i]}"}}
+//    ));
+//
+//    std:: string  ss;
+//
+//    ss=  comp1->codeGen();
+
+    Computation* comp1 = new Computation();
+    comp1->addDataSpace("input", "int");
+    comp1->addDataSpace("useMe", "int");
+/*
+    if(x>10){
+        useMe = 90;
+    }
+    else{
+        useMe = 90;
+    }
+    useMe = useMe + input;
+    */
+
+    comp1->addStmt(new Stmt (
+            "useMe = 80;",
+            "{[0]: x > 10}",
+            "{[0]->[0]}",
+            {{"x", "{[0]->[0]}"}},
+            {{"useMe", "{[0]->[0]}"}}
+    ));
+
+    comp1->addStmt(new Stmt (
+            "useMe = 98;",
+            "{[0]: x <=10}",
+            "{[0]->[1]}",
+            {{"x", "{[0]->[0]}"}},
+            {{"useMe", "{[0]->[0]}"}}
+    ));
+///*
+//    comp1->addStmt(new Stmt (
+//            "useMe = useMe + input;",
+//            "{[0]}", "{[0]->[2]}",
+//            {{"useMe", "{[0]->[0]}"}, {"input", "{[0]->[0]}"}},
+//            {{"useMe", "{[0]->[0]}"}}
+//    ));
+//    */
+
+    string dotString;
+    comp1->codeGen();
+    dotString = comp1->toDotString();
+    std:cerr << dotString;
+    EXPECT_EQ("1","1");
 }
 TEST_F(ComputationTest, Colors) {
     // Basic for loop with 2 statements
