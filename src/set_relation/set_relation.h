@@ -673,6 +673,8 @@ public:
     **  unchanged. User owns the returned Set object.
     */
     Set* boundDomainRange();
+    
+    
 
     //! Send through ISL to achieve a canonical form.
     void normalize(bool bdr=true);
@@ -765,6 +767,13 @@ public:
     void reOrdTV_OmegaCodeGen(std::set<int> parallelTvs);
     //
     void removeUPs();
+    
+    /**
+     * This function returns true if this set is a subset
+     * of some other set
+     * \param other is not adopted
+     * */
+    bool isSubset(Set* other);
 
 private:
     int mArity;

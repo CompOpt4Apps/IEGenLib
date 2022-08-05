@@ -4119,11 +4119,6 @@ TEST_F(SetRelationTest, projectOut)
         s1 = s2;
     }
 
-    s2 = s1->projectOut(2);
-    if (s2) {
-        delete s1;
-        s1 = s2;
-    }
     EXPECT_EQ(s2->prettyPrintString(), "");
     delete s1;
 
@@ -4986,4 +4981,12 @@ TEST_F(SetRelationTest, TupleBoundsTest){
 
     EXPECT_EQ("",(*lowerBounds.begin())->
 		    prettyPrintString(domain->getTupleDecl()));
+}
+
+
+TEST_F(SetRelationTest, IsSubset){
+    Set* s1 = new Set("{[i]: 0 <= i < N && x < 0}");
+    Set* s2 = new Set("{[i]: 0 <= i < N}");
+    EXPECT_FALSE(s2->isSubset(s1));
+    EXPECT_TRUE(s1->isSubset(s2));
 }
