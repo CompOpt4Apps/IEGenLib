@@ -47,15 +47,21 @@ bool SSA::isDominator(iegenlib::Set * parent, iegenlib::Set * child){
     std::cout<< child -> prettyPrintString()<<'\n';
     std::cout << parent -> prettyPrintString() <<'\n';
     // project out constant both parent and child
-    if( parent->arity() > child->arity()){
+    Set* childP, *parentP;
+
+    childP->projectOutConst(child);
+    parentP->projectOutConst(parent);
+
+    if( parentP->arity() > childP->arity()){
         return  false;
     }
+    while( parentP->getArity() < childP->getArity()) {
+        TupleDecl tl = child->getTupleDecl();
+        childP = childP->projectOut(tl.size()-1);
+        std::cout << childP->prettyPrintString();
 
-//    while( par->arity() < child->arity()) {
-//        Set *childN = child->projectOutConst(child);
-//    }
+    }
     // s1 subset s2;
-
     return false;
 }
 

@@ -2242,8 +2242,8 @@ bool Set::LexiSort(Set * a, Set * b){
     Set a_copy = *a;
     Set b_copy = *b;
     int max = std::max( a_copy.getArity(), b_copy.getArity());
-//    a_copy.padExecutionSchedules(max);
-//    b_copy.padExecutionSchedules(max);
+    a_copy.addPadding(max);
+    b_copy.addPadding(max);
     bool ret_value = (a_copy.getTupleDecl() < b_copy.getTupleDecl());
     return ret_value;
 }
@@ -4368,7 +4368,7 @@ Set *Set::projectOut(int tvar) {
     TupleDecl tl = s->getTupleDecl();
     for(int i= tl.size(); i>=0 ;i--){
         if( tl.elemIsConst(i)) {
-            std::cout<< "the const elem are " << i <<'\n';
+            //std::cout<< "the const elem are " << i <<'\n';
             res = res->projectOut(i);
         }
     }
