@@ -49,7 +49,7 @@ bool SSA::isDominator(iegenlib::Set * parent, iegenlib::Set * child){
     if( parent->getTupleDecl().getSize() > child->getTupleDecl().getSize()){
         return  false;
     }
-     Set* childN = child-> projectOutConst();
+    // Set* childN = child-> projectOutConst();
 
     return false;
 }
@@ -66,9 +66,8 @@ DominanceTree* SSA::createDominanceTree(std::vector<std::pair<int, iegenlib::Set
     });
 
     for (auto v: executionS) {
-        rval->push_Back(v);
+        rval->push_Back({ v.first,  v.second->Set::projectOutConst(v.second)});
     }
-
     for (int i = executionS.size() - 1; i >= 0; i--) {
         for (int j = i-1; j >= 0; j--) {
             bool isDominator1 = SSA::isDominator(executionS[j].second, executionS[i].second);
