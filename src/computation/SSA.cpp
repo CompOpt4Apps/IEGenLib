@@ -40,19 +40,21 @@ void DominanceTree::add_edge(int parent, int child) {
 }
 
 bool DominanceTree::equivalent(DominanceTree) {
+
     return true;
 }
 
 bool SSA::isDominator(iegenlib::Set * parent, iegenlib::Set * child){
-    std::cout<< child -> prettyPrintString()<<'\n';
-    std::cout << parent -> prettyPrintString() <<'\n';
     // project out constant both parent and child
     Set* childP, *parentP;
 
-    childP->projectOutConst(child);
-    parentP->projectOutConst(parent);
+    childP = child->projectOutConst(child);
+    parentP = parent->projectOutConst(parent);
 
-    if( parentP->arity() > childP->arity()){
+//    std::cout << childP->prettyPrintString();
+//    std::cout << parentP->prettyPrintString();
+
+    if( parentP->getArity() > childP->getArity()){
         return  false;
     }
     while( parentP->getArity() < childP->getArity()) {
@@ -61,8 +63,8 @@ bool SSA::isDominator(iegenlib::Set * parent, iegenlib::Set * child){
         std::cout << childP->prettyPrintString();
 
     }
-    // s1 subset s2;
-    return false;
+    // child subset of parent;
+    return (childP->isSubset(parentP));
 }
 
 DominanceTree* SSA::createDominanceTree(std::vector<std::pair<int, iegenlib::Set *>>executionS) {
@@ -80,7 +82,6 @@ DominanceTree* SSA::createDominanceTree(std::vector<std::pair<int, iegenlib::Set
 
     // collect nodes into node list
     for (auto v: executionS) {
-        //rval->push_Back({ v.first,  v.second->Set::projectOutConst(v.second)});
         rval ->push_Back(v);
     }
     // set up the relations( parent and child)
@@ -96,21 +97,3 @@ DominanceTree* SSA::createDominanceTree(std::vector<std::pair<int, iegenlib::Set
     }
     return rval;
 }
-
-//
-//    for( std::vector<std::pair<int, iegenlib::Set*>>::reverse_iterator it = executionS.rbegin(); it != executionS.rend(); ++it ){
-//
-//
-    //        auto tupl = it->second->getTupleDecl();
-//        for( std::vector<std::pair<int, iegenlib::Set*>>::reverse_iterator it1 = executionS.rbegin(); it1 != executionS.rend(); ++it1 ){
-//            if(tupl.getSize()==it1->second->getTupleDecl().getSize()){
-//                std::cout<< it1->first<<'\n';
-//                std::cout<< it1->second-> prettyPrintString()<<'\n';
-//                std::string a =  it1->second->getTupleDecl().toString();
-//                std::cout << "this is test  " << a<<'\n';
-//               this->DominanceTree::add_edge(p1, p2);
-//                break;
-//            }
-//        }
-//        break;
-//    }

@@ -4285,8 +4285,7 @@ class VisitorFindMultiVarUFCalls : public Visitor {
 Set *Set::projectOut(int tvar) {
     // find transitive closure
     Set *closure = this->TransitiveClosure();
-    
-    
+
     // Check if this tuple variable is directly equal to another
     // tuple variable.
     bool hasDirectReplacement = false;
