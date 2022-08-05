@@ -766,8 +766,14 @@ public:
     //
     void removeUPs();
 
+    // Sorts given two sets lexicographically
     bool LexiSort(Set * a, Set * b);
+
+    // Removes constants from the set
     static  Set* projectOutConst(Set* s);
+
+    //adds zeros at the end of the set to make arity equal
+    Set* addPadding(int n);
 
 private:
     int mArity;

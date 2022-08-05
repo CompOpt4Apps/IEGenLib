@@ -2246,6 +2246,12 @@ bool Set::LexiSort(Set * a, Set * b){
     return ret_value;
 }
 
+/*
+ * add zeros at the end to make arity equal
+ */
+Set* addPadding(int n){
+    return 0;
+}
 //! Creates a set with the specified tuple declaration.
 //! It starts with no constraints so all tuples of that arity belong in it.
 Set::Set(TupleDecl tdecl) : SparseConstraints(), mArity(tdecl.size()) {

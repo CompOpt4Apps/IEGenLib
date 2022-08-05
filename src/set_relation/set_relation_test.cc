@@ -5022,5 +5022,13 @@ TEST_F(SetRelationTest, ProjectOutConstTest ){
     delete s3_afterP;
 
     //std::cout << "after projection " << s1_afterP->prettyPrintString()<<'\n';
+}
+
+TEST_F(SetRelationTest, SetPadding){
+    iegenlib::Set* s1 = new iegenlib::Set("{[0,i,0] : 0 <=i< N}");
+    iegenlib::Set* s2 = new iegenlib::Set("{[i] : 0 <=i< N}");
+
+    Set* s3 expectedPad = s1->addPadding(s2);
+
 
 }
