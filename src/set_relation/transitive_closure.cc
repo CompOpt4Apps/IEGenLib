@@ -223,7 +223,7 @@ std::vector<Term*> DiGraph::getAliasTerms(Term& t){
 void DiGraph::Closure(){
     simplifyGreaterOrEqual();
     transitiveClosure();
-    findAddMonotonicity ();
+    
 }
 
 
