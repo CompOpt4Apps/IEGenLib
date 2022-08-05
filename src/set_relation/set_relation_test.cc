@@ -4092,6 +4092,35 @@ TEST_F(SetRelationTest, projectOut)
 		    " - 1 >= 0 }");
     delete s1, ex_s1;
     
+    s1 = new Set("{ [ii, k, jj, jj1, k1, ii1] : ii - ii1 = 0 && jj - jj1 = 0"
+		    "&& jj - col2(k) = 0 && jj1 - P0(ii, jj) = 0 && k1"
+		    " - P1(ii, jj) = 0 && ii1 - P2(ii, jj) = 0 && ii1 -"
+		    " row4(k1) = 0 && ii >= 0 && jj >= 0 && jj1 >= 0 &&"
+		    " k - rowptr(ii) >= 0 && k1 - colptr(jj1) >= 0 && -ii"
+		    " + NR - 1 >= 0 && -k + rowptr(ii + 1) - 1 >= 0 && -jj"
+		    " + NC - 4 >= 0 && -jj1 + NC - 1 >= 0 && -k1 + "
+		    "colptr(jj1 + 1) - 1 >= 0 } ");
+
+    s2 = s1->projectOut(5);
+    if (s2) {
+        delete s1;
+        s1 = s2;
+    }
+
+    s2 = s1->projectOut(4);
+    if (s2) {
+        delete s1;
+        s1 = s2;
+    }
+
+    s2 = s1->projectOut(3);
+    if (s2) {
+        delete s1;
+        s1 = s2;
+    }
+
+    EXPECT_EQ(s2->prettyPrintString(), "");
+    delete s1;
 
 
     s1 = new Set("{[i,j]: 0 <= A(i,B(j)) && 0 <= i < N}");
@@ -4762,34 +4791,12 @@ TEST_F(SetRelationTest, TransitiveClosure){
     Relation* clo4 = rel4->TransitiveClosure();
 
 
-    Set * set = new Set(
-	     "{[n,k]: A(row(n),col1(n)) > 0 and rowptr(row(n)) <= k"
-	     " and k < rowptr(row(n) + 1) and col2_inv(row(n),col1(n)) = k"
-	     " and 0 <= row(n) and col2(k) = col1(n)"
-	     " and row(n) < NR and 0 <= col1(n) and col1(n) < NC}");
-
-    Set* clo5 = set->TransitiveClosure();
-    EXPECT_EQ("{ [n, k] : k - col2_inv(row(n), col1(n)) = 0"
-	      " && col1(n) - col2(k) = 0 && col1(n) >= 0 &&"
-	      " col2(k) >= 0 && row(n) >= 0 && k - rowptr(row(n)) >= 0"
-	      " && NC - 1 >= 0 && NR - 1 >= 0 && A(row(n), col1(n)) - 1 >= 0"
-	      " && col2_inv(row(n), col1(n)) - rowptr(row(n)) >= 0 &&"
-	      " -k + rowptr(row(n) + 1) - 1 >= 0 && NC - col1(n) - 1 >= 0 &&"
-	      " NC - col2(k) - 1 >= 0 && NR - row(n) - 1 >= 0 &&"
-	      " -col2_inv(row(n) + 1, col1(n)) + col2_inv(row(n), col1(n))"
-	      " - 1 >= 0 && -col2_inv(row(n), col1(n))"
-	      " + rowptr(row(n) + 1) - 1 >= 0 && -rowptr(row(n))"
-	      " + rowptr(row(n) + 1) - 1 >= 0 }"
-	      ,clo5->prettyPrintString());
     
-    delete clo5;
-    delete set;
-    
-    set = new Set(
+    Set* set = new Set(
 	   "{ [i, jp] : i = col(jp)+1 && jp >= 0 && jp +1 >= T && col(jp) >="
 	   " 0 && idx(i) >= 0 && jp < n && col(jp) < n-2 &&"
 	   " idx(i+1) < n && idx(i) < idx(i+1)}");
-    clo5 = set->TransitiveClosure();
+    Set* clo5 = set->TransitiveClosure();
     EXPECT_EQ("{ [i, jp] : i - col(jp) - 1 = 0 && jp >= 0 &&"
 	      " col(jp) >= 0 && idx(i) >= 0 && n - 1 >= 0 &&"
 	      " idx(i + 1) - 1 >= 0 && -jp + n - 1 >= 0 &&"
@@ -4797,29 +4804,6 @@ TEST_F(SetRelationTest, TransitiveClosure){
 	      " n - idx(i) - 1 >= 0 && n - idx(i + 1) - 1"
 	      " >= 0 && -idx(i) + idx(i + 1) - 1 >= 0 }"
 	      ,clo5->prettyPrintString());
-    rel = new Relation("{ [n] -> [i, k] : i - row1(n) = 0 "
-		    "&& k - P1(row1(n), col1(n)) = 0 &&"
-		    " col1(n) - col2(k) = 0 && n >= 0 &&"
-		    " i >= 0 && col1(n) >= 0 &&"
-		    " row1(n) >= 0 && k - rowptr(i) >= 0 &&"
-		    " -n + NNZ - 1 >= 0 &&"
-		    " -i + NR - 1 >= 0 && -k + rowptr(i + 1) - 1 >= 0 &&"
-		    " NC - col1(n) - 1 >= 0 &&"
-		    " NR - row1(n) - 1 >= 0 }");
-    closure = rel->TransitiveClosure();
-    EXPECT_EQ("{ [n] -> [i, k] : i - row1(n) = 0 &&"
-	" k - P1(row1(n), col1(n)) = 0 && col1(n) - col2(k) = 0 &&"
-	" n >= 0 && i >= 0 && col1(n) >= 0 && col2(k) >= 0 &&"
-	" row1(n) >= 0 && k - rowptr(i) >= 0 &&"
-	" NC - 1 >= 0 && NNZ - 1 >= 0 && NR - 1 >= 0"
-	" && P1(row1(n), col1(n)) - rowptr(i) >= 0"
-	" && -n + NNZ - 1 >= 0 && -i + NR - 1 >= 0"
-	" && -k + rowptr(i + 1) - 1 >= 0 && NC - col1(n) - 1 >= 0 &&"
-	" NC - col2(k) - 1 >= 0 && NR - row1(n) - 1 >= 0 &&"
-	" -P1(row1(n) + 1, col1(n)) + P1(row1(n), col1(n)) - 1 >= 0 &&"
-	" -P1(row1(n), col1(n)) + rowptr(i + 1) - 1 >= 0 &&"
-	" -rowptr(i) + rowptr(i + 1) - 1 >= 0 }",
-	closure->prettyPrintString());
 
     delete set;
     delete clo5;
@@ -4999,6 +4983,13 @@ TEST_F(SetRelationTest, TupleBoundsTest){
 		    prettyPrintString(domain->getTupleDecl()));
 }
 
+
+TEST_F(SetRelationTest, IsSubset) {
+    Set *s1 = new Set("{[i]: 0 <= i < N && x < 0}");
+    Set *s2 = new Set("{[i]: 0 <= i < N}");
+    EXPECT_FALSE(s2->isSubset(s1));
+    EXPECT_TRUE(s1->isSubset(s2));
+}
 TEST_F(SetRelationTest, ProjectOutConstTest ){
     iegenlib::Set* s1 = new iegenlib::Set("{[0,i,0] : 0 <=i< N}");
     iegenlib::Set* s2 = new iegenlib::Set("{[0,i,1] : 0 <=i< N && x >10}");

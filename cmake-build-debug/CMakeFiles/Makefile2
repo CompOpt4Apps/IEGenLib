@@ -262,8 +262,8 @@ CMakeFiles/lib-omega.dir/clean:
 # Target rules for target CMakeFiles/lib-isl.dir
 
 # All Build rule for target.
-CMakeFiles/lib-isl.dir/all: CMakeFiles/libgmp.dir/all
 CMakeFiles/lib-isl.dir/all: CMakeFiles/lib-omega.dir/all
+CMakeFiles/lib-isl.dir/all: CMakeFiles/libgmp.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/lib-isl.dir/build.make CMakeFiles/lib-isl.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/lib-isl.dir/build.make CMakeFiles/lib-isl.dir/build
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles --progress-num=70,71,72,73,74,75 "Built target lib-isl"

@@ -3408,6 +3408,15 @@ Set* Relation::ToSet(){
 }
 
 
+bool Set::isSubset(Set* other){
+    assert(mArity == other->arity() && "isSubset: mismatch arity");
+    Set* setIntersect = this->Intersect(other);
+    std::cout << setIntersect->prettyPrintString() << "\n";
+    bool res = *setIntersect == *this;
+    delete setIntersect;
+    return res;
+}
+
 /******************************************************************************/
 #pragma mark -
 /*************** ExpTermVisitor *****************************/
