@@ -57,6 +57,9 @@ TEST(SSATest, IsDominator){
     bool status = SSA::isDominator(s1,s3);
     EXPECT_EQ(status, true);
 
+    bool status1 = SSA::isDominator(s1,s2);
+    EXPECT_EQ(status1, true);
+
 }
 
 
