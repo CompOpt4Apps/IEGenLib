@@ -64,7 +64,7 @@ TEST(SSATest, DominanceTreeTEST2){
     iegenlib::Set* s8 = new iegenlib::Set("{[2,t,0,m,0]: 0<=t<M && m<=10}");
 
     iegenlib::Set* s9 = new iegenlib::Set("{[2,t,1]: 0<=t<M}");
-    iegenlib::Set* s10 = new iegenlib::Set("{[2,t,s,0,r,0]: 0<=t<M && 0<=s<S && r>10}");
+    iegenlib::Set* s10 = new iegenlib::Set("{[2,t,3,s,0,r,0]: 0<=t<M && 0<=s<S && r>10}");
 
     iegenlib::Set* s11 = new iegenlib::Set("{[2,t,4]: 0<=t<M}");
     iegenlib::Set* s12 = new iegenlib::Set("{[3]}");
@@ -96,10 +96,8 @@ TEST(SSATest, DominanceTreeTEST2){
     edt.add_edge(p2, p3);
     edt.add_edge(p2, p12);
 
-
-
-    edt.add_edge(p1, p4);
-    edt.add_edge(p1, p8);
+    edt.add_edge(p3, p4);
+    edt.add_edge(p3, p8);
     edt.add_edge(p3, p10);
 
 

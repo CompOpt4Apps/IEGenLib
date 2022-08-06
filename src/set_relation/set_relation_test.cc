@@ -5031,12 +5031,16 @@ TEST_F(SetRelationTest, SetPadding){
 }
 
 TEST_F(SetRelationTest, LexiSort){
-    iegenlib::Set* s1 = new iegenlib::Set("{[3] : 0 <=i< N}");
-    iegenlib::Set* s2 = new iegenlib::Set("{[2,i,0] : 0 <=i< N}");
+    iegenlib::Set* s1 = new iegenlib::Set("{[2, t, 0] : t >= 0 && -t + M - 1 >= 0 }");
+    iegenlib::Set* s2 = new iegenlib::Set("{ [2, t, 0, m, 0] : t >= 0 && -m + 10 >= 0 && -t + M - 1 >= 0 }");
     Set* s ;
     bool status = s->LexiSort(s1,s2);
-    EXPECT_EQ(status, false);
+    EXPECT_EQ(status, true);
+
+    iegenlib::Set* s3 = new iegenlib::Set("{[3] : 0 <=i< N}");
+    iegenlib::Set* s4 = new iegenlib::Set("{[2,i,0] : 0 <=i< N}");
+    Set* ss ;
+    bool status1 = ss->LexiSort(s3,s4);
+    EXPECT_EQ(status1, false);
 }
-
-
 
