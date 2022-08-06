@@ -4375,7 +4375,10 @@ Set *Set::projectOut(int tvar) {
      Set* res = new Set(*s);
     // Set * s1;
     TupleDecl tl = s->getTupleDecl();
-    for(int i= tl.size(); i>=0 ;i--){
+    if( tl.size()==1){
+        return s;
+    }
+    for(int i= tl.size()-1; i>=0 ;i--){
         if( tl.elemIsConst(i)) {
             //std::cout<< "the const elem are " << i <<'\n';
             res = res->projectOut(i);
