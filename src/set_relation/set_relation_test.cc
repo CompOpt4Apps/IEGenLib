@@ -5024,3 +5024,14 @@ TEST_F(SetRelationTest, SetPadding){
     Set* s3  = s2->addPadding(max);
     EXPECT_EQ(s3->prettyPrintString(), "{ [i, 0, 0] : i >= 0 && -i + N - 1 >= 0 }");
 }
+
+TEST_F(SetRelationTest, LexiSort){
+    iegenlib::Set* s1 = new iegenlib::Set("{[3] : 0 <=i< N}");
+    iegenlib::Set* s2 = new iegenlib::Set("{[2,i,0] : 0 <=i< N}");
+    Set* s ;
+    bool status = s->LexiSort(s1,s2);
+    EXPECT_EQ(status, false);
+}
+
+
+

@@ -2242,9 +2242,10 @@ bool Set::LexiSort(Set * a, Set * b){
     Set a_copy = *a;
     Set b_copy = *b;
     int max = std::max( a_copy.getArity(), b_copy.getArity());
-    a_copy.addPadding(max);
-    b_copy.addPadding(max);
-    bool ret_value = (a_copy.getTupleDecl() < b_copy.getTupleDecl());
+    Set* aa = a_copy.addPadding(max);
+    Set* bb = b_copy.addPadding(max);
+
+    bool ret_value = (aa->getTupleDecl() < bb->getTupleDecl());
     return ret_value;
 }
 
