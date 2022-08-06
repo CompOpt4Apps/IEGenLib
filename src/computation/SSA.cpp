@@ -41,14 +41,7 @@ void DominanceTree::add_edge(int parent, int child) {
 
 bool DominanceTree::equivalent(DominanceTree dt) {
     if(dt.nodes[1].data.second->prettyPrintString()!= this->nodes[1].data.second->prettyPrintString()) return false;
-//    for(auto v: dt.nodes[0].children){
-//        std:: cout << "dt "<< v <<'\n';
-//    }
-//
-//
-//    for(auto v: this->nodes[0].children){
-//        std:: cout << "edt " <<  v<<'\n';
-//    }
+
         std::vector<int> v1 = dt.nodes[0].children;
         std::vector<int> v2 = this->nodes[0].children;
         std::sort(v1.begin(),v1.end());
@@ -72,8 +65,8 @@ bool SSA::isDominator(iegenlib::Set * parent, iegenlib::Set * child){
         return  false;
     }
     while( parentP->getArity() < childP->getArity()) {
-        TupleDecl tl = child->getTupleDecl();
-        childP = childP->projectOut(tl.size()-1);
+        TupleDecl tl = childP->getTupleDecl();
+        childP = childP->projectOut(tl.getSize()-1);
         //std::cout << childP->prettyPrintString();
 
     }
