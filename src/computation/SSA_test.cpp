@@ -37,7 +37,6 @@ TEST(SSATest, DominanceTreeTEST){
     std::vector<std::pair<int, iegenlib::Set*>> executionS {{0, s1}, {1, s2}, {2, s3}};
 
     DominanceTree* dt = createDominanceTree(executionS);
-    std:: cout << dt
     DominanceTree edt;
     int p1 = edt.push_Back({0, s1});
     int p2 =  edt.push_Back({1, s2});
@@ -46,7 +45,7 @@ TEST(SSATest, DominanceTreeTEST){
     edt.add_edge(p1, p2);
     edt.add_edge(p1, p3);
 
-    //EXPECT_TRUE(edt.equivalent(*dt));
+    EXPECT_TRUE(edt.equivalent(*dt));
 
 }
 
