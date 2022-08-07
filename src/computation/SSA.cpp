@@ -80,7 +80,8 @@ bool SSA::isDominator(iegenlib::Set * parent, iegenlib::Set * child){
     while( parentP->getArity() < childP->getArity()) {
         TupleDecl tl = childP->getTupleDecl();
         childP = childP->projectOut(tl.getSize()-1);
-        //std::cout << childP->prettyPrintString();
+//        std::cout << childP->prettyPrintString()<<'\n';
+//        std::cout << parentP->prettyPrintString() <<'\n';
 
     }
     // child subset of parent;

@@ -2245,8 +2245,8 @@ bool Set::LexiSort(Set * a, Set * b){
     Set* aa = a_copy.addPadding(max);
     Set* bb = b_copy.addPadding(max);
 
-    std::cout <<" After padding " << aa->prettyPrintString()<<'\n';
-    std::cout <<" After padding " << bb->prettyPrintString()<<'\n';
+//    std::cout <<" After padding " << aa->prettyPrintString()<<'\n';
+//    std::cout <<" After padding " << bb->prettyPrintString()<<'\n';
 
 
     bool ret_value = (aa->getTupleDecl() < bb->getTupleDecl());
