@@ -93,9 +93,13 @@ void Vertex::reset(){
     terms.clear();
 }
 
+//Copy constructor
+Vertex::Vertex(const Vertex& other){
+    operator=(other);
+}
 
 //! Copy assignment. Deep Copy
-Vertex& Vertex::operator= (const Vertex &v1){
+void Vertex::operator= (const Vertex &v1){
     reset();
     for(auto t : v1.terms){
         this->terms.push_back(t->clone());
@@ -223,7 +227,6 @@ std::vector<Term*> DiGraph::getAliasTerms(Term& t){
 void DiGraph::Closure(){
     simplifyGreaterOrEqual();
     transitiveClosure();
-    
 }
 
 

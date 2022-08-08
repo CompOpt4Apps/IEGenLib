@@ -4142,9 +4142,12 @@ TEST_F(SetRelationTest, projectOut)
     delete s1, ex_s1;
 
     iegenlib::Set* s4 ;
-    iegenlib::Set* s5 = new iegenlib::Set("{ [2, t, 1, p, 1, q, 0] : t >= 0 && p - 11 >= 0 && q - 11 >= 0 && -t + M - 1 >= 0 }");
-    s4 = s5->projectOut(7);
-
+    iegenlib::Set* s5 = new iegenlib::Set("{ [2, t, 1, p, 1, q, 0] : t >= 0 && p - 11 >= 0 &&"
+		    "q - 11 >= 0 && -t + M - 1 >= 0 }");
+    s4 = s5->projectOut(6);
+    EXPECT_EQ(s4->prettyPrintString(),"{ [2, t, 1, p, 1, q] : t >= 0 &&"
+		    " p - 11 >= 0 && q - 11 >= 0 && M - 1 >= 0"
+		    " && -t + M - 1 >= 0 }" );
     /* Relations (same functionality as sets) */
     Relation* r1;
     Relation* r2;
@@ -4747,7 +4750,6 @@ TEST_F(SetRelationTest, DISABLED_SolveForOutputTuple){
 // Test transitive closure.
 TEST_F(SetRelationTest, TransitiveClosure){
     
-	
     Relation * rel = new Relation(
 	     "{[i,j] -> [k]: A(i,j) > 0 and rowptr(i) <= k"
 	     " and k < rowptr(i+ 1) and col(k) =j and 0 <= i"
@@ -4808,7 +4810,16 @@ TEST_F(SetRelationTest, TransitiveClosure){
 	      " n - idx(i) - 1 >= 0 && n - idx(i + 1) - 1"
 	      " >= 0 && -idx(i) + idx(i + 1) - 1 >= 0 }"
 	      ,clo5->prettyPrintString());
-
+    iegenlib::Set* s5 = new iegenlib::Set("{ [2, t, 1, p, 1, q, 0] :"
+		    " t >= 0 && p - 11 >= 0 && q - 11 >= 0 && -t + M"
+		    " - 1 >= 0 }");
+    Set* c5 = s5->TransitiveClosure();
+    EXPECT_EQ(c5->prettyPrintString(),"{ [2, t, 1, p, 1, q, 0] : t >= 0 &&"
+		    " p - 11 >= 0 && q - 11 >= 0 && M - 1 >= 0 &&"
+		    " -t + M - 1 >= 0 }");
+    
+    delete s5;
+    delete c5;
     delete set;
     delete clo5;
     delete rel4;
@@ -4818,7 +4829,7 @@ TEST_F(SetRelationTest, TransitiveClosure){
     delete clo2;
     delete rel2;
     delete closure;
-    delete rel;
+    delete rel; 
 }
 
 

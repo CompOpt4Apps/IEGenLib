@@ -571,7 +571,7 @@ TEST_F(ComputationTest, SSARenaming) {
     delete computation;
 }
 
-TEST_F(ComputationTest, AppendComputationSSA) {
+TEST_F(ComputationTest, DISABLED_AppendComputationSSA) {
     /* Code:
      * useMe =  80;
      * input = useMe * 8;

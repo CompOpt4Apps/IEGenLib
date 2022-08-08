@@ -51,6 +51,9 @@ typedef std::unique_ptr<Vertex> VertexPtr;
 class Vertex{
     std::list<Term*> terms;
 public:
+    Vertex(){};
+    //Copy Constructor
+    Vertex(const Vertex& other);
     ~Vertex();
     
     //! Function adds term to Vertex.    
@@ -61,7 +64,7 @@ public:
     void reset();
    
     //! Copy assignment. Deep Copy
-    Vertex& operator= (const Vertex &v1);
+    void operator= (const Vertex &v1);
 
     std::string toString() const;
     bool operator== (const Vertex &v1);
