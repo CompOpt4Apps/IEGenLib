@@ -4141,6 +4141,10 @@ TEST_F(SetRelationTest, projectOut)
     EXPECT_EQ(s1->toISLString(), ex_s1->toISLString());
     delete s1, ex_s1;
 
+    iegenlib::Set* s4 ;
+    iegenlib::Set* s5 = new iegenlib::Set("{ [2, t, 1, p, 1, q, 0] : t >= 0 && p - 11 >= 0 && q - 11 >= 0 && -t + M - 1 >= 0 }");
+    s4 = s5->projectOut(7);
+
     /* Relations (same functionality as sets) */
     Relation* r1;
     Relation* r2;
@@ -5013,9 +5017,13 @@ TEST_F(SetRelationTest, ProjectOutConstTest ){
     Set* s4_afterP;
     s4_afterP = s4->projectOutConst(s4);
     std::cout << s4_afterP->prettyPrintString();
+
+
+
     delete s1_afterP;
     delete s2_afterP;
     delete s3_afterP;
+
 
     //std::cout << "after projection " << s1_afterP->prettyPrintString()<<'\n';
 }
