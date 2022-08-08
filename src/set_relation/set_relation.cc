@@ -4382,14 +4382,14 @@ Set *Set::projectOut(int tvar) {
     if( tl.size()==1){
         return s;
     }
-     std::cout <<"Before  projecting out const " << s -> prettyPrintString() <<'\n';
+    //std::cout <<"Before  projecting out const " << s -> prettyPrintString() <<'\n';
     for(int i= tl.size()-1; i>=0 ;i--){
         if( tl.elemIsConst(i)) {
             //std::cout<< "the const elem are " << i <<'\n';
             res = res->projectOut(i);
         }
     }
-    std::cout <<"After projecting out const " << res -> prettyPrintString() <<'\n';
+    //std::cout <<"After projecting out const " << res -> prettyPrintString() <<'\n';
     return res;
 
 };

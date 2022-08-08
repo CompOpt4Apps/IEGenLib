@@ -41,24 +41,24 @@ void DominanceTree::add_edge(int parent, int child) {
 
 bool DominanceTree::equivalent(DominanceTree dt) {
 
-    std::cout <<"expected "<< dt.nodes[2].data.second->prettyPrintString()<<'\n';
-    std::cout <<"actual "<< this->nodes[2].data.second->prettyPrintString()<<'\n';
+    std::cout <<"expected "<< dt.nodes[3].data.second->prettyPrintString()<<'\n';
+    std::cout <<"actual "<< this->nodes[3].data.second->prettyPrintString()<<'\n';
 
-    if(dt.nodes[1].data.second->prettyPrintString()!= this->nodes[1].data.second->prettyPrintString()) return false;
+    if(dt.nodes[3].data.second->prettyPrintString()!= this->nodes[3].data.second->prettyPrintString()) return false;
 
-    std::vector<int> v1 = dt.nodes[2].children;
-    std::vector<int> v2 = this->nodes[2].children;
+    std::vector<int> v1 = dt.nodes[3].children;
+    std::vector<int> v2 = this->nodes[3].children;
     std::sort(v1.begin(),v1.end());
     std::sort(v2.begin(),v2.end() );
 
-    for(auto v:v1){
-        std::cout<< v<<'\n';
-    }
-    std::cout << "nope "<<'\n';
-
-    for(auto v:v2){
-        std::cout<< v<<'\n';
-    }
+//    for(auto v:v1){
+//        std::cout<< v<<'\n';
+//    }
+//    std::cout << "break "<<'\n';
+//
+//    for(auto v:v2){
+//        std::cout<< v<<'\n';
+//    }
 
     if (v1 !=v2 ){
           return false;
@@ -80,12 +80,10 @@ bool SSA::isDominator(iegenlib::Set * parent, iegenlib::Set * child){
     while( parentP->getArity() < childP->getArity()) {
 
         TupleDecl tl = childP->getTupleDecl();
-
-        std::cout << "before" <<childP->prettyPrintString()<<'\n';
+       // std::cout << "before" <<childP->prettyPrintString()<<'\n';
        // std::cout << parentP->prettyPrintString() <<'\n';
         childP = childP->projectOut(tl.getSize()-1);
-        std::cout <<"after " << childP->prettyPrintString()<<'\n';
-       // std::cout << parentP->prettyPrintString() <<'\n';
+
 
     }
     // child subset of parent;
@@ -107,7 +105,7 @@ DominanceTree* SSA::createDominanceTree(std::vector<std::pair<int, iegenlib::Set
 
     // collect nodes into node list
     for (auto v: executionS) {
-        std::cout << "after sort" << v.second->prettyPrintString() <<'\n';
+    //  std::cout << "after sort" << v.second->prettyPrintString() <<'\n';
         rval ->push_Back(v);
     }
     // set up the relations( parent and child)
