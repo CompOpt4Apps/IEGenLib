@@ -40,6 +40,7 @@ private:
     struct Node{
         int parent; // parent to the node
         std::vector<int>children;  // list of the Children's
+        std::vector<int> predecessors; // list of the dominators for particular node
         std::pair<int, iegenlib::Set*> data; // iteration domain with stmtIdx as key
     };
     std::vector<Node> nodes;
@@ -49,10 +50,13 @@ public:
     int push_Back(std::pair<int,iegenlib::Set*>);
     void add_edge(int parent , int child);
     bool equivalent(DominanceTree);
+    int getVectorSize();
+    void add_predecessors(int i, int j);
 };
     bool isDominator(iegenlib::Set* parent, iegenlib::Set* child);
     bool isReverseDominator(iegenlib::Set * s1, iegenlib::Set * s2);
     DominanceTree* createDominanceTree( std::vector<std::pair<int, iegenlib::Set*>> executionS);
+    DominanceTree* findPredecessors(DominanceTree* dt);
 
 };
 #endif

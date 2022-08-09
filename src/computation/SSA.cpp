@@ -38,7 +38,13 @@ void DominanceTree::add_edge(int parent, int child) {
     nodes[parent].children.push_back(child);
     nodes[child].parent = parent;
 }
-
+// j is predecessor of i
+void DominanceTree::add_predecessors(int i, int j){
+    nodes[i].predecessors.push_back(j);
+}
+int DominanceTree::getVectorSize() {
+    return nodes.size();
+}
 bool DominanceTree::equivalent(DominanceTree dt) {
 
     std::cout <<"expected "<< dt.nodes[3].data.second->prettyPrintString()<<'\n';
@@ -51,15 +57,6 @@ bool DominanceTree::equivalent(DominanceTree dt) {
     std::sort(v1.begin(),v1.end());
     std::sort(v2.begin(),v2.end() );
 
-//    for(auto v:v1){
-//        std::cout<< v<<'\n';
-//    }
-//    std::cout << "break "<<'\n';
-//
-//    for(auto v:v2){
-//        std::cout<< v<<'\n';
-//    }
-
     if (v1 !=v2 ){
           return false;
       }
@@ -67,8 +64,31 @@ bool DominanceTree::equivalent(DominanceTree dt) {
 }
 
 bool SSA::isReverseDominator(iegenlib::Set * s1, iegenlib::Set * s2){
-    return false;
+    if(s2->getArity()< s1->getArity()){
+        return true;
+    }
+    while( s2->getArity() > s1->getArity()) {
+
+        TupleDecl tl = s2->getTupleDecl();
+        // std::cout << "before" <<childP->prettyPrintString()<<'\n';
+        // std::cout << parentP->prettyPrintString() <<'\n';
+        s2 = s2->projectOut(tl.getSize()-1);
+    }
+    if (s2->isSubset(s1)) return false;
+    return true;
+
 }
+
+DominanceTree* SSA::findPredecessors(DominanceTree* dt) {
+    for (int i = dt->getVectorSize() -1; i >= 0; i--) {
+        for (int j = i-1; j >= 0; j--) {
+            bool flag = true;
+            //to be implemented
+            //dt->add_predecessors(i, j);
+        }
+    }
+}
+
 
 bool SSA::isDominator(iegenlib::Set * parent, iegenlib::Set * child){
     // project out constant both parent and child
@@ -87,12 +107,11 @@ bool SSA::isDominator(iegenlib::Set * parent, iegenlib::Set * child){
        // std::cout << "before" <<childP->prettyPrintString()<<'\n';
        // std::cout << parentP->prettyPrintString() <<'\n';
         childP = childP->projectOut(tl.getSize()-1);
-
-
     }
     // child subset of parent;
     return (childP->isSubset(parentP));
 }
+
 
 DominanceTree* SSA::createDominanceTree(std::vector<std::pair<int, iegenlib::Set *>>executionS) {
     DominanceTree * rval = new DominanceTree();

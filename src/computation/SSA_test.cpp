@@ -48,7 +48,7 @@ TEST(SSATest, IsReverseDominator){
 
     bool status = SSA::isReverseDominator(s1, s0);
 
-    EXPECT_EQ(status, true);
+    EXPECT_EQ(status, false);
 
 }
 
@@ -71,6 +71,7 @@ TEST(SSATest, DominanceTreeTEST1){
     std::vector<std::pair<int, iegenlib::Set*>> executionS {{0, s1}, {1, s2}, {2, s3}};
 
     DominanceTree* dt = createDominanceTree(executionS);
+
     DominanceTree edt;
     int p1 = edt.push_Back({0, s1});
     int p2 =  edt.push_Back({1, s2});
