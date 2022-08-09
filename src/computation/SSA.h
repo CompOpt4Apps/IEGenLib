@@ -41,7 +41,7 @@ private:
     struct Node{
         int parent; // parent to the node
         std::vector<int>children;  // list of the Children's
-        std::vector<int> predecessors; // list of the dominators for particular node
+        std::vector<int> predecessors{}; // list of the dominators for particular node
         std::pair<int, iegenlib::Set*> data; // iteration domain with stmtIdx as key
     };
     std::vector<Node> nodes;
@@ -56,6 +56,7 @@ public:
     Set* getElem(int i);
     std::vector<int> getPredecessor(int i);
     bool predecessorEquivalent(DominanceTree dt);
+    bool isParent(int parent, int child);
 };
     bool isDominator(iegenlib::Set* parent, iegenlib::Set* child);
     bool isReverseDominator(iegenlib::Set * s1, iegenlib::Set * s2);

@@ -211,10 +211,7 @@ TEST(SSATest, DominanceTreeTEST3){
     edt.add_edge(p9, p11);
 
     EXPECT_TRUE(edt.equivalent(*dt));
-
-
     EXPECT_TRUE(edt.predecessorEquivalent(*dt1));
-
 
 }
 

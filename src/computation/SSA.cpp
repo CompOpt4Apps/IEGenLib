@@ -49,6 +49,14 @@ Set* DominanceTree::getElem(int i){
     return(nodes[i].data.second);
 
 }
+bool DominanceTree::isParent(int parent, int child) {
+   for(auto v:  nodes[parent].children){
+       if(v == child){
+           return true;
+       }
+   }
+    return  false;
+}
 std::vector<int> DominanceTree::getPredecessor(int i){
     return(nodes[i].predecessors);
 }
@@ -71,7 +79,14 @@ bool DominanceTree::equivalent(DominanceTree dt) {
 }
 bool DominanceTree::predecessorEquivalent(DominanceTree dt){
 
+    std::cout << "node " << dt.nodes[11].data.second->prettyPrintString() << '\n';
+    std::cout << "node " << dt.nodes[10].data.second->prettyPrintString() << '\n';
+    std::cout << "node " << dt.nodes[1].data.second->prettyPrintString() << '\n';
 
+    for(auto v: dt.nodes[11].predecessors){
+        std::cout << "pred  " << v <<'\n';
+
+    }
     return false;
 }
 
@@ -96,16 +111,14 @@ DominanceTree* SSA::findPredecessors(DominanceTree* dt) {
 
     for (int i = dt->getVectorSize() -1; i >= 0; i--) {
         for (int j = i-1; j >= 0; j--) {
-
             bool flag = true;
-            for(int k: dt->getPredecessor(j)){
+            for(int k: dt->getPredecessor(i)){
                 flag = SSA::isReverseDominator( dt->getElem(k),dt->getElem(j) );
             }
             if(flag){
                 dt->add_predecessors(i, j);
             }
-            if(SSA::isDominator(dt->getElem(j),dt->getElem(i)))break;
-
+            if(dt->isParent(j,i)) break;
         }
     }
     return dt;
