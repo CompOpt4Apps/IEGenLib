@@ -18,6 +18,7 @@
 #include <vector>
 using namespace SSA;
 
+
 TEST(SSATest, IsDominator){
 
     iegenlib::Set* s1 = new iegenlib::Set("{[0,i,0] : 0 <=i< N}");
@@ -175,6 +176,8 @@ TEST(SSATest, DominanceTreeTEST3){
                         {11,s12}};
 
     DominanceTree* dt = createDominanceTree(executionS);
+    DominanceTree* dt1 = findPredecessors(dt);
+
     DominanceTree edt;
 
     int p1 = edt.push_Back({0, s1});
@@ -208,6 +211,11 @@ TEST(SSATest, DominanceTreeTEST3){
     edt.add_edge(p9, p11);
 
     EXPECT_TRUE(edt.equivalent(*dt));
+
+
+    EXPECT_TRUE(edt.predecessorEquivalent(*dt1));
+
+
 }
 
 

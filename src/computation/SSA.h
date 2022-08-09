@@ -21,6 +21,7 @@
 #include <tuple>
 #include <iostream>
 #include "set_relation/set_relation.h"
+using namespace iegenlib;
 //class SSA {
 //public:
 //    SSA();
@@ -52,6 +53,9 @@ public:
     bool equivalent(DominanceTree);
     int getVectorSize();
     void add_predecessors(int i, int j);
+    Set* getElem(int i);
+    std::vector<int> getPredecessor(int i);
+    bool predecessorEquivalent(DominanceTree dt);
 };
     bool isDominator(iegenlib::Set* parent, iegenlib::Set* child);
     bool isReverseDominator(iegenlib::Set * s1, iegenlib::Set * s2);

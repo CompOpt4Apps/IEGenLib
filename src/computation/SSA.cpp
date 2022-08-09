@@ -45,10 +45,17 @@ void DominanceTree::add_predecessors(int i, int j){
 int DominanceTree::getVectorSize() {
     return nodes.size();
 }
+Set* DominanceTree::getElem(int i){
+    return(nodes[i].data.second);
+
+}
+std::vector<int> DominanceTree::getPredecessor(int i){
+    return(nodes[i].predecessors);
+}
 bool DominanceTree::equivalent(DominanceTree dt) {
 
-    std::cout <<"expected "<< dt.nodes[3].data.second->prettyPrintString()<<'\n';
-    std::cout <<"actual "<< this->nodes[3].data.second->prettyPrintString()<<'\n';
+//    std::cout <<"expected "<< dt.nodes[3].data.second->prettyPrintString()<<'\n';
+//    std::cout <<"actual "<< this->nodes[3].data.second->prettyPrintString()<<'\n';
 
     if(dt.nodes[3].data.second->prettyPrintString()!= this->nodes[3].data.second->prettyPrintString()) return false;
 
@@ -62,6 +69,12 @@ bool DominanceTree::equivalent(DominanceTree dt) {
       }
     return true;
 }
+bool DominanceTree::predecessorEquivalent(DominanceTree dt){
+
+
+    return false;
+}
+
 
 bool SSA::isReverseDominator(iegenlib::Set * s1, iegenlib::Set * s2){
     if(s2->getArity()< s1->getArity()){
@@ -80,13 +93,22 @@ bool SSA::isReverseDominator(iegenlib::Set * s1, iegenlib::Set * s2){
 }
 
 DominanceTree* SSA::findPredecessors(DominanceTree* dt) {
+
     for (int i = dt->getVectorSize() -1; i >= 0; i--) {
         for (int j = i-1; j >= 0; j--) {
+
             bool flag = true;
-            //to be implemented
-            //dt->add_predecessors(i, j);
+            for(int k: dt->getPredecessor(j)){
+                flag = SSA::isReverseDominator( dt->getElem(k),dt->getElem(j) );
+            }
+            if(flag){
+                dt->add_predecessors(i, j);
+            }
+            if(SSA::isDominator(dt->getElem(j),dt->getElem(i)))break;
+
         }
     }
+    return dt;
 }
 
 
