@@ -51,7 +51,7 @@ public:
     bool equivalent(DominanceTree);
 };
     bool isDominator(iegenlib::Set* parent, iegenlib::Set* child);
-    bool isReverseDominator(iegenlib::Set * s1, iegenlib::Set * s2)
+    bool isReverseDominator(iegenlib::Set * s1, iegenlib::Set * s2);
     DominanceTree* createDominanceTree( std::vector<std::pair<int, iegenlib::Set*>> executionS);
 
 };
