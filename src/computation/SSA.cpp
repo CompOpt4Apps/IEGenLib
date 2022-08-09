@@ -66,6 +66,10 @@ bool DominanceTree::equivalent(DominanceTree dt) {
     return true;
 }
 
+bool SSA::isReverseDominator(iegenlib::Set * s1, iegenlib::Set * s2){
+    return false;
+}
+
 bool SSA::isDominator(iegenlib::Set * parent, iegenlib::Set * child){
     // project out constant both parent and child
     Set* childP, *parentP;

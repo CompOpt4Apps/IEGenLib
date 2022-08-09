@@ -41,6 +41,17 @@ TEST(SSATest, IsDominator){
 
 }
 
+TEST(SSATest, IsReverseDominator){
+
+    iegenlib::Set* s0 = new iegenlib::Set("{[2,t,3,s,0,r,0]: 0<=t<M && 0<=s<S && r>10}");
+    iegenlib::Set* s1 = new iegenlib::Set("{[2,t,4]: 0<=t<M}");
+
+    bool status = SSA::isReverseDominator(s1, s0);
+
+    EXPECT_EQ(status, true);
+
+}
+
 TEST(SSATest, DominanceTreeTEST1){
    // string s = {([0],0), ([1],2), ([2],2)};
     /*
