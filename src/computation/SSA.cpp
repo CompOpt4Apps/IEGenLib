@@ -79,15 +79,9 @@ bool DominanceTree::equivalent(DominanceTree dt) {
 }
 bool DominanceTree::predecessorEquivalent(DominanceTree dt){
 
-    std::cout << "node " << dt.nodes[11].data.second->prettyPrintString() << '\n';
-    std::cout << "node " << dt.nodes[10].data.second->prettyPrintString() << '\n';
-    std::cout << "node " << dt.nodes[1].data.second->prettyPrintString() << '\n';
-
-    for(auto v: dt.nodes[11].predecessors){
-        std::cout << "pred  " << v <<'\n';
-
-    }
-    return false;
+    if(dt.nodes[11].predecessors[0] != this->nodes[11].predecessors[0] ) return  false;
+    if(dt.nodes[11].predecessors[1] != this->nodes[11].predecessors[1] ) return  false;
+    return true;
 }
 
 

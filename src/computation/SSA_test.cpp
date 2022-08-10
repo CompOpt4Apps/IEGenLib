@@ -144,6 +144,9 @@ TEST(SSATest, DominanceTreeTEST2){
     edt.add_edge(p9, p10);
     edt.add_edge(p9, p11);
 
+    edt.add_predecessors(p12, p11);
+    edt.add_predecessors(p12, p1);
+
     EXPECT_TRUE(edt.equivalent(*dt));
 
 }
@@ -209,6 +212,9 @@ TEST(SSATest, DominanceTreeTEST3){
 
     edt.add_edge(p9, p10);
     edt.add_edge(p9, p11);
+
+    edt.add_predecessors(p12, p11);
+    edt.add_predecessors(p12, p2);
 
     EXPECT_TRUE(edt.equivalent(*dt));
     EXPECT_TRUE(edt.predecessorEquivalent(*dt1));
