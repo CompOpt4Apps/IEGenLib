@@ -65,22 +65,31 @@ bool DominanceTree::equivalent(DominanceTree dt) {
 //    std::cout <<"expected "<< dt.nodes[3].data.second->prettyPrintString()<<'\n';
 //    std::cout <<"actual "<< this->nodes[3].data.second->prettyPrintString()<<'\n';
 
-    if(dt.nodes[3].data.second->prettyPrintString()!= this->nodes[3].data.second->prettyPrintString()) return false;
+ for(int i=0;i<dt.nodes.size();i++) {
+     if (dt.nodes[i].data.second->prettyPrintString() != this->nodes[i].data.second->prettyPrintString()) return false;
 
-    std::vector<int> v1 = dt.nodes[3].children;
-    std::vector<int> v2 = this->nodes[3].children;
-    std::sort(v1.begin(),v1.end());
-    std::sort(v2.begin(),v2.end() );
+     std::vector<int> v1 = dt.nodes[i].children;
+     std::vector<int> v2 = this->nodes[i].children;
+     std::sort(v1.begin(), v1.end());
+     std::sort(v2.begin(), v2.end());
+     if(v1.size()) continue;
 
-    if (v1 !=v2 ){
-          return false;
-      }
+     if (v1 != v2) {
+         return false;
+     }
+ }
     return true;
+
 }
 bool DominanceTree::predecessorEquivalent(DominanceTree dt){
-
-    if(dt.nodes[11].predecessors[0] != this->nodes[11].predecessors[0] ) return  false;
-    if(dt.nodes[11].predecessors[1] != this->nodes[11].predecessors[1] ) return  false;
+for(int i=0;i<dt.getVectorSize();i++) {
+    for(int j = 0; j<dt.nodes[i].predecessors.size();j++){
+        if(this->nodes[i].predecessors.size()>0) {
+            if (dt.nodes[i].predecessors[j] != this->nodes[i].predecessors[j]) return false;
+            if (dt.nodes[i].predecessors[j] != this->nodes[i].predecessors[j]) return false;
+        }
+}
+}
     return true;
 }
 
