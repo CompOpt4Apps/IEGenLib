@@ -84,10 +84,11 @@ bool DominanceTree::equivalent(DominanceTree dt) {
 bool DominanceTree::predecessorEquivalent(DominanceTree dt){
 for(int i=0;i<dt.getVectorSize();i++) {
     for(int j = 0; j<dt.nodes[i].predecessors.size();j++){
-        if(this->nodes[i].predecessors.size()>0) {
+        if(this->nodes[i].predecessors.size()>0 && this->nodes[i].predecessors.size()== dt.nodes[i].predecessors.size()) {
             if (dt.nodes[i].predecessors[j] != this->nodes[i].predecessors[j]) return false;
             if (dt.nodes[i].predecessors[j] != this->nodes[i].predecessors[j]) return false;
         }
+        else{ return  false;}
 }
 }
     return true;
