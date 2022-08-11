@@ -152,6 +152,7 @@ TEST(SSATest, DominanceTreeTEST2){
 }
 
 
+
 TEST(SSATest, DominanceTreeTEST3){
 
     iegenlib::Set* s1 = new iegenlib::Set("{[0]}");
@@ -221,5 +222,32 @@ TEST(SSATest, DominanceTreeTEST3){
 
 }
 
+// This test is to check if correct predecessors will be created 
+// for situations with back edges.
+TEST(SSATest, DominanceTreeTEST4){
+
+    iegenlib::Set* s1 = new iegenlib::Set("{[0,i,0,j,0]: 0 <= i  < N && 0 <= j < M}");
+    iegenlib::Set* s2 = new iegenlib::Set("{[0,i,1,j,0]: 0 <= i  < N && 0 <= j < M}");
+
+
+    std::vector<std::pair<int, iegenlib::Set*>>
+            executionS {{0, s1}, {1, s2}};
+
+    DominanceTree* dt = createDominanceTree(executionS);
+    DominanceTree* dt1 = findPredecessors(dt);
+
+    DominanceTree edt;
+
+    int p1 = edt.push_Back({0, s1});
+    int p2 =  edt.push_Back({1, s2});
+
+    edt.add_edge(p1, p2);
+
+    edt.add_predecessors(p1, p2);
+
+    EXPECT_TRUE(edt.equivalent(*dt));
+    EXPECT_TRUE(edt.predecessorEquivalent(*dt1));
+
+}
 
 
