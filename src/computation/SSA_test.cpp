@@ -250,4 +250,29 @@ TEST(SSATest, DominanceTreeTEST4){
 
 }
 
+TEST(SSATest, DominanceTreeTEST5){
+
+    iegenlib::Set* s1 = new iegenlib::Set("{[0,i,0] : 0 <=i< N}");
+    iegenlib::Set* s2 = new iegenlib::Set("{[0,i,1] : 0 <=i< N && x >10}");
+    iegenlib::Set* s3 = new iegenlib::Set("{[0,i,2] : 0 <=i< N && x <=10}");
+
+
+    std::vector<std::pair<int, iegenlib::Set*>>
+            executionS {{0, s1}, {1, s2},{2,s3}};
+
+    DominanceTree* dt = createDominanceTree(executionS);
+    DominanceTree edt;
+
+    int p1 = edt.push_Back({0, s1});
+    int p2 =  edt.push_Back({1, s2});
+    int p3 =  edt.push_Back({2, s3});
+
+    edt.add_edge(p1, p2);
+    edt.add_edge(p1, p3);
+
+    EXPECT_TRUE(edt.equivalent(*dt));
+
+
+}
+
 
