@@ -4391,7 +4391,6 @@ Set *Set::projectOut(int tvar) {
     }
     //std::cout <<"After projecting out const " << res -> prettyPrintString() <<'\n';
     return res;
-
 };
 
 Relation *Relation::projectOut(int tvar) {

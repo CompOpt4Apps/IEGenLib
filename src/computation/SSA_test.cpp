@@ -244,6 +244,8 @@ TEST(SSATest, DominanceTreeTEST4){
     edt.add_edge(p1, p2);
 
     edt.add_predecessors(p1, p2);
+   // edt.add_predecessors(p2, p1);
+
 
     EXPECT_TRUE(edt.equivalent(*dt));
     EXPECT_TRUE(edt.predecessorEquivalent(*dt1));
@@ -272,7 +274,29 @@ TEST(SSATest, DominanceTreeTEST5){
 
     EXPECT_TRUE(edt.equivalent(*dt));
 
+}
+TEST(SSATest, GetPrefixes){
+
+    iegenlib::Set* s5 = new iegenlib::Set("{[2,t,1,p,1,q,0]:0<=t<M && p>10 && q>10}");
+    iegenlib::Set* s6 = new iegenlib::Set("{[2,t,1,p,1,n,0]:0<=t<M && p>10 && n<=10 }");
+
+    DominanceTree* edt;
+    std::vector<Set*> v;
+//    Set* s1 = new Set("{[2, t, 1, p, 1, q, 0] : t >= 0 && p - 11 >= 0 && q - 11 >= 0 && -t + M - 1 >= 0}");
+    Set* s2 = new Set("{[2, t, 1, p, 1, q] : t >= 0 && p - 11 >= 0 && q - 11 >= 0 && M - 1 >= 0 && -t + M - 1 >= 0}");
+    Set* s3 = new Set("{[2, t, 1, p] : t >= 0 && p - 11 >= 0 && M - 1 >= 0 && -t + M - 1 >= 0}");
+    Set* s4 = new Set("{[2, t] : t >= 0 && M - 1 >= 0 && -t + M - 1 >= 0}");
+
+    std::vector<Set*> expected_v = {s2, s3, s4};
+    v = edt->getPrefixes(s5);
+
+   // EXPECT_EQ(v, expected_v);
+    for(int i=0;i<v.size();i++){
+        EXPECT_EQ(v[i]->prettyPrintString(), expected_v[i]->prettyPrintString());
+    }
 
 }
+
+
 
 

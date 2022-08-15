@@ -111,6 +111,30 @@ bool SSA::isReverseDominator(iegenlib::Set * s1, iegenlib::Set * s2){
 
 }
 
+// function returns list of prefixes
+std::vector<Set*> DominanceTree::getPrefixes(Set*s) {
+
+    std::vector<Set*>v;
+    Set* res = new Set(*s);
+    TupleDecl tl = s->getTupleDecl();
+    if( tl.size()==1 ||  tl.size()==2){
+        return v;
+    }
+    for(int i= tl.size()-1; i>0 ;i--){
+        if( tl.elemIsConst(i)) {
+            //std::cout<< "the const elem are " << i <<'\n';
+            res = res->projectOut(i);
+            v.push_back(res);
+        }
+        else{
+            res = res->projectOut(i);
+        }
+    }
+    //std::cout << "print "<< s->prettyPrintString() <<'\n';
+    return v;
+}
+
+
 DominanceTree* SSA::findPredecessors(DominanceTree* dt) {
 
     for (int i = dt->getVectorSize() -1; i >= 0; i--) {
@@ -122,6 +146,9 @@ DominanceTree* SSA::findPredecessors(DominanceTree* dt) {
             if(flag){
                 dt->add_predecessors(i, j);
             }
+            // //
+            //dt->getPrefixes(Set*s);
+
             if(dt->isParent(j,i)) break;
         }
     }

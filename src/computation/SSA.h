@@ -57,6 +57,7 @@ public:
     std::vector<int> getPredecessor(int i);
     bool predecessorEquivalent(DominanceTree dt);
     bool isParent(int parent, int child);
+    std::vector<Set*>getPrefixes(Set*s);
 };
     bool isDominator(iegenlib::Set* parent, iegenlib::Set* child);
     bool isReverseDominator(iegenlib::Set * s1, iegenlib::Set * s2);
