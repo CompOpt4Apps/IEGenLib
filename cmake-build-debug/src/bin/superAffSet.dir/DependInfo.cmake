@@ -4,33 +4,11 @@ set(CMAKE_DEPENDS_IN_PROJECT_ONLY OFF)
 
 # The set of languages for which implicit dependencies are needed:
 set(CMAKE_DEPENDS_LANGUAGES
-  "CXX"
-  )
-# The set of files for implicit dependencies of each language:
-set(CMAKE_DEPENDS_CHECK_CXX
-  "/Users/ant/Documents/AdaptLab/IEGenLib/src/drivers/superAffSet.cc" "/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/src/bin/superAffSet.dir/drivers/superAffSet.cc.o"
-  )
-set(CMAKE_CXX_COMPILER_ID "Clang")
-
-# Preprocessor definitions for this target.
-set(CMAKE_TARGET_DEFINITIONS_CXX
-  "GTEST_HAS_TR1_TUPLE=0"
-  )
-
-# The include file search paths:
-set(CMAKE_CXX_TARGET_INCLUDE_PATH
-  "../lib/omega/install/include"
-  "../lib/installed/include"
-  "../lib/gtest/include"
-  "../src/."
-  "../src/parser"
-  "../src/set_relation"
-  "../src/computation"
-  "../src/util"
   )
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
+  "/Users/ant/Documents/AdaptLab/IEGenLib/src/drivers/superAffSet.cc" "src/bin/superAffSet.dir/drivers/superAffSet.cc.o" "gcc" "src/bin/superAffSet.dir/drivers/superAffSet.cc.o.d"
   )
 
 # Targets to which this target links.

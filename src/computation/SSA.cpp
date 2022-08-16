@@ -138,7 +138,7 @@ std::vector<Set*> DominanceTree::getPrefixes(Set*s) {
 
 DominanceTree* SSA::findPredecessors(DominanceTree* dt) {
 
-    std::stack<std::pair<Set*, int>> stack;
+    std::vector<std::pair<Set*, int>> stack;
     for (int i = dt->getVectorSize() -1; i >= 0; i--) {
         for (int j = i-1; j >= 0; j--) {
             bool flag = true;
@@ -150,11 +150,20 @@ DominanceTree* SSA::findPredecessors(DominanceTree* dt) {
             }
             // //
             std::vector<Set*>  v = dt->getPrefixes(dt->getElem(j) );
-            for(int i=v.size()-1;i>=0;i--) {
+
+//            if (std::find(stack.first.begin(), stack.first.end(),v[i])!=stack.first.end()){
+//                std::cout << "the first elem is   in vector "<<'\n';
+//            }
+//            else{
+//                std::cout << "the df elem is   in vector "<<'\n';
+//            }
+
+                for(int i=v.size()-1;i>=0;i--) {
                 std::cout << "print2 "<< j<< " " << v[i]->prettyPrintString() << '\n';
 
-                stack.push({v[i], i});
+                stack.push_back({v[i], i});
             }
+            std::cout <<"-----------------------------------"<<'\n';
             if(dt->isParent(j,i)) break;
         }
     }

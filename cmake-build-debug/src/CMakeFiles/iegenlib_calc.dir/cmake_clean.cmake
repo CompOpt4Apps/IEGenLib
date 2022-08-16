@@ -2,6 +2,7 @@ file(REMOVE_RECURSE
   "../bin/iegenlib_calc"
   "../bin/iegenlib_calc.pdb"
   "CMakeFiles/iegenlib_calc.dir/iegenlib_calc.cc.o"
+  "CMakeFiles/iegenlib_calc.dir/iegenlib_calc.cc.o.d"
 )
 
 # Per-language clean rules from dependency scanning.

@@ -2,6 +2,7 @@ file(REMOVE_RECURSE
   "../bin/tutorial/mttkrp"
   "../bin/tutorial/mttkrp.pdb"
   "CMakeFiles/mttkrp.dir/mttkrp.cc.o"
+  "CMakeFiles/mttkrp.dir/mttkrp.cc.o.d"
 )
 
 # Per-language clean rules from dependency scanning.

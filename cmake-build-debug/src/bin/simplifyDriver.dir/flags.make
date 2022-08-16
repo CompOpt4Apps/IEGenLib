@@ -6,5 +6,5 @@ CXX_DEFINES = -DGTEST_HAS_TR1_TUPLE=0
 
 CXX_INCLUDES = -I/Users/ant/Documents/AdaptLab/IEGenLib/lib/omega/install/include -I/Users/ant/Documents/AdaptLab/IEGenLib/lib/installed/include -I/Users/ant/Documents/AdaptLab/IEGenLib/lib/gtest/include -I/Users/ant/Documents/AdaptLab/IEGenLib/src/. -I/Users/ant/Documents/AdaptLab/IEGenLib/src/parser -I/Users/ant/Documents/AdaptLab/IEGenLib/src/set_relation -I/Users/ant/Documents/AdaptLab/IEGenLib/src/computation -I/Users/ant/Documents/AdaptLab/IEGenLib/src/util
 
-CXX_FLAGS = -std=c++11 -fPIC -std=c++11 -O0 -g -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.0.sdk -mmacosx-version-min=11.5
+CXX_FLAGS = -std=c++11 -fPIC -std=c++11 -O0 -g -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.3.sdk
 

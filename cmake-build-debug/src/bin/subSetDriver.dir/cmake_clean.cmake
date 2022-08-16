@@ -2,6 +2,7 @@ file(REMOVE_RECURSE
   "../bin/../bin/subSetDriver"
   "../bin/../bin/subSetDriver.pdb"
   "CMakeFiles/../bin/subSetDriver.dir/drivers/subSetDriver.cc.o"
+  "CMakeFiles/../bin/subSetDriver.dir/drivers/subSetDriver.cc.o.d"
 )
 
 # Per-language clean rules from dependency scanning.
