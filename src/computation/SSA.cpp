@@ -16,6 +16,7 @@
 #include "SSA.h"
 #include <vector>
 #include <tuple>
+#include <stack>
 #include "set_relation/set_relation.h"
 #include <iostream>
 using namespace SSA;
@@ -137,6 +138,7 @@ std::vector<Set*> DominanceTree::getPrefixes(Set*s) {
 
 DominanceTree* SSA::findPredecessors(DominanceTree* dt) {
 
+    std::stack<std::pair<Set*, int>> stack;
     for (int i = dt->getVectorSize() -1; i >= 0; i--) {
         for (int j = i-1; j >= 0; j--) {
             bool flag = true;
@@ -147,8 +149,12 @@ DominanceTree* SSA::findPredecessors(DominanceTree* dt) {
                 dt->add_predecessors(i, j);
             }
             // //
-            //dt->getPrefixes(Set*s);
+            std::vector<Set*>  v = dt->getPrefixes(dt->getElem(j) );
+            for(int i=v.size()-1;i>=0;i--) {
+                std::cout << "print2 "<< j<< " " << v[i]->prettyPrintString() << '\n';
 
+                stack.push({v[i], i});
+            }
             if(dt->isParent(j,i)) break;
         }
     }
