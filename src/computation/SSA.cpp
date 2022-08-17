@@ -150,19 +150,40 @@ DominanceTree* SSA::findPredecessors(DominanceTree* dt) {
             }
             // //
             std::vector<Set*>  v = dt->getPrefixes(dt->getElem(j) );
+            bool no_match =true;
+            std::vector<std::pair<Set*, int>> tmp_stack;
 
-//            if (std::find(stack.first.begin(), stack.first.end(),v[i])!=stack.first.end()){
-//                std::cout << "the first elem is   in vector "<<'\n';
-//            }
-//            else{
-//                std::cout << "the df elem is   in vector "<<'\n';
-//            }
-
-                for(int i=v.size()-1;i>=0;i--) {
-                std::cout << "print2 "<< j<< " " << v[i]->prettyPrintString() << '\n';
-
-                stack.push_back({v[i], i});
+            for(int k=0;k<v.size();k++){
+                bool flag  = false;
+                int l;
+                for( l=0;l<stack.size();l++){
+                    if(v[k]==stack[l].first){
+                        flag = true;
+                        no_match = false;
+                        break;
+                    }
+                }
+                if(flag) {
+                    int m = 0;
+                    while (m < l) {
+                        std::cout << "hello....hello."<<'\n';
+                        bool st = SSA::isReverseDominator( dt->getElem(stack[stack.size()-1].second),dt->getElem(j) );
+                        if(st){ dt->add_predecessors(stack[stack.size()-1].second, j);}
+                       stack.pop_back();
+                        m++;
+                    }
+                    break;
+                }else{
+                std::cout << "abcd....."<<'\n';
+                tmp_stack.push_back({v[k], i});}
             }
+            if(no_match){stack={};}
+            stack.insert(stack.end(), tmp_stack.begin(), tmp_stack.end());
+
+            for (int i = 0; i <stack.size() ;  i++) {
+                    std::cout << "print2 " << j << " " << stack[i].first->prettyPrintString() << '\n';
+
+                }
             std::cout <<"-----------------------------------"<<'\n';
             if(dt->isParent(j,i)) break;
         }
