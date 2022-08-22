@@ -174,17 +174,11 @@ DominanceTree* SSA::findPredecessors(DominanceTree* dt) {
                     }
                     break;
                 }else{
-                std::cout << "abcd....."<<'\n';
+
                 tmp_stack.push_back({v[k], i});}
             }
             if(no_match){stack={};}
             stack.insert(stack.end(), tmp_stack.begin(), tmp_stack.end());
-
-            for (int i = 0; i <stack.size() ;  i++) {
-                    std::cout << "print2 " << j << " " << stack[i].first->prettyPrintString() << '\n';
-
-                }
-            std::cout <<"-----------------------------------"<<'\n';
             if(dt->isParent(j,i)) break;
         }
     }
