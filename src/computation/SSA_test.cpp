@@ -297,6 +297,55 @@ TEST(SSATest, GetPrefixes){
 
 }
 
+TEST(SSATest, DominanceTreeTEST6){
+
+    iegenlib::Set* s0 = new iegenlib::Set("{[0,i,0,j,0] : 0 <=i< N  && 0 <=j<M }");
+    iegenlib::Set* s1 = new iegenlib::Set("{[1,i,0,j,0] : 0 <=i< N  && 0 <=j<M }");
+    iegenlib::Set* s2 = new iegenlib::Set("{[2,i,0,j,0] : 0 <=i< N  && 0 <=j<M }");
+    iegenlib::Set* s3 = new iegenlib::Set("{[3,i,0,j,0] : 0 <=i< N  && 0 <=j<M }");
+
+
+    std::vector<std::pair<int, iegenlib::Set*>>
+            executionS {{0, s0}, {1, s1},{2,s2},{3, s3}};
+
+    DominanceTree* dt = createDominanceTree(executionS);
+    DominanceTree edt;
+
+}
+
+TEST(SSATest, DominanceTreeTEST7){
+
+    iegenlib::Set* s0 = new iegenlib::Set("{[0,i,0,j,0] : 0 <=i< N  && 0 <=j<M }");
+    iegenlib::Set* s1 = new iegenlib::Set("{[0,i,0,j,1] : 0 <=i< N  && 0 <=j<M }");
+    iegenlib::Set* s2 = new iegenlib::Set("{[0,i,0,j,2] : 0 <=i< N  && 0 <=j<M }");
+    iegenlib::Set* s3 = new iegenlib::Set("{[0,i,0,j,3] : 0 <=i< N  && 0 <=j<M }");
+
+
+    std::vector<std::pair<int, iegenlib::Set*>>
+            executionS {{0, s0}, {1, s1},{2,s2},{3, s3}};
+
+    DominanceTree* dt = createDominanceTree(executionS);
+    DominanceTree edt;
+
+}
+
+
+TEST(SSATest, DominanceTreeTEST8){
+
+    iegenlib::Set* s0 = new iegenlib::Set("{[0,i,0,j,0] : 0 <=i< N  && 0 <=j<M }");
+    iegenlib::Set* s1 = new iegenlib::Set("{[0,i,1,j,0] : 0 <=i< N  && 0 <=j<M }");
+    iegenlib::Set* s2 = new iegenlib::Set("{[1,i,0,j,0] : 0 <=i< N  && 0 <=j<M }");
+    iegenlib::Set* s3 = new iegenlib::Set("{[1,i,0,j,1] : 0 <=i< N  && 0 <=j<M }");
+
+
+    std::vector<std::pair<int, iegenlib::Set*>>
+            executionS {{0, s0}, {1, s1},{2,s2},{3, s3}};
+
+    DominanceTree* dt = createDominanceTree(executionS);
+    DominanceTree edt;
+
+}
+
 
 
 
