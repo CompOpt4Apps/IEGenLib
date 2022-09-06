@@ -346,6 +346,52 @@ TEST(SSATest, DominanceTreeTEST8){
 
 }
 
+TEST(SSATest, DominanceTreeTEST9){
+
+    iegenlib::Set* s0 = new iegenlib::Set("{[0,i,0,j,0] : 0 <=i< N  && 0 <=j<M }");
+    iegenlib::Set* s1 = new iegenlib::Set("{[0,i,1,j,0] : 0 <=i< N  && 0 <=j<M }");
+    iegenlib::Set* s2 = new iegenlib::Set("{[1,i,0,j,0] : 0 <=i< N  && 0 <=j<M }");
+    iegenlib::Set* s3 = new iegenlib::Set("{[1,i,0,j,1] : 0 <=i< N  && 0 <=j<M }");
+
+    std::vector<std::pair<int, iegenlib::Set*>>
+            executionS {{0, s0}, {1, s1},{2,s2},{3, s3}};
+
+    DominanceTree* dt = createDominanceTree(executionS);
+    DominanceTree* dt1;
+    dt1 = findPredecessors(dt);
+    DominanceTree edt;
+    dt->DFCal();
+}
 
 
 
+TEST(SSATest, DominanceTreeTEST10){
+
+    iegenlib::Set* s1 = new iegenlib::Set("{[0]}");
+    iegenlib::Set* s2 = new iegenlib::Set("{[1]}");
+
+    iegenlib::Set* s3 = new iegenlib::Set("{[2,t,0]: 0<=t<M}");
+    iegenlib::Set* s4 = new iegenlib::Set("{[2,t,1,p,0]: 0<=t<M && p> 10 }");
+
+    iegenlib::Set* s5 = new iegenlib::Set("{[2,t,1,p,1,q,0]:0<=t<M && p>10 && q>10}");
+    iegenlib::Set* s6 = new iegenlib::Set("{[2,t,1,p,1,n,0]:0<=t<M && p>10 && n<=10 }");
+
+    iegenlib::Set* s7 = new iegenlib::Set("{[2,t,1,p,2]: 0<=t<M && p>10}");
+    iegenlib::Set* s8 = new iegenlib::Set("{[2,t,2,m,0]: 0<=t<M && m<=10}");
+
+    iegenlib::Set* s9 = new iegenlib::Set("{[2,t,3]: 0<=t<M}");
+    iegenlib::Set* s10 = new iegenlib::Set("{[2,t,4,s,0,r,0]: 0<=t<M && 0<=s<S && r>10}");
+
+    iegenlib::Set* s11 = new iegenlib::Set("{[2,t,5]: 0<=t<M}");
+    iegenlib::Set* s12 = new iegenlib::Set("{[3]}");
+
+
+    std::vector<std::pair<int, iegenlib::Set*>>
+            executionS {{0, s1}, {1, s2}, {2, s3}, {3,s4},{4,s5},
+                        {5,s6},{6,s7},{7,s8},{8,s9},{9,s10}, {10,s11},
+                        {11,s12}};
+
+    DominanceTree* dt = createDominanceTree(executionS);
+    DominanceTree* dt1 = findPredecessors(dt);
+    dt->DFCal();
+}

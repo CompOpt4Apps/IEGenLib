@@ -31,9 +31,11 @@ int DominanceTree::push_Back(std::pair<int, iegenlib::Set*> data) {
     node->parent= -1;
     node->children = {};
     node->data = data;
+    node-> dominanceFrontier = -1;
     nodes.push_back(*node);
     return(nodes.size()-1);
 }
+
 
 void DominanceTree::add_edge(int parent, int child) {
     nodes[parent].children.push_back(child);
@@ -61,10 +63,24 @@ bool DominanceTree::isParent(int parent, int child) {
 std::vector<int> DominanceTree::getPredecessor(int i){
     return(nodes[i].predecessors);
 }
-bool DominanceTree::equivalent(DominanceTree dt) {
+//calculate Dominance Frontier
+void DominanceTree::DFCal() {
+    for(int i=0; i<this->nodes.size()-2;i++){
+        if( this->nodes[i].predecessors.size() > 1) {
+            for (int pred:  this->nodes[i].predecessors) {
+                int runner = pred;
+                while( runner !=  this->nodes[i].parent){
+                    this->nodes[runner].dominanceFrontier = i;
+                    runner =   this->nodes[runner].parent;
+                }
+            }
+        }
+    }
+    return;
+}
 
-//    std::cout <<"expected "<< dt.nodes[3].data.second->prettyPrintString()<<'\n';
-//    std::cout <<"actual "<< this->nodes[3].data.second->prettyPrintString()<<'\n';
+//test if two dominator tree are equivalent
+bool DominanceTree::equivalent(DominanceTree dt) {
 
  for(int i=0;i<dt.nodes.size();i++) {
      if (dt.nodes[i].data.second->prettyPrintString() != this->nodes[i].data.second->prettyPrintString()) return false;
@@ -166,7 +182,7 @@ DominanceTree* SSA::findPredecessors(DominanceTree* dt) {
                 if(flag) {
                     int m = 0;
                     while (m < l) {
-                        std::cout << "hello....hello."<<'\n';
+                        //std::cout << "hello....hello."<<'\n';
                         bool st = SSA::isReverseDominator( dt->getElem(stack[stack.size()-1].second),dt->getElem(j) );
                         if(st){ dt->add_predecessors(stack[stack.size()-1].second, j);}
                        stack.pop_back();
@@ -197,18 +213,17 @@ bool SSA::isDominator(iegenlib::Set * parent, iegenlib::Set * child){
     if( parentP->getArity() > childP->getArity()){
         return  false;
     }
+    // project out until parents and child parity matches
     while( parentP->getArity() < childP->getArity()) {
 
         TupleDecl tl = childP->getTupleDecl();
-       // std::cout << "before" <<childP->prettyPrintString()<<'\n';
-       // std::cout << parentP->prettyPrintString() <<'\n';
         childP = childP->projectOut(tl.getSize()-1);
     }
     // child subset of parent;
     return (childP->isSubset(parentP));
 }
 
-
+// create dominator tree
 DominanceTree* SSA::createDominanceTree(std::vector<std::pair<int, iegenlib::Set *>>executionS) {
     DominanceTree * rval = new DominanceTree();
 
@@ -224,7 +239,6 @@ DominanceTree* SSA::createDominanceTree(std::vector<std::pair<int, iegenlib::Set
 
     // collect nodes into node list
     for (auto v: executionS) {
-    //  std::cout << "after sort" << v.second->prettyPrintString() <<'\n';
         rval ->push_Back(v);
     }
     // set up the relations( parent and child)
@@ -240,4 +254,9 @@ DominanceTree* SSA::createDominanceTree(std::vector<std::pair<int, iegenlib::Set
         }
     }
     return rval;
+}
+
+DominanceTree* createDominanceFrontier(DominanceTree* dt){
+    dt->DFCal();
+    return dt;
 }

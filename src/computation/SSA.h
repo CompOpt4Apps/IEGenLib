@@ -22,18 +22,6 @@
 #include <iostream>
 #include "set_relation/set_relation.h"
 using namespace iegenlib;
-//class SSA {
-//public:
-//    SSA();
-//    virtual ~SSA();
-//    struct dominanceTree{
-//        dominanceTree * parent; // parent to the node
-//        std::vector<dominanceTree*>child;  // list of the Children's
-//        std::pair<int, std::vector<std::string>> data; // iteration domain with stmtIdx as key
-//    };
-//    std::vector<SSA::dominanceTree> getDominanceTree(std::vector<std::pair<int,iegenlib::Set*>>&executionS);
-//};
-//
 
 namespace SSA{
 class DominanceTree {
@@ -43,6 +31,7 @@ private:
         std::vector<int>children;  // list of the Children's
         std::vector<int> predecessors{}; // list of the dominators for particular node
         std::pair<int, iegenlib::Set*> data; // iteration domain with stmtIdx as key
+        int dominanceFrontier;
     };
     std::vector<Node> nodes;
 public:
@@ -58,11 +47,12 @@ public:
     bool predecessorEquivalent(DominanceTree dt);
     bool isParent(int parent, int child);
     std::vector<Set*>getPrefixes(Set*s);
+    void DFCal();
 };
     bool isDominator(iegenlib::Set* parent, iegenlib::Set* child);
     bool isReverseDominator(iegenlib::Set * s1, iegenlib::Set * s2);
     DominanceTree* createDominanceTree( std::vector<std::pair<int, iegenlib::Set*>> executionS);
     DominanceTree* findPredecessors(DominanceTree* dt);
-
+    DominanceTree* createDominanceFrontier(DominanceTree* dt);
 };
 #endif
