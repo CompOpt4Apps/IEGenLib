@@ -65,11 +65,12 @@ std::vector<int> DominanceTree::getPredecessor(int i){
 }
 //calculate Dominance Frontier
 void DominanceTree::DFCal() {
-    for(int i=0; i<this->nodes.size()-2;i++){
+    for(int i=0; i<this->nodes.size();i++){
         if( this->nodes[i].predecessors.size() > 1) {
             for (int pred:  this->nodes[i].predecessors) {
                 int runner = pred;
                 while( runner !=  this->nodes[i].parent){
+                    std:: cout << "statement " <<  this->nodes[i].data.second->prettyPrintString();
                     this->nodes[runner].dominanceFrontier = i;
                     runner =   this->nodes[runner].parent;
                 }

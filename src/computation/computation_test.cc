@@ -742,78 +742,53 @@ TEST_F(ComputationTest, DISABLED_AppendComputationSSA) {
 
 TEST_F(ComputationTest, StaticSSA){
     Computation* comp1 = new Computation();
-    comp1->addDataSpace("input", "int");
-    comp1->addDataSpace("useMe", "int");
-/*
-    if(x>10){
-        useMe = 90;
-    }
-    else{
-        useMe = 98;
-    }
-    useMe = useMe + input;
-    */
-//    comp1->addStmt(new Stmt (
-//            "useMe = 10;",
-//            "{[0]}",
-//            "{[0]->[0]}",`
-//            {},
-//            {{"useMe", "{[0]->[0]}"}}
-//    ));
-//    comp1->addStmt(new Stmt (
-//            "useMe+ = 80;",
-//            "{[0]: x > 10}",
-//            "{[0]->[1]}",
-//            {{"useMe", "{[0]->[0]}"} },
-//            {{"useMe", "{[0]->[0]}"}}
-//    ));
-//
-//    comp1->addStmt(new Stmt (
-//            "useMe+ = 98;",
-//            "{[0]: x <=10}",
-//            "{[0]->[2]}",
-//            {{"useMe", "{[0]->[0]}"}},
-//            {{"useMe", "{[0]->[0]}"}}
-//    ));
-//
-//    comp1->addStmt(new Stmt (
-//            "useMe = useMe + input;",
-//            "{[0]}", "{[0]->[3]}",
-//            {{"useMe", "{[0]->[0]}"}, {"input", "{[0]->[0]}"}},
-//            {{"useMe", "{[0]->[0]}"}}
-//    ));
+    comp1->addDataSpace("x", "int");
+    comp1->addDataSpace("y", "int");
+    comp1->addDataSpace("y1", "int");
+    comp1->addDataSpace("y2", "int");
+    comp1->addDataSpace("y3", "int");
+    comp1->addDataSpace("y4", "int");
 
     comp1->addStmt(new Stmt (
             "y(i,j)+= x(i,j)+10;",
             "{[i,j]:  0 <=i< N  && 0 <=j<M}",
-            "{[i,j]->[0,i,0,j,0]}",
-            {{"x", "{[i,j]->[i,j]}"}, {"y", "{[i,j]->[i,j]}"}},
-            {{"y", "{[i,j]->[i,j]}"}}
-    ));
-
-
-    comp1->addStmt(new Stmt (
-            "y(i,j)+ = x(i,j)+10;",
-            "{[i,j]:  0 <=i< N  && 0 <=j<M}",
-            "{[i,j]->[1,i,0,j,0]}",
-            {{"x", "{[i,j]->[i,j]}"}, {"y", "{[i,j]->[i,j]}"}},
-            {{"y", "{[i,j]->[i,j]}"}}
-    ));
-    comp1->addStmt(new Stmt (
-            "y(i,j)+ = x(i,j)+10;",
-            "{[i,j]:  0 <=i< N  && 0 <=j<M}",
-            "{[i,j]->[1,i,0,j,1]}",
+            "{[i,j]->[0,i,0,j,0,0,0]}",
             {{"x", "{[i,j]->[i,j]}"}, {"y", "{[i,j]->[i,j]}"}},
             {{"y", "{[i,j]->[i,j]}"}}
     ));
 
     comp1->addStmt(new Stmt (
+            "y(i,j) = y(i,j)+ x(i,j)+5;",
+            "{[i,j,p]:  0 <=i< N  && 0 <=j<M && p > 10 }",
+            "{[i,j,p]->[0,i,0,j,1,p,0]}",
+            {{"x", "{[i,j,p]->[i,j]}"}, {"y", "{[i,j,p]->[i,j]}"}},
+            {{"y", "{[i,j,p]->[i,j]}"}}
+    ));
+
+    comp1->addStmt(new Stmt (
             "y(i,j)+ = x(i,j)+10;",
             "{[i,j]:  0 <=i< N  && 0 <=j<M}",
-            "{[i,j]->[3,i,0,j,1]}",
+            "{[i,j]->[1,i,0,j,0,0,0]}",
             {{"x", "{[i,j]->[i,j]}"}, {"y", "{[i,j]->[i,j]}"}},
             {{"y", "{[i,j]->[i,j]}"}}
     ));
+
+    comp1->addStmt(new Stmt (
+            "y(i,j)+ = x(i,j)+10;",
+            "{[i,j]:  0 <=i< N  && 0 <=j<M}",
+            "{[i,j]->[1,i,0,j,1,0,0]}",
+            {{"x", "{[i,j]->[i,j]}"}, {"y", "{[i,j]->[i,j]}"}},
+            {{"y", "{[i,j]->[i,j]}"}}
+    ));
+
+    comp1->addStmt(new Stmt (
+            "y(i,j)+ = x(i,j)+10;",
+            "{[i,j]:  0 <=i< N  && 0 <=j<M}",
+            "{[i,j]->[3,i,0,j,1,0,0]}",
+            {{"x", "{[i,j]->[i,j]}"}, {"y", "{[i,j]->[i,j]}"}},
+            {{"y", "{[i,j]->[i,j]}"}}
+    ));
+
     string dotString;
     //comp1->codeGen();
     dotString = comp1->toDotString();

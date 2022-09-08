@@ -392,6 +392,6 @@ TEST(SSATest, DominanceTreeTEST10){
                         {11,s12}};
 
     DominanceTree* dt = createDominanceTree(executionS);
-    DominanceTree* dt1 = findPredecessors(dt);
-    dt->DFCal();
+   // DominanceTree* dt1 = findPredecessors(dt);
+   // dt->DFCal();
 }
