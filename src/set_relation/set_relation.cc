@@ -1692,11 +1692,11 @@ Conjunction*  Conjunction::TransitiveClosure(){
 	// Add edge between lhs and rhs in the graph.
         g->addEdge(lhsNode,rhsNode,EdgeType::GREATER_OR_EQUAL_TO);
     }
-    //std::cout <<  "Before: \n";
-    //std::cout << g->toDotString();
+    std::cout <<  "Before: \n";
+    std::cout << g->toDotString();
     g->Closure();
-    //std::cout <<  "After: \n";
-    //std::cout << g->toDotString();
+    std::cout <<  "After: \n";
+    std::cout << g->toDotString();
     // Delete all expressions in the retVal conjunction.
     retVal->reset();
 
@@ -4288,8 +4288,9 @@ class VisitorFindMultiVarUFCalls : public Visitor {
 
 Set *Set::projectOut(int tvar) {
     // find transitive closure
-    Set *closure = this->TransitiveClosure();
 
+    Set *closure = this->TransitiveClosure();
+    std::cout<< "After Closure" << this->prettyPrintString()<<'\n';
     // Check if this tuple variable is directly equal to another
     // tuple variable.
     bool hasDirectReplacement = false;

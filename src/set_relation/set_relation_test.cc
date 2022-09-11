@@ -5062,4 +5062,20 @@ TEST_F(SetRelationTest, LexiSort){
     bool status1 = ss->LexiSort(s3,s4);
     EXPECT_EQ(status1, false);
 }
+TEST_F(SetRelationTest, projectOut1)
+{
 
+    Set* s2;
+
+    s2 = new Set(
+            "{[t,s,r]: 0<=t<M && 0<=s<S && r>10}");
+
+    while( s2->getArity()> 1) {
+        TupleDecl tl = s2->getTupleDecl();
+        s2 = s2->projectOut(tl.getSize()-1);
+
+        std::cout << "test " << s2->prettyPrintString()<<'\n';
+    }
+    EXPECT_EQ(1, 1);
+    delete s2;
+}

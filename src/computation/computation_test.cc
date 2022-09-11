@@ -750,45 +750,50 @@ TEST_F(ComputationTest, StaticSSA){
     comp1->addDataSpace("y4", "int");
 
     comp1->addStmt(new Stmt (
-            "y(i,j)+= x(i,j)+10;",
+            "y1(i,j)= y(i,j)+x(i,j)+10;",
             "{[i,j]:  0 <=i< N  && 0 <=j<M}",
             "{[i,j]->[0,i,0,j,0,0,0]}",
             {{"x", "{[i,j]->[i,j]}"}, {"y", "{[i,j]->[i,j]}"}},
-            {{"y", "{[i,j]->[i,j]}"}}
+            {{"y1", "{[i,j]->[i,j]}"}}
     ));
-
     comp1->addStmt(new Stmt (
-            "y(i,j) = y(i,j)+ x(i,j)+5;",
+            "y2(i,j) = y1(i,j)+ x(i,j)+5;",
             "{[i,j,p]:  0 <=i< N  && 0 <=j<M && p > 10 }",
             "{[i,j,p]->[0,i,0,j,1,p,0]}",
-            {{"x", "{[i,j,p]->[i,j]}"}, {"y", "{[i,j,p]->[i,j]}"}},
-            {{"y", "{[i,j,p]->[i,j]}"}}
+            {{"x", "{[i,j,p]->[i,j]}"}, {"y1", "{[i,j,p]->[i,j]}"}},
+            {{"y2", "{[i,j,p]->[i,j]}"}}
     ));
 
     comp1->addStmt(new Stmt (
-            "y(i,j)+ = x(i,j)+10;",
+            "y_phi(i,j) = phi(y1,y2);",
+            "{[i,j]:  0 <=i< N  && 0 <=j<M }",
+            "{[i,j]->[0,i,0,j,1,0,0]}",
+            {{"y2", "{[i,j]->[i,j]}"}, {"y1", "{[i,j]->[i,j]}"}},
+            {{"y_phi", "{[i,j]->[i,j]}"}}
+    ));
+
+    comp1->addStmt(new Stmt (
+            "y3(i,j) = y_phi(i,j)+ x(i,j)+10;",
             "{[i,j]:  0 <=i< N  && 0 <=j<M}",
-            "{[i,j]->[1,i,0,j,0,0,0]}",
-            {{"x", "{[i,j]->[i,j]}"}, {"y", "{[i,j]->[i,j]}"}},
-            {{"y", "{[i,j]->[i,j]}"}}
+            "{[i,j]->[1,i,1,j,0,0,0]}",
+            {{"x", "{[i,j]->[i,j]}"}, {"y_phi", "{[i,j]->[i,j]}"}},
+            {{"y3", "{[i,j]->[i,j]}"}}
     ));
-
     comp1->addStmt(new Stmt (
-            "y(i,j)+ = x(i,j)+10;",
+            "y4(i,j) = y3(i,j)+x(i,j)+10;",
             "{[i,j]:  0 <=i< N  && 0 <=j<M}",
             "{[i,j]->[1,i,0,j,1,0,0]}",
-            {{"x", "{[i,j]->[i,j]}"}, {"y", "{[i,j]->[i,j]}"}},
-            {{"y", "{[i,j]->[i,j]}"}}
+            {{"x", "{[i,j]->[i,j]}"}, {"y3", "{[i,j]->[i,j]}"}},
+            {{"y4", "{[i,j]->[i,j]}"}}
     ));
 
     comp1->addStmt(new Stmt (
-            "y(i,j)+ = x(i,j)+10;",
+            "y5(i,j) = y4(i,j)+ x(i,j)+10;",
             "{[i,j]:  0 <=i< N  && 0 <=j<M}",
             "{[i,j]->[3,i,0,j,1,0,0]}",
-            {{"x", "{[i,j]->[i,j]}"}, {"y", "{[i,j]->[i,j]}"}},
-            {{"y", "{[i,j]->[i,j]}"}}
+            {{"x", "{[i,j]->[i,j]}"}, {"y4", "{[i,j]->[i,j]}"}},
+            {{"y5", "{[i,j]->[i,j]}"}}
     ));
-
     string dotString;
     //comp1->codeGen();
     dotString = comp1->toDotString();

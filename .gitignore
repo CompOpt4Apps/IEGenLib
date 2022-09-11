@@ -355,3 +355,4 @@ lib/isl/libisl.la
 lib/isl/libtool
 lib/isl/pip_test.sh
 .DS_Store
+cmake-build-debug/
