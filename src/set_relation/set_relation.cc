@@ -1692,11 +1692,7 @@ Conjunction*  Conjunction::TransitiveClosure(){
 	// Add edge between lhs and rhs in the graph.
         g->addEdge(lhsNode,rhsNode,EdgeType::GREATER_OR_EQUAL_TO);
     }
-    std::cout <<  "Before: \n";
-    std::cout << g->toDotString();
     g->Closure();
-    std::cout <<  "After: \n";
-    std::cout << g->toDotString();
     // Delete all expressions in the retVal conjunction.
     retVal->reset();
 
@@ -3414,10 +3410,16 @@ Set* Relation::ToSet(){
 
 bool Set::isSubset(Set* other){
     assert(mArity == other->arity() && "isSubset: mismatch arity");
+    Set* thisCopy = new Set(*this);
     Set* setIntersect = this->Intersect(other);
+    // Normalize /simplify
+    thisCopy->normalize();
+    setIntersect->normalize();
+   
     //std::cout << setIntersect->prettyPrintString() << "\n";
-    bool res = *setIntersect == *this;
+    bool res = *setIntersect == *thisCopy;
     delete setIntersect;
+    delete thisCopy;
     return res;
 }
 
@@ -4170,7 +4172,6 @@ public:
         cc->setInArity(0);
         Set * cs = new Set(cc->arity() );
         cs->addConjunction(cc);
-
         // Send through ISL to project out desired tuple variable
         Set* islSet = islSetProjectOut(cs, tvar);
 
@@ -4290,7 +4291,6 @@ Set *Set::projectOut(int tvar) {
     // find transitive closure
 
     Set *closure = this->TransitiveClosure();
-    std::cout<< "After Closure" << this->prettyPrintString()<<'\n';
     // Check if this tuple variable is directly equal to another
     // tuple variable.
     bool hasDirectReplacement = false;

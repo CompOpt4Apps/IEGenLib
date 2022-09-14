@@ -5004,6 +5004,12 @@ TEST_F(SetRelationTest, IsSubset) {
     Set *s2 = new Set("{[i]: 0 <= i < N}");
     EXPECT_FALSE(s2->isSubset(s1));
     EXPECT_TRUE(s1->isSubset(s2));
+    delete s1;
+    delete s2;
+    s1 = new Set("{ [t] : t >= 0 && -t + M - 1 >= 0 }");
+    s2 = new Set("{ [t] : t >= 0 && S - 1 >= 0 && -t + M - 1 >= 0 }"); 
+    EXPECT_TRUE(s2->isSubset(s1));
+    EXPECT_FALSE(s1->isSubset(s2));
 }
 TEST_F(SetRelationTest, ProjectOutConstTest ){
     iegenlib::Set* s1 = new iegenlib::Set("{[0,i,0] : 0 <=i< N}");
@@ -5062,20 +5068,5 @@ TEST_F(SetRelationTest, LexiSort){
     bool status1 = ss->LexiSort(s3,s4);
     EXPECT_EQ(status1, false);
 }
-TEST_F(SetRelationTest, projectOut1)
-{
 
-    Set* s2;
 
-    s2 = new Set(
-            "{[t,s,r]: 0<=t<M && 0<=s<S && r>10}");
-
-    while( s2->getArity()> 1) {
-        TupleDecl tl = s2->getTupleDecl();
-        s2 = s2->projectOut(tl.getSize()-1);
-
-        std::cout << "test " << s2->prettyPrintString()<<'\n';
-    }
-    EXPECT_EQ(1, 1);
-    delete s2;
-}
