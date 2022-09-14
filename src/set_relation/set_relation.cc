@@ -3412,6 +3412,8 @@ bool Set::isSubset(Set* other){
     assert(mArity == other->arity() && "isSubset: mismatch arity");
     Set* thisCopy = new Set(*this);
     Set* setIntersect = this->Intersect(other);
+    thisCopy->pushConstToConstraints();
+    setIntersect->pushConstToConstraints();
     // Normalize /simplify
     thisCopy->normalize();
     setIntersect->normalize();

@@ -391,7 +391,22 @@ TEST(SSATest, DominanceTreeTEST10){
                         {5,s6},{6,s7},{7,s8},{8,s9},{9,s10}, {10,s11},
                         {11,s12}};
 
+
     DominanceTree* dt = createDominanceTree(executionS);
-   // DominanceTree* dt1 = findPredecessors(dt);
-   // dt->DFCal();
+   //DominanceTree* dt1 = findPredecessors(dt);
+   //dt->DFCal();
+}
+
+
+
+
+TEST(SSATest, IsDominator5){
+
+    iegenlib::Set* s9 = new iegenlib::Set("{[2,t,1]: 0<=t<M}");
+    iegenlib::Set* s10 = new iegenlib::Set("{[2,t,3,s,0,r,0]: 0<=t<M && 0<=s<S && r>10}");
+
+    bool status = SSA::isDominator(s9, s10);
+
+    EXPECT_EQ(status, true);
+
 }
