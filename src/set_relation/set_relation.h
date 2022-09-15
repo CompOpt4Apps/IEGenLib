@@ -447,6 +447,11 @@ public:
     void pushConstToConstraints();
 
 
+    /*! Pushes constants in constraints into the tuple declaration.
+    */
+    void pushConstConstraintsToTupleDecl();
+    
+    
     //! Remove duplicate constraints and trivial constraints
     void cleanUp();
 

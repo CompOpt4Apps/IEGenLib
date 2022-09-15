@@ -107,7 +107,7 @@ SET_SOURCE_FILES_PROPERTIES(${iegenlib_SOURCES}
 			    COMPILE_FLAGS "-Wall -Wno-unknown-pragmas -g")
 SET_SOURCE_FILES_PROPERTIES(${iegenlib_t_SOURCES}
 	                    PROPERTIES
-			    COMPILE_FLAGS "-Wall -Wno-unknown-pragmas")
+			    COMPILE_FLAGS "-Wall -g -Wno-unknown-pragmas")
 
 ## create the library
 add_library(iegenlib STATIC ${iegenlib_SOURCES})

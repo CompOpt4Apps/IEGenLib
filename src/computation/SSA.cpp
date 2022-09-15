@@ -70,7 +70,6 @@ void DominanceTree::DFCal() {
             for (int pred:  this->nodes[i].predecessors) {
                 int runner = pred;
                 while( runner !=  this->nodes[i].parent){
-                    std:: cout << "statement " <<  this->nodes[i].data.second->prettyPrintString();
                     this->nodes[runner].dominanceFrontier = i;
                     runner =   this->nodes[runner].parent;
                 }
@@ -120,8 +119,6 @@ bool SSA::isReverseDominator(iegenlib::Set * s1, iegenlib::Set * s2){
     while( s2->getArity() > s1->getArity()) {
 
         TupleDecl tl = s2->getTupleDecl();
-        // std::cout << "before" <<childP->prettyPrintString()<<'\n';
-        // std::cout << parentP->prettyPrintString() <<'\n';
         s2 = s2->projectOut(tl.getSize()-1);
     }
     if (s2->isSubset(s1)) return false;
@@ -209,14 +206,13 @@ bool SSA::isDominator(iegenlib::Set * parent, iegenlib::Set * child){
 
     childP = child->projectOutConst(child);
     parentP = parent->projectOutConst(parent);
-
+    
 
     if( parentP->getArity() > childP->getArity()){
         return  false;
     }
     // project out until parents and child parity matches
     while( parentP->getArity() < childP->getArity()) {
-
         TupleDecl tl = childP->getTupleDecl();
         childP = childP->projectOut(tl.getSize()-1);
     }

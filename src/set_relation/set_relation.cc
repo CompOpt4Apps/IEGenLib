@@ -170,7 +170,6 @@ Set* islSetComplement (Set* s){
 Set* islSetProjectOut(Set* s, unsigned pos) {
 
     string sstr = s->toISLString();
-
     // Using isl to project out tuple variable #pos
     isl_ctx *ctx = isl_ctx_alloc();
     string islStr = islSetToString (
@@ -1834,6 +1833,19 @@ void SparseConstraints::pushConstToConstraints(){
     }
 }
 
+/*! Pushes constants in constraints into the tuple declaration.
+*/
+void SparseConstraints::pushConstConstraintsToTupleDecl(){
+
+    for (std::list<Conjunction*>::iterator i=mConjunctions.begin();
+            i != mConjunctions.end(); i++) {
+        Conjunction* c = *i;
+        c->pushConstConstraintsToTupleDecl();
+    }
+}
+
+
+
 //! For all conjunctions, sets them to the given tuple declaration.
 //! If there are some constants that don't agree then throws exception.
 //! If replacing a constant with a variable ignores the substitution
@@ -3410,18 +3422,14 @@ Set* Relation::ToSet(){
 
 bool Set::isSubset(Set* other){
     assert(mArity == other->arity() && "isSubset: mismatch arity");
-    Set* thisCopy = new Set(*this);
-    Set* setIntersect = this->Intersect(other);
-    thisCopy->pushConstToConstraints();
-    setIntersect->pushConstToConstraints();
-    // Normalize /simplify
-    thisCopy->normalize();
-    setIntersect->normalize();
-   
-    //std::cout << setIntersect->prettyPrintString() << "\n";
-    bool res = *setIntersect == *thisCopy;
+    Set* thisClosure = this->TransitiveClosure();
+    Set* otherClosure = other->TransitiveClosure();
+    Set* setIntersect = thisClosure->Intersect(otherClosure);
+    // circumvent possible inequivalnce by using closure.
+    bool res = *setIntersect == *thisClosure;
     delete setIntersect;
-    delete thisCopy;
+    delete otherClosure;
+    delete thisClosure;
     return res;
 }
 

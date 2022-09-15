@@ -5070,3 +5070,16 @@ TEST_F(SetRelationTest, LexiSort){
 }
 
 
+TEST_F(SetRelationTest, ProjectOutISL){
+    Set* s = new Set("{ [t, s] : t >= 0 && s >= 0 && M - 1 >= 0 &&"
+		    " S - 1 >= 0 && -t + M - 1 >= 0"
+		    " && -s + S - 1 >= 0 }");
+    // This is called internally in our project out.
+    Set* islSet = islSetProjectOut(s, 1);
+    Set* tranClose = islSet->TransitiveClosure(); 
+    EXPECT_EQ("{ [t] : t >= 0 && M - 1 >= 0 && S - 1 >= 0 && -t + M - 1 >= 0 }",
+		    tranClose->prettyPrintString());
+    delete s;
+    delete islSet;
+    delete tranClose;
+}
