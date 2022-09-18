@@ -31,7 +31,7 @@ int DominanceTree::push_Back(std::pair<int, iegenlib::Set*> data) {
     node->parent= -1;
     node->children = {};
     node->data = data;
-    node-> dominanceFrontier = -1;
+    node-> dominanceFrontier = {};
     nodes.push_back(*node);
     return(nodes.size()-1);
 }
@@ -70,7 +70,10 @@ void DominanceTree::DFCal() {
             for (int pred:  this->nodes[i].predecessors) {
                 int runner = pred;
                 while( runner !=  this->nodes[i].parent){
-                    this->nodes[runner].dominanceFrontier = i;
+                    std::vector<int> DF_runner =  this->nodes[runner].dominanceFrontier;
+                    if(std::find(DF_runner.begin(), DF_runner.end(), i) == DF_runner.end()) {
+                        DF_runner.push_back(i) ;
+                    }
                     runner =   this->nodes[runner].parent;
                 }
             }
@@ -259,13 +262,13 @@ void DominanceTree::insertPhiNode(std::vector<std::pair<int, std::vector<int>>> 
         std::vector<int> workList = globals[i].second;
         for(int j=0 ;j<workList.size();j++){
             //std::cout << "definition nodes for a variable "<< workList[j]<<'\n';
-            int DF = this->nodes[workList[j]].dominanceFrontier;
-            if(DF){
+            std::vector<int> DF = this->nodes[workList[j]].dominanceFrontier;
+            for(int k=0;k<DF.size();k++){
                 //code to insert in phi nodes;
                // std::cout << "insert phi nodes in DF "<< this->nodes[workList[j]].dominanceFrontier<<'\n';
-                if (std::find(workList.begin(), workList.end(), DF) == workList.end()) {
+                if (std::find(workList.begin(), workList.end(), DF[k]) == workList.end()) {
                     // someName not in name, add it
-                    workList.push_back(DF);
+                    workList.push_back(DF[k]);
                 }
             }
         }

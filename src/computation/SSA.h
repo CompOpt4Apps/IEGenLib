@@ -32,7 +32,7 @@ private:
         std::vector<int>children;  // list of the Children's
         std::vector<int> predecessors{}; // list of the dominators for particular node
         std::pair<int, iegenlib::Set*> data; // iteration domain with stmtIdx as key
-        int dominanceFrontier;
+        std::vector<int>dominanceFrontier;
     };
     std::vector<Node> nodes;
 public:
