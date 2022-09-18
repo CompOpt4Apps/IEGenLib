@@ -253,7 +253,22 @@ DominanceTree* SSA::createDominanceTree(std::vector<std::pair<int, iegenlib::Set
     return rval;
 }
 
-DominanceTree* createDominanceFrontier(DominanceTree* dt){
-    dt->DFCal();
-    return dt;
+void DominanceTree::insertPhiNode(std::vector<std::pair<int, std::vector<int>>> globals){
+
+    for(int i=0;i<globals.size();i++){
+        std::vector<int> workList = globals[i].second;
+        for(int j=0 ;j<workList.size();j++){
+            //std::cout << "definition nodes for a variable "<< workList[j]<<'\n';
+            int DF = this->nodes[workList[j]].dominanceFrontier;
+            if(DF){
+                //code to insert in phi nodes;
+               // std::cout << "insert phi nodes in DF "<< this->nodes[workList[j]].dominanceFrontier<<'\n';
+                if (std::find(workList.begin(), workList.end(), DF) == workList.end()) {
+                    // someName not in name, add it
+                    workList.push_back(DF);
+                }
+            }
+        }
+    }
 }
+

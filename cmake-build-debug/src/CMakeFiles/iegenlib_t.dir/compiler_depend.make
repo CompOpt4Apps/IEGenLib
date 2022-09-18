@@ -2032,7 +2032,9 @@ src/CMakeFiles/iegenlib_t.dir/computation/SSA.cpp.o: ../src/computation/SSA.cpp 
   ../src/parser/jsoncons/parse_error_handler.hpp \
   ../src/parser/jsoncons/json_parser.hpp \
   ../src/parser/jsoncons/json_error_category.hpp \
-  ../src/parser/jsoncons/json_type_traits.hpp
+  ../src/parser/jsoncons/json_type_traits.hpp \
+  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/unordered_set \
+  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/__hash_table
 
 src/CMakeFiles/iegenlib_t.dir/computation/SSA_test.cpp.o: ../src/computation/SSA_test.cpp \
   ../src/computation/SSA.h \
@@ -2515,6 +2517,16 @@ src/CMakeFiles/iegenlib_t.dir/computation/SSA_test.cpp.o: ../src/computation/SSA
   ../src/parser/jsoncons/json_parser.hpp \
   ../src/parser/jsoncons/json_error_category.hpp \
   ../src/parser/jsoncons/json_type_traits.hpp \
+  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/unordered_set \
+  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/__hash_table \
+  ../src/computation/Computation.h \
+  ../lib/installed/include/basic/boolset.h \
+  ../src/computation/CompGraph.h \
+  ../src/set_relation/Visitor.h \
+  ../src/set_relation/set_relation.h \
+  ../src/set_relation/expression.h \
+  ../src/set_relation/VisitorChangeUFsForOmega.h \
+  ../src/set_relation/Visitor.h \
   ../lib/gtest/include/gtest/gtest.h \
   ../lib/gtest/include/gtest/internal/gtest-internal.h \
   ../lib/gtest/include/gtest/internal/gtest-port.h \
@@ -2546,7 +2558,40 @@ src/CMakeFiles/iegenlib_t.dir/computation/SSA_test.cpp.o: ../src/computation/SSA
   ../lib/gtest/include/gtest/gtest_prod.h \
   ../lib/gtest/include/gtest/gtest-test-part.h \
   ../lib/gtest/include/gtest/gtest-typed-test.h \
-  ../lib/gtest/include/gtest/gtest_pred_impl.h
+  ../lib/gtest/include/gtest/gtest_pred_impl.h \
+  ../lib/installed/include/code_gen/parser/parser.h \
+  ../lib/installed/include/omega.h \
+  ../lib/installed/include/omega/omega_core/debugging.h \
+  ../lib/installed/include/omega/pres_var.h \
+  ../lib/installed/include/omega/pres_gen.h \
+  ../lib/installed/include/omega/omega_core/oc.h \
+  ../lib/installed/include/basic/util.h \
+  ../lib/installed/include/basic/Tuple.h \
+  ../lib/installed/include/basic/Collection.h \
+  ../lib/installed/include/basic/Iterator.h \
+  ../lib/installed/include/basic/Tuple.c \
+  ../lib/installed/include/basic/ConstString.h \
+  ../lib/installed/include/basic/List.h \
+  ../lib/installed/include/basic/Link.h \
+  ../lib/installed/include/basic/List.c \
+  ../lib/installed/include/omega/pres_cnstr.h \
+  ../lib/installed/include/omega/pres_subs.h \
+  ../lib/installed/include/omega/Relation.h \
+  ../lib/installed/include/omega/RelBody.h \
+  ../lib/installed/include/omega/pres_form.h \
+  ../lib/installed/include/omega/pres_dnf.h \
+  ../lib/installed/include/omega/Relations.h \
+  ../lib/installed/include/omega/pres_conj.h \
+  ../lib/installed/include/omega/pres_decl.h \
+  ../lib/installed/include/basic/Section.h \
+  ../lib/installed/include/basic/Section.c \
+  ../lib/installed/include/omega/pres_logic.h \
+  ../lib/installed/include/omega/pres_quant.h \
+  ../lib/installed/include/omega/pres_cmpr.h \
+  ../lib/installed/include/omega/Rel_map.h \
+  ../lib/installed/include/omega/farkas.h \
+  ../lib/installed/include/omega/hull.h \
+  ../lib/installed/include/omega/closure.h
 
 src/CMakeFiles/iegenlib_t.dir/computation/computation_test.cc.o: ../src/computation/computation_test.cc \
   ../src/computation/Computation.h \

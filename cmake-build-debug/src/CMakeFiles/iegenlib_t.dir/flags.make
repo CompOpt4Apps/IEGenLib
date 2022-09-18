@@ -50,41 +50,41 @@ CXX_FLAGS = -std=c++11 -fPIC -std=c++11 -O0 -g -isysroot /Applications/Xcode.app
 
 # Custom flags: src/CMakeFiles/iegenlib_t.dir/util/util.cc.o_FLAGS = -Wall -Wno-unknown-pragmas -g
 
-# Custom flags: src/CMakeFiles/iegenlib_t.dir/chillusage_test.cc.o_FLAGS = -Wall -Wno-unknown-pragmas
+# Custom flags: src/CMakeFiles/iegenlib_t.dir/chillusage_test.cc.o_FLAGS = -Wall -g -Wno-unknown-pragmas
 
-# Custom flags: src/CMakeFiles/iegenlib_t.dir/computation/computation_test.cc.o_FLAGS = -Wall -Wno-unknown-pragmas
+# Custom flags: src/CMakeFiles/iegenlib_t.dir/computation/computation_test.cc.o_FLAGS = -Wall -g -Wno-unknown-pragmas
 
-# Custom flags: src/CMakeFiles/iegenlib_t.dir/exceptions_test.cc.o_FLAGS = -Wall -Wno-unknown-pragmas
+# Custom flags: src/CMakeFiles/iegenlib_t.dir/exceptions_test.cc.o_FLAGS = -Wall -g -Wno-unknown-pragmas
 
-# Custom flags: src/CMakeFiles/iegenlib_t.dir/iegenlib_unit_test.cc.o_FLAGS = -Wall -Wno-unknown-pragmas
+# Custom flags: src/CMakeFiles/iegenlib_t.dir/iegenlib_unit_test.cc.o_FLAGS = -Wall -g -Wno-unknown-pragmas
 
-# Custom flags: src/CMakeFiles/iegenlib_t.dir/parser/parser_test.cc.o_FLAGS = -Wall -Wno-unknown-pragmas
+# Custom flags: src/CMakeFiles/iegenlib_t.dir/parser/parser_test.cc.o_FLAGS = -Wall -g -Wno-unknown-pragmas
 
-# Custom flags: src/CMakeFiles/iegenlib_t.dir/set_relation/TupleDecl_test.cc.o_FLAGS = -Wall -Wno-unknown-pragmas
+# Custom flags: src/CMakeFiles/iegenlib_t.dir/set_relation/TupleDecl_test.cc.o_FLAGS = -Wall -g -Wno-unknown-pragmas
 
-# Custom flags: src/CMakeFiles/iegenlib_t.dir/set_relation/UFCallMap_test.cc.o_FLAGS = -Wall -Wno-unknown-pragmas
+# Custom flags: src/CMakeFiles/iegenlib_t.dir/set_relation/UFCallMap_test.cc.o_FLAGS = -Wall -g -Wno-unknown-pragmas
 
-# Custom flags: src/CMakeFiles/iegenlib_t.dir/set_relation/complexityForPartialParallel_test.cc.o_FLAGS = -Wall -Wno-unknown-pragmas
+# Custom flags: src/CMakeFiles/iegenlib_t.dir/set_relation/complexityForPartialParallel_test.cc.o_FLAGS = -Wall -g -Wno-unknown-pragmas
 
-# Custom flags: src/CMakeFiles/iegenlib_t.dir/set_relation/detectUnsatOrFindEqualities_test.cc.o_FLAGS = -Wall -Wno-unknown-pragmas
+# Custom flags: src/CMakeFiles/iegenlib_t.dir/set_relation/detectUnsatOrFindEqualities_test.cc.o_FLAGS = -Wall -g -Wno-unknown-pragmas
 
-# Custom flags: src/CMakeFiles/iegenlib_t.dir/set_relation/environment_test.cc.o_FLAGS = -Wall -Wno-unknown-pragmas
+# Custom flags: src/CMakeFiles/iegenlib_t.dir/set_relation/environment_test.cc.o_FLAGS = -Wall -g -Wno-unknown-pragmas
 
-# Custom flags: src/CMakeFiles/iegenlib_t.dir/set_relation/expression_test.cc.o_FLAGS = -Wall -Wno-unknown-pragmas
+# Custom flags: src/CMakeFiles/iegenlib_t.dir/set_relation/expression_test.cc.o_FLAGS = -Wall -g -Wno-unknown-pragmas
 
-# Custom flags: src/CMakeFiles/iegenlib_t.dir/set_relation/isl_str_manipulation_test.cc.o_FLAGS = -Wall -Wno-unknown-pragmas
+# Custom flags: src/CMakeFiles/iegenlib_t.dir/set_relation/isl_str_manipulation_test.cc.o_FLAGS = -Wall -g -Wno-unknown-pragmas
 
-# Custom flags: src/CMakeFiles/iegenlib_t.dir/set_relation/normalization_test.cc.o_FLAGS = -Wall -Wno-unknown-pragmas
+# Custom flags: src/CMakeFiles/iegenlib_t.dir/set_relation/normalization_test.cc.o_FLAGS = -Wall -g -Wno-unknown-pragmas
 
-# Custom flags: src/CMakeFiles/iegenlib_t.dir/set_relation/reOrdTV_OmegaCodeGen_test.cc.o_FLAGS = -Wall -Wno-unknown-pragmas
+# Custom flags: src/CMakeFiles/iegenlib_t.dir/set_relation/reOrdTV_OmegaCodeGen_test.cc.o_FLAGS = -Wall -g -Wno-unknown-pragmas
 
-# Custom flags: src/CMakeFiles/iegenlib_t.dir/set_relation/setRelationship_test.cc.o_FLAGS = -Wall -Wno-unknown-pragmas
+# Custom flags: src/CMakeFiles/iegenlib_t.dir/set_relation/setRelationship_test.cc.o_FLAGS = -Wall -g -Wno-unknown-pragmas
 
-# Custom flags: src/CMakeFiles/iegenlib_t.dir/set_relation/set_relation_test.cc.o_FLAGS = -Wall -Wno-unknown-pragmas
+# Custom flags: src/CMakeFiles/iegenlib_t.dir/set_relation/set_relation_test.cc.o_FLAGS = -Wall -g -Wno-unknown-pragmas
 
-# Custom flags: src/CMakeFiles/iegenlib_t.dir/sparse_format_test.cc.o_FLAGS = -Wall -Wno-unknown-pragmas
+# Custom flags: src/CMakeFiles/iegenlib_t.dir/sparse_format_test.cc.o_FLAGS = -Wall -g -Wno-unknown-pragmas
 
-# Custom flags: src/CMakeFiles/iegenlib_t.dir/util/UnionFind_test.cc.o_FLAGS = -Wall -Wno-unknown-pragmas
+# Custom flags: src/CMakeFiles/iegenlib_t.dir/util/UnionFind_test.cc.o_FLAGS = -Wall -g -Wno-unknown-pragmas
 
-# Custom flags: src/CMakeFiles/iegenlib_t.dir/util/util_test.cc.o_FLAGS = -Wall -Wno-unknown-pragmas
+# Custom flags: src/CMakeFiles/iegenlib_t.dir/util/util_test.cc.o_FLAGS = -Wall -g -Wno-unknown-pragmas
 

@@ -800,6 +800,7 @@ TEST_F(ComputationTest, StaticSSA){
     std:cerr << dotString;
     EXPECT_EQ("1","1");
 }
+
 TEST_F(ComputationTest, Colors) {
     // Basic for loop with 2 statements
     // for (i = 0; i < N; i++) /loop over rows
