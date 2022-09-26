@@ -71,24 +71,29 @@ void DominanceTree::DFCal() {
     for(int i=0; i<this->nodes.size();i++){
         if( this->nodes[i].predecessors.size() > 1) {
            // std:: cout<< "pred for node " <<i <<'\n';
-           std::cout << "--------------------"<<'\n';
+           //std::cout << "--------------------"<<'\n';
             for (int pred:  this->nodes[i].predecessors) {
-                std:: cout<< "pred "<< pred << " for node " <<i <<'\n';
+                //std:: cout<< "pred "<< pred << " for node " <<i <<'\n';
                 int runner = pred;
                 std::vector<int> DF_runner =  this->nodes[runner].dominanceFrontier;
                 while( runner !=  this->nodes[i].parent){
                     //check if element i isn't in the vector
                     if(std::find(DF_runner.begin(), DF_runner.end(), i) == DF_runner.end()) {
                         DF_runner.push_back(i);
+                        //std:: cout << "DF  " << i<<'\n';
+                        //looks like additional DF nodes are being added
+                        // might have to remove the statement
                         this->nodes[runner].dominanceFrontier.push_back(i);
                     }
                     runner =   this->nodes[runner].parent;
                 }
-                std::cout << "runner " << runner <<'\n';
+                std::vector<int> test =  this->nodes[i].dominanceFrontier;
+                //std::cout << "runner " << runner <<'\n';
+                if(std::find(test.begin(), test.end(), i) == test.end()){
+                    test.push_back(runner);
+                }
 
-               // this->nodes[i].dominanceFrontier.push_back(runner);
             }
-
         }
         //this->nodes[runner].dominanceFrontier.push_back(i);
     }
@@ -269,7 +274,7 @@ DominanceTree* SSA::createDominanceTree(std::vector<std::pair<int, iegenlib::Set
     return pDominanceTree;
 }
 
-void DominanceTree::insertPhiNode(std::vector<std::map<string, std::vector<int>>> globals){
+void DominanceTree::insertPhiNode(std::vector<std::map<string, std::vector<int>>> globals ){
 
     for(int i=0;i<globals.size();i++){
         std:: cout << "hell0 =---"<<'\n';
@@ -277,10 +282,11 @@ void DominanceTree::insertPhiNode(std::vector<std::map<string, std::vector<int>>
 
         std::vector<int> workList = it->second;
         for(int j=0 ;j<workList.size();j++){
-            std::cout << "definition nodes for a variable "<< workList[j]<<'\n';
+            std::cout << "variable's definition node "<< workList[j]<<'\n';
             std::vector<int> DF = this->nodes[workList[j]].dominanceFrontier;
             for(int k=0;k<DF.size();k++){
                 //code to insert in phi nodes;
+
                 std::cout << "insert phi nodes in DF "<< this->nodes[workList[j]].dominanceFrontier[k]<<'\n';
                 if (std::find(workList.begin(), workList.end(), DF[k]) == workList.end()) {
                     workList.push_back(DF[k]);

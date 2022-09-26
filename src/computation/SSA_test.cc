@@ -444,7 +444,7 @@ TEST(SSATest, DominanceTreeTEST11){
     std::vector<std::map<string, std::vector<int>>> globals;
     std::map<string, std::vector<int>> a;
     std::map<string, std::vector<int>> c;
-    std::vector<int>b {1,5};
+    std::vector<int>b {2,3,4,5,6,7,8};
     a.insert(make_pair("x", b));
     //c.insert(make_pair("y", b));
 
