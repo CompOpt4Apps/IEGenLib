@@ -17,11 +17,11 @@
 #include "set_relation/set_relation.h"
 #include <utility>
 #include <vector>
+#include <map>
 #include "code_gen/parser/parser.h"
 #include "omega/Relation.h"
 using namespace SSA;
-
-
+using namespace std;
 TEST(SSATest, IsDominator){
 
     iegenlib::Set* s1 = new iegenlib::Set("{[0,i,0] : 0 <=i< N}");
@@ -220,8 +220,8 @@ TEST(SSATest, DominanceTreeTEST3){
     edt.add_predecessors(p12, p11);
     edt.add_predecessors(p12, p2);
 
-//    EXPECT_TRUE(edt.equivalent(*dt));
-//    EXPECT_TRUE(edt.predecessorEquivalent(*dt1));
+    //EXPECT_TRUE(edt.equivalent(*dt));
+   // EXPECT_TRUE(edt.predecessorEquivalent(*dt1));
 
 }
 
@@ -408,7 +408,9 @@ TEST(SSATest, IsDominator5){
 
     EXPECT_EQ(status, true);
 }
+
 TEST(SSATest, DominanceTreeTEST11){
+
 
     iegenlib::Set* s1 = new iegenlib::Set("{[0]}");
     iegenlib::Set* s2 = new iegenlib::Set("{[1]}");
@@ -438,8 +440,46 @@ TEST(SSATest, DominanceTreeTEST11){
     DominanceTree* dt1 = findPredecessors(dt);
     dt1->DFCal();
 
-    std::vector<std::pair<int, std::vector<int>>> globals {{'x',{1,4,5} },{'y',{1,4,5} }};
+
+    std::vector<std::map<string, std::vector<int>>> globals;
+    std::map<string, std::vector<int>> a;
+    std::map<string, std::vector<int>> c;
+    std::vector<int>b {1,5};
+    a.insert(make_pair("x", b));
+    //c.insert(make_pair("y", b));
+
+    globals.push_back(a);
+    //globals.push_back(c);
 
     dt1->insertPhiNode(globals);
 
+}
+
+TEST(SSATest, SSARenaming1) {
+
+    Computation* computation = new Computation();
+
+    computation->addParameter("foo", "int");
+    computation->addDataSpace("bar", "int");
+
+    Stmt* s1 = new Stmt("bar = foo;",
+                        "{[0]}",
+                        "{[0]->[0]}",
+                        {{"foo", "{[0]->[0]}"}},
+                        {{"bar", "{[0]->[0]}"}}
+    );
+    computation->addStmt(s1);
+
+    Stmt* s2 =new Stmt("foo = bar + 1",
+                       "{[0]}", "{[0]->[1]}",
+                       {{"bar", "{[0]->[0]}"}},
+                       {{"foo", "{[0]->[0]}"}}
+    );
+    computation->addStmt(s2);
+
+    std::string codeGen = computation->codeGen();
+    computation->finalize();
+
+    EXPECT_EQ("1","1");
+    delete computation;
 }

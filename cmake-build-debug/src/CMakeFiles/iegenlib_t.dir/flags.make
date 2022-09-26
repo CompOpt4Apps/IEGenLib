@@ -12,6 +12,8 @@ CXX_FLAGS = -std=c++11 -fPIC -std=c++11 -O0 -g -isysroot /Applications/Xcode.app
 
 # Custom flags: src/CMakeFiles/iegenlib_t.dir/computation/Computation.cc.o_FLAGS = -Wall -Wno-unknown-pragmas -g
 
+# Custom flags: src/CMakeFiles/iegenlib_t.dir/computation/SSA.cc.o_FLAGS = -Wall -Wno-unknown-pragmas -g
+
 # Custom flags: src/CMakeFiles/iegenlib_t.dir/parser/gen_parser.cc.o_FLAGS = -Wall -Wno-unknown-pragmas -g
 
 # Custom flags: src/CMakeFiles/iegenlib_t.dir/parser/gen_scanner.cc.o_FLAGS = -Wall -Wno-unknown-pragmas -g
@@ -51,6 +53,8 @@ CXX_FLAGS = -std=c++11 -fPIC -std=c++11 -O0 -g -isysroot /Applications/Xcode.app
 # Custom flags: src/CMakeFiles/iegenlib_t.dir/util/util.cc.o_FLAGS = -Wall -Wno-unknown-pragmas -g
 
 # Custom flags: src/CMakeFiles/iegenlib_t.dir/chillusage_test.cc.o_FLAGS = -Wall -g -Wno-unknown-pragmas
+
+# Custom flags: src/CMakeFiles/iegenlib_t.dir/computation/SSA_test.cc.o_FLAGS = -Wall -g -Wno-unknown-pragmas
 
 # Custom flags: src/CMakeFiles/iegenlib_t.dir/computation/computation_test.cc.o_FLAGS = -Wall -g -Wno-unknown-pragmas
 

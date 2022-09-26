@@ -135,7 +135,7 @@ target_link_libraries(../bin/subSetDriver iegenlib isl codegen omega gmp)
 
 
 ### this executable hold our unit tests
-add_executable(iegenlib_t ${iegenlib_SOURCES} ${iegenlib_t_SOURCES} computation/SSA.h computation/SSA.cpp computation/SSA.h computation/SSA_test.cpp)
+add_executable(iegenlib_t ${iegenlib_SOURCES} ${iegenlib_t_SOURCES})
 #Tell included gtest headers to NOT use tuple support.
 add_definitions(-DGTEST_HAS_TR1_TUPLE=0)
 target_link_libraries(iegenlib_t gtest isl codegen omega gmp)

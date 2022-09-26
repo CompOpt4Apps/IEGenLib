@@ -1202,13 +1202,15 @@
 			<Option target="iegenlib"/>
 			<Option target="iegenlib_t"/>
 		</Unit>
-		<Unit filename="/Users/ant/Documents/AdaptLab/IEGenLib/src/computation/SSA.cpp">
+		<Unit filename="/Users/ant/Documents/AdaptLab/IEGenLib/src/computation/SSA.cc">
+			<Option target="iegenlib"/>
 			<Option target="iegenlib_t"/>
 		</Unit>
 		<Unit filename="/Users/ant/Documents/AdaptLab/IEGenLib/src/computation/SSA.h">
+			<Option target="iegenlib"/>
 			<Option target="iegenlib_t"/>
 		</Unit>
-		<Unit filename="/Users/ant/Documents/AdaptLab/IEGenLib/src/computation/SSA_test.cpp">
+		<Unit filename="/Users/ant/Documents/AdaptLab/IEGenLib/src/computation/SSA_test.cc">
 			<Option target="iegenlib_t"/>
 		</Unit>
 		<Unit filename="/Users/ant/Documents/AdaptLab/IEGenLib/src/computation/computation_test.cc">

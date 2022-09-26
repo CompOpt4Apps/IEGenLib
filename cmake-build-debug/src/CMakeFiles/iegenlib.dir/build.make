@@ -97,10 +97,24 @@ src/CMakeFiles/iegenlib.dir/computation/Computation.cc.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/iegenlib.dir/computation/Computation.cc.s"
 	cd /Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -Wall -Wno-unknown-pragmas -g -S /Users/ant/Documents/AdaptLab/IEGenLib/src/computation/Computation.cc -o CMakeFiles/iegenlib.dir/computation/Computation.cc.s
 
+src/CMakeFiles/iegenlib.dir/computation/SSA.cc.o: src/CMakeFiles/iegenlib.dir/flags.make
+src/CMakeFiles/iegenlib.dir/computation/SSA.cc.o: ../src/computation/SSA.cc
+src/CMakeFiles/iegenlib.dir/computation/SSA.cc.o: src/CMakeFiles/iegenlib.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object src/CMakeFiles/iegenlib.dir/computation/SSA.cc.o"
+	cd /Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -Wall -Wno-unknown-pragmas -g -MD -MT src/CMakeFiles/iegenlib.dir/computation/SSA.cc.o -MF CMakeFiles/iegenlib.dir/computation/SSA.cc.o.d -o CMakeFiles/iegenlib.dir/computation/SSA.cc.o -c /Users/ant/Documents/AdaptLab/IEGenLib/src/computation/SSA.cc
+
+src/CMakeFiles/iegenlib.dir/computation/SSA.cc.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/iegenlib.dir/computation/SSA.cc.i"
+	cd /Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -Wall -Wno-unknown-pragmas -g -E /Users/ant/Documents/AdaptLab/IEGenLib/src/computation/SSA.cc > CMakeFiles/iegenlib.dir/computation/SSA.cc.i
+
+src/CMakeFiles/iegenlib.dir/computation/SSA.cc.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/iegenlib.dir/computation/SSA.cc.s"
+	cd /Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -Wall -Wno-unknown-pragmas -g -S /Users/ant/Documents/AdaptLab/IEGenLib/src/computation/SSA.cc -o CMakeFiles/iegenlib.dir/computation/SSA.cc.s
+
 src/CMakeFiles/iegenlib.dir/parser/gen_parser.cc.o: src/CMakeFiles/iegenlib.dir/flags.make
 src/CMakeFiles/iegenlib.dir/parser/gen_parser.cc.o: ../src/parser/gen_parser.cc
 src/CMakeFiles/iegenlib.dir/parser/gen_parser.cc.o: src/CMakeFiles/iegenlib.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object src/CMakeFiles/iegenlib.dir/parser/gen_parser.cc.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object src/CMakeFiles/iegenlib.dir/parser/gen_parser.cc.o"
 	cd /Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -Wall -Wno-unknown-pragmas -g -MD -MT src/CMakeFiles/iegenlib.dir/parser/gen_parser.cc.o -MF CMakeFiles/iegenlib.dir/parser/gen_parser.cc.o.d -o CMakeFiles/iegenlib.dir/parser/gen_parser.cc.o -c /Users/ant/Documents/AdaptLab/IEGenLib/src/parser/gen_parser.cc
 
 src/CMakeFiles/iegenlib.dir/parser/gen_parser.cc.i: cmake_force
@@ -114,7 +128,7 @@ src/CMakeFiles/iegenlib.dir/parser/gen_parser.cc.s: cmake_force
 src/CMakeFiles/iegenlib.dir/parser/gen_scanner.cc.o: src/CMakeFiles/iegenlib.dir/flags.make
 src/CMakeFiles/iegenlib.dir/parser/gen_scanner.cc.o: ../src/parser/gen_scanner.cc
 src/CMakeFiles/iegenlib.dir/parser/gen_scanner.cc.o: src/CMakeFiles/iegenlib.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object src/CMakeFiles/iegenlib.dir/parser/gen_scanner.cc.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object src/CMakeFiles/iegenlib.dir/parser/gen_scanner.cc.o"
 	cd /Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -Wall -Wno-unknown-pragmas -g -MD -MT src/CMakeFiles/iegenlib.dir/parser/gen_scanner.cc.o -MF CMakeFiles/iegenlib.dir/parser/gen_scanner.cc.o.d -o CMakeFiles/iegenlib.dir/parser/gen_scanner.cc.o -c /Users/ant/Documents/AdaptLab/IEGenLib/src/parser/gen_scanner.cc
 
 src/CMakeFiles/iegenlib.dir/parser/gen_scanner.cc.i: cmake_force
@@ -128,7 +142,7 @@ src/CMakeFiles/iegenlib.dir/parser/gen_scanner.cc.s: cmake_force
 src/CMakeFiles/iegenlib.dir/parser/parser.cc.o: src/CMakeFiles/iegenlib.dir/flags.make
 src/CMakeFiles/iegenlib.dir/parser/parser.cc.o: ../src/parser/parser.cc
 src/CMakeFiles/iegenlib.dir/parser/parser.cc.o: src/CMakeFiles/iegenlib.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object src/CMakeFiles/iegenlib.dir/parser/parser.cc.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object src/CMakeFiles/iegenlib.dir/parser/parser.cc.o"
 	cd /Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -Wall -Wno-unknown-pragmas -g -MD -MT src/CMakeFiles/iegenlib.dir/parser/parser.cc.o -MF CMakeFiles/iegenlib.dir/parser/parser.cc.o.d -o CMakeFiles/iegenlib.dir/parser/parser.cc.o -c /Users/ant/Documents/AdaptLab/IEGenLib/src/parser/parser.cc
 
 src/CMakeFiles/iegenlib.dir/parser/parser.cc.i: cmake_force
@@ -142,7 +156,7 @@ src/CMakeFiles/iegenlib.dir/parser/parser.cc.s: cmake_force
 src/CMakeFiles/iegenlib.dir/set_relation/SubMap.cc.o: src/CMakeFiles/iegenlib.dir/flags.make
 src/CMakeFiles/iegenlib.dir/set_relation/SubMap.cc.o: ../src/set_relation/SubMap.cc
 src/CMakeFiles/iegenlib.dir/set_relation/SubMap.cc.o: src/CMakeFiles/iegenlib.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object src/CMakeFiles/iegenlib.dir/set_relation/SubMap.cc.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object src/CMakeFiles/iegenlib.dir/set_relation/SubMap.cc.o"
 	cd /Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -Wall -Wno-unknown-pragmas -g -MD -MT src/CMakeFiles/iegenlib.dir/set_relation/SubMap.cc.o -MF CMakeFiles/iegenlib.dir/set_relation/SubMap.cc.o.d -o CMakeFiles/iegenlib.dir/set_relation/SubMap.cc.o -c /Users/ant/Documents/AdaptLab/IEGenLib/src/set_relation/SubMap.cc
 
 src/CMakeFiles/iegenlib.dir/set_relation/SubMap.cc.i: cmake_force
@@ -156,7 +170,7 @@ src/CMakeFiles/iegenlib.dir/set_relation/SubMap.cc.s: cmake_force
 src/CMakeFiles/iegenlib.dir/set_relation/TupleDecl.cc.o: src/CMakeFiles/iegenlib.dir/flags.make
 src/CMakeFiles/iegenlib.dir/set_relation/TupleDecl.cc.o: ../src/set_relation/TupleDecl.cc
 src/CMakeFiles/iegenlib.dir/set_relation/TupleDecl.cc.o: src/CMakeFiles/iegenlib.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object src/CMakeFiles/iegenlib.dir/set_relation/TupleDecl.cc.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object src/CMakeFiles/iegenlib.dir/set_relation/TupleDecl.cc.o"
 	cd /Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -Wall -Wno-unknown-pragmas -g -MD -MT src/CMakeFiles/iegenlib.dir/set_relation/TupleDecl.cc.o -MF CMakeFiles/iegenlib.dir/set_relation/TupleDecl.cc.o.d -o CMakeFiles/iegenlib.dir/set_relation/TupleDecl.cc.o -c /Users/ant/Documents/AdaptLab/IEGenLib/src/set_relation/TupleDecl.cc
 
 src/CMakeFiles/iegenlib.dir/set_relation/TupleDecl.cc.i: cmake_force
@@ -170,7 +184,7 @@ src/CMakeFiles/iegenlib.dir/set_relation/TupleDecl.cc.s: cmake_force
 src/CMakeFiles/iegenlib.dir/set_relation/UFCallMap.cc.o: src/CMakeFiles/iegenlib.dir/flags.make
 src/CMakeFiles/iegenlib.dir/set_relation/UFCallMap.cc.o: ../src/set_relation/UFCallMap.cc
 src/CMakeFiles/iegenlib.dir/set_relation/UFCallMap.cc.o: src/CMakeFiles/iegenlib.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object src/CMakeFiles/iegenlib.dir/set_relation/UFCallMap.cc.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object src/CMakeFiles/iegenlib.dir/set_relation/UFCallMap.cc.o"
 	cd /Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -Wall -Wno-unknown-pragmas -g -MD -MT src/CMakeFiles/iegenlib.dir/set_relation/UFCallMap.cc.o -MF CMakeFiles/iegenlib.dir/set_relation/UFCallMap.cc.o.d -o CMakeFiles/iegenlib.dir/set_relation/UFCallMap.cc.o -c /Users/ant/Documents/AdaptLab/IEGenLib/src/set_relation/UFCallMap.cc
 
 src/CMakeFiles/iegenlib.dir/set_relation/UFCallMap.cc.i: cmake_force
@@ -184,7 +198,7 @@ src/CMakeFiles/iegenlib.dir/set_relation/UFCallMap.cc.s: cmake_force
 src/CMakeFiles/iegenlib.dir/set_relation/UninterpFunc.cc.o: src/CMakeFiles/iegenlib.dir/flags.make
 src/CMakeFiles/iegenlib.dir/set_relation/UninterpFunc.cc.o: ../src/set_relation/UninterpFunc.cc
 src/CMakeFiles/iegenlib.dir/set_relation/UninterpFunc.cc.o: src/CMakeFiles/iegenlib.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object src/CMakeFiles/iegenlib.dir/set_relation/UninterpFunc.cc.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object src/CMakeFiles/iegenlib.dir/set_relation/UninterpFunc.cc.o"
 	cd /Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -Wall -Wno-unknown-pragmas -g -MD -MT src/CMakeFiles/iegenlib.dir/set_relation/UninterpFunc.cc.o -MF CMakeFiles/iegenlib.dir/set_relation/UninterpFunc.cc.o.d -o CMakeFiles/iegenlib.dir/set_relation/UninterpFunc.cc.o -c /Users/ant/Documents/AdaptLab/IEGenLib/src/set_relation/UninterpFunc.cc
 
 src/CMakeFiles/iegenlib.dir/set_relation/UninterpFunc.cc.i: cmake_force
@@ -198,7 +212,7 @@ src/CMakeFiles/iegenlib.dir/set_relation/UninterpFunc.cc.s: cmake_force
 src/CMakeFiles/iegenlib.dir/set_relation/VisitorChangeUFsForOmega.cc.o: src/CMakeFiles/iegenlib.dir/flags.make
 src/CMakeFiles/iegenlib.dir/set_relation/VisitorChangeUFsForOmega.cc.o: ../src/set_relation/VisitorChangeUFsForOmega.cc
 src/CMakeFiles/iegenlib.dir/set_relation/VisitorChangeUFsForOmega.cc.o: src/CMakeFiles/iegenlib.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object src/CMakeFiles/iegenlib.dir/set_relation/VisitorChangeUFsForOmega.cc.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object src/CMakeFiles/iegenlib.dir/set_relation/VisitorChangeUFsForOmega.cc.o"
 	cd /Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -Wall -Wno-unknown-pragmas -g -MD -MT src/CMakeFiles/iegenlib.dir/set_relation/VisitorChangeUFsForOmega.cc.o -MF CMakeFiles/iegenlib.dir/set_relation/VisitorChangeUFsForOmega.cc.o.d -o CMakeFiles/iegenlib.dir/set_relation/VisitorChangeUFsForOmega.cc.o -c /Users/ant/Documents/AdaptLab/IEGenLib/src/set_relation/VisitorChangeUFsForOmega.cc
 
 src/CMakeFiles/iegenlib.dir/set_relation/VisitorChangeUFsForOmega.cc.i: cmake_force
@@ -212,7 +226,7 @@ src/CMakeFiles/iegenlib.dir/set_relation/VisitorChangeUFsForOmega.cc.s: cmake_fo
 src/CMakeFiles/iegenlib.dir/set_relation/complexityForPartialParallel.cc.o: src/CMakeFiles/iegenlib.dir/flags.make
 src/CMakeFiles/iegenlib.dir/set_relation/complexityForPartialParallel.cc.o: ../src/set_relation/complexityForPartialParallel.cc
 src/CMakeFiles/iegenlib.dir/set_relation/complexityForPartialParallel.cc.o: src/CMakeFiles/iegenlib.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object src/CMakeFiles/iegenlib.dir/set_relation/complexityForPartialParallel.cc.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object src/CMakeFiles/iegenlib.dir/set_relation/complexityForPartialParallel.cc.o"
 	cd /Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -Wall -Wno-unknown-pragmas -g -MD -MT src/CMakeFiles/iegenlib.dir/set_relation/complexityForPartialParallel.cc.o -MF CMakeFiles/iegenlib.dir/set_relation/complexityForPartialParallel.cc.o.d -o CMakeFiles/iegenlib.dir/set_relation/complexityForPartialParallel.cc.o -c /Users/ant/Documents/AdaptLab/IEGenLib/src/set_relation/complexityForPartialParallel.cc
 
 src/CMakeFiles/iegenlib.dir/set_relation/complexityForPartialParallel.cc.i: cmake_force
@@ -226,7 +240,7 @@ src/CMakeFiles/iegenlib.dir/set_relation/complexityForPartialParallel.cc.s: cmak
 src/CMakeFiles/iegenlib.dir/set_relation/environment.cc.o: src/CMakeFiles/iegenlib.dir/flags.make
 src/CMakeFiles/iegenlib.dir/set_relation/environment.cc.o: ../src/set_relation/environment.cc
 src/CMakeFiles/iegenlib.dir/set_relation/environment.cc.o: src/CMakeFiles/iegenlib.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object src/CMakeFiles/iegenlib.dir/set_relation/environment.cc.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object src/CMakeFiles/iegenlib.dir/set_relation/environment.cc.o"
 	cd /Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -Wall -Wno-unknown-pragmas -g -MD -MT src/CMakeFiles/iegenlib.dir/set_relation/environment.cc.o -MF CMakeFiles/iegenlib.dir/set_relation/environment.cc.o.d -o CMakeFiles/iegenlib.dir/set_relation/environment.cc.o -c /Users/ant/Documents/AdaptLab/IEGenLib/src/set_relation/environment.cc
 
 src/CMakeFiles/iegenlib.dir/set_relation/environment.cc.i: cmake_force
@@ -240,7 +254,7 @@ src/CMakeFiles/iegenlib.dir/set_relation/environment.cc.s: cmake_force
 src/CMakeFiles/iegenlib.dir/set_relation/expression.cc.o: src/CMakeFiles/iegenlib.dir/flags.make
 src/CMakeFiles/iegenlib.dir/set_relation/expression.cc.o: ../src/set_relation/expression.cc
 src/CMakeFiles/iegenlib.dir/set_relation/expression.cc.o: src/CMakeFiles/iegenlib.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object src/CMakeFiles/iegenlib.dir/set_relation/expression.cc.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building CXX object src/CMakeFiles/iegenlib.dir/set_relation/expression.cc.o"
 	cd /Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -Wall -Wno-unknown-pragmas -g -MD -MT src/CMakeFiles/iegenlib.dir/set_relation/expression.cc.o -MF CMakeFiles/iegenlib.dir/set_relation/expression.cc.o.d -o CMakeFiles/iegenlib.dir/set_relation/expression.cc.o -c /Users/ant/Documents/AdaptLab/IEGenLib/src/set_relation/expression.cc
 
 src/CMakeFiles/iegenlib.dir/set_relation/expression.cc.i: cmake_force
@@ -254,7 +268,7 @@ src/CMakeFiles/iegenlib.dir/set_relation/expression.cc.s: cmake_force
 src/CMakeFiles/iegenlib.dir/set_relation/isl_str_manipulation.cc.o: src/CMakeFiles/iegenlib.dir/flags.make
 src/CMakeFiles/iegenlib.dir/set_relation/isl_str_manipulation.cc.o: ../src/set_relation/isl_str_manipulation.cc
 src/CMakeFiles/iegenlib.dir/set_relation/isl_str_manipulation.cc.o: src/CMakeFiles/iegenlib.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building CXX object src/CMakeFiles/iegenlib.dir/set_relation/isl_str_manipulation.cc.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Building CXX object src/CMakeFiles/iegenlib.dir/set_relation/isl_str_manipulation.cc.o"
 	cd /Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -Wall -Wno-unknown-pragmas -g -MD -MT src/CMakeFiles/iegenlib.dir/set_relation/isl_str_manipulation.cc.o -MF CMakeFiles/iegenlib.dir/set_relation/isl_str_manipulation.cc.o.d -o CMakeFiles/iegenlib.dir/set_relation/isl_str_manipulation.cc.o -c /Users/ant/Documents/AdaptLab/IEGenLib/src/set_relation/isl_str_manipulation.cc
 
 src/CMakeFiles/iegenlib.dir/set_relation/isl_str_manipulation.cc.i: cmake_force
@@ -268,7 +282,7 @@ src/CMakeFiles/iegenlib.dir/set_relation/isl_str_manipulation.cc.s: cmake_force
 src/CMakeFiles/iegenlib.dir/set_relation/reOrdTV_OmegaCodeGen.cc.o: src/CMakeFiles/iegenlib.dir/flags.make
 src/CMakeFiles/iegenlib.dir/set_relation/reOrdTV_OmegaCodeGen.cc.o: ../src/set_relation/reOrdTV_OmegaCodeGen.cc
 src/CMakeFiles/iegenlib.dir/set_relation/reOrdTV_OmegaCodeGen.cc.o: src/CMakeFiles/iegenlib.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Building CXX object src/CMakeFiles/iegenlib.dir/set_relation/reOrdTV_OmegaCodeGen.cc.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Building CXX object src/CMakeFiles/iegenlib.dir/set_relation/reOrdTV_OmegaCodeGen.cc.o"
 	cd /Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -Wall -Wno-unknown-pragmas -g -MD -MT src/CMakeFiles/iegenlib.dir/set_relation/reOrdTV_OmegaCodeGen.cc.o -MF CMakeFiles/iegenlib.dir/set_relation/reOrdTV_OmegaCodeGen.cc.o.d -o CMakeFiles/iegenlib.dir/set_relation/reOrdTV_OmegaCodeGen.cc.o -c /Users/ant/Documents/AdaptLab/IEGenLib/src/set_relation/reOrdTV_OmegaCodeGen.cc
 
 src/CMakeFiles/iegenlib.dir/set_relation/reOrdTV_OmegaCodeGen.cc.i: cmake_force
@@ -282,7 +296,7 @@ src/CMakeFiles/iegenlib.dir/set_relation/reOrdTV_OmegaCodeGen.cc.s: cmake_force
 src/CMakeFiles/iegenlib.dir/set_relation/setRelationship.cc.o: src/CMakeFiles/iegenlib.dir/flags.make
 src/CMakeFiles/iegenlib.dir/set_relation/setRelationship.cc.o: ../src/set_relation/setRelationship.cc
 src/CMakeFiles/iegenlib.dir/set_relation/setRelationship.cc.o: src/CMakeFiles/iegenlib.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Building CXX object src/CMakeFiles/iegenlib.dir/set_relation/setRelationship.cc.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Building CXX object src/CMakeFiles/iegenlib.dir/set_relation/setRelationship.cc.o"
 	cd /Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -Wall -Wno-unknown-pragmas -g -MD -MT src/CMakeFiles/iegenlib.dir/set_relation/setRelationship.cc.o -MF CMakeFiles/iegenlib.dir/set_relation/setRelationship.cc.o.d -o CMakeFiles/iegenlib.dir/set_relation/setRelationship.cc.o -c /Users/ant/Documents/AdaptLab/IEGenLib/src/set_relation/setRelationship.cc
 
 src/CMakeFiles/iegenlib.dir/set_relation/setRelationship.cc.i: cmake_force
@@ -296,7 +310,7 @@ src/CMakeFiles/iegenlib.dir/set_relation/setRelationship.cc.s: cmake_force
 src/CMakeFiles/iegenlib.dir/set_relation/set_relation.cc.o: src/CMakeFiles/iegenlib.dir/flags.make
 src/CMakeFiles/iegenlib.dir/set_relation/set_relation.cc.o: ../src/set_relation/set_relation.cc
 src/CMakeFiles/iegenlib.dir/set_relation/set_relation.cc.o: src/CMakeFiles/iegenlib.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Building CXX object src/CMakeFiles/iegenlib.dir/set_relation/set_relation.cc.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Building CXX object src/CMakeFiles/iegenlib.dir/set_relation/set_relation.cc.o"
 	cd /Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -Wall -Wno-unknown-pragmas -g -MD -MT src/CMakeFiles/iegenlib.dir/set_relation/set_relation.cc.o -MF CMakeFiles/iegenlib.dir/set_relation/set_relation.cc.o.d -o CMakeFiles/iegenlib.dir/set_relation/set_relation.cc.o -c /Users/ant/Documents/AdaptLab/IEGenLib/src/set_relation/set_relation.cc
 
 src/CMakeFiles/iegenlib.dir/set_relation/set_relation.cc.i: cmake_force
@@ -310,7 +324,7 @@ src/CMakeFiles/iegenlib.dir/set_relation/set_relation.cc.s: cmake_force
 src/CMakeFiles/iegenlib.dir/set_relation/transitive_closure.cc.o: src/CMakeFiles/iegenlib.dir/flags.make
 src/CMakeFiles/iegenlib.dir/set_relation/transitive_closure.cc.o: ../src/set_relation/transitive_closure.cc
 src/CMakeFiles/iegenlib.dir/set_relation/transitive_closure.cc.o: src/CMakeFiles/iegenlib.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Building CXX object src/CMakeFiles/iegenlib.dir/set_relation/transitive_closure.cc.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Building CXX object src/CMakeFiles/iegenlib.dir/set_relation/transitive_closure.cc.o"
 	cd /Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -Wall -Wno-unknown-pragmas -g -MD -MT src/CMakeFiles/iegenlib.dir/set_relation/transitive_closure.cc.o -MF CMakeFiles/iegenlib.dir/set_relation/transitive_closure.cc.o.d -o CMakeFiles/iegenlib.dir/set_relation/transitive_closure.cc.o -c /Users/ant/Documents/AdaptLab/IEGenLib/src/set_relation/transitive_closure.cc
 
 src/CMakeFiles/iegenlib.dir/set_relation/transitive_closure.cc.i: cmake_force
@@ -324,7 +338,7 @@ src/CMakeFiles/iegenlib.dir/set_relation/transitive_closure.cc.s: cmake_force
 src/CMakeFiles/iegenlib.dir/util/UnionFindUniverse.cc.o: src/CMakeFiles/iegenlib.dir/flags.make
 src/CMakeFiles/iegenlib.dir/util/UnionFindUniverse.cc.o: ../src/util/UnionFindUniverse.cc
 src/CMakeFiles/iegenlib.dir/util/UnionFindUniverse.cc.o: src/CMakeFiles/iegenlib.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Building CXX object src/CMakeFiles/iegenlib.dir/util/UnionFindUniverse.cc.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_20) "Building CXX object src/CMakeFiles/iegenlib.dir/util/UnionFindUniverse.cc.o"
 	cd /Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -Wall -Wno-unknown-pragmas -g -MD -MT src/CMakeFiles/iegenlib.dir/util/UnionFindUniverse.cc.o -MF CMakeFiles/iegenlib.dir/util/UnionFindUniverse.cc.o.d -o CMakeFiles/iegenlib.dir/util/UnionFindUniverse.cc.o -c /Users/ant/Documents/AdaptLab/IEGenLib/src/util/UnionFindUniverse.cc
 
 src/CMakeFiles/iegenlib.dir/util/UnionFindUniverse.cc.i: cmake_force
@@ -338,7 +352,7 @@ src/CMakeFiles/iegenlib.dir/util/UnionFindUniverse.cc.s: cmake_force
 src/CMakeFiles/iegenlib.dir/util/jsonHelper.cc.o: src/CMakeFiles/iegenlib.dir/flags.make
 src/CMakeFiles/iegenlib.dir/util/jsonHelper.cc.o: ../src/util/jsonHelper.cc
 src/CMakeFiles/iegenlib.dir/util/jsonHelper.cc.o: src/CMakeFiles/iegenlib.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_20) "Building CXX object src/CMakeFiles/iegenlib.dir/util/jsonHelper.cc.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_21) "Building CXX object src/CMakeFiles/iegenlib.dir/util/jsonHelper.cc.o"
 	cd /Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -Wall -Wno-unknown-pragmas -g -MD -MT src/CMakeFiles/iegenlib.dir/util/jsonHelper.cc.o -MF CMakeFiles/iegenlib.dir/util/jsonHelper.cc.o.d -o CMakeFiles/iegenlib.dir/util/jsonHelper.cc.o -c /Users/ant/Documents/AdaptLab/IEGenLib/src/util/jsonHelper.cc
 
 src/CMakeFiles/iegenlib.dir/util/jsonHelper.cc.i: cmake_force
@@ -352,7 +366,7 @@ src/CMakeFiles/iegenlib.dir/util/jsonHelper.cc.s: cmake_force
 src/CMakeFiles/iegenlib.dir/util/util.cc.o: src/CMakeFiles/iegenlib.dir/flags.make
 src/CMakeFiles/iegenlib.dir/util/util.cc.o: ../src/util/util.cc
 src/CMakeFiles/iegenlib.dir/util/util.cc.o: src/CMakeFiles/iegenlib.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_21) "Building CXX object src/CMakeFiles/iegenlib.dir/util/util.cc.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_22) "Building CXX object src/CMakeFiles/iegenlib.dir/util/util.cc.o"
 	cd /Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -Wall -Wno-unknown-pragmas -g -MD -MT src/CMakeFiles/iegenlib.dir/util/util.cc.o -MF CMakeFiles/iegenlib.dir/util/util.cc.o.d -o CMakeFiles/iegenlib.dir/util/util.cc.o -c /Users/ant/Documents/AdaptLab/IEGenLib/src/util/util.cc
 
 src/CMakeFiles/iegenlib.dir/util/util.cc.i: cmake_force
@@ -367,6 +381,7 @@ src/CMakeFiles/iegenlib.dir/util/util.cc.s: cmake_force
 iegenlib_OBJECTS = \
 "CMakeFiles/iegenlib.dir/computation/CompGraph.cc.o" \
 "CMakeFiles/iegenlib.dir/computation/Computation.cc.o" \
+"CMakeFiles/iegenlib.dir/computation/SSA.cc.o" \
 "CMakeFiles/iegenlib.dir/parser/gen_parser.cc.o" \
 "CMakeFiles/iegenlib.dir/parser/gen_scanner.cc.o" \
 "CMakeFiles/iegenlib.dir/parser/parser.cc.o" \
@@ -392,6 +407,7 @@ iegenlib_EXTERNAL_OBJECTS =
 
 src/libiegenlib.a: src/CMakeFiles/iegenlib.dir/computation/CompGraph.cc.o
 src/libiegenlib.a: src/CMakeFiles/iegenlib.dir/computation/Computation.cc.o
+src/libiegenlib.a: src/CMakeFiles/iegenlib.dir/computation/SSA.cc.o
 src/libiegenlib.a: src/CMakeFiles/iegenlib.dir/parser/gen_parser.cc.o
 src/libiegenlib.a: src/CMakeFiles/iegenlib.dir/parser/gen_scanner.cc.o
 src/libiegenlib.a: src/CMakeFiles/iegenlib.dir/parser/parser.cc.o
@@ -413,7 +429,7 @@ src/libiegenlib.a: src/CMakeFiles/iegenlib.dir/util/jsonHelper.cc.o
 src/libiegenlib.a: src/CMakeFiles/iegenlib.dir/util/util.cc.o
 src/libiegenlib.a: src/CMakeFiles/iegenlib.dir/build.make
 src/libiegenlib.a: src/CMakeFiles/iegenlib.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_22) "Linking CXX static library libiegenlib.a"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_23) "Linking CXX static library libiegenlib.a"
 	cd /Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/src && $(CMAKE_COMMAND) -P CMakeFiles/iegenlib.dir/cmake_clean_target.cmake
 	cd /Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug/src && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/iegenlib.dir/link.txt --verbose=$(VERBOSE)
 

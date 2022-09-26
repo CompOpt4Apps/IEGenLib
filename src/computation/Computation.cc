@@ -34,7 +34,7 @@
 #include <regex>
 #include <vector>
 #include <map>
-
+#include "SSA.h"
 #include "set_relation/set_relation.h"
 
 //! Base string for use in name prefixing
@@ -1456,7 +1456,8 @@ void Computation::fuse (int s1, int s2, int fuseLevel){
 }
 
 void Computation::finalize(bool deleteDeadNodes) {
-    //enforceSSA();
+
+    SSA::generateSSA(this->stmts);
     adjustExecutionSchedules();
 	padExecutionSchedules();
 

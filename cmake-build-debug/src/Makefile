@@ -333,53 +333,56 @@ computation/Computation.cc.s:
 	cd /Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/iegenlib_t.dir/build.make src/CMakeFiles/iegenlib_t.dir/computation/Computation.cc.s
 .PHONY : computation/Computation.cc.s
 
-computation/SSA.o: computation/SSA.cpp.o
+computation/SSA.o: computation/SSA.cc.o
 .PHONY : computation/SSA.o
 
 # target to build an object file
-computation/SSA.cpp.o:
-	cd /Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/iegenlib_t.dir/build.make src/CMakeFiles/iegenlib_t.dir/computation/SSA.cpp.o
-.PHONY : computation/SSA.cpp.o
+computation/SSA.cc.o:
+	cd /Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/iegenlib.dir/build.make src/CMakeFiles/iegenlib.dir/computation/SSA.cc.o
+	cd /Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/iegenlib_t.dir/build.make src/CMakeFiles/iegenlib_t.dir/computation/SSA.cc.o
+.PHONY : computation/SSA.cc.o
 
-computation/SSA.i: computation/SSA.cpp.i
+computation/SSA.i: computation/SSA.cc.i
 .PHONY : computation/SSA.i
 
 # target to preprocess a source file
-computation/SSA.cpp.i:
-	cd /Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/iegenlib_t.dir/build.make src/CMakeFiles/iegenlib_t.dir/computation/SSA.cpp.i
-.PHONY : computation/SSA.cpp.i
+computation/SSA.cc.i:
+	cd /Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/iegenlib.dir/build.make src/CMakeFiles/iegenlib.dir/computation/SSA.cc.i
+	cd /Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/iegenlib_t.dir/build.make src/CMakeFiles/iegenlib_t.dir/computation/SSA.cc.i
+.PHONY : computation/SSA.cc.i
 
-computation/SSA.s: computation/SSA.cpp.s
+computation/SSA.s: computation/SSA.cc.s
 .PHONY : computation/SSA.s
 
 # target to generate assembly for a file
-computation/SSA.cpp.s:
-	cd /Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/iegenlib_t.dir/build.make src/CMakeFiles/iegenlib_t.dir/computation/SSA.cpp.s
-.PHONY : computation/SSA.cpp.s
+computation/SSA.cc.s:
+	cd /Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/iegenlib.dir/build.make src/CMakeFiles/iegenlib.dir/computation/SSA.cc.s
+	cd /Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/iegenlib_t.dir/build.make src/CMakeFiles/iegenlib_t.dir/computation/SSA.cc.s
+.PHONY : computation/SSA.cc.s
 
-computation/SSA_test.o: computation/SSA_test.cpp.o
+computation/SSA_test.o: computation/SSA_test.cc.o
 .PHONY : computation/SSA_test.o
 
 # target to build an object file
-computation/SSA_test.cpp.o:
-	cd /Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/iegenlib_t.dir/build.make src/CMakeFiles/iegenlib_t.dir/computation/SSA_test.cpp.o
-.PHONY : computation/SSA_test.cpp.o
+computation/SSA_test.cc.o:
+	cd /Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/iegenlib_t.dir/build.make src/CMakeFiles/iegenlib_t.dir/computation/SSA_test.cc.o
+.PHONY : computation/SSA_test.cc.o
 
-computation/SSA_test.i: computation/SSA_test.cpp.i
+computation/SSA_test.i: computation/SSA_test.cc.i
 .PHONY : computation/SSA_test.i
 
 # target to preprocess a source file
-computation/SSA_test.cpp.i:
-	cd /Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/iegenlib_t.dir/build.make src/CMakeFiles/iegenlib_t.dir/computation/SSA_test.cpp.i
-.PHONY : computation/SSA_test.cpp.i
+computation/SSA_test.cc.i:
+	cd /Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/iegenlib_t.dir/build.make src/CMakeFiles/iegenlib_t.dir/computation/SSA_test.cc.i
+.PHONY : computation/SSA_test.cc.i
 
-computation/SSA_test.s: computation/SSA_test.cpp.s
+computation/SSA_test.s: computation/SSA_test.cc.s
 .PHONY : computation/SSA_test.s
 
 # target to generate assembly for a file
-computation/SSA_test.cpp.s:
-	cd /Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/iegenlib_t.dir/build.make src/CMakeFiles/iegenlib_t.dir/computation/SSA_test.cpp.s
-.PHONY : computation/SSA_test.cpp.s
+computation/SSA_test.cc.s:
+	cd /Users/ant/Documents/AdaptLab/IEGenLib/cmake-build-debug && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/iegenlib_t.dir/build.make src/CMakeFiles/iegenlib_t.dir/computation/SSA_test.cc.s
+.PHONY : computation/SSA_test.cc.s
 
 computation/computation_test.o: computation/computation_test.cc.o
 .PHONY : computation/computation_test.o

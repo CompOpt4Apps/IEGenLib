@@ -19,6 +19,9 @@
 #include <stack>
 #include "set_relation/set_relation.h"
 #include <iostream>
+#include "Computation.h"
+#include <utility>
+
 using namespace SSA;
 using namespace iegenlib;
 DominanceTree::DominanceTree() {}
@@ -67,17 +70,27 @@ std::vector<int> DominanceTree::getPredecessor(int i){
 void DominanceTree::DFCal() {
     for(int i=0; i<this->nodes.size();i++){
         if( this->nodes[i].predecessors.size() > 1) {
+           // std:: cout<< "pred for node " <<i <<'\n';
+           std::cout << "--------------------"<<'\n';
             for (int pred:  this->nodes[i].predecessors) {
+                std:: cout<< "pred "<< pred << " for node " <<i <<'\n';
                 int runner = pred;
+                std::vector<int> DF_runner =  this->nodes[runner].dominanceFrontier;
                 while( runner !=  this->nodes[i].parent){
-                    std::vector<int> DF_runner =  this->nodes[runner].dominanceFrontier;
+                    //check if element i isn't in the vector
                     if(std::find(DF_runner.begin(), DF_runner.end(), i) == DF_runner.end()) {
-                        DF_runner.push_back(i) ;
+                        DF_runner.push_back(i);
+                        this->nodes[runner].dominanceFrontier.push_back(i);
                     }
                     runner =   this->nodes[runner].parent;
                 }
+                std::cout << "runner " << runner <<'\n';
+
+               // this->nodes[i].dominanceFrontier.push_back(runner);
             }
+
         }
+        //this->nodes[runner].dominanceFrontier.push_back(i);
     }
     return;
 }
@@ -225,7 +238,7 @@ bool SSA::isDominator(iegenlib::Set * parent, iegenlib::Set * child){
 
 // create dominator tree
 DominanceTree* SSA::createDominanceTree(std::vector<std::pair<int, iegenlib::Set *>>executionS) {
-    DominanceTree * rval = new DominanceTree();
+    DominanceTree* pDominanceTree = new DominanceTree();
 
     //perform the lexicographical sort
 
@@ -239,7 +252,7 @@ DominanceTree* SSA::createDominanceTree(std::vector<std::pair<int, iegenlib::Set
 
     // collect nodes into node list
     for (auto v: executionS) {
-        rval ->push_Back(v);
+        pDominanceTree ->push_Back(v);
     }
     // set up the relations( parent and child)
     //
@@ -248,26 +261,28 @@ DominanceTree* SSA::createDominanceTree(std::vector<std::pair<int, iegenlib::Set
         for (int j = i-1; j >= 0; j--) {
             bool isDominator1 = SSA::isDominator(executionS[j].second, executionS[i].second);
             if(isDominator1){
-                rval -> add_edge(j,i);
+                pDominanceTree -> add_edge(j, i);
                 break;
             }
         }
     }
-    return rval;
+    return pDominanceTree;
 }
 
-void DominanceTree::insertPhiNode(std::vector<std::pair<int, std::vector<int>>> globals){
+void DominanceTree::insertPhiNode(std::vector<std::map<string, std::vector<int>>> globals){
 
     for(int i=0;i<globals.size();i++){
-        std::vector<int> workList = globals[i].second;
+        std:: cout << "hell0 =---"<<'\n';
+        std::map<string, std::vector<int>> ::iterator it = globals[i].begin();
+
+        std::vector<int> workList = it->second;
         for(int j=0 ;j<workList.size();j++){
-            //std::cout << "definition nodes for a variable "<< workList[j]<<'\n';
+            std::cout << "definition nodes for a variable "<< workList[j]<<'\n';
             std::vector<int> DF = this->nodes[workList[j]].dominanceFrontier;
             for(int k=0;k<DF.size();k++){
                 //code to insert in phi nodes;
-               // std::cout << "insert phi nodes in DF "<< this->nodes[workList[j]].dominanceFrontier<<'\n';
+                std::cout << "insert phi nodes in DF "<< this->nodes[workList[j]].dominanceFrontier[k]<<'\n';
                 if (std::find(workList.begin(), workList.end(), DF[k]) == workList.end()) {
-                    // someName not in name, add it
                     workList.push_back(DF[k]);
                 }
             }
@@ -275,3 +290,40 @@ void DominanceTree::insertPhiNode(std::vector<std::pair<int, std::vector<int>>> 
     }
 }
 
+void SSA::generateSSA(std::vector<Stmt*> stmts) {
+
+
+    std::vector<std::pair<int, iegenlib::Set*>> executionS;
+    std::vector<std::map<string, std::vector<int>>> globals;
+
+    for(int i=0; i<stmts.size(); i++){
+            iegenlib::Set* s1 = stmts[i]->getExecutionSchedule()->Apply( stmts[i]->getIterationSpace());
+
+            std::map<string, std::vector<int>> vec ;
+            int numWrites = stmts[i]->getNumWrites();
+
+            for (unsigned int j = 0; j < numWrites; ++j){
+                vec[stmts[i]->getWriteDataSpace(j)].push_back(i);
+                //std::cout << "variables    " << stmts[i]->getWriteDataSpace(j)<<" ,  "<< i<<'\n';
+            }
+            globals.push_back(vec);
+            executionS.push_back({i, s1});
+    }
+
+//    for( auto v: globals){
+//        for (auto it = v.cbegin(); it != v.cend(); ++it) {
+//            std::cout << "{" << (*it).first << ": "  ;
+//            for(int l= 0;l < (*it).second.size();l++) {
+//                std::cout << (*it).second[l] <<'\n';
+//            }
+//
+//        }
+//    }
+
+    DominanceTree* dt = createDominanceTree(executionS);
+    DominanceTree* dt1 = findPredecessors(dt);
+    dt1->DFCal();
+    dt1->insertPhiNode(globals);
+    std::cout << "print random";
+
+}
