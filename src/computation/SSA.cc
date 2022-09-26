@@ -274,10 +274,10 @@ DominanceTree* SSA::createDominanceTree(std::vector<std::pair<int, iegenlib::Set
     return pDominanceTree;
 }
 
-void DominanceTree::insertPhiNode(std::vector<std::map<string, std::vector<int>>> globals ){
+void DominanceTree::insertPhiNode(std::vector<std::map<string, std::vector<int>>> globals, Computation* comp ){
 
     for(int i=0;i<globals.size();i++){
-        std:: cout << "hell0 =---"<<'\n';
+        std:: cout << "hell0 ="<<'\n';
         std::map<string, std::vector<int>> ::iterator it = globals[i].begin();
 
         std::vector<int> workList = it->second;
@@ -286,6 +286,22 @@ void DominanceTree::insertPhiNode(std::vector<std::map<string, std::vector<int>>
             std::vector<int> DF = this->nodes[workList[j]].dominanceFrontier;
             for(int k=0;k<DF.size();k++){
                 //code to insert in phi nodes;
+
+                int df =  DF[k];
+                Stmt * s_org = comp->getStmt(nodes[df].data.first);
+
+                //std:: cout<< '---' <<s_org->prettyPrintString()<<'\n';
+                std:: cout<< s_org->prettyPrintString()<<'\n';
+               // std:: cout << s_org->getIterationSpace()->prettyPrintString()<<'\n';
+//
+//                Stmt * s2 = new Stmt (
+//                        "phi;",
+//                        s_org->getIterationSpace(),
+//                        s_org->getExecutionSchedule(),
+//                        {{it->first, s_org->getIterationSpace()},{it->first, s_org->getIterationSpace()}},
+//                        {{it->first,  s_org->getIterationSpace()}}
+//                );
+//                comp->addStmt(s2);
 
                 std::cout << "insert phi nodes in DF "<< this->nodes[workList[j]].dominanceFrontier[k]<<'\n';
                 if (std::find(workList.begin(), workList.end(), DF[k]) == workList.end()) {
@@ -296,14 +312,18 @@ void DominanceTree::insertPhiNode(std::vector<std::map<string, std::vector<int>>
     }
 }
 
-void SSA::generateSSA(std::vector<Stmt*> stmts) {
+void SSA::generateSSA(Computation *  comp) {
 
-
+    std::vector<Stmt*> stmts  ;
+    for( int a=0;a<comp->getNumStmts();a++){
+        stmts.push_back(comp->getStmt(a));
+    }
     std::vector<std::pair<int, iegenlib::Set*>> executionS;
     std::vector<std::map<string, std::vector<int>>> globals;
 
     for(int i=0; i<stmts.size(); i++){
             iegenlib::Set* s1 = stmts[i]->getExecutionSchedule()->Apply( stmts[i]->getIterationSpace());
+            //std::cout << s1->prettyPrintString()<<'\n';
 
             std::map<string, std::vector<int>> vec ;
             int numWrites = stmts[i]->getNumWrites();
@@ -315,6 +335,7 @@ void SSA::generateSSA(std::vector<Stmt*> stmts) {
             globals.push_back(vec);
             executionS.push_back({i, s1});
     }
+
 
 //    for( auto v: globals){
 //        for (auto it = v.cbegin(); it != v.cend(); ++it) {
@@ -329,7 +350,7 @@ void SSA::generateSSA(std::vector<Stmt*> stmts) {
     DominanceTree* dt = createDominanceTree(executionS);
     DominanceTree* dt1 = findPredecessors(dt);
     dt1->DFCal();
-    dt1->insertPhiNode(globals);
+    dt1->insertPhiNode(globals, comp);
     std::cout << "print random";
 
 }

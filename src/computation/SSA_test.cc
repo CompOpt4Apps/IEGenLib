@@ -409,49 +409,168 @@ TEST(SSATest, IsDominator5){
     EXPECT_EQ(status, true);
 }
 
-TEST(SSATest, DominanceTreeTEST11){
+TEST(SSATest123, DominanceTreeTEST111){
 
 
-    iegenlib::Set* s1 = new iegenlib::Set("{[0]}");
-    iegenlib::Set* s2 = new iegenlib::Set("{[1]}");
+    Computation * comp = new Computation();
+    comp->addDataSpace("x", "int");
 
-    iegenlib::Set* s3 = new iegenlib::Set("{[2,t,0]: 0<=t<M}");
-    iegenlib::Set* s4 = new iegenlib::Set("{[2,t,1,p,0]: 0<=t<M && p> 10 }");
+    //s1
+    //    iegenlib::Set* s1 = new iegenlib::Set("{[0]}");
+    comp->addStmt(new Stmt (
+            "x=1;",
+            "{[0]}",
+            "{[0]->[0]}",
+            {},
+            {{"x", "{[0]->[0]}"}}
+    ));
 
-    iegenlib::Set* s5 = new iegenlib::Set("{[2,t,1,p,1,q,0]:0<=t<M && p>10 && q>10}");
-    iegenlib::Set* s6 = new iegenlib::Set("{[2,t,1,p,1,n,0]:0<=t<M && p>10 && n<=10 }");
+    //s2
+    // iegenlib::Set* s2 = new iegenlib::Set("{[1]}");
 
-    iegenlib::Set* s7 = new iegenlib::Set("{[2,t,1,p,2]: 0<=t<M && p>10}");
-    iegenlib::Set* s8 = new iegenlib::Set("{[2,t,2,m,0]: 0<=t<M && m<=10}");
+    comp->addStmt(new Stmt (
+            "x=2;",
+            "{[0]}",
+            "{[0]->[1]}",
+            {},
+            {{"x", "{[0]->[0]}"}}
+    ));
 
-    iegenlib::Set* s9 = new iegenlib::Set("{[2,t,3]: 0<=t<M}");
-    iegenlib::Set* s10 = new iegenlib::Set("{[2,t,4,s,0,r,0]: 0<=t<M && 0<=s<S && r>10}");
+    //s3
+    //iegenlib::Set* s3 = new iegenlib::Set("{[2,t,0]: 0<=t<M}");
 
-    iegenlib::Set* s11 = new iegenlib::Set("{[2,t,5]: 0<=t<M}");
-    iegenlib::Set* s12 = new iegenlib::Set("{[3]}");
+    comp->addStmt(new Stmt (
+            "x=2;",
+            "{[t]:0<=t<M }",
+            "{[t]->[2,t,0]}",
+            {},
+            {{"x", "{[t]->[t]}"}}
+    ));
+
+    //s4
+    //iegenlib::Set* s4 = new iegenlib::Set("{[2,t,1,p,0]: 0<=t<M && p> 10 }");
+
+    comp->addStmt(new Stmt (
+            "x=2;",
+            "{[t,p]:0<=t<M && p> 10}",
+            "{[t,p]->[2,t,1,p,0]}",
+            {},
+            {{"x", "{[t,p]->[t,p]}"}}
+    ));
+
+    //s5
+    //iegenlib::Set* s5 = new iegenlib::Set("{[2,t,1,p,1,q,0]:0<=t<M && p>10 && q>10}");
+
+    comp->addStmt(new Stmt (
+            "x=2;",
+            "{[t,p,q]:0<=t<M && p>10 && q>10}",
+            "{[t,p,q]->[2,t,1,p,1,q,0]}",
+            {},
+            {{"x", "{[t,p,q]->[t,p,q]}"}}
+    ));
+
+    //s6
+    //iegenlib::Set* s6 = new iegenlib::Set("{[2,t,1,p,1,n,0]:0<=t<M && p>10 && n<=10 }");
+
+    comp->addStmt(new Stmt (
+            "x=2;",
+            "{[t,p,n]:0<=t<M && p>10 && n<=10}",
+            "{[t,p,n]->[2,t,1,p,1,n,0]}",
+            {},
+            {{"x", "{[t,p,n]->[t,p,n]}"}}
+    ));
+
+    //s7
+    //iegenlib::Set* s7 = new iegenlib::Set("{[2,t,1,p,2]: 0<=t<M && p>10}");
+
+    comp->addStmt(new Stmt (
+            "x=2;",
+            "{[t,p]:0<=t<M && p>10 && n<=10}",
+            "{[t,p]->[2,t,1,p,2]}",
+            {},
+            {{"x", "{[t,p]->[t,p]}"}}
+    ));
+
+    //s8
+    //iegenlib::Set* s8 = new iegenlib::Set("{[2,t,2,m,0]: 0<=t<M && m<=10}");
 
 
-    std::vector<std::pair<int, iegenlib::Set*>>
-            executionS {{0, s1}, {1, s2}, {2, s3}, {3,s4},{4,s5},
-                        {5,s6},{6,s7},{7,s8},{8,s9},{9,s10}, {10,s11},
-                        {11,s12}};
+    comp->addStmt(new Stmt (
+            "x=2;",
+            "{[t,m]:0<=t<M && m<=10}",
+            "{[t,m]->[2,t,2,m,0]}",
+            {},
+            {{"x", "{[t,m]->[t,m]}"}}
+    ));
 
-    DominanceTree* dt = createDominanceTree(executionS);
-    DominanceTree* dt1 = findPredecessors(dt);
-    dt1->DFCal();
+    //s9
+    //iegenlib::Set* s9 = new iegenlib::Set("{[2,t,3]: 0<=t<M}");
 
+    comp->addStmt(new Stmt (
+            "x=2;",
+            "{[t]:0<=t<M}",
+            "{[t]->[2,t,3]}",
+            {},
+            {{"x", "{[t]->[t]}"}}
+    ));
 
-    std::vector<std::map<string, std::vector<int>>> globals;
-    std::map<string, std::vector<int>> a;
-    std::map<string, std::vector<int>> c;
-    std::vector<int>b {2,3,4,5,6,7,8};
-    a.insert(make_pair("x", b));
-    //c.insert(make_pair("y", b));
+    //s10
+    //iegenlib::Set* s10 = new iegenlib::Set("{[2,t,4,s,0,r,0]: 0<=t<M && 0<=s<S && r>10}");
 
-    globals.push_back(a);
-    //globals.push_back(c);
+    comp->addStmt(new Stmt (
+            "x=2;",
+            "{[t,s,r]:0<=t<M}",
+            "{[t,s,r]->[2,t,4,s,0,r,0]}",
+            {},
+            {{"x", "{[t,s,r]->[t,s,r]}"}}
+    ));
+    //s11
+    //iegenlib::Set* s11 = new iegenlib::Set("{[2,t,5]: 0<=t<M}");
 
-    dt1->insertPhiNode(globals);
+    comp->addStmt(new Stmt (
+            "x=2;",
+            "{[t]:0<=t<M}",
+            "{[t]->[2,t,5]}",
+            {},
+            {{"x", "{[t]->[t]}"}}
+    ));
+    //s12
+    //iegenlib::Set* s12 = new iegenlib::Set("{[3]}");
+
+    comp->addStmt(new Stmt (
+            "x=2;",
+            "{[0]}",
+            "{[0]->[3]}",
+            {},
+            {{"x", "{[0]->[0]}"}}
+    ));
+
+    comp->finalize();
+
+    EXPECT_EQ(1,1);
+
+//    std::vector<std::pair<int, iegenlib::Set*>>
+//            executionS {{0, s1}, {1, s2}, {2, s3}, {3,s4},{4,s5},
+//                        {5,s6},{6,s7},{7,s8},{8,s9},{9,s10}, {10,s11},
+//                        {11,s12}};
+
+//    DominanceTree* dt = createDominanceTree(executionS);
+//    DominanceTree* dt1 = findPredecessors(dt);
+//    dt1->DFCal();
+//
+//
+//    std::vector<std::map<string, std::vector<int>>> globals;
+//    std::map<string, std::vector<int>> a;
+//    std::map<string, std::vector<int>> c;
+//    std::vector<int>b {2,3,4,5,6,7,8};
+//    a.insert(make_pair("x", b));
+//    //c.insert(make_pair("y", b));
+//
+//    globals.push_back(a);
+//    //globals.push_back(c);
+//    Computation* comp;
+//
+//    dt1->insertPhiNode(globals,comp);
 
 }
 
@@ -477,9 +596,9 @@ TEST(SSATest, SSARenaming1) {
     );
     computation->addStmt(s2);
 
-    std::string codeGen = computation->codeGen();
+    //std::string codeGen = computation->codeGen();
     computation->finalize();
-
-    EXPECT_EQ("1","1");
+    //std:: cout << codeGen;
+    EXPECT_EQ("a","a");
     delete computation;
 }

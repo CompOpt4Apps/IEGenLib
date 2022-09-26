@@ -25,6 +25,7 @@
 #include <unordered_set>
 namespace iegenlib{
     class Stmt;
+    class Computation;
 }
 using namespace iegenlib;
 
@@ -54,13 +55,13 @@ public:
     bool isParent(int parent, int child);
     std::vector<Set*>getPrefixes(Set*s);
     void DFCal();
-    void insertPhiNode(std::vector<std::map<string, std::vector<int>>>);
+    void insertPhiNode(std::vector<std::map<string, std::vector<int>>>, Computation* comp );
 };
     bool isDominator(iegenlib::Set* parent, iegenlib::Set* child);
     bool isReverseDominator(iegenlib::Set * s1, iegenlib::Set * s2);
     DominanceTree* createDominanceTree( std::vector<std::pair<int, iegenlib::Set*>> executionS);
     DominanceTree* findPredecessors(DominanceTree* dt);
-    void generateSSA(std::vector<Stmt*> stmts);
+    void generateSSA(Computation * comp);
 
 };
 #endif
