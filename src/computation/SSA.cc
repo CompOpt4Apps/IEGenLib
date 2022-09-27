@@ -21,6 +21,7 @@
 #include <iostream>
 #include "Computation.h"
 #include <utility>
+#include <string>
 
 using namespace SSA;
 using namespace iegenlib;
@@ -273,25 +274,39 @@ DominanceTree* SSA::createDominanceTree(std::vector<std::pair<int, iegenlib::Set
     }
     return pDominanceTree;
 }
+//
+//void DominanceTree::SSARenaming( std::vector<std::map<string, std::vector<int>> >phi_nodes,  Computation* comp){
+//
+//
+//}
 
-void DominanceTree::insertPhiNode(std::vector<std::map<string, std::vector<int>>> globals, Computation* comp ){
+void DominanceTree::insertPhiNode(std::map<string, std::vector<int>> globals, Computation* comp ){
 
-    for(int i=0;i<globals.size();i++){
-        std:: cout << "hell0 ="<<'\n';
-        std::map<string, std::vector<int>> ::iterator it = globals[i].begin();
+    std:: vector<string> global_var ;
+
+        std:: cout << "hell0 ===="<<'\n';
+        std::map<string, std::vector<int>> phi;
+        std::map<string, std::vector<int>> ::iterator it;
+
+    for (it = globals.begin(); it != globals.end(); it++){
+
+        global_var.push_back(it->first);
 
         std::vector<int> workList = it->second;
         for(int j=0 ;j<workList.size();j++){
-            std::cout << "variable's definition node "<< workList[j]<<'\n';
+           // std::cout << "variable's definition node "<< workList[j]<<'\n';
             std::vector<int> DF = this->nodes[workList[j]].dominanceFrontier;
             for(int k=0;k<DF.size();k++){
                 //code to insert in phi nodes;
-
                 int df =  DF[k];
-                Stmt * s_org = comp->getStmt(nodes[df].data.first);
+                //insert only unique
+                if(std::find( phi[it->first].begin(),  phi[it->first].end(), df) ==  phi[it->first].end()) {
+                    phi[it->first].push_back(df);
+                }
+                //Stmt * s_org = comp->getStmt(nodes[df].data.first);
 
                 //std:: cout<< '---' <<s_org->prettyPrintString()<<'\n';
-                std:: cout<< s_org->prettyPrintString()<<'\n';
+               // std:: cout<< s_org->prettyPrintString()<<'\n';
                // std:: cout << s_org->getIterationSpace()->prettyPrintString()<<'\n';
 //
 //                Stmt * s2 = new Stmt (
@@ -303,15 +318,68 @@ void DominanceTree::insertPhiNode(std::vector<std::map<string, std::vector<int>>
 //                );
 //                comp->addStmt(s2);
 
-                std::cout << "insert phi nodes in DF "<< this->nodes[workList[j]].dominanceFrontier[k]<<'\n';
+              //  std::cout << "insert phi nodes in DF "<< this->nodes[workList[j]].dominanceFrontier[k]<<'\n';
                 if (std::find(workList.begin(), workList.end(), DF[k]) == workList.end()) {
                     workList.push_back(DF[k]);
                 }
             }
+
+        }
+//        phi_nodes.push_back(phi);
+    }
+
+    std::map<string, int> counter;
+    std::map<string, int> stack;
+
+    for(int i=0;i<global_var.size();i++){
+        std:: cout << "global vars " << global_var[i]<< '\n';
+        counter[global_var[i]] = 0;
+        stack[global_var[i]] = {};
+    }
+
+//    std::cout << rename(counter , stack ,"x")<<'\n';
+//    std::cout << rename(counter , stack ,"x")<<'\n';
+
+    for(int i=0;i<nodes.size();i++){
+        std::vector<int>loc ;
+        string l;
+        for (it = phi.begin(); it != phi.end(); it++){
+            loc = it -> second;
+
+            if(std::find(loc.begin(), loc.end(), i) != loc.end()){
+                string newName = rename(counter, stack, it ->first);
+                std::cout<< newName<<"   " << i <<'\n';
+                Stmt * s_org = comp->getStmt(nodes[i].data.first);
+
+//                std:: cout << s_org->prettyPrintString()<<'\n';
+//                std:: cout << s_org->getIterationSpace()->prettyPrintString()<<'\n';
+
+                string itrspace = s_org->getIterationSpace()->prettyPrintString();
+                string executionSch = s_org -> getExecutionSchedule()->prettyPrintString();
+                comp->addStmt(new Stmt (
+                        "phi",
+                        itrspace,
+                        executionSch,
+                        {},
+                        {{newName, "{[0]->[0]}"}}
+                ));
+            }
+
         }
     }
+
 }
 
+string DominanceTree::rename( std::map<string, int> &counter, std::map<string, int> &stack,string n ){
+    int i = counter[n];
+    counter[n] = counter[n]+1;
+    stack[n] = i;
+    n.erase(n.begin());
+    n.erase(n.end());
+    return n + std::to_string(i);
+    //return n.insert( n.length()-1, "1" ) ;//+ std::to_string(i);
+
+}
 void SSA::generateSSA(Computation *  comp) {
 
     std::vector<Stmt*> stmts  ;
@@ -319,7 +387,7 @@ void SSA::generateSSA(Computation *  comp) {
         stmts.push_back(comp->getStmt(a));
     }
     std::vector<std::pair<int, iegenlib::Set*>> executionS;
-    std::vector<std::map<string, std::vector<int>>> globals;
+    std::map<string, std::vector<int>> globals;
 
     for(int i=0; i<stmts.size(); i++){
             iegenlib::Set* s1 = stmts[i]->getExecutionSchedule()->Apply( stmts[i]->getIterationSpace());
@@ -329,10 +397,11 @@ void SSA::generateSSA(Computation *  comp) {
             int numWrites = stmts[i]->getNumWrites();
 
             for (unsigned int j = 0; j < numWrites; ++j){
-                vec[stmts[i]->getWriteDataSpace(j)].push_back(i);
+                globals[stmts[i]->getWriteDataSpace(j)].push_back(i);
                 //std::cout << "variables    " << stmts[i]->getWriteDataSpace(j)<<" ,  "<< i<<'\n';
             }
-            globals.push_back(vec);
+            // insert only unique
+            //globals.push_back(vec);
             executionS.push_back({i, s1});
     }
 
@@ -346,6 +415,10 @@ void SSA::generateSSA(Computation *  comp) {
 //
 //        }
 //    }
+
+        std::map<string, std::vector<int>> ::iterator it = globals.begin();
+        std::cout << it->first<< " sdfd  "<<'\n';
+
 
     DominanceTree* dt = createDominanceTree(executionS);
     DominanceTree* dt1 = findPredecessors(dt);

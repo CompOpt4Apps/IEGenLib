@@ -546,31 +546,7 @@ TEST(SSATest123, DominanceTreeTEST111){
     ));
 
     comp->finalize();
-
     EXPECT_EQ(1,1);
-
-//    std::vector<std::pair<int, iegenlib::Set*>>
-//            executionS {{0, s1}, {1, s2}, {2, s3}, {3,s4},{4,s5},
-//                        {5,s6},{6,s7},{7,s8},{8,s9},{9,s10}, {10,s11},
-//                        {11,s12}};
-
-//    DominanceTree* dt = createDominanceTree(executionS);
-//    DominanceTree* dt1 = findPredecessors(dt);
-//    dt1->DFCal();
-//
-//
-//    std::vector<std::map<string, std::vector<int>>> globals;
-//    std::map<string, std::vector<int>> a;
-//    std::map<string, std::vector<int>> c;
-//    std::vector<int>b {2,3,4,5,6,7,8};
-//    a.insert(make_pair("x", b));
-//    //c.insert(make_pair("y", b));
-//
-//    globals.push_back(a);
-//    //globals.push_back(c);
-//    Computation* comp;
-//
-//    dt1->insertPhiNode(globals,comp);
 
 }
 

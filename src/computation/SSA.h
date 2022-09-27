@@ -55,7 +55,9 @@ public:
     bool isParent(int parent, int child);
     std::vector<Set*>getPrefixes(Set*s);
     void DFCal();
-    void insertPhiNode(std::vector<std::map<string, std::vector<int>>>, Computation* comp );
+    void insertPhiNode(std::map<string, std::vector<int>>, Computation* comp );
+    void SSARenaming( std::vector<std::map<string, std::vector<int>> >phi_nodes,  Computation* comp);
+    string rename( std::map<string, int> &counter, std::map<string, int> &stack,string n);
 };
     bool isDominator(iegenlib::Set* parent, iegenlib::Set* child);
     bool isReverseDominator(iegenlib::Set * s1, iegenlib::Set * s2);
