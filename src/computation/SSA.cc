@@ -303,20 +303,6 @@ void DominanceTree::insertPhiNode(std::map<string, std::vector<int>> globals, Co
                 if(std::find( phi[it->first].begin(),  phi[it->first].end(), df) ==  phi[it->first].end()) {
                     phi[it->first].push_back(df);
                 }
-                //Stmt * s_org = comp->getStmt(nodes[df].data.first);
-
-                //std:: cout<< '---' <<s_org->prettyPrintString()<<'\n';
-               // std:: cout<< s_org->prettyPrintString()<<'\n';
-               // std:: cout << s_org->getIterationSpace()->prettyPrintString()<<'\n';
-//
-//                Stmt * s2 = new Stmt (
-//                        "phi;",
-//                        s_org->getIterationSpace(),
-//                        s_org->getExecutionSchedule(),
-//                        {{it->first, s_org->getIterationSpace()},{it->first, s_org->getIterationSpace()}},
-//                        {{it->first,  s_org->getIterationSpace()}}
-//                );
-//                comp->addStmt(s2);
 
               //  std::cout << "insert phi nodes in DF "<< this->nodes[workList[j]].dominanceFrontier[k]<<'\n';
                 if (std::find(workList.begin(), workList.end(), DF[k]) == workList.end()) {
