@@ -39,6 +39,7 @@ private:
         std::vector<int> predecessors{}; // list of the dominators for particular node
         std::pair<int, iegenlib::Set*> data; // iteration domain with stmtIdx as key
         std::vector<int>dominanceFrontier;
+        std::pair<std::string, std:: vector<int>> phis{};
     };
     std::vector<Node> nodes;
 public:

@@ -286,6 +286,8 @@ void DominanceTree::insertPhiNode(std::map<string, std::vector<int>> globals, Co
 
         std:: cout << "hell0 ===="<<'\n';
         std::map<string, std::vector<int>> phi;
+
+        std::map<string, std::vector<int>> actual_phi;
         std::map<string, std::vector<int>> ::iterator it;
 
     for (it = globals.begin(); it != globals.end(); it++){
@@ -297,21 +299,25 @@ void DominanceTree::insertPhiNode(std::map<string, std::vector<int>> globals, Co
            // std::cout << "variable's definition node "<< workList[j]<<'\n';
             std::vector<int> DF = this->nodes[workList[j]].dominanceFrontier;
             for(int k=0;k<DF.size();k++){
-                //code to insert in phi nodes;
+                //location of phi to insert in phi nodes;
                 int df =  DF[k];
                 //insert only unique
                 if(std::find( phi[it->first].begin(),  phi[it->first].end(), df) ==  phi[it->first].end()) {
                     phi[it->first].push_back(df);
                 }
 
+
+               // nodes[df].phis =t
+
               //  std::cout << "insert phi nodes in DF "<< this->nodes[workList[j]].dominanceFrontier[k]<<'\n';
                 if (std::find(workList.begin(), workList.end(), DF[k]) == workList.end()) {
+                    actual_phi[it->first].push_back(workList[j]);
                     workList.push_back(DF[k]);
                 }
-            }
 
+            }
         }
-//        phi_nodes.push_back(phi);
+
     }
 
     std::map<string, int> counter;
