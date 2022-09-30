@@ -51,6 +51,7 @@ public:
     bool equivalent(DominanceTree);
     int getVectorSize();
     void add_predecessors(int i, int j);
+    void add_successors(int i, int j);
     Set* getElem(int i);
     std::vector<int> getPredecessor(int i);
     bool predecessorEquivalent(DominanceTree dt);

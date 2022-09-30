@@ -49,6 +49,9 @@ void DominanceTree::add_edge(int parent, int child) {
 void DominanceTree::add_predecessors(int i, int j){
     nodes[i].predecessors.push_back(j);
 }
+void DominanceTree::add_successors(int i, int j){
+    nodes[j].successors.push_back(i);
+}
 int DominanceTree::getVectorSize() {
     return nodes.size();
 }
@@ -183,6 +186,7 @@ DominanceTree* SSA::findPredecessors(DominanceTree* dt) {
             }
             if(flag){
                 dt->add_predecessors(i, j);
+                dt->add_successors(i,j);
             }
             // //
             std::vector<Set*>  v = dt->getPrefixes(dt->getElem(j) );
@@ -202,9 +206,11 @@ DominanceTree* SSA::findPredecessors(DominanceTree* dt) {
                 if(flag) {
                     int m = 0;
                     while (m < l) {
-                        //std::cout << "hello....hello."<<'\n';
                         bool st = SSA::isReverseDominator( dt->getElem(stack[stack.size()-1].second),dt->getElem(j) );
-                        if(st){ dt->add_predecessors(stack[stack.size()-1].second, j);}
+                        if(st){
+                            dt->add_predecessors(stack[stack.size()-1].second, j);
+                            dt->add_successors(i,j);
+                        }
                        stack.pop_back();
                         m++;
                     }
