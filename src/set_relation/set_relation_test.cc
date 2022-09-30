@@ -5016,6 +5016,7 @@ TEST_F(SetRelationTest, ProjectOutConstTest ){
     iegenlib::Set* s2 = new iegenlib::Set("{[0,i,1] : 0 <=i< N && x >10}");
     iegenlib::Set* s3 = new iegenlib::Set("{[0,i,2] : 0 <=i< N && x <=10}");
 
+
     Set * s1_afterP;
     s1_afterP = s1->projectOutConst(s1);
     EXPECT_EQ(s1_afterP->prettyPrintString(),"{ [i] : i >= 0 && N - 1 >= 0 && -i + N - 1 >= 0 }");
@@ -5035,11 +5036,16 @@ TEST_F(SetRelationTest, ProjectOutConstTest ){
     s4_afterP = s4->projectOutConst(s4);
     std::cout << s4_afterP->prettyPrintString();
 
-
+    iegenlib::Set* s5 = new iegenlib::Set("{[3,0,0]}");
+    Set* s5_afterP;
+    s5_afterP = s5->projectOutConst(s5);
+    std::cout << s5_afterP->prettyPrintString();
 
     delete s1_afterP;
     delete s2_afterP;
     delete s3_afterP;
+    delete s4_afterP;
+    delete s5_afterP;
 
 
     //std::cout << "after projection " << s1_afterP->prettyPrintString()<<'\n';

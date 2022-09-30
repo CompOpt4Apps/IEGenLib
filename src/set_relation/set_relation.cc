@@ -4393,8 +4393,9 @@ Set *Set::projectOut(int tvar) {
         return s;
     }
     //std::cout <<"Before  projecting out const " << s -> prettyPrintString() <<'\n';
+    // i > 0 so that last element isn't removed at all
     for(int i= tl.size()-1; i>=0 ;i--){
-        if( tl.elemIsConst(i)) {
+        if( tl.elemIsConst(i) && res->getTupleDecl().size()>1) {
             //std::cout<< "the const elem are " << i <<'\n';
             res = res->projectOut(i);
         }
