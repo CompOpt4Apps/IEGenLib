@@ -1457,12 +1457,16 @@ void Computation::fuse (int s1, int s2, int fuseLevel){
 
 void Computation::finalize(bool deleteDeadNodes) {
 
+
     Computation* comp;
     comp = this;
 
     SSA::generateSSA(comp);
+
     adjustExecutionSchedules();
-	padExecutionSchedules();
+    padExecutionSchedules();
+//    adjustExecutionSchedules();
+//	padExecutionSchedules();
 
     if (deleteDeadNodes) {
         std::cerr << "Deleting Dead Nodes" << std::endl;

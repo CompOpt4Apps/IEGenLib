@@ -72,7 +72,7 @@ TEST(SSATest, DominanceTreeTEST1){
     iegenlib::Set* s2 = new iegenlib::Set("{[0,i,1] : 0 <=i< N && x >10}");
     iegenlib::Set* s3 = new iegenlib::Set("{[0,i,2] : 0 <=i< N && x <=10}");
 
-    std::vector<std::pair<int, iegenlib::Set*>> executionS {{0, s1}, {1, s2}, {2, s3}};
+    std::vector<iegenlib::Set*> executionS {s1,s2,s3};
 
     DominanceTree* dt = createDominanceTree(executionS);
 
@@ -109,10 +109,8 @@ TEST(SSATest, DominanceTreeTEST2){
     iegenlib::Set* s12 = new iegenlib::Set("{[3]}");
 
 
-    std::vector<std::pair<int, iegenlib::Set*>>
-    executionS {{0, s1}, {1, s2}, {2, s3}, {3,s4},{4,s5},
-                {5,s6},{6,s7},{7,s8},{8,s9},{9,s10}, {10,s11},
-                {11,s12}};
+    std::vector<iegenlib::Set*>
+    executionS { s1, s2,s3,s4,s5, s6,s7,s8,s9,s10,s11,s12};
 
     DominanceTree* dt = createDominanceTree(executionS);
     DominanceTree edt;
@@ -177,10 +175,8 @@ TEST(SSATest, DominanceTreeTEST3){
     iegenlib::Set* s12 = new iegenlib::Set("{[3]}");
 
 
-    std::vector<std::pair<int, iegenlib::Set*>>
-            executionS {{0, s1}, {1, s2}, {2, s3}, {3,s4},{4,s5},
-                        {5,s6},{6,s7},{7,s8},{8,s9},{9,s10}, {10,s11},
-                        {11,s12}};
+    std::vector<iegenlib::Set*>
+            executionS { s1, s2,s3,s4,s5, s6,s7,s8,s9,s10,s11,s12};
 
     DominanceTree* dt = createDominanceTree(executionS);
     DominanceTree* dt1 = findPredecessors(dt);
@@ -233,8 +229,8 @@ TEST(SSATest, DominanceTreeTEST4){
     iegenlib::Set* s2 = new iegenlib::Set("{[0,i,1,j,0]: 0 <= i  < N && 0 <= j < M}");
 
 
-    std::vector<std::pair<int, iegenlib::Set*>>
-            executionS {{0, s1}, {1, s2}};
+    std::vector< iegenlib::Set*>
+            executionS {s1, s2};
 
     DominanceTree* dt = createDominanceTree(executionS);
     DominanceTree* dt1 = findPredecessors(dt);
@@ -262,8 +258,8 @@ TEST(SSATest, DominanceTreeTEST5){
     iegenlib::Set* s3 = new iegenlib::Set("{[0,i,2] : 0 <=i< N && x <=10}");
 
 
-    std::vector<std::pair<int, iegenlib::Set*>>
-            executionS {{0, s1}, {1, s2},{2,s3}};
+    std::vector< iegenlib::Set*>
+            executionS {s1, s2,s3};
 
     DominanceTree* dt = createDominanceTree(executionS);
     DominanceTree edt;
@@ -308,8 +304,8 @@ TEST(SSATest, DominanceTreeTEST6){
     iegenlib::Set* s3 = new iegenlib::Set("{[3,i,0,j,0] : 0 <=i< N  && 0 <=j<M }");
 
 
-    std::vector<std::pair<int, iegenlib::Set*>>
-            executionS {{0, s0}, {1, s1},{2,s2},{3, s3}};
+    std::vector< iegenlib::Set*>
+            executionS {s0,s1,s2,s3};
 
     DominanceTree* dt = createDominanceTree(executionS);
     DominanceTree edt;
@@ -324,8 +320,8 @@ TEST(SSATest, DominanceTreeTEST7){
     iegenlib::Set* s3 = new iegenlib::Set("{[0,i,0,j,3] : 0 <=i< N  && 0 <=j<M }");
 
 
-    std::vector<std::pair<int, iegenlib::Set*>>
-            executionS {{0, s0}, {1, s1},{2,s2},{3, s3}};
+    std::vector< iegenlib::Set*>
+            executionS {s0,s1,s2,s3};
 
     DominanceTree* dt = createDominanceTree(executionS);
     DominanceTree edt;
@@ -340,9 +336,8 @@ TEST(SSATest, DominanceTreeTEST8){
     iegenlib::Set* s2 = new iegenlib::Set("{[1,i,0,j,0] : 0 <=i< N  && 0 <=j<M }");
     iegenlib::Set* s3 = new iegenlib::Set("{[1,i,0,j,1] : 0 <=i< N  && 0 <=j<M }");
 
-
-    std::vector<std::pair<int, iegenlib::Set*>>
-            executionS {{0, s0}, {1, s1},{2,s2},{3, s3}};
+    std::vector< iegenlib::Set*>
+            executionS {s0,s1,s2,s3};
 
     DominanceTree* dt = createDominanceTree(executionS);
     DominanceTree edt;
@@ -356,8 +351,8 @@ TEST(SSATest, DominanceTreeTEST9){
     iegenlib::Set* s2 = new iegenlib::Set("{[1,i,0,j,0] : 0 <=i< N  && 0 <=j<M }");
     iegenlib::Set* s3 = new iegenlib::Set("{[1,i,0,j,1] : 0 <=i< N  && 0 <=j<M }");
 
-    std::vector<std::pair<int, iegenlib::Set*>>
-            executionS {{0, s0}, {1, s1},{2,s2},{3, s3}};
+    std::vector< iegenlib::Set*>
+            executionS {s0,s1,s2,s3};
 
     DominanceTree* dt = createDominanceTree(executionS);
     DominanceTree* dt1;
@@ -389,10 +384,8 @@ TEST(SSATest, DominanceTreeTEST10){
     iegenlib::Set* s12 = new iegenlib::Set("{[3]}");
 
 
-    std::vector<std::pair<int, iegenlib::Set*>>
-            executionS {{0, s1}, {1, s2}, {2, s3}, {3,s4},{4,s5},
-                        {5,s6},{6,s7},{7,s8},{8,s9},{9,s10}, {10,s11},
-                        {11,s12}};
+    std::vector<iegenlib::Set*>
+            executionS { s1, s2,s3,s4,s5, s6,s7,s8,s9,s10,s11,s12};
 
     DominanceTree* dt = createDominanceTree(executionS);
     DominanceTree* dt1 = findPredecessors(dt);

@@ -243,11 +243,16 @@ bool SSA::isDominator(iegenlib::Set * parent, iegenlib::Set * child){
 }
 
 // create dominator tree
-DominanceTree* SSA::createDominanceTree(std::vector<std::pair<int, iegenlib::Set *>>executionS) {
+DominanceTree* SSA::createDominanceTree(std::vector<iegenlib::Set *>executionS1) {
     DominanceTree* pDominanceTree = new DominanceTree();
 
-    //perform the lexicographical sort
 
+    std::vector<std::pair<int, iegenlib::Set*>> executionS;
+    for(int i = 0; i<executionS1.size();i++){
+        executionS.push_back({i,executionS1[i] });
+    }
+
+    //perform the lexicographical sort
     std::sort(executionS.begin(), executionS.end(), []
             (const std::pair<int, iegenlib::Set *> &a, const std::pair<int, iegenlib::Set *> &b) {
         Set* s;
@@ -306,9 +311,6 @@ void DominanceTree::insertPhiNode(std::map<string, std::vector<int>> globals, Co
                     phi[it->first].push_back(df);
                 }
 
-
-               // nodes[df].phis =t
-
               //  std::cout << "insert phi nodes in DF "<< this->nodes[workList[j]].dominanceFrontier[k]<<'\n';
                 if (std::find(workList.begin(), workList.end(), DF[k]) == workList.end()) {
                     actual_phi[it->first].push_back(workList[j]);
@@ -341,6 +343,7 @@ void DominanceTree::insertPhiNode(std::map<string, std::vector<int>> globals, Co
             if(std::find(loc.begin(), loc.end(), i) != loc.end()){
                 string newName = rename(counter, stack, it ->first);
                 std::cout<< newName<<"   " << i <<'\n';
+
                 Stmt * s_org = comp->getStmt(nodes[i].data.first);
 
 //                std:: cout << s_org->prettyPrintString()<<'\n';
@@ -378,7 +381,7 @@ void SSA::generateSSA(Computation *  comp) {
     for( int a=0;a<comp->getNumStmts();a++){
         stmts.push_back(comp->getStmt(a));
     }
-    std::vector<std::pair<int, iegenlib::Set*>> executionS;
+    std::vector<iegenlib::Set*> executionS;
     std::map<string, std::vector<int>> globals;
 
     for(int i=0; i<stmts.size(); i++){
@@ -394,7 +397,7 @@ void SSA::generateSSA(Computation *  comp) {
             }
             // insert only unique
             //globals.push_back(vec);
-            executionS.push_back({i, s1});
+            executionS.push_back(s1);
     }
 
 

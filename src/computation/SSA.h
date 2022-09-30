@@ -40,6 +40,7 @@ private:
         std::pair<int, iegenlib::Set*> data; // iteration domain with stmtIdx as key
         std::vector<int>dominanceFrontier;
         std::pair<std::string, std:: vector<int>> phis{};
+        std::vector<int> successors{}; // list of successor for particular node
     };
     std::vector<Node> nodes;
 public:
@@ -62,7 +63,7 @@ public:
 };
     bool isDominator(iegenlib::Set* parent, iegenlib::Set* child);
     bool isReverseDominator(iegenlib::Set * s1, iegenlib::Set * s2);
-    DominanceTree* createDominanceTree( std::vector<std::pair<int, iegenlib::Set*>> executionS);
+    DominanceTree* createDominanceTree(std::vector<iegenlib::Set*> executionS);
     DominanceTree* findPredecessors(DominanceTree* dt);
     void generateSSA(Computation * comp);
 
