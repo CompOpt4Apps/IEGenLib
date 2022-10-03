@@ -37,10 +37,12 @@ private:
         int parent; // parent to the node
         std::vector<int>children;  // list of the Children's
         std::vector<int> predecessors{}; // list of the dominators for particular node
+        std::vector<int> cfg_predecessors{}; // merge predecessors for particular node
         std::pair<int, iegenlib::Set*> data; // iteration domain with stmtIdx as key
         std::vector<int>dominanceFrontier;
-        std::pair<std::string, std:: vector<int>> phis{};
+        std::map<std::string, std:: vector<int>> phis{}; // gives data read variables for a renamed variable
         std::vector<int> successors{}; // list of successor for particular node
+
     };
     std::vector<Node> nodes;
 public:
@@ -61,6 +63,12 @@ public:
     void insertPhiNode(std::map<string, std::vector<int>>, Computation* comp );
     void SSARenaming( std::vector<std::map<string, std::vector<int>> >phi_nodes,  Computation* comp);
     string rename( std::map<string, int> &counter, std::map<string, int> &stack,string n);
+    void printPredecessor();
+    void updatePredecessors(int i, std::vector<int>&v);
+    void printTree();
+    void updateCfgPredecessors(int i,std::vector<int>v);
+    void printCfgPred();
+
 };
     bool isDominator(iegenlib::Set* parent, iegenlib::Set* child);
     bool isReverseDominator(iegenlib::Set * s1, iegenlib::Set * s2);

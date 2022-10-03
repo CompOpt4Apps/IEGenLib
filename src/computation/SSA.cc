@@ -73,33 +73,29 @@ std::vector<int> DominanceTree::getPredecessor(int i){
 //calculate Dominance Frontier
 void DominanceTree::DFCal() {
     for(int i=0; i<this->nodes.size();i++){
-        if( this->nodes[i].predecessors.size() > 1) {
-           // std:: cout<< "pred for node " <<i <<'\n';
-           //std::cout << "--------------------"<<'\n';
+        if( this->nodes[i].predecessors.size() > 0) {
+
+            //std:: cout<< "predecessor  for node " <<i <<'\n';
+            std::cout << "--------------------"<<'\n';
             for (int pred:  this->nodes[i].predecessors) {
                 //std:: cout<< "pred "<< pred << " for node " <<i <<'\n';
                 int runner = pred;
                 std::vector<int> DF_runner =  this->nodes[runner].dominanceFrontier;
+//                std:: cout << "runner " << runner <<'\n';
+//                std:: cout << "parent " << this->nodes[i].parent <<'\n';
                 while( runner !=  this->nodes[i].parent){
                     //check if element i isn't in the vector
                     if(std::find(DF_runner.begin(), DF_runner.end(), i) == DF_runner.end()) {
                         DF_runner.push_back(i);
-                        //std:: cout << "DF  " << i<<'\n';
+//                        std:: cout << "DF  " << i<<'\n';
                         //looks like additional DF nodes are being added
                         // might have to remove the statement
                         this->nodes[runner].dominanceFrontier.push_back(i);
                     }
                     runner =   this->nodes[runner].parent;
                 }
-                std::vector<int> test =  this->nodes[i].dominanceFrontier;
-                //std::cout << "runner " << runner <<'\n';
-                if(std::find(test.begin(), test.end(), i) == test.end()){
-                    test.push_back(runner);
-                }
-
             }
         }
-        //this->nodes[runner].dominanceFrontier.push_back(i);
     }
     return;
 }
@@ -174,7 +170,27 @@ std::vector<Set*> DominanceTree::getPrefixes(Set*s) {
     return v;
 }
 
+void DominanceTree::updatePredecessors(int i, std::vector<int>&v) {
+    std::vector<int> pred = nodes[i].predecessors;
+    if(i>0){
+        for(int k=0;k<pred.size();k++){
+            //std::cout << "--------------------"<<'\n' << pred[k]<<'\n';
+            v.push_back(pred[k]);
+            //nodes[i].cfg_predecessors.push_back(pred[k]);
+            updatePredecessors(pred[k],v);
+        }
+    }
+    return;
+}
 
+void DominanceTree::updateCfgPredecessors(int k,std::vector<int>v){
+    for(int i=0;i<v.size();i++){
+        if (std::find(nodes[k].cfg_predecessors.begin(), nodes[k].cfg_predecessors.end(), v[i]) == nodes[k].cfg_predecessors.end()) {
+            nodes[k].cfg_predecessors.push_back(v[i]);
+        }
+
+    }
+}
 DominanceTree* SSA::findPredecessors(DominanceTree* dt) {
 
     std::vector<std::pair<Set*, int>> stack;
@@ -182,9 +198,10 @@ DominanceTree* SSA::findPredecessors(DominanceTree* dt) {
         for (int j = i-1; j >= 0; j--) {
             bool flag = true;
             for(int k: dt->getPredecessor(i)){
-                flag = SSA::isReverseDominator( dt->getElem(k),dt->getElem(j) );
+                if(SSA::isReverseDominator( dt->getElem(k),dt->getElem(j) )){flag= false;}
             }
             if(flag){
+                std::cout <<" adding pred "<<j <<" in node " << i << '\n';
                 dt->add_predecessors(i, j);
                 dt->add_successors(i,j);
             }
@@ -194,16 +211,16 @@ DominanceTree* SSA::findPredecessors(DominanceTree* dt) {
             std::vector<std::pair<Set*, int>> tmp_stack;
 
             for(int k=0;k<v.size();k++){
-                bool flag  = false;
+                bool flag1  = false;
                 int l;
                 for( l=0;l<stack.size();l++){
                     if(v[k]==stack[l].first){
-                        flag = true;
+                        flag1 = true;
                         no_match = false;
                         break;
                     }
                 }
-                if(flag) {
+                if(flag1) {
                     int m = 0;
                     while (m < l) {
                         bool st = SSA::isReverseDominator( dt->getElem(stack[stack.size()-1].second),dt->getElem(j) );
@@ -219,12 +236,22 @@ DominanceTree* SSA::findPredecessors(DominanceTree* dt) {
 
                 tmp_stack.push_back({v[k], i});}
             }
-            if(no_match){stack={};}
+            if(no_match){
+                stack={};}
             stack.insert(stack.end(), tmp_stack.begin(), tmp_stack.end());
-            if(dt->isParent(j,i)) break;
+            if(dt->isParent(j,i)) {
+                //std::cout << " I am being broken " <<'\n';
+                break;}
         }
     }
-    return dt;
+
+//    for(int i=dt->getVectorSize()-1;i>0;i--){
+//        std::vector<int> v;
+//        dt-> updatePredecessors(i,v);
+//        dt->updateCfgPredecessors(i, v);
+//        std::cout<< "size   "<<i << "   "<<v.size() <<'\n';
+//    }
+     return dt;
 }
 
 
@@ -296,9 +323,8 @@ void DominanceTree::insertPhiNode(std::map<string, std::vector<int>> globals, Co
     std:: vector<string> global_var ;
 
         std:: cout << "hell0 ===="<<'\n';
-        std::map<string, std::vector<int>> phi;
 
-        std::map<string, std::vector<int>> actual_phi;
+        std::vector<int> actual_phi;
         std::map<string, std::vector<int>> ::iterator it;
 
     for (it = globals.begin(); it != globals.end(); it++){
@@ -313,13 +339,16 @@ void DominanceTree::insertPhiNode(std::map<string, std::vector<int>> globals, Co
                 //location of phi to insert in phi nodes;
                 int df =  DF[k];
                 //insert only unique
-                if(std::find( phi[it->first].begin(),  phi[it->first].end(), df) ==  phi[it->first].end()) {
-                    phi[it->first].push_back(df);
+                actual_phi =  nodes[df].phis[it->first];
+
+                if(std::find( actual_phi.begin(),  actual_phi.end(), workList[j]) ==  actual_phi.end()) {
+                    actual_phi.push_back(workList[j]);
+                    nodes[df].phis[it->first].push_back(workList[j]);
                 }
 
               //  std::cout << "insert phi nodes in DF "<< this->nodes[workList[j]].dominanceFrontier[k]<<'\n';
                 if (std::find(workList.begin(), workList.end(), DF[k]) == workList.end()) {
-                    actual_phi[it->first].push_back(workList[j]);
+                   // actual_phi[it->first].push_back(workList[j]);
                     workList.push_back(DF[k]);
                 }
 
@@ -342,32 +371,41 @@ void DominanceTree::insertPhiNode(std::map<string, std::vector<int>> globals, Co
 
     for(int i=0;i<nodes.size();i++){
         std::vector<int>loc ;
-        string l;
-        for (it = phi.begin(); it != phi.end(); it++){
+        for (it = nodes[i].phis.begin(); it != nodes[i].phis.end(); it++){
             loc = it -> second;
+            for(int e=0;e<loc.size();e++){
+                std::cout << "phi reads from "<< e << "\n";
+            }
+            string newName = rename(counter, stack, it ->first);
+            std::cout<< newName<<"  loc  " << i <<'\n';
 
-            if(std::find(loc.begin(), loc.end(), i) != loc.end()){
-                string newName = rename(counter, stack, it ->first);
-                std::cout<< newName<<"   " << i <<'\n';
-
-                Stmt * s_org = comp->getStmt(nodes[i].data.first);
+            Stmt * s_org = comp->getStmt(nodes[i].data.first);
 
 //                std:: cout << s_org->prettyPrintString()<<'\n';
 //                std:: cout << s_org->getIterationSpace()->prettyPrintString()<<'\n';
 
-                string itrspace = s_org->getIterationSpace()->prettyPrintString();
-                string executionSch = s_org -> getExecutionSchedule()->prettyPrintString();
-                comp->addStmt(new Stmt (
-                        "phi",
-                        itrspace,
-                        executionSch,
-                        {},
-                        {{newName, "{[0]->[0]}"}}
-                ));
-            }
+//                for(int g=0; g<nodes[i]['x'].size();g++) {
+//                    std::cout << nodes[i]['x'][g];
+//                }
+
+            //nodes[i].phis.at('x');
+            string itrspace = s_org->getIterationSpace()->prettyPrintString();
+            string executionSch = s_org -> getExecutionSchedule()->prettyPrintString();
+            comp->addStmt(new Stmt (
+                    "phi",
+                    itrspace,
+                    executionSch,
+                    {},
+                    {{newName, "{[0]->[0]}"}}
+            ));
+
 
         }
     }
+//    for( int a=0;a<comp->getNumStmts();a++){
+//        std::cout << comp->getStmt(a)->prettyPrintString();
+//    }
+
 
 }
 
@@ -376,7 +414,8 @@ string DominanceTree::rename( std::map<string, int> &counter, std::map<string, i
     counter[n] = counter[n]+1;
     stack[n] = i;
     n.erase(n.begin());
-    n.erase(n.end());
+    n.erase(n.end()-1);
+    //std:: cout << "    "<<n <<'\n';
     return n + std::to_string(i);
     //return n.insert( n.length()-1, "1" ) ;//+ std::to_string(i);
 
@@ -423,8 +462,34 @@ void SSA::generateSSA(Computation *  comp) {
 
     DominanceTree* dt = createDominanceTree(executionS);
     DominanceTree* dt1 = findPredecessors(dt);
+    //dt1->printPredecessor();
+    //dt1->printCfgPred();
     dt1->DFCal();
-    dt1->insertPhiNode(globals, comp);
+   // dt1->insertPhiNode(globals, comp);
     std::cout << "print random";
 
+}
+
+void DominanceTree::printPredecessor() {
+    for(int i=0;i<nodes.size();i++){
+        std::cout << " node " << nodes[i].data.second->prettyPrintString() ;
+        for( int j=0; j<nodes[i].predecessors.size();j++){
+            std::cout  << " has dominator  "<<nodes[nodes[i].predecessors[j]].data.second->prettyPrintString() <<'\n';
+
+        }
+        std::cout<<'\n';
+    }
+}
+//
+//void DominanceTree::printTree(){
+//
+//}
+
+void DominanceTree:: printCfgPred(){
+    for(int i=0;i<nodes.size();i++){
+        for( int j=0; j<nodes[i].cfg_predecessors.size();j++){
+            std::cout << "node  " << i << "  "<<nodes[i].cfg_predecessors[j] <<'\n';
+        }
+        std:: cout << "---------------" <<'\n';
+    }
 }
