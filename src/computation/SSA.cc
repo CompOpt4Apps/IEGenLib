@@ -32,7 +32,7 @@ DominanceTree::~DominanceTree() {
 
 int DominanceTree::push_Back(std::pair<int, iegenlib::Set*> data) {
     Node* node = new Node();
-    node->parent= -1;
+    node->parent={};
     node->children = {};
     node->data = data;
     node-> dominanceFrontier = {};
@@ -78,16 +78,15 @@ void DominanceTree::DFCal() {
             //std:: cout<< "predecessor  for node " <<i <<'\n';
             std::cout << "--------------------"<<'\n';
             for (int pred:  this->nodes[i].predecessors) {
-                //std:: cout<< "pred "<< pred << " for node " <<i <<'\n';
+                std:: cout<< "pred "<< pred << " for node " <<i <<'\n';
                 int runner = pred;
                 std::vector<int> DF_runner =  this->nodes[runner].dominanceFrontier;
-//                std:: cout << "runner " << runner <<'\n';
-//                std:: cout << "parent " << this->nodes[i].parent <<'\n';
+
                 while( runner !=  this->nodes[i].parent){
                     //check if element i isn't in the vector
                     if(std::find(DF_runner.begin(), DF_runner.end(), i) == DF_runner.end()) {
                         DF_runner.push_back(i);
-//                        std:: cout << "DF  " << i<<'\n';
+                        std:: cout << "DF  " << i<<'\n';
                         //looks like additional DF nodes are being added
                         // might have to remove the statement
                         this->nodes[runner].dominanceFrontier.push_back(i);
@@ -138,7 +137,6 @@ bool SSA::isReverseDominator(iegenlib::Set * s1, iegenlib::Set * s2){
         return true;
     }
     while( s2->getArity() > s1->getArity()) {
-
         TupleDecl tl = s2->getTupleDecl();
         s2 = s2->projectOut(tl.getSize()-1);
     }
@@ -195,53 +193,51 @@ DominanceTree* SSA::findPredecessors(DominanceTree* dt) {
 
     std::vector<std::pair<Set*, int>> stack;
     for (int i = dt->getVectorSize() -1; i >= 0; i--) {
+       // std::cout << "--------the node is---------- " << i<<'\n';
         for (int j = i-1; j >= 0; j--) {
+          //  std::cout << "--------i am in  node ---------- " << j<<'\n';
             bool flag = true;
             for(int k: dt->getPredecessor(i)){
-                if(SSA::isReverseDominator( dt->getElem(k),dt->getElem(j) )){flag= false;}
+               // std:: cout << "does the node  " << k << " reverse dominates "<< j  << '\n';
+                flag = SSA::isReverseDominator( dt->getElem(k),dt->getElem(j) );
             }
             if(flag){
-                std::cout <<" adding pred "<<j <<" in node " << i << '\n';
+               // std::cout <<" adding pred "<<j <<" in node " << i << '\n';
                 dt->add_predecessors(i, j);
                 dt->add_successors(i,j);
             }
-            // //
+          //  std::cout << "hello hello"<<'\n';
+
+            // // get the prefixes for particular node
+            // put them in the stack
+            // move one node above
+
+
             std::vector<Set*>  v = dt->getPrefixes(dt->getElem(j) );
-            bool no_match =true;
+
             std::vector<std::pair<Set*, int>> tmp_stack;
-
-            for(int k=0;k<v.size();k++){
-                bool flag1  = false;
-                int l;
-                for( l=0;l<stack.size();l++){
-                    if(v[k]==stack[l].first){
-                        flag1 = true;
-                        no_match = false;
-                        break;
+            std::vector <int> pop_elm;
+            int l,m;
+            bool no_match;
+            for( l=stack.size()-1;l>0;l--){
+                tmp_stack = {};
+                for(m=0;m<v.size();m++){
+                    if(stack[l].first->prettyPrintString()==v[m]->prettyPrintString()){
+                       no_match = false;
+                       break;
                     }
+                    no_match = true;
+                    tmp_stack.push_back({v[m],i});
                 }
-                if(flag1) {
-                    int m = 0;
-                    while (m < l) {
-                        bool st = SSA::isReverseDominator( dt->getElem(stack[stack.size()-1].second),dt->getElem(j) );
-                        if(st){
-                            dt->add_predecessors(stack[stack.size()-1].second, j);
-                            dt->add_successors(i,j);
-                        }
-                       stack.pop_back();
-                        m++;
-                    }
-                    break;
-                }else{
-
-                tmp_stack.push_back({v[k], i});}
+                if(!no_match)break;
             }
-            if(no_match){
-                stack={};}
+            if(no_match){ stack = {};}
+            else{
+
+            }
             stack.insert(stack.end(), tmp_stack.begin(), tmp_stack.end());
-            if(dt->isParent(j,i)) {
-                //std::cout << " I am being broken " <<'\n';
-                break;}
+            std:: cout << "----------------------" <<'\n';
+            if(dt->isParent(j,i)) {break;}
         }
     }
 
@@ -299,8 +295,7 @@ DominanceTree* SSA::createDominanceTree(std::vector<iegenlib::Set *>executionS1)
         pDominanceTree ->push_Back(v);
     }
     // set up the relations( parent and child)
-    //
-    //
+
     for (int i = executionS.size() - 1; i >= 0; i--) {
         for (int j = i-1; j >= 0; j--) {
             bool isDominator1 = SSA::isDominator(executionS[j].second, executionS[i].second);
@@ -312,11 +307,6 @@ DominanceTree* SSA::createDominanceTree(std::vector<iegenlib::Set *>executionS1)
     }
     return pDominanceTree;
 }
-//
-//void DominanceTree::SSARenaming( std::vector<std::map<string, std::vector<int>> >phi_nodes,  Computation* comp){
-//
-//
-//}
 
 void DominanceTree::insertPhiNode(std::map<string, std::vector<int>> globals, Computation* comp ){
 
@@ -446,24 +436,15 @@ void SSA::generateSSA(Computation *  comp) {
     }
 
 
-//    for( auto v: globals){
-//        for (auto it = v.cbegin(); it != v.cend(); ++it) {
-//            std::cout << "{" << (*it).first << ": "  ;
-//            for(int l= 0;l < (*it).second.size();l++) {
-//                std::cout << (*it).second[l] <<'\n';
-//            }
-//
-//        }
-//    }
 
         std::map<string, std::vector<int>> ::iterator it = globals.begin();
         std::cout << it->first<< " sdfd  "<<'\n';
-
 
     DominanceTree* dt = createDominanceTree(executionS);
     DominanceTree* dt1 = findPredecessors(dt);
     //dt1->printPredecessor();
     //dt1->printCfgPred();
+    dt1->printTree();
     dt1->DFCal();
    // dt1->insertPhiNode(globals, comp);
     std::cout << "print random";
@@ -489,6 +470,15 @@ void DominanceTree:: printCfgPred(){
     for(int i=0;i<nodes.size();i++){
         for( int j=0; j<nodes[i].cfg_predecessors.size();j++){
             std::cout << "node  " << i << "  "<<nodes[i].cfg_predecessors[j] <<'\n';
+        }
+        std:: cout << "---------------" <<'\n';
+    }
+}
+
+void DominanceTree::printTree() {
+    for(int i=0;i<nodes.size();i++){
+        for( int j=0; j<nodes[i].children.size();j++){
+            std::cout << "node  " << i << " parent  "<<nodes[i].parent<< "   children  "  << nodes[i].children[j] <<'\n';
         }
         std:: cout << "---------------" <<'\n';
     }
