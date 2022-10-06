@@ -47,6 +47,8 @@ public:
     ScheduleTree();
     ~ScheduleTree();
     void createScheduleTree( Computation* Comp);
+    std::vector<Set*> getPrefixes(Set*s);
+
 };
     void generateSSA(Computation * comp);
 
