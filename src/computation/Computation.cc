@@ -1460,9 +1460,7 @@ void Computation::finalize(bool deleteDeadNodes) {
 
     Computation* comp;
     comp = this;
-
     SSA::generateSSA(comp);
-
     adjustExecutionSchedules();
     padExecutionSchedules();
 //    adjustExecutionSchedules();

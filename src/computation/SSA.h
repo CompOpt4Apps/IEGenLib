@@ -29,51 +29,25 @@ namespace iegenlib{
 }
 using namespace iegenlib;
 
-
 namespace SSA{
-class DominanceTree {
+class ScheduleTree {
 private:
     struct Node{
-        int parent; // parent to the node
-        std::vector<int>children;  // list of the Children's
-        std::vector<int> predecessors{}; // list of the dominators for particular node
-        std::vector<int> cfg_predecessors{}; // merge predecessors for particular node
-        std::pair<int, iegenlib::Set*> data; // iteration domain with stmtIdx as key
-        std::vector<int>dominanceFrontier;
-        std::map<std::string, std:: vector<int>> phis{}; // gives data read variables for a renamed variable
-        std::vector<int> successors{}; // list of successor for particular node
-
+        bool ordered;
+        int common_arity;
+        std::vector<struct  member>members;
     };
-    std::vector<Node> nodes;
+    struct member{
+        Set* schedule;
+        Stmt* stmt;
+        Node * child;
+        std::pair<Node*,int> parent;
+    };
 public:
-    DominanceTree();
-    ~DominanceTree();
-    int push_Back(std::pair<int,iegenlib::Set*>);
-    void add_edge(int parent , int child);
-    bool equivalent(DominanceTree);
-    int getVectorSize();
-    void add_predecessors(int i, int j);
-    void add_successors(int i, int j);
-    Set* getElem(int i);
-    std::vector<int> getPredecessor(int i);
-    bool predecessorEquivalent(DominanceTree dt);
-    bool isParent(int parent, int child);
-    std::vector<Set*>getPrefixes(Set*s);
-    void DFCal();
-    void insertPhiNode(std::map<string, std::vector<int>>, Computation* comp );
-    void SSARenaming( std::vector<std::map<string, std::vector<int>> >phi_nodes,  Computation* comp);
-    string rename( std::map<string, int> &counter, std::map<string, int> &stack,string n);
-    void printPredecessor();
-    void updatePredecessors(int i, std::vector<int>&v);
-    void printTree();
-    void updateCfgPredecessors(int i,std::vector<int>v);
-    void printCfgPred();
-
+    ScheduleTree();
+    ~ScheduleTree();
+    void createScheduleTree( Computation* Comp);
 };
-    bool isDominator(iegenlib::Set* parent, iegenlib::Set* child);
-    bool isReverseDominator(iegenlib::Set * s1, iegenlib::Set * s2);
-    DominanceTree* createDominanceTree(std::vector<iegenlib::Set*> executionS);
-    DominanceTree* findPredecessors(DominanceTree* dt);
     void generateSSA(Computation * comp);
 
 };
