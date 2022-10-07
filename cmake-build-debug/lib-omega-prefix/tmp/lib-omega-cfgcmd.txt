@@ -1,1 +1,1 @@
-cmd='autoreconf;-f;-i;COMMAND;./configure;--prefix=/home/kbwal/IEGenLib/lib/installed'
+cmd='autoreconf;-f;-i;COMMAND;./configure;--prefix=/Users/ant/Documents/AdaptLab/IEGenLib/lib/installed'

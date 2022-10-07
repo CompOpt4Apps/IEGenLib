@@ -35,7 +35,7 @@ private:
     struct Node{
         bool ordered;
         int common_arity;
-        std::vector<struct  member>members;
+        std::vector<struct member*>members;
     };
     struct member{
         Set* schedule;
@@ -48,6 +48,8 @@ public:
     ~ScheduleTree();
     void createScheduleTree( Computation* Comp);
     std::vector<Set*> getPrefixes(Set*s);
+    struct member* create_member(Set*S, Stmt*st);
+    void insert(struct member*);
 
 };
     void generateSSA(Computation * comp);
