@@ -159,8 +159,11 @@ TEST(SSATest123, DominanceTreeTEST111){
             {},
             {{"x", "{[0]->[0]}"}}
     ));
+    Node * node;
+    node = generateSSA(comp);
+    node->printBreadthFirst();
 
-    comp->finalize();
+   // comp->finalize();
     EXPECT_EQ(1,1);
 
 }

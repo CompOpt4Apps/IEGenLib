@@ -1463,8 +1463,6 @@ void Computation::finalize(bool deleteDeadNodes) {
     SSA::generateSSA(comp);
     adjustExecutionSchedules();
     padExecutionSchedules();
-//    adjustExecutionSchedules();
-//	padExecutionSchedules();
 
     if (deleteDeadNodes) {
         std::cerr << "Deleting Dead Nodes" << std::endl;

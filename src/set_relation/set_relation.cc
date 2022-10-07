@@ -2246,9 +2246,9 @@ Set::Set(int arity) : SparseConstraints(), mArity(arity) {
 /*
  *Lexicographically sorting sets
  */
-bool Set::LexiSort(Set * a, Set * b){
-    Set a_copy = *a;
-    Set b_copy = *b;
+bool Set::LexiLess(Set * other){
+    Set a_copy = *this;
+    Set b_copy = *other;
     int max = std::max( a_copy.getArity(), b_copy.getArity());
     Set* aa = a_copy.addPadding(max);
     Set* bb = b_copy.addPadding(max);

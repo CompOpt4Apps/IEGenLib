@@ -781,7 +781,7 @@ public:
     bool isSubset(Set* other);
 
     // Sorts given two sets lexicographically
-    bool LexiSort(Set * a, Set * b);
+    bool LexiLess(Set * other);
 
     // Removes constants from the set
     static  Set* projectOutConst(Set* s);

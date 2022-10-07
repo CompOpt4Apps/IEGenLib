@@ -17,6 +17,7 @@
 #ifndef SSA_H_
 #define SSA_H_
 
+
 #include <vector>
 #include <tuple>
 #include <iostream>
@@ -30,29 +31,68 @@ namespace iegenlib{
 using namespace iegenlib;
 
 namespace SSA{
-class ScheduleTree {
+    class Member;
+    class Node;
+class Node {
 private:
-    struct Node{
-        bool ordered;
-        int common_arity;
-        std::vector<struct member*>members;
-    };
-    struct member{
-        Set* schedule;
-        Stmt* stmt;
-        Node * child;
-        std::pair<Node*,int> parent;
-    };
+    bool ordered;
+    int common_arity;
+    std::vector<Member*>members;
 public:
-    ScheduleTree();
-    ~ScheduleTree();
-    void createScheduleTree( Computation* Comp);
-    std::vector<Set*> getPrefixes(Set*s);
-    struct member* create_member(Set*S, Stmt*st);
-    void insert(struct member*);
+    Node();
+    ~Node();
+    //void create_member(Set*S, Stmt*st);
+    Node* insert(Member* m);
+
+    bool isOrdered() const;
+
+    void setOrdered(bool ordered);
+
+    int getCommonArity() const;
+
+    void setCommonArity(int commonArity);
+
+    const std::vector<Node*> &getMembers() const;
+
+    void setMembers(const std::vector<Node *> &members);
+
+    void printBreadthFirst();
 
 };
-    void generateSSA(Computation * comp);
+class Member{
+private:
+    Set* schedule;
+public:
+    Set *getSchedule() const;
 
+    void setSchedule(Set *schedule);
+
+    Stmt *getStmt() const;
+
+    void setStmt(Stmt *stmt);
+
+    Node *getChild() const;
+
+    void setChild(Node *child);
+
+     std::pair<Node *, Member*> &getParent() ;
+
+    void setParent(Node *, Member*);
+
+private:
+    Stmt* stmt;
+    Node * child;
+    std::pair<Node*, Member*> parent;
+public:
+    Member();
+    Member(Set* s, Stmt * s1);
+    void printBreadthFirst();
+    ~Member();
+
+
+};
+    Node* generateSSA(Computation * comp);
+    Node* createScheduleTree( Computation* Comp);
+    std::vector<Set*> getPrefixes(Set*s);
 };
 #endif

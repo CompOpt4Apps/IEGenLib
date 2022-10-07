@@ -312,3 +312,10 @@ TEST(setRelationshipTest, setComplicatedSetEqualityTEST){
   delete r1;
   delete r2;
 }
+
+TEST(setRelationshipTest, setEqualityTEST1){
+    iegenlib::Set* s0 = new iegenlib::Set("{[2,t,0]: 0<=t<M}");
+    iegenlib::Set* s1 = new iegenlib::Set("{[2,t,0]: 0<=t<M}");
+    //if(s0==s1){std::cout<< "test";}
+    EXPECT_TRUE((*s0)==(*s1));
+}
