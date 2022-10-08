@@ -100,7 +100,7 @@ TEST(SSATest123, DominanceTreeTEST111){
 
     comp->addStmt(new Stmt (
             "x=2;",
-            "{[t,p]:0<=t<M && p>10 && n<=10}",
+            "{[t,p]:0<=t<M && p>10}",
             "{[t,p]->[2,t,1,p,2]}",
             {},
             {{"x", "{[t,p]->[t,p]}"}}

@@ -33,13 +33,12 @@ using namespace iegenlib;
 std::vector<Set*> SSA::getPrefixes(Set*s) {
 
     std::vector<Set*>v;
-
     Set* res = new Set(*s);
 
     TupleDecl tl = s->getTupleDecl();
+    v.push_back(res);
 
     if( tl.size()==1 ){
-        v.push_back(res);
         return(v);
     }
 
@@ -68,6 +67,7 @@ std::vector<Set*> SSA::getPrefixes(Set*s) {
     for( int a=0;a<comp->getNumStmts();a++){
         stmts.push_back(comp->getStmt(a));
     }
+    std::vector<Set> processedList;
 
     for(int i=0; i<stmts.size(); i++){
         iegenlib::Set* s1 = stmts[i]->getExecutionSchedule()->Apply( stmts[i]->getIterationSpace());
@@ -78,7 +78,13 @@ std::vector<Set*> SSA::getPrefixes(Set*s) {
         SSA::Node * current = rootNode;
 
         for(int j= v.size()-1;j>=0;j--){
-//            std:: cout << "prefixes " << v[j]->prettyPrintString()<<'\n';
+            //std:: cout << "prefixes " << (*v[j]).prettyPrintString()<<'\n';
+            if ( std::find(processedList.begin(), processedList.end(), (*v[j])) != processedList.end() ){
+                continue;
+            }
+            processedList.push_back((*v[j]));
+
+            std::cout << " this is is "<< v[j]->prettyPrintString()<<'\n';
 
             SSA::Member * m;
             if ( j ==0){
@@ -196,7 +202,7 @@ void SSA::Node::printBreadthFirst() {
     for(auto it=members.begin(); it!=members.end();it++){
         (*it)->printBreadthFirst();
     }
-
+        std::cout << "------------------"<<'\n';
 }
 void SSA::Member::printBreadthFirst() {
     std::cout << schedule->prettyPrintString()<<'\n';
