@@ -74,17 +74,14 @@ std::vector<Set*> SSA::getPrefixes(Set*s) {
         //std::cout << s1->prettyPrintString()<<'\n';
         std::vector<Set*>v;
         v = getPrefixes(s1);
-
         SSA::Node * current = rootNode;
 
         for(int j= v.size()-1;j>=0;j--){
             //std:: cout << "prefixes " << (*v[j]).prettyPrintString()<<'\n';
-            if ( std::find(processedList.begin(), processedList.end(), (*v[j])) != processedList.end() ){
-                continue;
-            }
-            processedList.push_back((*v[j]));
-
-            std::cout << " this is is "<< v[j]->prettyPrintString()<<'\n';
+//            if ( std::find(processedList.begin(), processedList.end(), (*v[j])) != processedList.end() ){
+//                continue;
+//            }
+//            processedList.push_back((*v[j]));
 
             SSA::Member * m;
             if ( j ==0){
@@ -92,7 +89,6 @@ std::vector<Set*> SSA::getPrefixes(Set*s) {
             }
             else{
                 m = new SSA::Member(v[j], NULL);
-
             }
             current =  current->insert(m);
         }
@@ -154,11 +150,13 @@ SSA::Node* SSA::Node::insert(SSA::Member * m){
         return NULL;
     }
     if(ordered){
-        for(auto current=members.begin(); current!=members.end();current++ ){
+        for(auto current=members.begin(); current!=members.end(); ++current ){
             //current = members[i];
             if((*(*current)->getSchedule())== (*m->getSchedule())){
                 return (*current)->getChild();
             }
+        }
+        for(auto current=members.begin(); current!=members.end(); ++current ){
             if(!((*current)->getSchedule())->LexiLess(m->getSchedule())){
                 members.emplace(current, m);
                 m->setParent(this, m);
@@ -178,7 +176,7 @@ SSA::Node* SSA::Node::insert(SSA::Member * m){
     }
     members.push_back(m);
     m->getChild()->setCommonArity(getCommonArity()+1);
-    m->setParent(this,m );
+    m->setParent(this,m ); // parent == null
     return m->getChild();
 }
 
