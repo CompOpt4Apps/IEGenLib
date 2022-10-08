@@ -48,13 +48,7 @@ std::vector<Set*> SSA::getPrefixes(Set*s) {
     }
     return v;
 }
-//Member::member* Member::create_member(Set* S, Stmt* st) {
-//    member* m = new member();
-//    m->schedule = S;
-//    m->child = new Node();
-//    m->stmt = st;
-//    return m;
-//}
+
  SSA::Node* SSA::createScheduleTree(iegenlib:: Computation* comp){
 
     std::vector<Stmt*> stmts  ;
@@ -202,7 +196,51 @@ void SSA::Node::printBreadthFirst() {
     }
         std::cout << "------------------"<<'\n';
 }
+
+void Node::setMembers(const std::vector<Member *> &members) {
+    Node::members = members;
+}
+
 void SSA::Member::printBreadthFirst() {
     std::cout << schedule->prettyPrintString()<<'\n';
     child->printBreadthFirst();
+}
+
+std::vector<Stmt> SSA::pred_and_dom(Node* n, int idx) {
+
+    std::vector<Stmt> listOfStatements{};
+    int i;
+    for(i = idx; i>=0 ;i--) {
+        if (n[i] == statement) {
+            listOfStatements.push_back(node[i]);
+            return listOfStatements;
+        }
+
+        for (auto c: n[i].getMembers()){
+            listOfStatements.push_back(pred_and_dom(c,c->.size()-1));
+        }
+
+        if(i==-1){
+            listOfStatements.push_back(pred_and_dom(node.parent,node.parent.index);
+        }
+
+
+    }
+
+//    listOfStatements = [];
+//    int i;
+//
+//    for(i = idx; i>=0 ;i–){
+//        if(node[i] == statement){
+//            listOfStatements.push_back(node[i]);
+//            return listOfStatements;
+//        }
+//        foreach child c (node[i]){
+//            listOfStatements.push_back(pred_and_dom(c,c.children.size()-1));
+//        }
+//    }
+//    if(i==-1){
+//        listOfStatements.push_back(pred_and_dom(node.parent,node.parent.index);
+//    }
+
 }

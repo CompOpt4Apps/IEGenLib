@@ -39,6 +39,9 @@ private:
     int common_arity;
     std::vector<Member*>members;
 public:
+    void setMembers(const std::vector<Member *> &members);
+
+public:
     Node();
     ~Node();
     //void create_member(Set*S, Stmt*st);
@@ -52,9 +55,7 @@ public:
 
     void setCommonArity(int commonArity);
 
-    const std::vector<Node*> &getMembers() const;
-
-    void setMembers(const std::vector<Node *> &members);
+    const std::vector<Member*> &getMembers() const;
 
     void printBreadthFirst();
 
@@ -94,5 +95,6 @@ public:
     Node* generateSSA(Computation * comp);
     Node* createScheduleTree( Computation* Comp);
     std::vector<Set*> getPrefixes(Set*s);
+    std::vector<Stmt> pred_and_dom(Node* n, int idx);
 };
 #endif
