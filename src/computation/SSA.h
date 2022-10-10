@@ -92,9 +92,10 @@ public:
 
 
 };
-    Node* generateSSA(Computation * comp);
+    Computation* generateSSA(Computation * comp);
     Node* createScheduleTree( Computation* Comp);
     std::vector<Set*> getPrefixes(Set*s);
     std::vector<Stmt> pred_and_dom(Node* n, int idx);
+    string rename( std::map<string, int> &counter, std::map<string, int> &stack,string n );
 };
 #endif

@@ -133,9 +133,13 @@ void Member::setParent(Node * n, Member* s) {
 }
 
 
-SSA::Node* SSA::generateSSA(iegenlib::Computation *comp) {
+Computation* SSA::generateSSA(iegenlib::Computation *comp) {
     Node * node = createScheduleTree(comp);
-    return node;
+
+    /// perform further operation
+    //
+    
+    return comp;
 }
 
 SSA::Node* SSA::Node::insert(SSA::Member * m){
@@ -209,38 +213,35 @@ void SSA::Member::printBreadthFirst() {
 std::vector<Stmt> SSA::pred_and_dom(Node* n, int idx) {
 
     std::vector<Stmt> listOfStatements{};
-    int i;
-    for(i = idx; i>=0 ;i--) {
-        if (n[i] == statement) {
-            listOfStatements.push_back(node[i]);
-            return listOfStatements;
-        }
-
-        for (auto c: n[i].getMembers()){
-            listOfStatements.push_back(pred_and_dom(c,c->.size()-1));
-        }
-
-        if(i==-1){
-            listOfStatements.push_back(pred_and_dom(node.parent,node.parent.index);
-        }
-
-
-    }
-
-//    listOfStatements = [];
+    return listOfStatements;
 //    int i;
-//
-//    for(i = idx; i>=0 ;i–){
-//        if(node[i] == statement){
-//            listOfStatements.push_back(node[i]);
+//    for(i = idx; i>=0 ;i--) {
+//        if (n[i] == statement) {
+//            listOfStatements.push_back(n[i]->);
 //            return listOfStatements;
 //        }
-//        foreach child c (node[i]){
-//            listOfStatements.push_back(pred_and_dom(c,c.children.size()-1));
+//
+//        for (auto c: n[i].getMembers()){
+//            listOfStatements.push_back(pred_and_dom(c,c->.size()-1));
 //        }
+//
+//        if(i==-1){
+//            listOfStatements.push_back(pred_and_dom(n.parent,n.parent.index);
+//        }
+//
+//
 //    }
-//    if(i==-1){
-//        listOfStatements.push_back(pred_and_dom(node.parent,node.parent.index);
-//    }
+
+}
+
+string SSA::rename( std::map<string, int> &counter, std::map<string, int> &stack,string n ){
+    int i = counter[n];
+    counter[n] = counter[n]+1;
+    stack[n] = i;
+    n.erase(n.begin());
+    n.erase(n.end()-1);
+    //std:: cout << "    "<<n <<'\n';
+    return n + std::to_string(i);
+    //return n.insert( n.length()-1, "1" ) ;//+ std::to_string(i);
 
 }

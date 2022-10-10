@@ -160,7 +160,7 @@ TEST(SSATest123, DominanceTreeTEST111){
             {{"x", "{[0]->[0]}"}}
     ));
     Node * node;
-    node = generateSSA(comp);
+    node = createScheduleTree(comp);
     node->printBreadthFirst();
 
    // comp->finalize();
