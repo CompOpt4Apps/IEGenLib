@@ -265,7 +265,6 @@ std::vector<Stmt*> SSA::Member::pred_and_dom(Node* n, int idx) {
                 listOfStatements.insert(listOfStatements.end(), s.begin(), s.end());
             }
         }
-        if (i == -1) {
             // this is for the root node
             if (n->getParent().first == NULL) {
                 return listOfStatements;
@@ -282,12 +281,20 @@ std::vector<Stmt*> SSA::Member::pred_and_dom(Node* n, int idx) {
             }
             if(p->getParent().first != NULL){
                 std::vector<Stmt*> s;
+
+                int j;
+                for(j=0;j<p->getMembers().size();j++ ){
+                    if(n->getParent().second==p->getMembers()[j] ){
+                        break;
+                    }
+                }
+
                 s = pred_and_dom(p->getParent().first,
-                                 p->getParent().first->getMembers().size()-1);
+                                 j);
                 listOfStatements.insert(listOfStatements.end(), s.begin(), s.end());
             }
             return listOfStatements;
-        }
+
 
 }
 
