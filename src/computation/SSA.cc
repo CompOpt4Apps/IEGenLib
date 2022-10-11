@@ -133,6 +133,7 @@ Computation* SSA::generateSSA(iegenlib::Computation *comp) {
     Node * node = createScheduleTree(comp);
 
     node->calc_all_pred();
+
     //pred_and_dom();
 
     /// perform further operation
@@ -227,7 +228,15 @@ void SSA::Member::calc_all_pred(Node * n){
                 break;
             }
         }
-        pred_and_dom(n, j-1);
+        std::vector<Stmt*> stmtList;
+
+        stmtList = pred_and_dom(n, j-1);
+
+        std::cout << "pred for " << schedule->prettyPrintString()<<std::endl;
+
+        for(int i =0;i<stmtList.size();i++){
+            std:: cout << " The schedule is " << stmtList[i]->getExecutionSchedule()->prettyPrintString()<<'\n';
+        }
 
     }
 
@@ -241,24 +250,25 @@ std::vector<Stmt*> SSA::Member::pred_and_dom(Node* n, int idx) {
     int i;
 
     for(i = idx; i>=0 ;i--) {
+        //this case is for when we hit a dominator
 
         if (n->getMembers()[i]->getStmt()!=NULL) {
             listOfStatements.push_back(n->getMembers()[i]->getStmt());
             return listOfStatements;
         }
-
+        //this case is for when we are adding predecessors that aren't dominators
         for (auto c:   n->getMembers()[i]->getChild()->getMembers() ){
             std::vector<Stmt*> s;
             s = pred_and_dom(  c->getChild()  , c->getChild()->getMembers().size()-1 ) ;
             listOfStatements.insert(listOfStatements.end(), s.begin(), s.end());
         }
     }
-
     if(i==-1){
+        // this is for the root node
         if(n->getParent().first==NULL){
             return  listOfStatements;
         }
-
+        // stepping up to find the location of the dominator in the member vector
         int j;
         for(j=0;j<n->getParent().first->getMembers().size();j++ ){
             if(n->getParent().second==n->getParent().first->getMembers()[j] ){
