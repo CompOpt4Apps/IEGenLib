@@ -161,7 +161,9 @@ TEST(SSATest123, DominanceTreeTEST111){
     ));
     Node * node;
     node = createScheduleTree(comp);
-    node->printBreadthFirst();
+
+   node->calc_all_pred();
+   //node->printBreadthFirst();
 
    // comp->finalize();
     EXPECT_EQ(1,1);

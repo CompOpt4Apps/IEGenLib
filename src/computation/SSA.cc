@@ -56,6 +56,7 @@ std::vector<Set*> SSA::getPrefixes(Set*s) {
     Node * rootNode = new Node();
     rootNode->setOrdered( true);
     rootNode->setCommonArity(1);
+    rootNode->setParent(NULL,NULL);
 
     // remove this for loop
     for( int a=0;a<comp->getNumStmts();a++){
@@ -72,11 +73,6 @@ std::vector<Set*> SSA::getPrefixes(Set*s) {
 
         for(int j= v.size()-1;j>=0;j--){
             //std:: cout << "prefixes " << (*v[j]).prettyPrintString()<<'\n';
-//            if ( std::find(processedList.begin(), processedList.end(), (*v[j])) != processedList.end() ){
-//                continue;
-//            }
-//            processedList.push_back((*v[j]));
-
             SSA::Member * m;
             if ( j ==0){
                 m = new SSA::Member(v[j], stmts[i]);
@@ -100,7 +96,7 @@ SSA::Member::Member(Set * s, Stmt * st) {
     stmt = st;
 }
 
-Set *Member::getSchedule() const {
+Set *Member::getSchedule()  {
     return schedule;
 }
 
@@ -108,7 +104,7 @@ void Member::setSchedule(Set *schedule) {
     Member::schedule = schedule;
 }
 
-Stmt *Member::getStmt() const {
+Stmt *Member::getStmt()  {
     return stmt;
 }
 
@@ -116,7 +112,7 @@ void Member::setStmt(Stmt *stmt) {
     Member::stmt = stmt;
 }
 
-Node *Member::getChild() const {
+Node *Member::getChild()  {
     return child;
 }
 
@@ -124,11 +120,11 @@ void SSA::Member::setChild(SSA::Node *child) {
     child = child;
 }
 
- std::pair<SSA::Node *, SSA::Member*> &SSA::Member::getParent() {
+ std::pair<SSA::Node *, SSA::Member*> &SSA::Node::getParent() {
     return parent;
 }
 
-void Member::setParent(Node * n, Member* s) {
+void Node::setParent(Node * n, Member* s) {
     parent = std::make_pair(n,s);
 }
 
@@ -136,9 +132,12 @@ void Member::setParent(Node * n, Member* s) {
 Computation* SSA::generateSSA(iegenlib::Computation *comp) {
     Node * node = createScheduleTree(comp);
 
+    node->calc_all_pred();
+    //pred_and_dom();
+
     /// perform further operation
     //
-    
+
     return comp;
 }
 
@@ -153,19 +152,19 @@ SSA::Node* SSA::Node::insert(SSA::Member * m){
             if((*(*current)->getSchedule())== (*m->getSchedule())){
                 return (*current)->getChild();
             }
-        }
-        for(auto current=members.begin(); current!=members.end(); ++current ){
+
             if(!((*current)->getSchedule())->LexiLess(m->getSchedule())){
                 members.emplace(current, m);
-                m->setParent(this, m);
+                m->getChild()->setParent(this, m);
                 m->getChild()->setCommonArity(getCommonArity()+1);
                 return m->getChild();
             }
-            members.push_back(m);
-            m->getChild()->setCommonArity(getCommonArity()+1);
-            m->setParent(this,m );
-            return m->getChild();
+
         }
+        members.push_back(m);
+        m->getChild()->setCommonArity(getCommonArity()+1);
+        m->getChild()->setParent(this,m );
+        return m->getChild();
     }
     for(auto current=members.begin(); current!=members.end();current++ ){
         if((*(*current)->getSchedule())== (*m->getSchedule())){
@@ -174,11 +173,11 @@ SSA::Node* SSA::Node::insert(SSA::Member * m){
     }
     members.push_back(m);
     m->getChild()->setCommonArity(getCommonArity()+1);
-    m->setParent(this,m ); // parent == null
+    m->getChild()->setParent(this,m ); // parent == null
     return m->getChild();
 }
 
-bool SSA::Node::isOrdered() const {
+bool SSA::Node::isOrdered()  {
     return ordered;
 }
 
@@ -186,7 +185,7 @@ void SSA::Node::setOrdered(bool ordered) {
     Node::ordered = ordered;
 }
 
-int SSA::Node::getCommonArity() const {
+int SSA::Node::getCommonArity()  {
     return common_arity;
 }
 
@@ -201,38 +200,83 @@ void SSA::Node::printBreadthFirst() {
         std::cout << "------------------"<<'\n';
 }
 
-void Node::setMembers(const std::vector<Member *> &members) {
+
+void SSA::Node::calc_all_pred() {
+
+    for(auto it=members.begin(); it!=members.end();it++){
+        (*it)->calc_all_pred(this);
+    }
+    std::cout << "------------------"<<'\n';
+}
+
+void Node::setMembers( std::vector<Member *> &members) {
     Node::members = members;
 }
+
 
 void SSA::Member::printBreadthFirst() {
     std::cout << schedule->prettyPrintString()<<'\n';
     child->printBreadthFirst();
 }
+void SSA::Member::calc_all_pred(Node * n){
 
-std::vector<Stmt> SSA::pred_and_dom(Node* n, int idx) {
+    if(stmt!=NULL){
+        int j;
+        for(j=0;j<n->getMembers().size();j++ ){
+            if(this==n->getMembers()[j] ){
+                break;
+            }
+        }
+        pred_and_dom(n, j-1);
 
-    std::vector<Stmt> listOfStatements{};
-    return listOfStatements;
-//    int i;
-//    for(i = idx; i>=0 ;i--) {
-//        if (n[i] == statement) {
-//            listOfStatements.push_back(n[i]->);
-//            return listOfStatements;
-//        }
-//
-//        for (auto c: n[i].getMembers()){
-//            listOfStatements.push_back(pred_and_dom(c,c->.size()-1));
-//        }
-//
-//        if(i==-1){
-//            listOfStatements.push_back(pred_and_dom(n.parent,n.parent.index);
-//        }
-//
-//
-//    }
+    }
 
+    child->calc_all_pred();
 }
+
+std::vector<Stmt*> SSA::Member::pred_and_dom(Node* n, int idx) {
+
+    std::vector<Stmt*> listOfStatements{};
+
+    int i;
+
+    for(i = idx; i>=0 ;i--) {
+
+        if (n->getMembers()[i]->getStmt()!=NULL) {
+            listOfStatements.push_back(n->getMembers()[i]->getStmt());
+            return listOfStatements;
+        }
+
+        for (auto c:   n->getMembers()[i]->getChild()->getMembers() ){
+            std::vector<Stmt*> s;
+            s = pred_and_dom(  c->getChild()  , c->getChild()->getMembers().size()-1 ) ;
+            listOfStatements.insert(listOfStatements.end(), s.begin(), s.end());
+        }
+    }
+
+    if(i==-1){
+        if(n->getParent().first==NULL){
+            return  listOfStatements;
+        }
+
+        int j;
+        for(j=0;j<n->getParent().first->getMembers().size();j++ ){
+            if(n->getParent().second==n->getParent().first->getMembers()[j] ){
+                break;
+            }
+        }
+
+        std::vector<Stmt*> s;
+        s = pred_and_dom(n->getParent().first,j-1);
+        listOfStatements.insert(listOfStatements.end(), s.begin(), s.end());
+        return  listOfStatements;
+    }
+}
+
+std::vector<Member*> SSA::Node::getMembers(){
+    return members;
+}
+
 
 string SSA::rename( std::map<string, int> &counter, std::map<string, int> &stack,string n ){
     int i = counter[n];

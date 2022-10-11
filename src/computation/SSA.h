@@ -38,8 +38,11 @@ private:
     bool ordered;
     int common_arity;
     std::vector<Member*>members;
+    std::pair<Node*, Member*> parent;
+
 public:
-    void setMembers(const std::vector<Member *> &members);
+    static std::map<Stmt*, std::vector<Stmt*>> predecessor;
+    void setMembers( std::vector<Member *> &members);
 
 public:
     Node();
@@ -47,55 +50,60 @@ public:
     //void create_member(Set*S, Stmt*st);
     Node* insert(Member* m);
 
-    bool isOrdered() const;
+    bool isOrdered() ;
 
     void setOrdered(bool ordered);
 
-    int getCommonArity() const;
+    int getCommonArity() ;
 
     void setCommonArity(int commonArity);
 
-    const std::vector<Member*> &getMembers() const;
+     std::vector<Member*> getMembers() ;
+
+    void calc_all_pred();
 
     void printBreadthFirst();
+
+    std::pair<Node *, Member*> &getParent() ;
+
+    void setParent(Node *, Member*);
 
 };
 class Member{
 private:
     Set* schedule;
 public:
-    Set *getSchedule() const;
+    Set *getSchedule() ;
 
     void setSchedule(Set *schedule);
 
-    Stmt *getStmt() const;
+    Stmt *getStmt() ;
 
     void setStmt(Stmt *stmt);
 
-    Node *getChild() const;
+    Node *getChild() ;
 
     void setChild(Node *child);
 
-     std::pair<Node *, Member*> &getParent() ;
-
-    void setParent(Node *, Member*);
 
 private:
     Stmt* stmt;
     Node * child;
-    std::pair<Node*, Member*> parent;
+
 public:
     Member();
     Member(Set* s, Stmt * s1);
     void printBreadthFirst();
+    void calc_all_pred(Node* n);
+    std::vector<Stmt*> pred_and_dom(Node* n, int idx);
     ~Member();
 
 
 };
+
     Computation* generateSSA(Computation * comp);
     Node* createScheduleTree( Computation* Comp);
     std::vector<Set*> getPrefixes(Set*s);
-    std::vector<Stmt> pred_and_dom(Node* n, int idx);
     string rename( std::map<string, int> &counter, std::map<string, int> &stack,string n );
 };
 #endif
