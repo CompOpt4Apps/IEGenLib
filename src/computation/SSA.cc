@@ -282,16 +282,30 @@ std::vector<Stmt*> SSA::Member::pred_and_dom(Node* n, int idx) {
     }
    // std::cout <<" get parent "<< p->getParent().second->getSchedule()->prettyPrintString() << std::endl;
 
-    if(p->getParent().first != NULL){
-        std::vector<Stmt*> s;
+//    if(p->getParent().first != NULL){
+//        std::vector<Stmt*> s;
+//
+//        int j;
+//        for(j=0;j<p->getMembers().size();j++ ){
+//            if(n->getParent().second==p->getMembers()[j] ){
+//                break;
+//            }
+//        }
+//        s = pred_and_dom(p->getParent().first,j-1);
+//        listOfStatements.insert(listOfStatements.end(), s.begin(), s.end());
+//    }
 
+    Node * gp = p->getParent().first;
+    Member * gpm = p->getParent().second;
+    if(gp != NULL){
+        std::vector<Stmt*> s;
         int j;
-        for(j=0;j<p->getMembers().size();j++ ){
-            if(n->getParent().second==p->getMembers()[j] ){
+        for(j=0;j<gp->getMembers().size();j++ ){
+            if(gpm==gp->getMembers()[j] ){
                 break;
             }
         }
-        s = pred_and_dom(p->getParent().first,j-1);
+        s = pred_and_dom(gp,j-1);
         listOfStatements.insert(listOfStatements.end(), s.begin(), s.end());
     }
     return listOfStatements;
