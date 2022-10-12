@@ -238,7 +238,7 @@ void SSA::Member::calc_all_pred(Node * n){
         std::cout << "pred for " << schedule->prettyPrintString()<<std::endl;
 
         for(int i =0;i<stmtList.size();i++){
-            std:: cout << " The schedule is " << stmtList[i]->getExecutionSchedule()->prettyPrintString()<<std::endl;
+            std:: cout << "  is " << stmtList[i]->getExecutionSchedule()->prettyPrintString()<<std::endl;
         }
 
     }
@@ -292,7 +292,7 @@ std::vector<Stmt*> SSA::Member::pred_and_dom(Node* n, int idx) {
                 break;
             }
         }
-        s = pred_and_dom(p->getParent().first,j-1);
+        s = pred_and_dom(p->getParent().first,j);
         listOfStatements.insert(listOfStatements.end(), s.begin(), s.end());
     }
     return listOfStatements;
