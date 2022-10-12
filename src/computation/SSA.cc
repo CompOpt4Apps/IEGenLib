@@ -224,25 +224,26 @@ void SSA::Member::printBreadthFirst() {
 }
 void SSA::Member::calc_all_pred(Node * n){
 
-    if(stmt!=NULL){
+    if(stmt!=NULL) {
         int j;
-        for(j=0;j<n->getMembers().size();j++ ){
-            if(this==n->getMembers()[j] ){
+        for (j = 0; j < n->getMembers().size(); j++) {
+            if (this == n->getMembers()[j]) {
                 break;
             }
         }
-        std::vector<Stmt*> stmtList;
+        std::vector<Stmt *> stmtList;
 
-        stmtList = pred_and_dom(n, j-1);
+        stmtList = pred_and_dom(n, j - 1);
 
-        std::cout << "pred for " << schedule->prettyPrintString()<<std::endl;
+        SSA::Node::predecessor[stmt]= stmtList;
 
-        for(int i =0;i<stmtList.size();i++){
-            std:: cout << "  is " << stmtList[i]->getExecutionSchedule()->prettyPrintString()<<std::endl;
+        std::cout << "pred for " << schedule->prettyPrintString() << std::endl;
+
+        for (int i = 0; i < stmtList.size(); i++) {
+            std::cout << "  is " << stmtList[i]->getExecutionSchedule()->prettyPrintString() << std::endl;
         }
 
     }
-
     child->calc_all_pred();
 }
 
@@ -282,19 +283,6 @@ std::vector<Stmt*> SSA::Member::pred_and_dom(Node* n, int idx) {
     }
    // std::cout <<" get parent "<< p->getParent().second->getSchedule()->prettyPrintString() << std::endl;
 
-//    if(p->getParent().first != NULL){
-//        std::vector<Stmt*> s;
-//
-//        int j;
-//        for(j=0;j<p->getMembers().size();j++ ){
-//            if(n->getParent().second==p->getMembers()[j] ){
-//                break;
-//            }
-//        }
-//        s = pred_and_dom(p->getParent().first,j-1);
-//        listOfStatements.insert(listOfStatements.end(), s.begin(), s.end());
-//    }
-
     Node * gp = p->getParent().first;
     Member * gpm = p->getParent().second;
     if(gp != NULL){
@@ -314,6 +302,14 @@ std::vector<Stmt*> SSA::Member::pred_and_dom(Node* n, int idx) {
 std::vector<Member*> SSA::Node::getMembers(){
     if(members.empty())  return std::vector<Member*>();
     return members;
+}
+
+const std::map<Stmt *, std::vector<Stmt *>> &Node::getPredecessor() {
+    return predecessor;
+}
+
+void Node::setPredecessor(const std::map<Stmt *, std::vector<Stmt *>> &predecessor) {
+    Node::predecessor = predecessor;
 }
 
 

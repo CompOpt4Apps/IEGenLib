@@ -42,12 +42,17 @@ private:
 
 public:
     static std::map<Stmt*, std::vector<Stmt*>> predecessor;
+
+    static const std::map<Stmt *, std::vector<Stmt *>> &getPredecessor();
+
+    static void setPredecessor(const std::map<Stmt *, std::vector<Stmt *>> &predecessor);
+
     void setMembers( std::vector<Member *> &members);
 
 public:
     Node();
     ~Node();
-    //void create_member(Set*S, Stmt*st);
+
     Node* insert(Member* m);
 
     bool isOrdered() ;
@@ -73,6 +78,8 @@ class Member{
 private:
     Set* schedule;
 public:
+
+
     Set *getSchedule() ;
 
     void setSchedule(Set *schedule);
