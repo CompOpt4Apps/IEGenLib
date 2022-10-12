@@ -105,6 +105,9 @@ void Member::setSchedule(Set *schedule) {
 }
 
 Stmt *Member::getStmt()  {
+    if(stmt==NULL){
+        return NULL;
+    }
     return stmt;
 }
 
@@ -262,15 +265,14 @@ std::vector<Stmt*> SSA::Member::pred_and_dom(Node* n, int idx) {
             listOfStatements.insert(listOfStatements.end(), s.begin(), s.end());
         }
     }
-    // this is for the root node
 
+    // this is for the root node
    // std::cout <<" root node "<< n->getParent().first << std::endl;
 
     if (n->getParent().first == NULL) {
         return listOfStatements;
     }
     // stepping up to find the location of the dominator in the member vector
-
     Node* p = n->getParent().first;
     for (auto c:p->getMembers()){
         if(c->getChild()!= n) {
@@ -279,26 +281,25 @@ std::vector<Stmt*> SSA::Member::pred_and_dom(Node* n, int idx) {
             listOfStatements.insert(listOfStatements.end(), s.begin(), s.end());
         }
     }
-    //std::cout <<" get parent "<< p->getParent().second->getSchedule()->prettyPrintString() << std::endl;
+   // std::cout <<" get parent "<< p->getParent().second->getSchedule()->prettyPrintString() << std::endl;
 
     if(p->getParent().first != NULL){
         std::vector<Stmt*> s;
 
         int j;
         for(j=0;j<p->getMembers().size();j++ ){
-            if(n->getParent().second==p->getMembers()[j] ){
+            if(p->getParent().second==p->getMembers()[j] ){
                 break;
             }
         }
-
-        s = pred_and_dom(p->getParent().first,j-1);
-
+        s = pred_and_dom(p->getParent().first,j);
         listOfStatements.insert(listOfStatements.end(), s.begin(), s.end());
     }
     return listOfStatements;
 }
 
 std::vector<Member*> SSA::Node::getMembers(){
+    if(members =={})  return std::vector<Member*>();
     return members;
 }
 
