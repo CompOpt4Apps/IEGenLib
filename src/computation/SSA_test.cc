@@ -113,7 +113,7 @@ TEST(SSATest123, DominanceTreeTEST111){
     comp->addStmt(new Stmt (
             "x=2;",
             "{[t,m]:0<=t<M && m<=10}",
-            "{[t,m]->[2,t,2,m,0]}",
+            "{[t,m]->[2,t,1,m,0]}",
             {},
             {{"x", "{[t,m]->[t,m]}"}}
     ));
@@ -162,7 +162,7 @@ TEST(SSATest123, DominanceTreeTEST111){
     Node * node;
     node = createScheduleTree(comp);
 
-  /// node->printBreadthFirst();
+  // node->printBreadthFirst();
 
    node->calc_all_pred();
 

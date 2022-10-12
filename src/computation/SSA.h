@@ -37,7 +37,7 @@ class Node {
 private:
     bool ordered;
     int common_arity;
-    std::vector<Member*>members;
+    std::vector<Member*>members {};
     std::pair<Node*, Member*> parent;
 
 public:

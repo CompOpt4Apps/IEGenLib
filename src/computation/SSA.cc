@@ -87,7 +87,7 @@ std::vector<Set*> SSA::getPrefixes(Set*s) {
 }
 
 SSA::Node::Node(){
-    members = {};
+     members = {};
 }
 
 SSA::Member::Member(Set * s, Stmt * st) {
@@ -238,7 +238,7 @@ void SSA::Member::calc_all_pred(Node * n){
         std::cout << "pred for " << schedule->prettyPrintString()<<std::endl;
 
         for(int i =0;i<stmtList.size();i++){
-            std:: cout << " The schedule is " << stmtList[i]->getExecutionSchedule()->prettyPrintString()<<'\n';
+            std:: cout << " The schedule is " << stmtList[i]->getExecutionSchedule()->prettyPrintString()<<std::endl;
         }
 
     }
