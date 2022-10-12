@@ -299,7 +299,7 @@ std::vector<Stmt*> SSA::Member::pred_and_dom(Node* n, int idx) {
 }
 
 std::vector<Member*> SSA::Node::getMembers(){
-    if(members =={})  return std::vector<Member*>();
+    if(members.empty())  return std::vector<Member*>();
     return members;
 }
 
