@@ -253,7 +253,6 @@ std::vector<Stmt*> SSA::Member::pred_and_dom(Node* n, int idx) {
     int i;
     for (i = idx; i >= 0; i--) {
         //this case is for when we hit a dominator
-
         if (n->getMembers()[i]->getStmt() != NULL) {
             listOfStatements.push_back(n->getMembers()[i]->getStmt());
             return listOfStatements;
@@ -292,7 +291,7 @@ std::vector<Stmt*> SSA::Member::pred_and_dom(Node* n, int idx) {
                 break;
             }
         }
-        s = pred_and_dom(p->getParent().first,j);
+        s = pred_and_dom(p->getParent().first,j-1);
         listOfStatements.insert(listOfStatements.end(), s.begin(), s.end());
     }
     return listOfStatements;
