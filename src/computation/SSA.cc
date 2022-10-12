@@ -287,7 +287,7 @@ std::vector<Stmt*> SSA::Member::pred_and_dom(Node* n, int idx) {
 
         int j;
         for(j=0;j<p->getMembers().size();j++ ){
-            if(p->getParent().second==p->getMembers()[j] ){
+            if(n->getParent().second==p->getMembers()[j] ){
                 break;
             }
         }
