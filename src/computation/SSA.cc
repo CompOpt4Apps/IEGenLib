@@ -246,56 +246,56 @@ void SSA::Member::calc_all_pred(Node * n){
 std::vector<Stmt*> SSA::Member::pred_and_dom(Node* n, int idx) {
 
    // std:: cout << "The ordered value is "<< n->isOrdered()<<std::endl;
+    std::vector < Stmt * > listOfStatements{};
+    int i;
+    for (i = idx; i >= 0; i--) {
+        //this case is for when we hit a dominator
 
-        std::vector < Stmt * > listOfStatements{};
+        if (n->getMembers()[i]->getStmt() != NULL) {
+            listOfStatements.push_back(n->getMembers()[i]->getStmt());
+            return listOfStatements;
+        }
+        //this case is for when we are adding predecessors that aren't dominators
+        for (auto c: n->getMembers()[i]->getChild()->getMembers()) {
+            std::vector < Stmt * > s;
+            s = pred_and_dom(c->getChild(), c->getChild()->getMembers().size() - 1);
+            listOfStatements.insert(listOfStatements.end(), s.begin(), s.end());
+        }
+    }
+    // this is for the root node
 
-        int i;
+   // std::cout <<" root node "<< n->getParent().first << std::endl;
 
-        for (i = idx; i >= 0; i--) {
-            //this case is for when we hit a dominator
+    if (n->getParent().first == NULL) {
+        return listOfStatements;
+    }
+    // stepping up to find the location of the dominator in the member vector
 
-            if (n->getMembers()[i]->getStmt() != NULL) {
-                listOfStatements.push_back(n->getMembers()[i]->getStmt());
-                return listOfStatements;
-            }
-            //this case is for when we are adding predecessors that aren't dominators
-            for (auto c: n->getMembers()[i]->getChild()->getMembers()) {
-                std::vector < Stmt * > s;
-                s = pred_and_dom(c->getChild(), c->getChild()->getMembers().size() - 1);
-                listOfStatements.insert(listOfStatements.end(), s.begin(), s.end());
+    Node* p = n->getParent().first;
+    for (auto c:p->getMembers()){
+        if(c->getChild()!= n) {
+            std::vector<Stmt *> s;
+            s = pred_and_dom(c->getChild(), c->getChild()->getMembers().size() - 1);
+            listOfStatements.insert(listOfStatements.end(), s.begin(), s.end());
+        }
+    }
+    //std::cout <<" get parent "<< p->getParent().second->getSchedule()->prettyPrintString() << std::endl;
+
+    if(p->getParent().first != NULL){
+        std::vector<Stmt*> s;
+
+        int j;
+        for(j=0;j<p->getMembers().size();j++ ){
+            if(n->getParent().second==p->getMembers()[j] ){
+                break;
             }
         }
-            // this is for the root node
-            if (n->getParent().first == NULL) {
-                return listOfStatements;
-            }
-            // stepping up to find the location of the dominator in the member vector
 
-            Node* p = n->getParent().first;
-            for (auto c:p->getMembers()){
-                if(c->getChild()!= n) {
-                    std::vector<Stmt *> s;
-                    s = pred_and_dom(c->getChild(), c->getChild()->getMembers().size() - 1);
-                    listOfStatements.insert(listOfStatements.end(), s.begin(), s.end());
-                }
-            }
-            if(p->getParent().first != NULL){
-                std::vector<Stmt*> s;
+        s = pred_and_dom(p->getParent().first,j-1);
 
-                int j;
-                for(j=0;j<p->getMembers().size();j++ ){
-                    if(n->getParent().second==p->getMembers()[j] ){
-                        break;
-                    }
-                }
-
-                s = pred_and_dom(p->getParent().first,
-                                 j);
-                listOfStatements.insert(listOfStatements.end(), s.begin(), s.end());
-            }
-            return listOfStatements;
-
-
+        listOfStatements.insert(listOfStatements.end(), s.begin(), s.end());
+    }
+    return listOfStatements;
 }
 
 std::vector<Member*> SSA::Node::getMembers(){
