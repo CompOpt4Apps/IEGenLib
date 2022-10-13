@@ -33,25 +33,18 @@ using namespace iegenlib;
 namespace SSA{
     class Member;
     class Node;
+    static std::map<Stmt*, std::vector<Stmt*>> predecessor;
 class Node {
 private:
     bool ordered;
     int common_arity;
     std::vector<Member*>members {};
     std::pair<Node*, Member*> parent;
-
-public:
-    static std::map<Stmt*, std::vector<Stmt*>> predecessor;
-
-    static const std::map<Stmt *, std::vector<Stmt *>> &getPredecessor();
-
-    static void setPredecessor(const std::map<Stmt *, std::vector<Stmt *>> &predecessor);
-
-    void setMembers( std::vector<Member *> &members);
-
 public:
     Node();
     ~Node();
+
+    void setMembers( std::vector<Member *> &members);
 
     Node* insert(Member* m);
 
@@ -77,8 +70,17 @@ public:
 class Member{
 private:
     Set* schedule;
+    Stmt* stmt;
+    Node * child;
+
 public:
 
+    Member();
+    Member(Set* s, Stmt * s1);
+    void printBreadthFirst();
+    void calc_all_pred(Node* n);
+    std::vector<Stmt*> pred_and_dom(Node* n, int idx);
+    ~Member();
 
     Set *getSchedule() ;
 
@@ -91,19 +93,6 @@ public:
     Node *getChild() ;
 
     void setChild(Node *child);
-
-
-private:
-    Stmt* stmt;
-    Node * child;
-
-public:
-    Member();
-    Member(Set* s, Stmt * s1);
-    void printBreadthFirst();
-    void calc_all_pred(Node* n);
-    std::vector<Stmt*> pred_and_dom(Node* n, int idx);
-    ~Member();
 
 
 };

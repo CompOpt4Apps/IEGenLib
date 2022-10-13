@@ -23,10 +23,7 @@
 #include <utility>
 #include <string>
 
-namespace iegenlib{
-    class Stmt;
-    class Computation;
-}
+
 using namespace SSA;
 using namespace iegenlib;
 
@@ -137,7 +134,6 @@ Computation* SSA::generateSSA(iegenlib::Computation *comp) {
 
     node->calc_all_pred();
 
-    //pred_and_dom();
 
     /// perform further operation
     //
@@ -235,9 +231,8 @@ void SSA::Member::calc_all_pred(Node * n){
 
         stmtList = pred_and_dom(n, j - 1);
 
-        SSA::Node::predecessor[stmt]= stmtList;
-
-        std::cout << "pred for " << schedule->prettyPrintString() << std::endl;
+        SSA::predecessor.insert(std::pair<Stmt*,std::vector<Stmt*>>(stmt,stmtList));
+        std:: cout << " the pred_n_dom for " << stmt->getExecutionSchedule()->prettyPrintString()<<std::endl;
 
         for (int i = 0; i < stmtList.size(); i++) {
             std::cout << "  is " << stmtList[i]->getExecutionSchedule()->prettyPrintString() << std::endl;
@@ -302,14 +297,6 @@ std::vector<Stmt*> SSA::Member::pred_and_dom(Node* n, int idx) {
 std::vector<Member*> SSA::Node::getMembers(){
     if(members.empty())  return std::vector<Member*>();
     return members;
-}
-
-const std::map<Stmt *, std::vector<Stmt *>> &Node::getPredecessor() {
-    return predecessor;
-}
-
-void Node::setPredecessor(const std::map<Stmt *, std::vector<Stmt *>> &predecessor) {
-    Node::predecessor = predecessor;
 }
 
 
