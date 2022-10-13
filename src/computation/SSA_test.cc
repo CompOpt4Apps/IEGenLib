@@ -166,15 +166,14 @@ TEST(SSATest123, DominanceTreeTEST111){
 
    node->calc_all_pred();
 
-   std::cout << "the size of pred " << predecessor.size() << std::endl;
+   std::cout << "the size of pred " << SSA::Member::predecessor.size() << std::endl;
 
-    for(auto m: predecessor){
-        std::cout << m.first->getExecutionSchedule()->prettyPrintString() <<std::endl;
+    for(auto m: SSA::Member::predecessor){
+        std::cout<< "the pred dom list for node  " << m.first->getExecutionSchedule()->prettyPrintString() <<std::endl;
         for (int i = 0; i < m.second.size(); i++) {
             std::cout << "  is " << m.second[i]->getExecutionSchedule()->prettyPrintString() << std::endl;
         }
-
-        std::cout << m.first->getExecutionSchedule()->prettyPrintString() <<std::endl;
+        std::cout << "-------===------------"<<std::endl;
     }
 
    std:: cout << std::endl;

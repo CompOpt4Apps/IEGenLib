@@ -33,7 +33,6 @@ using namespace iegenlib;
 namespace SSA{
     class Member;
     class Node;
-    static std::map<Stmt*, std::vector<Stmt*>> predecessor;
 class Node {
 private:
     bool ordered;
@@ -43,6 +42,8 @@ private:
 public:
     Node();
     ~Node();
+
+
 
     void setMembers( std::vector<Member *> &members);
 
@@ -77,6 +78,8 @@ public:
 
     Member();
     Member(Set* s, Stmt * s1);
+    static std::map<Stmt*, std::vector<Stmt*>> predecessor;
+
     void printBreadthFirst();
     void calc_all_pred(Node* n);
     std::vector<Stmt*> pred_and_dom(Node* n, int idx);

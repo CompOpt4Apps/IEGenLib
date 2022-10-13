@@ -27,6 +27,11 @@
 using namespace SSA;
 using namespace iegenlib;
 
+std::map<Stmt*, std::vector<Stmt*>> SSA::Member::predecessor{};
+
+//std::map<Stmt*, std::vector<Stmt*>> SSA::predecessor;
+
+
 std::vector<Set*> SSA::getPrefixes(Set*s) {
 
     std::vector<Set*>v;
@@ -206,7 +211,7 @@ void SSA::Node::calc_all_pred() {
     for(auto it=members.begin(); it!=members.end();it++){
         (*it)->calc_all_pred(this);
     }
-    std::cout << "------------------"<<'\n';
+    //std::cout << "------------------"<<'\n';
 }
 
 void Node::setMembers( std::vector<Member *> &members) {
@@ -231,12 +236,25 @@ void SSA::Member::calc_all_pred(Node * n){
 
         stmtList = pred_and_dom(n, j - 1);
 
-        SSA::predecessor.insert(std::pair<Stmt*,std::vector<Stmt*>>(stmt,stmtList));
-        std:: cout << " the pred_n_dom for " << stmt->getExecutionSchedule()->prettyPrintString()<<std::endl;
-
+        std::vector<Stmt*> rduplicates;
+        rduplicates  = predecessor[stmt];
         for (int i = 0; i < stmtList.size(); i++) {
-            std::cout << "  is " << stmtList[i]->getExecutionSchedule()->prettyPrintString() << std::endl;
+            if(stmtList[i]== stmt){
+                continue;
+            }
+            if(std::find(rduplicates.begin(), rduplicates.end(),stmtList[i] ) == rduplicates.end()){
+                rduplicates.push_back(stmtList[i]);
+            }
         }
+
+        predecessor[stmt] = rduplicates;
+
+        //SSA::predecessor.insert(std::pair<Stmt*,std::vector<Stmt*>>(stmt,stmtList));
+//        std:: cout << " the pred_n_dom for " << stmt->getExecutionSchedule()->prettyPrintString()<<std::endl;
+//
+//        for (int i = 0; i < stmtList.size(); i++) {
+//            std::cout << "  is " << stmtList[i]->getExecutionSchedule()->prettyPrintString() << std::endl;
+//        }
 
     }
     child->calc_all_pred();
@@ -260,7 +278,30 @@ std::vector<Stmt*> SSA::Member::pred_and_dom(Node* n, int idx) {
             listOfStatements.insert(listOfStatements.end(), s.begin(), s.end());
         }
     }
-
+    // if we are here we did not find a dominator within the loop.
+    // Now we have to do three things.
+    // 1. we have to find possible predecessors by looking at parent unordered node
+    // 2. we have to find the dominator by looking at grandparent node
+    // 3. we have to find possible intraloop predecessors by looking from
+    // the end of the loop backward until we reach idx
+    // I am going to do step 3 first, then 1, and then 2
+    //
+    // This is step 3 above.
+    if(n->getCommonArity()!=1) {
+        for (i = n->getMembers().size() - 1; i != idx; i--) {
+            //this case is for when we hit a dominator
+            if (n->getMembers()[i]->getStmt() != NULL) {
+                listOfStatements.push_back(n->getMembers()[i]->getStmt());
+                break;
+            }
+            //this case is for when we are adding predecessors that aren't dominators
+            for (auto c: n->getMembers()[i]->getChild()->getMembers()) {
+                std::vector<Stmt *> s;
+                s = pred_and_dom(c->getChild(), c->getChild()->getMembers().size() - 1);
+                listOfStatements.insert(listOfStatements.end(), s.begin(), s.end());
+            }
+        }
+    }
     // this is for the root node
    // std::cout <<" root node "<< n->getParent().first << std::endl;
 
