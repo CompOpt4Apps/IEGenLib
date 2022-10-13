@@ -90,9 +90,9 @@ TEST(SSATest123, DominanceTreeTEST111){
     comp->addStmt(new Stmt (
             "x=2;",
             "{[t,p,n]:0<=t<M && p>10 && n<=10}",
-            "{[t,p,n]->[2,t,0,p,1,n,0]}",
+            "{[t,p,v]->[2,t,0,p,1,v,0]}",
             {},
-            {{"x", "{[t,p,n]->[t,p,n]}"}}
+            {{"x", "{[t,p,v]->[t,p,v]}"}}
     ));
 
     //s7
@@ -113,9 +113,9 @@ TEST(SSATest123, DominanceTreeTEST111){
     comp->addStmt(new Stmt (
             "x=2;",
             "{[t,m]:0<=t<M && m<=10}",
-            "{[t,m]->[2,t,0,m,0]}",
+            "{[t,u]->[2,t,0,u,0]}",
             {},
-            {{"x", "{[t,m]->[t,m]}"}}
+            {{"x", "{[t,u]->[t,u]}"}}
     ));
 
     //s9
@@ -166,17 +166,50 @@ TEST(SSATest123, DominanceTreeTEST111){
 
    node->calc_all_pred();
 
-   std::cout << "the size of pred " << SSA::Member::predecessor.size() << std::endl;
+//   std::cout << "the size of pred " << SSA::Member::predecessor.size() << std::endl;
+//
+//    for(auto m: SSA::Member::predecessor){
+//        std::cout<< "the pred dom list for node  " << m.first->getExecutionSchedule()->prettyPrintString() <<std::endl;
+//        for (int i = 0; i < m.second.size(); i++) {
+//            std::cout << "  is " << m.second[i]->getExecutionSchedule()->prettyPrintString() << std::endl;
+//        }
+//        std::cout << "-------===------------"<<std::endl;
+//    }
 
-    for(auto m: SSA::Member::predecessor){
-        std::cout<< "the pred dom list for node  " << m.first->getExecutionSchedule()->prettyPrintString() <<std::endl;
+
+    std::map<Stmt*, std::vector<Stmt*>>::iterator it;
+    //for all statements in computation
+    for (it = Member::predecessor.begin(); it != Member::predecessor.end(); it++)
+    {
+        Stmt* runner;
+        //for all pred of that statement
+        if(it->second.size()> 1) {
+            for (int j = 0; j < it->second.size(); j++) {
+                runner = it->second[j];
+                // while the runner isn't equal to dominator of n
+                // DF of runner gets added to the
+                while (runner != it->second[it->second.size() - 1]) {
+                    if (Node::DF.find(runner) == Node::DF.end()) {
+                        Node::DF[runner] = {};
+                    }
+                    Node::DF[runner].push_back(it->first);
+                    runner = Member::predecessor.at(runner).back();
+                }
+            }
+
+        }
+    }
+
+
+    for(auto m: SSA::Node::DF){
+        std::cout<< "DF for node " << m.first->getExecutionSchedule()->prettyPrintString() <<std::endl;
         for (int i = 0; i < m.second.size(); i++) {
             std::cout << "  is " << m.second[i]->getExecutionSchedule()->prettyPrintString() << std::endl;
         }
         std::cout << "-------===------------"<<std::endl;
     }
 
-   std:: cout << std::endl;
+    std:: cout << std::endl;
   // comp->finalize();
    //std:: cout << comp->toDotString();
 

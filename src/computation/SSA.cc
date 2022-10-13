@@ -28,6 +28,7 @@ using namespace SSA;
 using namespace iegenlib;
 
 std::map<Stmt*, std::vector<Stmt*>> SSA::Member::predecessor{};
+std::map<Stmt*, std::vector<Stmt*>> SSA::Node::DF{};
 
 //std::map<Stmt*, std::vector<Stmt*>> SSA::predecessor;
 
@@ -140,6 +141,8 @@ Computation* SSA::generateSSA(iegenlib::Computation *comp) {
     node->calc_all_pred();
 
 
+    //Node::DF;
+
     /// perform further operation
     //
 
@@ -212,6 +215,8 @@ void SSA::Node::calc_all_pred() {
         (*it)->calc_all_pred(this);
     }
     //std::cout << "------------------"<<'\n';
+
+
 }
 
 void Node::setMembers( std::vector<Member *> &members) {
@@ -237,7 +242,11 @@ void SSA::Member::calc_all_pred(Node * n){
         stmtList = pred_and_dom(n, j - 1);
 
         std::vector<Stmt*> rduplicates;
+
         rduplicates  = predecessor[stmt];
+
+
+
         for (int i = 0; i < stmtList.size(); i++) {
             if(stmtList[i]== stmt){
                 continue;
@@ -246,15 +255,7 @@ void SSA::Member::calc_all_pred(Node * n){
                 rduplicates.push_back(stmtList[i]);
             }
         }
-
         predecessor[stmt] = rduplicates;
-
-        //SSA::predecessor.insert(std::pair<Stmt*,std::vector<Stmt*>>(stmt,stmtList));
-//        std:: cout << " the pred_n_dom for " << stmt->getExecutionSchedule()->prettyPrintString()<<std::endl;
-//
-//        for (int i = 0; i < stmtList.size(); i++) {
-//            std::cout << "  is " << stmtList[i]->getExecutionSchedule()->prettyPrintString() << std::endl;
-//        }
 
     }
     child->calc_all_pred();
