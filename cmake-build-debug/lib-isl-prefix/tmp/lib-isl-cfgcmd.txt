@@ -1,1 +1,0 @@
-cmd='autoreconf;-f;-i;COMMAND;./configure;--prefix=/Users/ant/Documents/AdaptLab/IEGenLib/lib/installed;--with-int=imath-32;--disable-shared;--with-pic'
