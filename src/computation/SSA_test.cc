@@ -159,12 +159,15 @@ TEST(SSATest123, DominanceTreeTEST111){
             {},
             {{"x", "{[0]->[0]}"}}
     ));
-    Node * node;
-    node = createScheduleTree(comp);
+//    Node * node;
+//    node = createScheduleTree(comp);
+//
+
+    SSA::generateSSA(comp);
 
   // node->printBreadthFirst();
 
-   node->calc_all_pred();
+ //  node->calc_all_pred();
 
 //   std::cout << "the size of pred " << SSA::Member::predecessor.size() << std::endl;
 //
@@ -176,29 +179,6 @@ TEST(SSATest123, DominanceTreeTEST111){
 //        std::cout << "-------===------------"<<std::endl;
 //    }
 
-
-    std::map<Stmt*, std::vector<Stmt*>>::iterator it;
-    //for all statements in computation
-    for (it = Member::predecessor.begin(); it != Member::predecessor.end(); it++)
-    {
-        Stmt* runner;
-        //for all pred of that statement
-        if(it->second.size()> 1) {
-            for (int j = 0; j < it->second.size(); j++) {
-                runner = it->second[j];
-                // while the runner isn't equal to dominator of n
-                // DF of runner gets added to the
-                while (runner != it->second[it->second.size() - 1]) {
-                    if (Node::DF.find(runner) == Node::DF.end()) {
-                        Node::DF[runner] = {};
-                    }
-                    Node::DF[runner].push_back(it->first);
-                    runner = Member::predecessor.at(runner).back();
-                }
-            }
-
-        }
-    }
 
 
     for(auto m: SSA::Node::DF){

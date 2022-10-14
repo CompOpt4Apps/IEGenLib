@@ -29,6 +29,7 @@ using namespace iegenlib;
 
 std::map<Stmt*, std::vector<Stmt*>> SSA::Member::predecessor{};
 std::map<Stmt*, std::vector<Stmt*>> SSA::Node::DF{};
+std::map<string, std::vector<Stmt*>> SSA::Node::globals{};
 
 //std::map<Stmt*, std::vector<Stmt*>> SSA::predecessor;
 
@@ -69,6 +70,13 @@ std::vector<Set*> SSA::getPrefixes(Set*s) {
 
     for(int i=0; i<stmts.size(); i++){
         iegenlib::Set* s1 = stmts[i]->getExecutionSchedule()->Apply( stmts[i]->getIterationSpace());
+
+        int numWrites = stmts[i]->getNumWrites();
+        for (int j = 0; j < numWrites; ++j){
+            Node::globals[stmts[i]->getWriteDataSpace(j)].push_back(stmts[i]);
+            //std::cout << "variables    " << stmts[i]->getWriteDataSpace(j)<<" ,  "<< i<<'\n';
+        }
+
         //std::cout << s1->prettyPrintString()<<'\n';
         std::vector<Set*>v;
         v = getPrefixes(s1);
@@ -139,14 +147,64 @@ Computation* SSA::generateSSA(iegenlib::Computation *comp) {
     Node * node = createScheduleTree(comp);
 
     node->calc_all_pred();
+    node-> computeDF();
 
+    std::map<string, std::vector<Stmt*>>::iterator it;
 
-    //Node::DF;
+    for (it = SSA::Node::globals.begin(); it != SSA::Node::globals.end(); it++) {
+        string newName = it->first;
+        newName.erase( newName.begin());
+        newName.erase( newName.end()-1);
+        for(int v=0;v<it->second.size();v++) {
 
-    /// perform further operation
-    //
+            if (Node::DF.find(it->second[v]) != Node::DF.end()) {
+                std:: cout << "contributing node " <<  it->second[v]->getExecutionSchedule()->prettyPrintString()  <<std::endl;
+                std::vector<Stmt* > insert_phi_at = Node::DF.at(it->second[v]);
+                for(auto stmt:insert_phi_at ){
+                    std::cout << "phi location "<< stmt->getExecutionSchedule()-> prettyPrintString()  <<std::endl;
 
+                    string itrspace = stmt ->getIterationSpace()->prettyPrintString();
+                    string executionSch = stmt -> getExecutionSchedule()->prettyPrintString();
+
+                    comp->addStmt(new Stmt (
+                            "phi",
+                            itrspace,
+                            executionSch,
+                            {},
+                            {{newName, "{[0]->[0]}"}}
+                    ));
+                }
+            }
+            std::cout << "----------------------------------------"<<std::endl;
+        }
+
+    }
     return comp;
+}
+
+void SSA::Node::computeDF() {
+    std::map<Stmt*, std::vector<Stmt*>>::iterator it;
+    //for all statements in computation
+    for (it = Member::predecessor.begin(); it != Member::predecessor.end(); it++)
+    {
+        Stmt* runner;
+        //for all pred of that statement
+        if(it->second.size()> 1) {
+            for (int j = 0; j < it->second.size(); j++) {
+                runner = it->second[j];
+                // while the runner isn't equal to dominator of n
+                // DF of runner gets added to the
+                while (runner != it->second[it->second.size() - 1]) {
+                    if (Node::DF.find(runner) == Node::DF.end()) {
+                        Node::DF[runner] = {};
+                    }
+                    Node::DF[runner].push_back(it->first);
+                    runner = Member::predecessor.at(runner).back();
+                }
+            }
+
+        }
+    }
 }
 
 SSA::Node* SSA::Node::insert(SSA::Member * m){
@@ -244,7 +302,6 @@ void SSA::Member::calc_all_pred(Node * n){
         std::vector<Stmt*> rduplicates;
 
         rduplicates  = predecessor[stmt];
-
 
 
         for (int i = 0; i < stmtList.size(); i++) {

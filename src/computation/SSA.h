@@ -67,6 +67,10 @@ public:
 
     void setParent(Node *, Member*);
 
+    void computeDF();
+
+    static std::map<string, std::vector<Stmt*>> globals;
+
 };
 class Member{
 private:
@@ -102,6 +106,7 @@ public:
     Computation* generateSSA(Computation * comp);
     Node* createScheduleTree( Computation* Comp);
     std::vector<Set*> getPrefixes(Set*s);
+
     string rename( std::map<string, int> &counter, std::map<string, int> &stack,string n );
 };
 #endif
