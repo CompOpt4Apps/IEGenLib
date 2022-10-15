@@ -190,8 +190,8 @@ TEST(SSATest123, DominanceTreeTEST111){
 //    }
 
     std:: cout << std::endl;
-  // comp->finalize();
-   //std:: cout << comp->toDotString();
+    comp->finalize();
+//   std:: cout << comp->toDotString();
 
 
     EXPECT_EQ(1,1);

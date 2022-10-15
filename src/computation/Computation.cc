@@ -1458,10 +1458,10 @@ void Computation::fuse (int s1, int s2, int fuseLevel){
 void Computation::finalize(bool deleteDeadNodes) {
 
 
-    Computation* comp;
-    comp = this;
-    SSA::generateSSA(comp);
-    adjustExecutionSchedules();
+//    Computation* comp;
+//    comp = this;
+//    SSA::generateSSA(comp);
+     adjustExecutionSchedules();
     padExecutionSchedules();
 
     if (deleteDeadNodes) {
@@ -2353,6 +2353,10 @@ void Stmt::replaceReadDataSpace(std::string searchStr, std::string replaceStr) {
         }
     }
 }
+void Stmt::removeReadDataSpace(int loc){
+    dataReads.erase(dataReads.begin()+loc);
+}
+
 
 void Stmt::replaceReadSourceCode(std::string searchStr, std::string replaceStr) {
     // TODO: will not work if there's an if statement that
