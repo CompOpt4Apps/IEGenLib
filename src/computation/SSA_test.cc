@@ -33,10 +33,10 @@ TEST(SSATest123, DominanceTreeTEST111){
     //s1
     //    iegenlib::Set* s1 = new iegenlib::Set("{[0]}");
     comp->addStmt(new Stmt (
-            "x=1;",
+            "x = 1;",
             "{[0]}",
             "{[0]->[0]}",
-            {},
+            {{"x", "{[0]->[0]}"}},
             {{"x", "{[0]->[0]}"}}
     ));
 
@@ -44,10 +44,10 @@ TEST(SSATest123, DominanceTreeTEST111){
     // iegenlib::Set* s2 = new iegenlib::Set("{[1]}");
 
     comp->addStmt(new Stmt (
-            "x=2;",
+            "x = 2;",
             "{[0]}",
             "{[0]->[1]}",
-            {},
+            {{"x", "{[0]->[0]}"}},
             {{"x", "{[0]->[0]}"}}
     ));
 
@@ -66,10 +66,10 @@ TEST(SSATest123, DominanceTreeTEST111){
     //iegenlib::Set* s4 = new iegenlib::Set("{[2,t,1,p,0]: 0<=t<M && p> 10 }");
 
     comp->addStmt(new Stmt (
-            "x=2;",
+            "x = 2;",
             "{[t,p]:0<=t<M && p> 10}",
             "{[t,p]->[2,t,0,p,0]}",
-            {},
+            {{"x", "{[0]->[0]}"}},
             {{"x", "{[t,p]->[t,p]}"}}
     ));
 
@@ -77,10 +77,10 @@ TEST(SSATest123, DominanceTreeTEST111){
     //iegenlib::Set* s5 = new iegenlib::Set("{[2,t,1,p,1,q,0]:0<=t<M && p>10 && q>10}");
 
     comp->addStmt(new Stmt (
-            "x=2;",
+            "x = 2;",
             "{[t,p,q]:0<=t<M && p>10 && q>10}",
             "{[t,p,q]->[2,t,0,p,1,q,0]}",
-            {},
+            {{"x", "{[0]->[0]}"}},
             {{"x", "{[t,p,q]->[t,p,q]}"}}
     ));
 
@@ -88,10 +88,10 @@ TEST(SSATest123, DominanceTreeTEST111){
     //iegenlib::Set* s6 = new iegenlib::Set("{[2,t,1,p,1,n,0]:0<=t<M && p>10 && n<=10 }");
 
     comp->addStmt(new Stmt (
-            "x=2;",
+            "x = 2;",
             "{[t,p,n]:0<=t<M && p>10 && n<=10}",
             "{[t,p,v]->[2,t,0,p,1,v,0]}",
-            {},
+            {{"x", "{[0]->[0]}"}},
             {{"x", "{[t,p,v]->[t,p,v]}"}}
     ));
 
@@ -99,10 +99,10 @@ TEST(SSATest123, DominanceTreeTEST111){
     //iegenlib::Set* s7 = new iegenlib::Set("{[2,t,1,p,2]: 0<=t<M && p>10}");
 
     comp->addStmt(new Stmt (
-            "x=2;",
+            "x = 2;",
             "{[t,p]:0<=t<M && p>10}",
             "{[t,p]->[2,t,0,p,2]}",
-            {},
+            {{"x", "{[t,p]->[t,p]}"}},
             {{"x", "{[t,p]->[t,p]}"}}
     ));
 
@@ -111,10 +111,10 @@ TEST(SSATest123, DominanceTreeTEST111){
 
 
     comp->addStmt(new Stmt (
-            "x=2;",
+            "x = 2;",
             "{[t,m]:0<=t<M && m<=10}",
             "{[t,u]->[2,t,0,u,0]}",
-            {},
+            {{"x", "{[t,u]->[t,u]}"}},
             {{"x", "{[t,u]->[t,u]}"}}
     ));
 
@@ -122,10 +122,10 @@ TEST(SSATest123, DominanceTreeTEST111){
     //iegenlib::Set* s9 = new iegenlib::Set("{[2,t,3]: 0<=t<M}");
 
     comp->addStmt(new Stmt (
-            "x=2;",
+            "x = 2;",
             "{[t]:0<=t<M}",
             "{[t]->[2,t,1]}",
-            {},
+            {{"x", "{[t]->[t]}"}},
             {{"x", "{[t]->[t]}"}}
     ));
 
@@ -133,30 +133,30 @@ TEST(SSATest123, DominanceTreeTEST111){
     //iegenlib::Set* s10 = new iegenlib::Set("{[2,t,4,s,0,r,0]: 0<=t<M && 0<=s<S && r>10}");
 
     comp->addStmt(new Stmt (
-            "x=2;",
+            "x = 2;",
             "{[t,s,r]:0<=t<M}",
             "{[t,s,r]->[2,t,3,s,0,r,0]}",
-            {},
+            {{"x", "{[t,s,r]->[t,s,r]}"}},
             {{"x", "{[t,s,r]->[t,s,r]}"}}
     ));
     //s11
     //iegenlib::Set* s11 = new iegenlib::Set("{[2,t,5]: 0<=t<M}");
 
     comp->addStmt(new Stmt (
-            "x=2;",
+            "x = 2;",
             "{[t]:0<=t<M}",
             "{[t]->[2,t,4]}",
-            {},
+            {{"x", "{[t]->[t]}"}},
             {{"x", "{[t]->[t]}"}}
     ));
     //s12
     //iegenlib::Set* s12 = new iegenlib::Set("{[3]}");
 
     comp->addStmt(new Stmt (
-            "x=2;",
+            "x = 2;",
             "{[0]}",
             "{[0]->[3]}",
-            {},
+            {{"x", "{[0]->[0]}"}},
             {{"x", "{[0]->[0]}"}}
     ));
 //    Node * node;
@@ -181,13 +181,13 @@ TEST(SSATest123, DominanceTreeTEST111){
 
 
 
-    for(auto m: SSA::Node::DF){
-        std::cout<< "DF for node " << m.first->getExecutionSchedule()->prettyPrintString() <<std::endl;
-        for (int i = 0; i < m.second.size(); i++) {
-            std::cout << "  is " << m.second[i]->getExecutionSchedule()->prettyPrintString() << std::endl;
-        }
-        std::cout << "-------===------------"<<std::endl;
-    }
+//    for(auto m: SSA::Node::DF){
+//        std::cout<< "DF for node " << m.first->getExecutionSchedule()->prettyPrintString() <<std::endl;
+//        for (int i = 0; i < m.second.size(); i++) {
+//            std::cout << "  is " << m.second[i]->getExecutionSchedule()->prettyPrintString() << std::endl;
+//        }
+//        std::cout << "-------===------------"<<std::endl;
+//    }
 
     std:: cout << std::endl;
   // comp->finalize();

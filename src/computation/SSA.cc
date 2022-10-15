@@ -150,35 +150,113 @@ Computation* SSA::generateSSA(iegenlib::Computation *comp) {
     node-> computeDF();
 
     std::map<string, std::vector<Stmt*>>::iterator it;
-
+    std::map<string,  std::map<Stmt *, std::vector<Stmt *>>> readLoc;
+    std::map<Stmt* , Stmt*> phi_to_stmt;
     for (it = SSA::Node::globals.begin(); it != SSA::Node::globals.end(); it++) {
         string newName = it->first;
-        newName.erase( newName.begin());
-        newName.erase( newName.end()-1);
-        for(int v=0;v<it->second.size();v++) {
+        newName.erase(newName.begin());
+        newName.erase(newName.end() - 1);
+        std::map<Stmt *, std::vector<Stmt *>> phiLoc;
+        for (int v = 0; v < it->second.size(); v++) {
 
             if (Node::DF.find(it->second[v]) != Node::DF.end()) {
-                std:: cout << "contributing node " <<  it->second[v]->getExecutionSchedule()->prettyPrintString()  <<std::endl;
-                std::vector<Stmt* > insert_phi_at = Node::DF.at(it->second[v]);
-                for(auto stmt:insert_phi_at ){
-                    std::cout << "phi location "<< stmt->getExecutionSchedule()-> prettyPrintString()  <<std::endl;
+                std::cout << "contributing node " << it->second[v]->getExecutionSchedule()->prettyPrintString()
+                          << std::endl;
+                std::vector<Stmt *> insert_phi_at = Node::DF.at(it->second[v]);
+                for (auto stmt: insert_phi_at) {
 
-                    string itrspace = stmt ->getIterationSpace()->prettyPrintString();
-                    string executionSch = stmt -> getExecutionSchedule()->prettyPrintString();
+                    if (std::find(phiLoc[stmt].begin(), phiLoc[stmt].end(), it->second[v]) == phiLoc[stmt].end()) {
+                        phiLoc[stmt].push_back(it->second[v]);
+                    }
 
-                    comp->addStmt(new Stmt (
-                            "phi",
-                            itrspace,
-                            executionSch,
-                            {},
-                            {{newName, "{[0]->[0]}"}}
-                    ));
                 }
             }
-            std::cout << "----------------------------------------"<<std::endl;
+            // std::cout << "----------------------------------------"<<std::endl;
+        }
+        std::map<Stmt *, std::vector<Stmt *>>::iterator phis;
+        for (phis = phiLoc.begin(); phis != phiLoc.end(); phis++) {
+            string itrspace = phis->first->getIterationSpace()->prettyPrintString();
+            string executionSch = phis->first->getExecutionSchedule()->prettyPrintString();
+
+            Stmt* phi  = new Stmt(
+                    "phi",
+                    itrspace,
+                    executionSch,
+                    {{newName,"{[0]->[0]}" }},
+                    {{newName, "{[0]->[0]}"}}
+            );
+            phi->setPhiNode(true);
+            comp->addStmt(phi);
+            phi_to_stmt[phi] = phis->first;
+
+        }
+
+
+        readLoc[it->first] = phiLoc;
+    }
+
+    int counter = 0;
+    for (int a = 0; a < comp->getNumStmts(); a++) {
+        Stmt *s;
+        s = comp->getStmt(a);
+
+        for (int j = 0; j < s->getNumWrites(); j++) {
+           std::string write = s->getWriteDataSpace(j);
+
+            write.erase(write.begin());
+            write.erase(write.end()-1);
+           string newWrite = write + "_"+ std::to_string(counter);
+
+           s->replaceWrite(write,  newWrite);
+            }
+        counter++;
+      //  std:: cout << "updated stmt " << s->prettyPrintString() << std::endl;
+    }
+
+    for (int b = 0; b < comp->getNumStmts(); b++) {
+        Stmt *s1;
+        s1 = comp->getStmt(b);
+
+        for (int j = 0; j < s1->getNumReads(); j++) {
+            std::string read = s1->getReadDataSpace(j);
+            std::string test = read;
+            test.erase(test.end()-1);
+            test = test + '_';
+            std:: cout << "the reads are " << read << std::endl;
+            if( s1->isPhiNode()){
+                if(readLoc.find(read)==readLoc.end()){
+                    continue;
+                }
+                std::map<Stmt *, std::vector<Stmt *>> read_locations = readLoc[read];
+
+                if(phi_to_stmt.find(s1)!=phi_to_stmt.end()){
+                    Stmt* st = phi_to_stmt[s1];
+                    if(read_locations.find(st)!=read_locations.end()){
+                        std::vector<Stmt*> r = read_locations[st];
+                        for(auto v: r){
+
+                            int numWrites =v->getNumWrites();
+                            for (int j = 0; j < v->getNumWrites(); j++){
+                                if(v->getWriteDataSpace(j).find(test)!= std::string::npos){
+
+                                    std::cout << "variables    " << v->getWriteDataSpace(j)<<'\n';
+
+                                    break;
+                                }
+
+                            }
+                        }
+
+                    }
+                }
+
+                std:: cout << " the phi node is " << s1->getExecutionSchedule()->prettyPrintString()<< std::endl;
+            }
+
         }
 
     }
+
     return comp;
 }
 
