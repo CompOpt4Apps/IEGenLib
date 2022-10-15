@@ -69,7 +69,7 @@ TEST(SSATest123, DominanceTreeTEST111){
             "x = 2;",
             "{[t,p]:0<=t<M && p> 10}",
             "{[t,p]->[2,t,0,p,0]}",
-            {{"x", "{[0]->[0]}"}},
+            {{"x", "{[t,p]->[t,p]}"}},
             {{"x", "{[t,p]->[t,p]}"}}
     ));
 
@@ -80,7 +80,7 @@ TEST(SSATest123, DominanceTreeTEST111){
             "x = 2;",
             "{[t,p,q]:0<=t<M && p>10 && q>10}",
             "{[t,p,q]->[2,t,0,p,1,q,0]}",
-            {{"x", "{[0]->[0]}"}},
+            {{"x", "{[t,p,q]->[t,p,q]}"}},
             {{"x", "{[t,p,q]->[t,p,q]}"}}
     ));
 
@@ -89,9 +89,9 @@ TEST(SSATest123, DominanceTreeTEST111){
 
     comp->addStmt(new Stmt (
             "x = 2;",
-            "{[t,p,n]:0<=t<M && p>10 && n<=10}",
+            "{[t,p,v]:0<=t<M && p>10 && v<=10}",
             "{[t,p,v]->[2,t,0,p,1,v,0]}",
-            {{"x", "{[0]->[0]}"}},
+            {{"x", "{[t,p,v]->[t,p,v]}"}},
             {{"x", "{[t,p,v]->[t,p,v]}"}}
     ));
 
@@ -112,7 +112,7 @@ TEST(SSATest123, DominanceTreeTEST111){
 
     comp->addStmt(new Stmt (
             "x = 2;",
-            "{[t,m]:0<=t<M && m<=10}",
+            "{[t,u]:0<=t<M && u<=10}",
             "{[t,u]->[2,t,0,u,0]}",
             {{"x", "{[t,u]->[t,u]}"}},
             {{"x", "{[t,u]->[t,u]}"}}
@@ -134,7 +134,7 @@ TEST(SSATest123, DominanceTreeTEST111){
 
     comp->addStmt(new Stmt (
             "x = 2;",
-            "{[t,s,r]:0<=t<M}",
+            "{[t,s,r]:0<=t<M && s>10 && r>20}",
             "{[t,s,r]->[2,t,3,s,0,r,0]}",
             {{"x", "{[t,s,r]->[t,s,r]}"}},
             {{"x", "{[t,s,r]->[t,s,r]}"}}
@@ -163,7 +163,7 @@ TEST(SSATest123, DominanceTreeTEST111){
 //    node = createScheduleTree(comp);
 //
 
-    SSA::generateSSA(comp);
+   SSA::generateSSA(comp);
 
   // node->printBreadthFirst();
 
@@ -191,7 +191,7 @@ TEST(SSATest123, DominanceTreeTEST111){
 
     std:: cout << std::endl;
     comp->finalize();
-//   std:: cout << comp->toDotString();
+    std:: cout << comp->toDotString();
 
 
     EXPECT_EQ(1,1);

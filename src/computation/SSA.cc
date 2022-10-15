@@ -176,13 +176,16 @@ Computation* SSA::generateSSA(iegenlib::Computation *comp) {
         }
         std::map<Stmt *, std::vector<Stmt *>>::iterator phis;
         for (phis = phiLoc.begin(); phis != phiLoc.end(); phis++) {
-            string itrspace = phis->first->getIterationSpace()->prettyPrintString();
-            string executionSch = phis->first->getExecutionSchedule()->prettyPrintString();
+//            string itrspace = phis->first->getIterationSpace()->getString();
+//            string executionSch = phis->first->getExecutionSchedule()->getString();
+//
+//            std:: cout<<"      " << itrspace << std::endl;
+//            std:: cout <<"     " << executionSch << std::endl;
 
             Stmt* phi  = new Stmt(
                     "phi",
-                    itrspace,
-                    executionSch,
+                    phis->first->getIterationSpace()->getString(),
+                    phis->first->getExecutionSchedule()->getString(),
                     {{newName,"{[0]->[0]}" }},
                     {{newName, "{[0]->[0]}"}}
             );
