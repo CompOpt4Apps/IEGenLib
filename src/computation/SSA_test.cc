@@ -36,7 +36,7 @@ TEST(SSATest123, DominanceTreeTEST111){
             "x = 1;",
             "{[0]}",
             "{[0]->[0]}",
-            {{"x", "{[0]->[0]}"}},
+            {},
             {{"x", "{[0]->[0]}"}}
     ));
 
@@ -163,7 +163,8 @@ TEST(SSATest123, DominanceTreeTEST111){
 //    node = createScheduleTree(comp);
 //
 
-   SSA::generateSSA(comp);
+    Computation * c;
+  c =  SSA::generateSSA(comp);
 
   // node->printBreadthFirst();
 
@@ -190,8 +191,8 @@ TEST(SSATest123, DominanceTreeTEST111){
 //    }
 
     std:: cout << std::endl;
-    comp->finalize();
-    std:: cout << comp->toDotString();
+    c->finalize();
+    std:: cout << c->toDotString();
 
 
     EXPECT_EQ(1,1);

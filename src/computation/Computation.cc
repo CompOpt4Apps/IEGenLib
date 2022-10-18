@@ -1461,7 +1461,7 @@ void Computation::finalize(bool deleteDeadNodes) {
 //    Computation* comp;
 //    comp = this;
 //    SSA::generateSSA(comp);
-     adjustExecutionSchedules();
+    // adjustExecutionSchedules();
      padExecutionSchedules();
 
     if (deleteDeadNodes) {
@@ -1884,6 +1884,9 @@ std::vector<Set*> Computation::applyTransformations() {
     std::vector<Relation*> transformations = getTransformations();
     std::vector<Set*> transformedSchedules;
     for (int stmtNum = 0; stmtNum < getNumStmts(); ++stmtNum) {
+        std:: cout << " the transformations "<< transformations[stmtNum]->prettyPrintString()<<std::endl;
+        std:: cout << " the statement "<< getStmt(stmtNum)->getIterationSpace()->prettyPrintString()<<std::endl;
+        std::cout << "-------------------------------------------"<<std::endl;
         Set* schedule = transformations[stmtNum]->Apply(
             getStmt(stmtNum)->getIterationSpace());
         transformedSchedules.push_back(schedule);
