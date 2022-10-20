@@ -164,7 +164,7 @@ TEST(SSATest123, DominanceTreeTEST111){
 //
 
     Computation * c;
-  c =  SSA::generateSSA(comp);
+    c =  SSA::generateSSA(comp);
 
   // node->printBreadthFirst();
 
@@ -192,7 +192,7 @@ TEST(SSATest123, DominanceTreeTEST111){
 
     std:: cout << std::endl;
     c->finalize();
-    std:: cout << c->toDotString();
+   std:: cout << c->toDotString();
 
 
     EXPECT_EQ(1,1);

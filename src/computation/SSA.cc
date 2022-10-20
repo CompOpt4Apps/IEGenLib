@@ -53,6 +53,28 @@ std::vector<Set*> SSA::getPrefixes(Set*s) {
     return v;
 }
 
+void SSA::Node::printDF() {
+    for (auto m: SSA::Node::DF) {
+        std::cout << "DF for node " << m.first->getExecutionSchedule()->prettyPrintString() << std::endl;
+        for (int i = 0; i < m.second.size(); i++) {
+            std::cout << "  is " << m.second[i]->getExecutionSchedule()->prettyPrintString() << std::endl;
+        }
+        std::cout << "-------===------------" << std::endl;
+    }
+}
+void SSA::Node::printPredDom(){
+
+    for(auto m: SSA::Member::predecessor){
+        std::cout<< "the pred dom list for node  " << m.first->getExecutionSchedule()->prettyPrintString() <<std::endl;
+        for (int i = 0; i < m.second.size(); i++) {
+            std::cout << "  is " << m.second[i]->getExecutionSchedule()->prettyPrintString() << std::endl;
+        }
+        std::cout << "-------===------------"<<std::endl;
+    }
+
+}
+
+
  SSA::Node* SSA::createScheduleTree(iegenlib:: Computation* comp){
 
     std::vector<Stmt*> stmts  ;
@@ -147,7 +169,12 @@ Computation* SSA::generateSSA(iegenlib::Computation *comp) {
     Node * node = createScheduleTree(comp);
 
     node->calc_all_pred();
+
+   // node->printPredDom();
+
     node-> computeDF();
+
+    //node->printDF();
 
     std::map<string, std::vector<Stmt*>>::iterator it;
     std::map<string,  std::map<Stmt *, std::vector<Stmt *>>> readLoc;
@@ -176,11 +203,6 @@ Computation* SSA::generateSSA(iegenlib::Computation *comp) {
         }
         std::map<Stmt *, std::vector<Stmt *>>::iterator phis;
         for (phis = phiLoc.begin(); phis != phiLoc.end(); phis++) {
-//            string itrspace = phis->first->getIterationSpace()->getString();
-//            string executionSch = phis->first->getExecutionSchedule()->getString();
-//
-//            std:: cout<<"      " << itrspace << std::endl;
-//            std:: cout <<"     " << executionSch << std::endl;
 
             Stmt* phi  = new Stmt(
                     "phi",
@@ -196,8 +218,6 @@ Computation* SSA::generateSSA(iegenlib::Computation *comp) {
             stmt_to_phi[phis->first] = phi;
 
         }
-
-
         readLoc[it->first] = phiLoc;
     }
 
@@ -238,10 +258,17 @@ Computation* SSA::generateSSA(iegenlib::Computation *comp) {
 
                 if(phi_to_stmt.find(s1)!=phi_to_stmt.end()){
                     Stmt* st = phi_to_stmt[s1];
-                    // update read of the statement
+                    // check if the immediate node of a phi's read
+                    Stmt* ss = SSA::Member::predecessor[st].back();
 
+                    // update read of the statement
                     if(read_locations.find(st)!=read_locations.end()){
                         std::vector<Stmt*> r = read_locations[st];
+
+                        if(std::find(r.begin(), r.end(),ss ) == r.end()){
+                            r.push_back(ss);
+                        }
+
                         for(auto v: r){
 
                             for (int j = 0; j < v->getNumWrites(); j++){
@@ -316,18 +343,27 @@ void SSA::Node::computeDF() {
     {
         Stmt* runner;
         //for all pred of that statement
+        std::cout << "it "<< it->first->getExecutionSchedule()->prettyPrintString()<<std::endl;
         if(it->second.size()> 1) {
             for (int j = 0; j < it->second.size(); j++) {
-                runner = it->second[j];
-                // while the runner isn't equal to dominator of n
-                // DF of runner gets added to the
-                while (runner != it->second[it->second.size() - 1]) {
-                    if (Node::DF.find(runner) == Node::DF.end()) {
-                        Node::DF[runner] = {};
-                    }
-                    Node::DF[runner].push_back(it->first);
-                    runner = Member::predecessor.at(runner).back();
+                runner =(Stmt*)it->second[j];
+                while (runner->getExecutionSchedule()->toString() != it->second[it->second.size() -1]->getExecutionSchedule()->toString()) {
+//                    if (Node::DF.find(runner) == Node::DF.end()) {
+//                        Node::DF[runner] = {};
+//                    }
+
+                    // bug seems to be in a map
+
+                    std:: cout << "r  "<< runner->getExecutionSchedule()->prettyPrintString()<<std::endl;
+                    Node::DF[runner].push_back((Stmt*)it->first);
+
+                    runner = (Stmt*)Member::predecessor[runner][Member::predecessor[runner].size()-1];
+
+                    std:: cout << "p   "<< it->first->getExecutionSchedule()->prettyPrintString()<<std::endl;
+
                 }
+
+                std::cout <<"-----------------------------------------------"<<std::endl;
             }
 
         }

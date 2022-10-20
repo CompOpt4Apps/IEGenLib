@@ -1461,7 +1461,7 @@ void Computation::finalize(bool deleteDeadNodes) {
 //    Computation* comp;
 //    comp = this;
 //    SSA::generateSSA(comp);
-    // adjustExecutionSchedules();
+     adjustExecutionSchedules();
      padExecutionSchedules();
 
     if (deleteDeadNodes) {
@@ -1743,12 +1743,13 @@ void Computation::adjustExecutionSchedules() {
     for (int i = 0; i < getNumStmts(); i++) {
         Stmt* stmt = getStmt(i);
         // Skip dynamically inserted nodes
-        if (!stmt->isPhiNode() && !stmt->isArrayAccess()) {
+        if ( !stmt->isArrayAccess()) {
             TupleDecl currTuple = stmt->getExecutionSchedule()->getTupleDecl();
             int inArity = stmt->getExecutionSchedule()->inArity();
             int outArity = stmt->getExecutionSchedule()->outArity();
             int arity = inArity + outArity;
             // Compute currTuple - oldTuple
+            //TODO: Need to find what it does and remove if not needed
             int level = 0, diff = 0;
             while (level < outArity && diff == 0) {
                 if (currTuple.elemIsConst(level + inArity) 
@@ -1884,9 +1885,7 @@ std::vector<Set*> Computation::applyTransformations() {
     std::vector<Relation*> transformations = getTransformations();
     std::vector<Set*> transformedSchedules;
     for (int stmtNum = 0; stmtNum < getNumStmts(); ++stmtNum) {
-        std:: cout << " the transformations "<< transformations[stmtNum]->prettyPrintString()<<std::endl;
-        std:: cout << " the statement "<< getStmt(stmtNum)->getIterationSpace()->prettyPrintString()<<std::endl;
-        std::cout << "-------------------------------------------"<<std::endl;
+
         Set* schedule = transformations[stmtNum]->Apply(
             getStmt(stmtNum)->getIterationSpace());
         transformedSchedules.push_back(schedule);
