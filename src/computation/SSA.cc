@@ -487,6 +487,7 @@ std::vector<Stmt*> SSA::Member::pred_and_dom(Node* n, int idx) {
     std::vector < Stmt * > listOfStatements{};
     int i;
     for (i = idx; i >= 0; i--) {
+
         //this case is for when we hit a dominator
         if (n->getMembers()[i]->getStmt() != NULL) {
             listOfStatements.push_back(n->getMembers()[i]->getStmt());
