@@ -283,17 +283,17 @@ Computation* SSA::generateSSA(iegenlib::Computation *comp) {
 
                     }
                 }
-                s1->removeReadDataSpace(0);
+               //s1->removeReadDataSpace(0);
             }
                 // trying to edit reads on complementary node of phi node
             else if(readLoc[read].find(s1)!=readLoc[read].end()){
 
                 Stmt * s_phi = stmt_to_phi[s1];
                 for (int l = 0; l < s1->getNumReads(); l++){
-                    //std:: cout << st->getReadDataSpace(l) << "    "<< read <<std::endl;
+                    std:: cout << s1->getReadDataSpace(l) << "  dfdf  "<< read <<std::endl;
 
                     if(s1->getReadDataSpace(l)==read){
-                      //  std:: cout << s1->getReadDataSpace(l) << "    "<< s_phi->getWriteDataSpace(0) <<std::endl;
+                      std:: cout << s1->getReadDataSpace(l) << "  af  "<< s_phi->getWriteDataSpace(0) <<std::endl;
                         s1->replaceReadDataSpace( s1->getReadDataSpace(l), s_phi->getWriteDataSpace(0));
                         break;
                     }
@@ -306,19 +306,19 @@ Computation* SSA::generateSSA(iegenlib::Computation *comp) {
                    Stmt* s_pred = pred[0];
                    int k;
                    for ( k = 0; k < s_pred->getNumWrites(); k++){
-                       //std:: cout << st->getReadDataSpace(l) << "    "<< read <<std::endl;
+                      // std:: cout << s_pred->getWriteDataSpace(k) << "   sb  "<< test <<std::endl;
 
-                       if(s_pred->getWriteDataSpace(k)==test){
+                       if(s_pred->getWriteDataSpace(k).find(test)!= std::string::npos){
                            break;
                        }
                    }
 
                    for (int l = 0; l < s1->getNumReads(); l++){
-                       //std:: cout << st->getReadDataSpace(l) << "    "<< read <<std::endl;
+                      // std:: cout << s1->getReadDataSpace(l) << "  tttttt   "<< test <<std::endl;
 
                        if(s1->getReadDataSpace(l)==read){
-                           //  std:: cout << s1->getReadDataSpace(l) << "    "<< s_phi->getWriteDataSpace(0) <<std::endl;
-                           s1->replaceReadDataSpace( s1->getReadDataSpace(l), s_pred->getWriteDataSpace(k-1));
+                           //std:: cout << s1->getReadDataSpace(l) << "  t  "<< s_pred->getWriteDataSpace(k) << "  the test is " << test<<std::endl;
+                           s1->replaceReadDataSpace( s1->getReadDataSpace(l), s_pred->getWriteDataSpace(k));
                            break;
                        }
                    }
@@ -343,7 +343,7 @@ void SSA::Node::computeDF() {
     {
         Stmt* runner;
         //for all pred of that statement
-        std::cout << "it "<< it->first->getExecutionSchedule()->prettyPrintString()<<std::endl;
+       // std::cout << "it "<< it->first->getExecutionSchedule()->prettyPrintString()<<std::endl;
         if(it->second.size()> 1) {
             for (int j = 0; j < it->second.size(); j++) {
                 runner =(Stmt*)it->second[j];
@@ -509,7 +509,7 @@ std::vector<Stmt*> SSA::Member::pred_and_dom(Node* n, int idx) {
     // I am going to do step 3 first, then 1, and then 2
     //
     // This is step 3 above.
-    if(n->getCommonArity()!=1) {
+    if(n->getCommonArity()!=1 && n->getMembers().size()>1) {
         for (i = n->getMembers().size() - 1; i != idx; i--) {
             //this case is for when we hit a dominator
             if (n->getMembers()[i]->getStmt() != NULL) {

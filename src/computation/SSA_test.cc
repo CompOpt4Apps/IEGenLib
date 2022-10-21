@@ -244,11 +244,17 @@ TEST(SSATest, MTTKRP){
     mttkrp.addDataSpace("A","double*");
     mttkrp.addDataSpace("B","double*");
     mttkrp.addDataSpace("C","double*");
-    Stmt *s = new Stmt("x=1", "{[0]}", "{[0]->[0]}",{},{});
+    Stmt *s = new Stmt("x=1", "{[i,j,k,r] : 0 <= i < I and 0<=j<J and 0<=k<K and 0<=r<R}",
+                       "{[i,j,k,r]->[0,i,0,j,0,k,0,r,0]}",
+                       {},
+                       { {"A", "{[i,k,l,j]->[i,j]}"},
+                         {"B", "{[i,k,l,j]->[i,k,l]}"},
+                         {"D", "{[i,k,l,j]->[l,j]}"},
+                         {"C", "{[i,k,l,j]->[k,j]}"}});
     mttkrp.addStmt(s);
     Stmt *s0 = new Stmt("A(i,r) += X(i,j,k)*B(j,r)*C(k,r)",
                         "{[i,j,k,r] : 0 <= i < I and 0<=j<J and 0<=k<K and 0<=r<R}",
-                        "{[i,j,k,r]->[0,i,0,j,0,k,0,r,0]}",
+                        "{[i,j,k,r]->[1,i,0,j,0,k,0,r,0]}",
                         {
                                 // data reads
                                 {"A", "{[i,k,l,j]->[i,j]}"},
@@ -262,8 +268,14 @@ TEST(SSATest, MTTKRP){
                         });
 
     mttkrp.addStmt(s0);
-    Stmt *s2 = new Stmt("x=2", "{[0]}", "{[0]->[0]}",{},{});
-    mttkrp.addStmt(s2);
+    Stmt *s2 = new Stmt("x=2", "{[0]}", "{[0]->[1]}",{},{});
+    //mttkrp.addStmt(s2);
+
+    Computation * c;
+    c =  SSA::generateSSA(&mttkrp);
+
+    c->finalize();
+    std:: cout << c->toDotString();
 
     // this one is COO
     Computation mttkrp_sps;
@@ -283,14 +295,6 @@ TEST(SSATest, MTTKRP){
     //Calling
 //    std::cout << "Codegen:\n";
 //    std::cout << mttkrp_sps.codeGen();
-
-
-    Computation * c;
-    c =  SSA::generateSSA(&mttkrp);
-
-    c->finalize();
-    std:: cout << c->toDotString();
-
 
     EXPECT_EQ(1,1);
 
