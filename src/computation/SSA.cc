@@ -302,24 +302,27 @@ Computation* SSA::generateSSA(iegenlib::Computation *comp) {
             }
             else{
                std::vector<Stmt*> pred= SSA::Member::predecessor[s1];
+               std::cout << " the pred size is "<< pred.size()<<std::endl;
                if(pred.size()>0){
-                   Stmt* s_pred = pred[0];
+                   Stmt* s_pred = pred[pred.size()-1];
+                   std::cout << " ----- pred list " <<  s_pred->prettyPrintString();
                    int k;
                    for ( k = 0; k < s_pred->getNumWrites(); k++){
-                      // std:: cout << s_pred->getWriteDataSpace(k) << "   sb  "<< test <<std::endl;
+                      std:: cout << s_pred->getWriteDataSpace(k) << "   sb  "<< test <<std::endl;
 
                        if(s_pred->getWriteDataSpace(k).find(test)!= std::string::npos){
                            break;
                        }
                    }
-
-                   for (int l = 0; l < s1->getNumReads(); l++){
-                      // std:: cout << s1->getReadDataSpace(l) << "  tttttt   "<< test <<std::endl;
-
-                       if(s1->getReadDataSpace(l)==read){
-                           //std:: cout << s1->getReadDataSpace(l) << "  t  "<< s_pred->getWriteDataSpace(k) << "  the test is " << test<<std::endl;
-                           s1->replaceReadDataSpace( s1->getReadDataSpace(l), s_pred->getWriteDataSpace(k));
-                           break;
+                  // std::cout << "the value of k is "<< k << std::endl;
+                   if( s_pred->getNumWrites()>-1) {
+                       for (int l = 0; l < s1->getNumReads(); l++) {
+                           // std:: cout << s1->getReadDataSpace(l) << "  tttttt   "<< test <<std::endl;
+                           if (s1->getReadDataSpace(l) == read) {
+                               //std:: cout << s1->getReadDataSpace(l) << "  t  "<< s_pred->getWriteDataSpace(k) << "  the test is " << test<<std::endl;
+                               s1->replaceReadDataSpace(s1->getReadDataSpace(l), s_pred->getWriteDataSpace(k));
+                               break;
+                           }
                        }
                    }
 
