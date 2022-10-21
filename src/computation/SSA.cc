@@ -170,7 +170,7 @@ Computation* SSA::generateSSA(iegenlib::Computation *comp) {
 
     node->calc_all_pred();
 
-   // node->printPredDom();
+    //node->printPredDom();
 
     node-> computeDF();
 
@@ -283,7 +283,7 @@ Computation* SSA::generateSSA(iegenlib::Computation *comp) {
 
                     }
                 }
-               //s1->removeReadDataSpace(0);
+               s1->removeReadDataSpace(0);
             }
                 // trying to edit reads on complementary node of phi node
             else if(readLoc[read].find(s1)!=readLoc[read].end()){
@@ -302,22 +302,22 @@ Computation* SSA::generateSSA(iegenlib::Computation *comp) {
             }
             else{
                std::vector<Stmt*> pred= SSA::Member::predecessor[s1];
-               std::cout << " the pred size is "<< pred.size()<<std::endl;
+               //std::cout << " the pred size is "<< pred.size()<<std::endl;
                if(pred.size()>0){
-                   Stmt* s_pred = pred[pred.size()-1];
-                   std::cout << " ----- pred list " <<  s_pred->prettyPrintString();
+                   Stmt* s_pred = pred[0];
+                   //std::cout << " ----- pred list " <<  s_pred->prettyPrintString();
                    int k;
                    for ( k = 0; k < s_pred->getNumWrites(); k++){
-                      std:: cout << s_pred->getWriteDataSpace(k) << "   sb  "<< test <<std::endl;
+                     // std:: cout << s_pred->getWriteDataSpace(k) << "   sb  "<< test <<std::endl;
 
                        if(s_pred->getWriteDataSpace(k).find(test)!= std::string::npos){
                            break;
                        }
                    }
                   // std::cout << "the value of k is "<< k << std::endl;
-                   if( s_pred->getNumWrites()>-1) {
+                   if( s_pred->getNumWrites()>0) {
                        for (int l = 0; l < s1->getNumReads(); l++) {
-                           // std:: cout << s1->getReadDataSpace(l) << "  tttttt   "<< test <<std::endl;
+                            //std:: cout << s1->getReadDataSpace(l) << "  tttttt   "<< test <<std::endl;
                            if (s1->getReadDataSpace(l) == read) {
                                //std:: cout << s1->getReadDataSpace(l) << "  t  "<< s_pred->getWriteDataSpace(k) << "  the test is " << test<<std::endl;
                                s1->replaceReadDataSpace(s1->getReadDataSpace(l), s_pred->getWriteDataSpace(k));
@@ -331,9 +331,9 @@ Computation* SSA::generateSSA(iegenlib::Computation *comp) {
             }
         }
 
-        std:: cout <<"---------------------------------------------------"<< std::endl;
-        std:: cout << "updated stmt " << s1->prettyPrintString() << std::endl;
-        std:: cout <<"---------------------------------------------------"<< std::endl;
+//        std:: cout <<"---------------------------------------------------"<< std::endl;
+//        std:: cout << "updated stmt " << s1->prettyPrintString() << std::endl;
+//        std:: cout <<"---------------------------------------------------"<< std::endl;
     }
 
     return comp;
@@ -351,22 +351,14 @@ void SSA::Node::computeDF() {
             for (int j = 0; j < it->second.size(); j++) {
                 runner =(Stmt*)it->second[j];
                 while (runner->getExecutionSchedule()->toString() != it->second[it->second.size() -1]->getExecutionSchedule()->toString()) {
-//                    if (Node::DF.find(runner) == Node::DF.end()) {
-//                        Node::DF[runner] = {};
-//                    }
-
-                    // bug seems to be in a map
-
-                    std:: cout << "r  "<< runner->getExecutionSchedule()->prettyPrintString()<<std::endl;
+                    //std:: cout << "p   "<< it->first->getExecutionSchedule()->prettyPrintString()<<std::endl;
+                   // std:: cout << "r  "<< runner->getExecutionSchedule()->prettyPrintString()<<std::endl;
                     Node::DF[runner].push_back((Stmt*)it->first);
-
                     runner = (Stmt*)Member::predecessor[runner][Member::predecessor[runner].size()-1];
-
-                    std:: cout << "p   "<< it->first->getExecutionSchedule()->prettyPrintString()<<std::endl;
 
                 }
 
-                std::cout <<"-----------------------------------------------"<<std::endl;
+                //std::cout <<"-----------------------------------------------"<<std::endl;
             }
 
         }

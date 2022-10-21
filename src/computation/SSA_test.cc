@@ -268,7 +268,7 @@ TEST(SSATest, MTTKRP){
                         });
 
     mttkrp.addStmt(s0);
-    Stmt *s2 = new Stmt("x=2", "{[0]}", "{[0]->[1]}",{},{});
+    Stmt *s2 = new Stmt("x=2", "{[0]}", "{[0]->[2]}",{},{});
     mttkrp.addStmt(s2);
 
     Computation * c;
