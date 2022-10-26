@@ -107,7 +107,7 @@ public:
 
 };
 
-    Computation* generateSSA(Computation * comp);
+    void generateSSA(Computation * comp);
     Node* createScheduleTree( Computation* comp);
     std::vector<Set*> getPrefixes(Set*s);
 

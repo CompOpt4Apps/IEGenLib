@@ -165,7 +165,7 @@ void Node::setParent(Node * n, Member* s) {
 }
 
 
-Computation* SSA::generateSSA(iegenlib::Computation *comp) {
+void SSA::generateSSA(iegenlib::Computation *comp) {
     Node * node = createScheduleTree(comp);
 
     node->calc_all_pred();
@@ -290,10 +290,10 @@ Computation* SSA::generateSSA(iegenlib::Computation *comp) {
 
                 Stmt * s_phi = stmt_to_phi[s1];
                 for (int l = 0; l < s1->getNumReads(); l++){
-                    std:: cout << s1->getReadDataSpace(l) << "  dfdf  "<< read <<std::endl;
+                   // std:: cout << s1->getReadDataSpace(l) << "    "<< read <<std::endl;
 
                     if(s1->getReadDataSpace(l)==read){
-                      std:: cout << s1->getReadDataSpace(l) << "  af  "<< s_phi->getWriteDataSpace(0) <<std::endl;
+                      //std:: cout << s1->getReadDataSpace(l) << "    "<< s_phi->getWriteDataSpace(0) <<std::endl;
                         s1->replaceReadDataSpace( s1->getReadDataSpace(l), s_phi->getWriteDataSpace(0));
                         break;
                     }
@@ -336,7 +336,6 @@ Computation* SSA::generateSSA(iegenlib::Computation *comp) {
 //        std:: cout <<"---------------------------------------------------"<< std::endl;
     }
 
-    return comp;
 }
 
 void SSA::Node::computeDF() {

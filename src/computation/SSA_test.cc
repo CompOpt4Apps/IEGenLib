@@ -163,38 +163,9 @@ TEST(SSATest123, DominanceTreeTEST111){
 //    node = createScheduleTree(comp);
 //
 
-    Computation * c;
-    c =  SSA::generateSSA(comp);
-
-  // node->printBreadthFirst();
-
- //  node->calc_all_pred();
-
-//   std::cout << "the size of pred " << SSA::Member::predecessor.size() << std::endl;
-//
-//    for(auto m: SSA::Member::predecessor){
-//        std::cout<< "the pred dom list for node  " << m.first->getExecutionSchedule()->prettyPrintString() <<std::endl;
-//        for (int i = 0; i < m.second.size(); i++) {
-//            std::cout << "  is " << m.second[i]->getExecutionSchedule()->prettyPrintString() << std::endl;
-//        }
-//        std::cout << "-------===------------"<<std::endl;
-//    }
-
-
-
-//    for(auto m: SSA::Node::DF){
-//        std::cout<< "DF for node " << m.first->getExecutionSchedule()->prettyPrintString() <<std::endl;
-//        for (int i = 0; i < m.second.size(); i++) {
-//            std::cout << "  is " << m.second[i]->getExecutionSchedule()->prettyPrintString() << std::endl;
-//        }
-//        std::cout << "-------===------------"<<std::endl;
-//    }
-
-    std:: cout << std::endl;
-    c->finalize();
-   std:: cout << c->toDotString();
-
-
+    SSA::generateSSA(comp);
+    comp->finalize();
+    std:: cout << comp->toDotString();
     EXPECT_EQ(1,1);
 
 }
@@ -271,11 +242,10 @@ TEST(SSATest, MTTKRP){
     Stmt *s2 = new Stmt("x=2", "{[0]}", "{[0]->[2]}",{},{});
     mttkrp.addStmt(s2);
 
-    Computation * c;
-    c =  SSA::generateSSA(&mttkrp);
+    SSA::generateSSA(&mttkrp);
 
-    c->finalize();
-    std:: cout << c->toDotString();
+    mttkrp.finalize();
+    std:: cout << mttkrp.toDotString();
 
     // this one is COO
     Computation mttkrp_sps;
@@ -296,7 +266,7 @@ TEST(SSATest, MTTKRP){
 //    std::cout << "Codegen:\n";
 //    std::cout << mttkrp_sps.codeGen();
 
-    EXPECT_EQ(1,1);
+    EXPECT_EQ("1","1");
 
 }
 
